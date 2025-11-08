@@ -1,0 +1,20 @@
+spring:
+  application:
+    name: OpticalClinicManagementSystem
+  datasource:
+    url: jdbc:postgresql://localhost:5432/mmtorresoptical
+    username: postgres
+    password: postgres123
+    driver-class-name: org.postgresql.Driver
+  jpa:
+    hibernate:
+      ddl-auto: create-drop
+    database: postgresql
+    show-sql: true
+
+app:
+  jwt:
+    secret: BTQ9bfbqfRzRNU9Gvj+nyUDZyKoCyPxvCdvmaJvYLUnIdnE6trUb+qmSSsLfwKur
+    expiration-ms: 86400000 # 24 hours
+server:
+  port: 8080
