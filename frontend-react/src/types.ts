@@ -19,12 +19,35 @@ export const productSchema = z.object({
     "sunglasses",
   ]),
   supplier: z.string().min(1, "Required"),
-  unitPrice: z.number().min(0, "Price must be positive"),
-  quantity: z.number().int().min(0, "Quantity must be positive"),
-  lowLevelThreshold: z.number().int().min(0, "Must be positive"),
-  overstockedThreshold: z.number().int().min(0, "Must be positive"),
+  unitPrice: z.union([
+    z.number().min(0, "Unit price cannot be negative"),
+    z.undefined()
+  ]).refine((val) => val !== undefined, {
+    message: "Unit price is required"
+  }).transform((val) => val as number),
+  quantity: z.union([
+    z.number().int("Quantity must be a whole number").min(0, "Quantity cannot be negative"),
+    z.undefined()
+  ]).refine((val) => val !== undefined, {
+    message: "Quantity is required"
+  }).transform((val) => val as number),
+  lowLevelThreshold: z.union([
+    z.number().int("Low stock threshold must be a whole number").min(0, "Low stock threshold cannot be negative"),
+    z.undefined()
+  ]).refine((val) => val !== undefined, {
+    message: "Low stock threshold is required"
+  }).transform((val) => val as number),
+  overstockedThreshold: z.union([
+    z.number().int("Overstock threshold must be a whole number").min(0, "Overstock threshold cannot be negative"),
+    z.undefined()
+  ]).refine((val) => val !== undefined, {
+    message: "Overstock threshold is required"
+  }).transform((val) => val as number),
   isArchived: z.boolean(),
   imageDir: z.string().optional(),
+}).refine((data) => data.overstockedThreshold > data.lowLevelThreshold, {
+  message: "Overstock threshold must be greater than low stock threshold",
+  path: ["overstockedThreshold"],
 });
 
 export type ProductFormData = z.infer<typeof productSchema>;

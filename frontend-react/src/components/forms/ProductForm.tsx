@@ -1,5 +1,4 @@
 import { useForm, FormProvider } from "react-hook-form";
-import type { SubmitHandler } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useNavigate } from "react-router-dom";
 import {
@@ -48,10 +47,10 @@ export const ProductForm: React.FC<ProductFormProps> = ({
     productName: "",
     category: "eyeglasses",
     supplier: "",
-    unitPrice: 0,
-    quantity: 0,
-    lowLevelThreshold: 5,
-    overstockedThreshold: 50,
+    unitPrice: undefined as any,
+    quantity: undefined as any,
+    lowLevelThreshold: undefined as any,
+    overstockedThreshold: undefined as any,
     isArchived: false,
     imageDir: "",
   };
@@ -143,8 +142,15 @@ export const ProductForm: React.FC<ProductFormProps> = ({
                       <Input
                         type="number"
                         step="0.01"
+                        placeholder="Enter unit price"
                         {...field}
-                        onChange={(e) => field.onChange(e.target.valueAsNumber)}
+                        value={field.value || ""}
+                        onChange={(e) => {
+                          const value = e.target.value;
+                          field.onChange(
+                            value === "" ? undefined : e.target.valueAsNumber
+                          );
+                        }}
                       />
                     </FormControl>
                     <FormMessage />
@@ -161,8 +167,15 @@ export const ProductForm: React.FC<ProductFormProps> = ({
                     <FormControl>
                       <Input
                         type="number"
+                        placeholder="Enter quantity"
                         {...field}
-                        onChange={(e) => field.onChange(e.target.valueAsNumber)}
+                        value={field.value || ""}
+                        onChange={(e) => {
+                          const value = e.target.value;
+                          field.onChange(
+                            value === "" ? undefined : e.target.valueAsNumber
+                          );
+                        }}
                       />
                     </FormControl>
                     <FormMessage />
@@ -181,8 +194,15 @@ export const ProductForm: React.FC<ProductFormProps> = ({
                     <FormControl>
                       <Input
                         type="number"
+                        placeholder="Enter low stock threshold"
                         {...field}
-                        onChange={(e) => field.onChange(e.target.valueAsNumber)}
+                        value={field.value || ""}
+                        onChange={(e) => {
+                          const value = e.target.value;
+                          field.onChange(
+                            value === "" ? undefined : e.target.valueAsNumber
+                          );
+                        }}
                       />
                     </FormControl>
                     <FormMessage />
@@ -199,8 +219,15 @@ export const ProductForm: React.FC<ProductFormProps> = ({
                     <FormControl>
                       <Input
                         type="number"
+                        placeholder="Enter overstock threshold"
                         {...field}
-                        onChange={(e) => field.onChange(e.target.valueAsNumber)}
+                        value={field.value || ""}
+                        onChange={(e) => {
+                          const value = e.target.value;
+                          field.onChange(
+                            value === "" ? undefined : e.target.valueAsNumber
+                          );
+                        }}
                       />
                     </FormControl>
                     <FormMessage />
