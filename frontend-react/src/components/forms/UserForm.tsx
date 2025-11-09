@@ -204,7 +204,7 @@ export const UserForm: React.FC<UserFormProps> = ({
                     <FormControl>
                       <Input
                         type="email"
-                        placeholder="user@example.com"
+                        placeholder="Enter email address"
                         {...field}
                       />
                     </FormControl>
@@ -219,7 +219,11 @@ export const UserForm: React.FC<UserFormProps> = ({
                   <FormItem>
                     <FormLabel>Contact Number *</FormLabel>
                     <FormControl>
-                      <Input type="tel" placeholder="09..." {...field} />
+                      <Input
+                        type="tel"
+                        placeholder="Enter contact number"
+                        {...field}
+                      />
                     </FormControl>
                     <FormMessage />
                   </FormItem>

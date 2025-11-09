@@ -1,3 +1,4 @@
+import { useEffect, useMemo } from "react";
 import { useForm, FormProvider } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useNavigate } from "react-router-dom";
@@ -25,8 +26,8 @@ import {
   CardTitle,
 } from "@/components/ui/card";
 import { Checkbox } from "@/components/ui/checkbox";
-import { productSchema } from "@/types"; // Import schema from types
-import type { ProductFormData } from "@/types";
+import { productSchema, productFormSchema } from "@/types";
+import type { ProductFormData, ProductFormValues } from "@/types";
 
 interface ProductFormProps {
   defaultValues?: ProductFormData;
@@ -34,6 +35,29 @@ interface ProductFormProps {
   isLoading: boolean;
   isEditMode: boolean;
 }
+
+const DECIMAL_INPUT_REGEX = /^\d*(?:\.\d*)?$/;
+const INTEGER_INPUT_REGEX = /^\d*$/;
+
+const mapToFormValues = (values?: ProductFormData): ProductFormValues => ({
+  productName: values?.productName ?? "",
+  category: values?.category ?? "eyeglasses",
+  supplier: values?.supplier ?? "",
+  unitPrice:
+    values && values.unitPrice !== undefined ? String(values.unitPrice) : "",
+  quantity:
+    values && values.quantity !== undefined ? String(values.quantity) : "",
+  lowLevelThreshold:
+    values && values.lowLevelThreshold !== undefined
+      ? String(values.lowLevelThreshold)
+      : "",
+  overstockedThreshold:
+    values && values.overstockedThreshold !== undefined
+      ? String(values.overstockedThreshold)
+      : "",
+  isArchived: values?.isArchived ?? false,
+  imageDir: values?.imageDir ?? "",
+});
 
 export const ProductForm: React.FC<ProductFormProps> = ({
   onFormSubmit,
@@ -43,26 +67,28 @@ export const ProductForm: React.FC<ProductFormProps> = ({
 }) => {
   const navigate = useNavigate();
 
-  const defaultValues: ProductFormData = {
-    productName: "",
-    category: "eyeglasses",
-    supplier: "",
-    unitPrice: undefined as any,
-    quantity: undefined as any,
-    lowLevelThreshold: undefined as any,
-    overstockedThreshold: undefined as any,
-    isArchived: false,
-    imageDir: "",
-  };
+  const initialFormValues = useMemo(
+    () => mapToFormValues(passedDefaultValues),
+    [passedDefaultValues]
+  );
 
-  const form = useForm<ProductFormData>({
-    resolver: zodResolver(productSchema),
-    defaultValues: passedDefaultValues || defaultValues,
+  const form = useForm<ProductFormValues>({
+    resolver: zodResolver(productFormSchema),
+    defaultValues: initialFormValues,
+  });
+
+  useEffect(() => {
+    form.reset(initialFormValues);
+  }, [initialFormValues, form]);
+
+  const handleSubmit = form.handleSubmit(async (values) => {
+    const payload = productSchema.parse(values);
+    await onFormSubmit(payload);
   });
 
   return (
     <FormProvider {...form}>
-      <form onSubmit={form.handleSubmit(onFormSubmit)}>
+      <form onSubmit={handleSubmit}>
         <Card>
           <CardHeader>
             <CardTitle>
@@ -110,8 +136,11 @@ export const ProductForm: React.FC<ProductFormProps> = ({
                 <FormItem>
                   <FormLabel className="font-semibold">Category</FormLabel>
                   <Select
-                    onValueChange={field.onChange}
-                    defaultValue={field.value}
+                    value={field.value}
+                    onValueChange={(value) => {
+                      field.onChange(value);
+                      field.onBlur();
+                    }}
                   >
                     <FormControl>
                       <SelectTrigger>
@@ -144,16 +173,18 @@ export const ProductForm: React.FC<ProductFormProps> = ({
                     </FormLabel>
                     <FormControl>
                       <Input
-                        type="number"
-                        step="0.01"
+                        type="text"
+                        inputMode="decimal"
                         placeholder="Enter unit price"
-                        {...field}
-                        value={field.value || ""}
+                        value={field.value ?? ""}
+                        name={field.name}
+                        ref={field.ref}
+                        onBlur={field.onBlur}
                         onChange={(e) => {
-                          const value = e.target.value;
-                          field.onChange(
-                            value === "" ? undefined : e.target.valueAsNumber
-                          );
+                          const value = e.target.value.trimStart();
+                          if (DECIMAL_INPUT_REGEX.test(value)) {
+                            field.onChange(value);
+                          }
                         }}
                       />
                     </FormControl>
@@ -170,15 +201,18 @@ export const ProductForm: React.FC<ProductFormProps> = ({
                     <FormLabel className="font-semibold">Quantity</FormLabel>
                     <FormControl>
                       <Input
-                        type="number"
+                        type="text"
+                        inputMode="numeric"
                         placeholder="Enter quantity"
-                        {...field}
-                        value={field.value || ""}
+                        value={field.value ?? ""}
+                        name={field.name}
+                        ref={field.ref}
+                        onBlur={field.onBlur}
                         onChange={(e) => {
-                          const value = e.target.value;
-                          field.onChange(
-                            value === "" ? undefined : e.target.valueAsNumber
-                          );
+                          const value = e.target.value.trimStart();
+                          if (INTEGER_INPUT_REGEX.test(value)) {
+                            field.onChange(value);
+                          }
                         }}
                       />
                     </FormControl>
@@ -199,15 +233,18 @@ export const ProductForm: React.FC<ProductFormProps> = ({
                     </FormLabel>
                     <FormControl>
                       <Input
-                        type="number"
+                        type="text"
+                        inputMode="numeric"
                         placeholder="Enter low stock threshold"
-                        {...field}
-                        value={field.value || ""}
+                        value={field.value ?? ""}
+                        name={field.name}
+                        ref={field.ref}
+                        onBlur={field.onBlur}
                         onChange={(e) => {
-                          const value = e.target.value;
-                          field.onChange(
-                            value === "" ? undefined : e.target.valueAsNumber
-                          );
+                          const value = e.target.value.trimStart();
+                          if (INTEGER_INPUT_REGEX.test(value)) {
+                            field.onChange(value);
+                          }
                         }}
                       />
                     </FormControl>
@@ -226,15 +263,18 @@ export const ProductForm: React.FC<ProductFormProps> = ({
                     </FormLabel>
                     <FormControl>
                       <Input
-                        type="number"
+                        type="text"
+                        inputMode="numeric"
                         placeholder="Enter overstock threshold"
-                        {...field}
-                        value={field.value || ""}
+                        value={field.value ?? ""}
+                        name={field.name}
+                        ref={field.ref}
+                        onBlur={field.onBlur}
                         onChange={(e) => {
-                          const value = e.target.value;
-                          field.onChange(
-                            value === "" ? undefined : e.target.valueAsNumber
-                          );
+                          const value = e.target.value.trimStart();
+                          if (INTEGER_INPUT_REGEX.test(value)) {
+                            field.onChange(value);
+                          }
                         }}
                       />
                     </FormControl>

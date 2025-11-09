@@ -7,49 +7,63 @@ export interface LoginFormData {
   password: string;
 }
 
-export const productSchema = z.object({
-  productName: z.string().min(1, "Required"),
-  category: z.enum([
-    "eyeglasses",
-    "frames",
-    "lens",
-    "goggles",
-    "prisms",
-    "eyedrop",
-    "sunglasses",
-  ]),
-  supplier: z.string().min(1, "Required"),
-  unitPrice: z.union([
-    z.number().min(0, "Unit price cannot be negative"),
-    z.undefined()
-  ]).refine((val) => val !== undefined, {
-    message: "Unit price is required"
-  }).transform((val) => val as number),
-  quantity: z.union([
-    z.number().int("Quantity must be a whole number").min(0, "Quantity cannot be negative"),
-    z.undefined()
-  ]).refine((val) => val !== undefined, {
-    message: "Quantity is required"
-  }).transform((val) => val as number),
-  lowLevelThreshold: z.union([
-    z.number().int("Low stock threshold must be a whole number").min(0, "Low stock threshold cannot be negative"),
-    z.undefined()
-  ]).refine((val) => val !== undefined, {
-    message: "Low stock threshold is required"
-  }).transform((val) => val as number),
-  overstockedThreshold: z.union([
-    z.number().int("Overstock threshold must be a whole number").min(0, "Overstock threshold cannot be negative"),
-    z.undefined()
-  ]).refine((val) => val !== undefined, {
-    message: "Overstock threshold is required"
-  }).transform((val) => val as number),
-  isArchived: z.boolean(),
-  imageDir: z.string().optional(),
-}).refine((data) => data.overstockedThreshold > data.lowLevelThreshold, {
-  message: "Overstock threshold must be greater than low stock threshold",
-  path: ["overstockedThreshold"],
-});
+const decimalString = (label: string) =>
+  z
+    .string()
+    .trim()
+    .min(1, `${label} is required`)
+    .regex(/^(?:\d+\.?\d*|\d*\.\d+)$/, `${label} must be a valid number`)
+    .refine((value) => Number(value) >= 0, {
+      message: `${label} cannot be negative`,
+    });
 
+const integerString = (label: string) =>
+  z
+    .string()
+    .trim()
+    .min(1, `${label} is required`)
+    .regex(/^\d+$/, `${label} must be a whole number`)
+    .refine((value) => Number(value) >= 0, {
+      message: `${label} cannot be negative`,
+    });
+
+export const productFormSchema = z
+  .object({
+    productName: z.string().min(1, "Required"),
+    category: z.enum([
+      "eyeglasses",
+      "frames",
+      "lens",
+      "goggles",
+      "prisms",
+      "eyedrop",
+      "sunglasses",
+    ]),
+    supplier: z.string().min(1, "Required"),
+    unitPrice: decimalString("Unit price"),
+    quantity: integerString("Quantity"),
+    lowLevelThreshold: integerString("Low stock threshold"),
+    overstockedThreshold: integerString("Overstock threshold"),
+    isArchived: z.boolean(),
+    imageDir: z.string().optional(),
+  })
+  .refine(
+    (data) => Number(data.overstockedThreshold) > Number(data.lowLevelThreshold),
+    {
+      message: "Overstock threshold must be greater than low stock threshold",
+      path: ["overstockedThreshold"],
+    }
+  );
+
+export const productSchema = productFormSchema.transform((data) => ({
+  ...data,
+  unitPrice: Number(data.unitPrice),
+  quantity: Number(data.quantity),
+  lowLevelThreshold: Number(data.lowLevelThreshold),
+  overstockedThreshold: Number(data.overstockedThreshold),
+}));
+
+export type ProductFormValues = z.infer<typeof productFormSchema>;
 export type ProductFormData = z.infer<typeof productSchema>;
 
 // This is the type for data coming from your Spring Boot API
@@ -82,8 +96,8 @@ export const userSchema = z.object({
   lastName: z.string().min(1, "Last name is required").max(50),
   gender: z.enum(["Male", "Female", "Other"]),
   birthDate: z.string().min(1, "Birth date is required"), // React Hook Form handles date string
-  email: z.string().email("Invalid email address"),
-  contactNumber: z.string().min(10, "Must be at least 10 digits"),
+  email: z.email("Invalid email address"),
+  contactNumber: z.string().min(11, "Must be at least 11 digits"),
   username: z.string().min(3, "Username must be at least 3 characters"),
   
   // Special handling for edit vs. add
