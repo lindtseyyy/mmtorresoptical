@@ -1,10 +1,10 @@
 import { NavLink, useLocation, useNavigate } from "react-router-dom";
-import { Users, Package, LogOut } from "lucide-react";
+import { Users, Eye, LogOut } from "lucide-react";
 import { Button, buttonVariants } from "@/components/ui/button";
 import { toast } from "sonner"; // 👈 1. Import toast directly from sonner
 
 const menuItems = [
-  { title: "Manage Inventory", href: "/inventory", icon: Package },
+  { title: "Manage Inventory", href: "/inventory", icon: Eye },
   { title: "Manage Users", href: "/users", icon: Users },
 ];
 
@@ -37,7 +37,7 @@ const Sidenav: React.FC = () => {
     <div className="flex h-screen w-64 shrink-0 flex-col border-r border-border bg-card">
       <div className="flex h-16 items-center gap-2 border-b border-border p-4">
         <div className="flex h-10 w-10 items-center justify-center rounded-full bg-primary">
-          <Package className="h-5 w-5 text-primary-foreground" />
+          <Eye className="h-5 w-5 text-primary-foreground" />
         </div>
         <div>
           <p className="text-sm font-semibold text-foreground">MM Torres</p>
