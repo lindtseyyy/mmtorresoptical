@@ -90,7 +90,9 @@ const Login: React.FC = () => {
           <div className="space-y-4">
             {/* Field 1: Username or Email */}
             <div className="space-y-2">
-              <Label htmlFor="loginIdentifier">Username or Email</Label>
+              <Label htmlFor="loginIdentifier" className="font-semibold">
+                Username or Email
+              </Label>
               <Input
                 id="loginIdentifier"
                 type="text"
@@ -109,7 +111,9 @@ const Login: React.FC = () => {
 
             {/* Field 2: Password */}
             <div className="space-y-2">
-              <Label htmlFor="password">Password</Label>
+              <Label htmlFor="password" className="font-semibold">
+                Password
+              </Label>
               <div className="relative">
                 <Input
                   id="password"

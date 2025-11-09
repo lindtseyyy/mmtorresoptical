@@ -77,7 +77,9 @@ export const ProductForm: React.FC<ProductFormProps> = ({
                 name="productName"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel>Product Name</FormLabel>
+                    <FormLabel className="font-semibold">
+                      Product Name
+                    </FormLabel>
                     <FormControl>
                       <Input placeholder="Enter product name" {...field} />
                     </FormControl>
@@ -91,7 +93,7 @@ export const ProductForm: React.FC<ProductFormProps> = ({
                 name="supplier"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel>Supplier</FormLabel>
+                    <FormLabel className="font-semibold">Supplier</FormLabel>
                     <FormControl>
                       <Input placeholder="Enter supplier name" {...field} />
                     </FormControl>
@@ -106,7 +108,7 @@ export const ProductForm: React.FC<ProductFormProps> = ({
               name="category"
               render={({ field }) => (
                 <FormItem>
-                  <FormLabel>Category</FormLabel>
+                  <FormLabel className="font-semibold">Category</FormLabel>
                   <Select
                     onValueChange={field.onChange}
                     defaultValue={field.value}
@@ -137,7 +139,9 @@ export const ProductForm: React.FC<ProductFormProps> = ({
                 name="unitPrice"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel>Unit Price (₱)</FormLabel>
+                    <FormLabel className="font-semibold">
+                      Unit Price (₱)
+                    </FormLabel>
                     <FormControl>
                       <Input
                         type="number"
@@ -163,7 +167,7 @@ export const ProductForm: React.FC<ProductFormProps> = ({
                 name="quantity"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel>Quantity</FormLabel>
+                    <FormLabel className="font-semibold">Quantity</FormLabel>
                     <FormControl>
                       <Input
                         type="number"
@@ -190,7 +194,9 @@ export const ProductForm: React.FC<ProductFormProps> = ({
                 name="lowLevelThreshold"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel>Low Stock Threshold</FormLabel>
+                    <FormLabel className="font-semibold">
+                      Low Stock Threshold
+                    </FormLabel>
                     <FormControl>
                       <Input
                         type="number"
@@ -215,7 +221,9 @@ export const ProductForm: React.FC<ProductFormProps> = ({
                 name="overstockedThreshold"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel>Overstock Threshold</FormLabel>
+                    <FormLabel className="font-semibold">
+                      Overstock Threshold
+                    </FormLabel>
                     <FormControl>
                       <Input
                         type="number"
@@ -247,7 +255,9 @@ export const ProductForm: React.FC<ProductFormProps> = ({
                       onCheckedChange={field.onChange}
                     />
                   </FormControl>
-                  <FormLabel>Archive this product</FormLabel>
+                  <FormLabel className="font-semibold">
+                    Archive this product
+                  </FormLabel>
                 </FormItem>
               )}
             />
