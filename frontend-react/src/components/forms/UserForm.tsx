@@ -34,7 +34,7 @@ import { z } from "zod";
 
 interface UserFormProps {
   defaultValues?: Partial<UserFormData>; // Partial for edit
-  onFormSubmit: (data: UserFormData) => Promise<void>;
+  onFormSubmit: (data: UserFormData) => Promise<any>;
   isLoading: boolean;
   isEditMode: boolean;
 }

@@ -2,37 +2,15 @@ import { useNavigate } from "react-router-dom";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { UserForm } from "@/components/forms/UserForm";
 import type { UserFormData } from "@/types";
-import axios from "axios";
-import { toast } from "sonner";
-
-// API call to register a new user
-const registerUser = async (data: UserFormData) => {
-  const token = localStorage.getItem("authToken");
-  return await axios.post("http://localhost:8080/api/users", data, {
-    headers: { Authorization: `Bearer ${token}` },
-  });
-};
+import { createAddUserMutationOptions } from "@/query/userQuery";
 
 const AddUser: React.FC = () => {
   const navigate = useNavigate();
   const queryClient = useQueryClient();
 
-  const mutation = useMutation({
-    mutationFn: registerUser,
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["users"] });
-      toast.success("User Created", {
-        description: "The new user account has been successfully created.",
-      });
-      navigate("/users");
-    },
-    onError: (error) => {
-      toast.error("Error", {
-        description: "Failed to create user. Please try again.",
-      });
-      console.error(error);
-    },
-  });
+  const mutation = useMutation(
+    createAddUserMutationOptions(queryClient, navigate)
+  );
 
   const handleFormSubmit = async (data: UserFormData) => {
     mutation.mutate(data);

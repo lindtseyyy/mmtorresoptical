@@ -1,6 +1,5 @@
 import { useState } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
-import axios from "axios";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import {
@@ -15,24 +14,10 @@ import { Plus, Search, Archive, Pencil, Glasses } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { Card, CardContent } from "@/components/ui/card";
 import type { Product } from "@/types"; // Import our new Product type
-import { toast } from "sonner";
-
-// API call to fetch all products
-const fetchProducts = async (): Promise<Product[]> => {
-  const token = localStorage.getItem("authToken");
-  const { data } = await axios.get("http://localhost:8080/api/products", {
-    headers: { Authorization: `Bearer ${token}` },
-  });
-  return data;
-};
-
-// API call to archive a product (using DELETE)
-const archiveProduct = async (id: string) => {
-  const token = localStorage.getItem("authToken");
-  return await axios.delete(`http://localhost:8080/api/products/${id}`, {
-    headers: { Authorization: `Bearer ${token}` },
-  });
-};
+import {
+  createArchiveProductMutationOptions,
+  createProductsListQueryOptions,
+} from "@/query/productQuery";
 
 const ManageInventory: React.FC = () => {
   const [searchQuery, setSearchQuery] = useState("");
@@ -41,26 +26,14 @@ const ManageInventory: React.FC = () => {
   const queryClient = useQueryClient();
 
   // Fetch data using React Query
-  const { data: products, isLoading } = useQuery({
-    queryKey: ["products"],
-    queryFn: fetchProducts,
-  });
+  const { data: products, isLoading } = useQuery(
+    createProductsListQueryOptions()
+  );
 
   // Mutation for archiving
-  const archiveMutation = useMutation({
-    mutationFn: archiveProduct,
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["products"] });
-      toast.success("Product Archived", {
-        description: "The product has been successfully archived.",
-      });
-    },
-    onError: () => {
-      toast.error("Error", {
-        description: "Failed to archive product.",
-      });
-    },
-  });
+  const archiveMutation = useMutation(
+    createArchiveProductMutationOptions(queryClient)
+  );
 
   const handleArchive = (id: string) => {
     // You should add a confirmation dialog here

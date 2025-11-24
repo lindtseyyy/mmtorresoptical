@@ -1,53 +1,28 @@
 // src/pages/ManageUsers.tsx
 import { useState } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
-import axios from "axios";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
 import { Plus, Search, Pencil, Archive } from "lucide-react"; // Replaced Lock with Archive
 import { useNavigate } from "react-router-dom";
 import { Card, CardContent } from "@/components/ui/card";
-import type { User } from "@/types";
-import { toast } from "sonner";
-
-// API call to fetch all users
-const fetchUsers = async (): Promise<User[]> => {
-  const token = localStorage.getItem("authToken");
-  const { data } = await axios.get("http://localhost:8080/api/users", {
-    headers: { Authorization: `Bearer ${token}` },
-  });
-  return data;
-};
-
-// API call to archive a user
-const archiveUser = async (id: string) => {
-  const token = localStorage.getItem("authToken");
-  return await axios.delete(`http://localhost:8080/api/users/${id}`, {
-    headers: { Authorization: `Bearer ${token}` },
-  });
-};
+import {
+  createArchiveUserMutationOptions,
+  createUsersListQueryOptions,
+} from "@/query/userQuery";
 
 const ManageUsers: React.FC = () => {
   const [searchQuery, setSearchQuery] = useState("");
   const navigate = useNavigate();
   const queryClient = useQueryClient();
 
-  const { data: users, isLoading } = useQuery({
-    queryKey: ["users"],
-    queryFn: fetchUsers,
-  });
+  const { data: users, isLoading } = useQuery(createUsersListQueryOptions());
+  console.log("Fetched users:", users);
 
-  const archiveMutation = useMutation({
-    mutationFn: archiveUser,
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["users"] });
-      toast.success("User Archived");
-    },
-    onError: () => {
-      toast.error("Failed to archive user.");
-    },
-  });
+  const archiveMutation = useMutation(
+    createArchiveUserMutationOptions(queryClient)
+  );
 
   const filteredUsers = users?.filter(
     (user) =>
@@ -174,7 +149,7 @@ const ManageUsers: React.FC = () => {
                     <Button
                       variant="outline"
                       size="sm"
-                      onClick={() => archiveUser(user.userId)}
+                      onClick={() => archiveMutation.mutate(user.userId)}
                       disabled={archiveMutation.isPending}
                     >
                       <Archive className="h-4 w-4" />

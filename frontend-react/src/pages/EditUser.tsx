@@ -1,65 +1,43 @@
 import { useNavigate, useParams } from "react-router-dom";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { UserForm } from "@/components/forms/UserForm";
-import type { UserFormData, User } from "@/types";
-import axios from "axios";
-import { toast } from "sonner";
-
-// API call to get one user
-const fetchUser = async (id: string): Promise<User> => {
-  const token = localStorage.getItem("authToken");
-  const { data } = await axios.get(`http://localhost:8080/api/users/${id}`, {
-    headers: { Authorization: `Bearer ${token}` },
-  });
-  return data;
-};
-
-// API call to update a user
-const updateUser = async ({
-  id,
-  data,
-}: {
-  id: string;
-  data: Partial<UserFormData>;
-}) => {
-  // Don't send an empty password
-  if (data.password === "") {
-    delete data.password;
-  }
-  const token = localStorage.getItem("authToken");
-  return await axios.put(`http://localhost:8080/api/users/${id}`, data, {
-    headers: { Authorization: `Bearer ${token}` },
-  });
-};
+import {
+  createEditUserMutationOptions,
+  createEditUserQueryOptions,
+} from "@/query/userQuery";
 
 const EditUser: React.FC = () => {
   const navigate = useNavigate();
   const { id } = useParams<{ id: string }>();
   const queryClient = useQueryClient();
 
-  const { data: user, isLoading: isLoadingData } = useQuery({
-    queryKey: ["user", id],
-    queryFn: () => fetchUser(id!),
-    enabled: !!id,
-  });
+  console.log("Editing user:", id);
 
-  const mutation = useMutation({
-    mutationFn: (data: UserFormData) => updateUser({ id: id!, data }),
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["users"] });
-      queryClient.invalidateQueries({ queryKey: ["user", id] });
-      toast.success("User Updated", {
-        description: "The user account has been successfully updated.",
-      });
-      navigate("/users");
-    },
-    onError: (error) => {
-      toast.error("Error", {
-        description: "Failed to update user. Please try again.",
-      });
-      console.error(error);
-    },
-  });
+  const { data: user, isLoading: isLoadingData } = useQuery(
+    createEditUserQueryOptions(id!)
+  );
+
+  console.log("Fetched user data:", user);
+
+  const { isPending, mutateAsync } = useMutation(
+    createEditUserMutationOptions(queryClient, navigate, id!)
+  );
+
+  // Transform user data to match form expectations
+  const formDefaultValues = user
+    ? {
+        firstName: user.firstName,
+        middleName: user.middleName ?? undefined,
+        lastName: user.lastName,
+        gender: user.gender as "Male" | "Female" | "Other",
+        birthDate: user.birthDate,
+        email: user.email,
+        contactNumber: user.contactNumber,
+        username: user.username,
+        role: user.role as "Admin" | "Staff",
+        isArchived: user.isArchived,
+      }
+    : undefined;
 
   if (isLoadingData) {
     return (
@@ -78,10 +56,10 @@ const EditUser: React.FC = () => {
         </p>
       </div>
       <UserForm
-        onFormSubmit={mutation.mutateAsync}
-        isLoading={mutation.isPending}
+        onFormSubmit={mutateAsync}
+        isLoading={isPending}
         isEditMode={true}
-        defaultValues={user}
+        defaultValues={formDefaultValues}
       />
     </div>
   );

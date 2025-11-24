@@ -3,19 +3,18 @@ import type { SubmitHandler } from "react-hook-form";
 import { useForm } from "react-hook-form";
 import type { LoginFormData } from "../types";
 import axios from "axios";
-import { useNavigate } from "react-router-dom"; // 👈 1. Import useNavigate
+import { useNavigate } from "react-router-dom";
 
-// Import components from your UI library (e.g., shadcn/ui)
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 
-// Import icons (likely from lucide-react)
-import { User, Eye, EyeOff, AlertCircle } from "lucide-react"; // 👈 2. Import an error icon
+import { User, Eye, EyeOff, AlertCircle } from "lucide-react";
+import api from "@/lib/axiosInstance";
 
 const Login: React.FC = () => {
   const [showPassword, setShowPassword] = useState<boolean>(false);
-  // 👇 3. Add state to hold the login error from the backend
+
   const [loginError, setLoginError] = useState<string | null>(null);
   const navigate = useNavigate(); // 👈 4. Initialize navigate for redirect
 
@@ -25,26 +24,20 @@ const Login: React.FC = () => {
     formState: { errors, isSubmitting },
   } = useForm<LoginFormData>();
 
-  // 👇 5. This function is now fully implemented
   const onSubmit: SubmitHandler<LoginFormData> = async (data) => {
-    setLoginError(null); // Clear any previous errors on a new submit
+    setLoginError(null);
 
     try {
-      // This is where you'd call your API
-      const response = await axios.post(
-        "http://localhost:8080/api/auth/login",
-        data
-      );
+      const response = await api.post("/auth/login", data);
 
       // --- SUCCESS ---
-      // Assuming the backend sends back { accessToken: "..." }
       const token = response.data.accessToken;
 
       // Store the token (e.g., in localStorage)
       localStorage.setItem("authToken", token);
 
       // Redirect to the main page
-      navigate("/"); // Or to "/dashboard", etc.
+      navigate("/");
     } catch (error) {
       // --- FAILURE ---
       if (axios.isAxiosError(error) && error.response) {

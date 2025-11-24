@@ -2,55 +2,23 @@ import { useNavigate, useParams } from "react-router-dom";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { ProductForm } from "@/components/forms/ProductForm";
 import type { ProductFormData, Product } from "@/types";
-import axios from "axios";
-import { toast } from "sonner";
-
-const fetchProduct = async (id: string): Promise<Product> => {
-  const token = localStorage.getItem("authToken");
-  const { data } = await axios.get(`http://localhost:8080/api/products/${id}`, {
-    headers: { Authorization: `Bearer ${token}` },
-  });
-  return data;
-};
-
-const updateProduct = async ({
-  id,
-  data,
-}: {
-  id: string;
-  data: ProductFormData;
-}) => {
-  const token = localStorage.getItem("authToken");
-  return await axios.put(`http://localhost:8080/api/products/${id}`, data, {
-    headers: { Authorization: `Bearer ${token}` },
-  });
-};
+import {
+  createEditProductMutationOptions,
+  createEditProductQueryOptions,
+} from "@/query/productQuery";
 
 const EditProduct: React.FC = () => {
   const navigate = useNavigate();
   const { id } = useParams<{ id: string }>();
   const queryClient = useQueryClient();
 
-  const { data: product, isLoading: isLoadingData } = useQuery({
-    queryKey: ["product", id],
-    queryFn: () => fetchProduct(id!),
-    enabled: !!id,
-  });
+  const { data: product, isLoading: isLoadingData } = useQuery(
+    createEditProductQueryOptions(id!)
+  );
 
-  const mutation = useMutation({
-    mutationFn: (data: ProductFormData) => updateProduct({ id: id!, data }),
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["products"] });
-      queryClient.invalidateQueries({ queryKey: ["product", id] });
-      toast.success("Product Updated", {
-        description: "Successfully updated.",
-      });
-      navigate("/inventory");
-    },
-    onError: () => {
-      toast.error("Error", { description: "Failed to update product." });
-    },
-  });
+  const mutation = useMutation(
+    createEditProductMutationOptions(queryClient, navigate, id!)
+  );
 
   const handleFormSubmit = async (data: ProductFormData) => {
     mutation.mutate(data);

@@ -34,13 +34,13 @@ const router = createBrowserRouter([
     children: [
       { index: true, element: <Navigate to="/inventory" replace /> },
       { path: "inventory", element: <ManageInventory /> },
-      { path: "inventory/add", element: <AddProduct /> }, // 👈 ADD THIS
-      { path: "inventory/edit/:id", element: <EditProduct /> }, // 👈 ADD THIS
+      { path: "inventory/add", element: <AddProduct /> },
+      { path: "inventory/edit/:id", element: <EditProduct /> },
       { path: "users", element: <ManageUsers /> },
       // User routes
       { path: "users", element: <ManageUsers /> },
-      { path: "users/add", element: <AddUser /> }, // 👈 ADD THIS
-      { path: "users/edit/:id", element: <EditUser /> }, // 👈 ADD THIS
+      { path: "users/add", element: <AddUser /> },
+      { path: "users/edit/:id", element: <EditUser /> },
     ],
   },
   // You could also add a 404 route
