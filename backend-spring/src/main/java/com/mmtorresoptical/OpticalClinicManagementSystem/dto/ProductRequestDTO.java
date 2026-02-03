@@ -5,7 +5,7 @@ import lombok.Data;
 import java.math.BigDecimal;
 
 @Data
-public class ProductRequest {
+public class ProductRequestDTO {
     @NotEmpty(message = "Product name is required")
     private String productName;
 
