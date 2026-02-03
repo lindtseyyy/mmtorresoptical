@@ -1,11 +1,10 @@
 package com.mmtorresoptical.OpticalClinicManagementSystem.controller;
 
-import com.mmtorresoptical.OpticalClinicManagementSystem.dto.UserRequest;
+import com.mmtorresoptical.OpticalClinicManagementSystem.dto.UserRequestDTO;
 import com.mmtorresoptical.OpticalClinicManagementSystem.exception.ResourceNotFoundException;
 import com.mmtorresoptical.OpticalClinicManagementSystem.model.User;
 import com.mmtorresoptical.OpticalClinicManagementSystem.repository.UserRepository;
 import jakarta.validation.Valid;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.crypto.password.PasswordEncoder;
@@ -18,18 +17,20 @@ import java.util.UUID;
 @RequestMapping("/api/users")
 public class UserController {
 
-    @Autowired
-    private UserRepository userRepository;
+    private final UserRepository userRepository;
+    private final PasswordEncoder passwordEncoder;
 
-    @Autowired
-    private PasswordEncoder passwordEncoder;
+    UserController(UserRepository userRepository, PasswordEncoder passwordEncoder) {
+        this.userRepository = userRepository;
+        this.passwordEncoder = passwordEncoder;
+    }
 
     /**
      * CREATE a new user
      * Change return type from ResponseEntity<?> to ResponseEntity<Object>
      */
     @PostMapping
-    public ResponseEntity<Object> createUser(@Valid @RequestBody UserRequest userRequest) {
+    public ResponseEntity<Object> createUser(@Valid @RequestBody UserRequestDTO userRequest) {
         // 1. Check if username or email already exists
         if (userRepository.findByUsername(userRequest.getUsername()).isPresent()) {
             // This String body is now allowed
@@ -80,7 +81,7 @@ public class UserController {
      * Change return type from ResponseEntity<User> to ResponseEntity<Object>
      */
     @PutMapping("/{id}")
-    public ResponseEntity<Object> updateUser(@PathVariable UUID id, @Valid @RequestBody UserRequest userRequest) {
+    public ResponseEntity<Object> updateUser(@PathVariable UUID id, @Valid @RequestBody UserRequestDTO userRequest) {
         User user = userRepository.findById(id)
                 .orElseThrow(() -> new ResourceNotFoundException("User not found with id: " + id));
 
@@ -121,7 +122,7 @@ public class UserController {
     /**
      * Helper method to map DTO fields to the User entity
      */
-    private void mapDtoToEntity(User user, UserRequest userRequest) {
+    private void mapDtoToEntity(User user, UserRequestDTO userRequest) {
         user.setFirstName(userRequest.getFirstName());
         user.setMiddleName(userRequest.getMiddleName());
         user.setLastName(userRequest.getLastName());

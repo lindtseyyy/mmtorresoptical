@@ -1,11 +1,10 @@
 package com.mmtorresoptical.OpticalClinicManagementSystem.controller;
 
-import com.mmtorresoptical.OpticalClinicManagementSystem.dto.ProductRequest;
+import com.mmtorresoptical.OpticalClinicManagementSystem.dto.ProductRequestDTO;
 import com.mmtorresoptical.OpticalClinicManagementSystem.exception.ResourceNotFoundException;
 import com.mmtorresoptical.OpticalClinicManagementSystem.model.Product;
 import com.mmtorresoptical.OpticalClinicManagementSystem.repository.ProductRepository;
 import jakarta.validation.Valid;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
@@ -17,15 +16,18 @@ import java.util.UUID;
 @RequestMapping("/api/products")
 public class ProductController {
 
-    @Autowired
-    private ProductRepository productRepository;
+    private final ProductRepository productRepository;
+
+    ProductController(ProductRepository productRepository) {
+        this.productRepository = productRepository;
+    }
 
     /**
      * CREATE a new product
      * (Called from AddProduct.tsx)
      */
     @PostMapping
-    public ResponseEntity<Product> createProduct(@Valid @RequestBody ProductRequest productRequest) {
+    public ResponseEntity<Product> createProduct(@Valid @RequestBody ProductRequestDTO productRequest) {
         // 1. Create new Product entity from DTO
         Product product = new Product();
         product.setProductName(productRequest.getProductName());
@@ -76,7 +78,7 @@ public class ProductController {
      * (Called from EditProduct.tsx)
      */
     @PutMapping("/{id}")
-    public ResponseEntity<Product> updateProduct(@PathVariable UUID id, @Valid @RequestBody ProductRequest productRequest) {
+    public ResponseEntity<Product> updateProduct(@PathVariable UUID id, @Valid @RequestBody ProductRequestDTO productRequest) {
         // 1. Find the existing product
         Product product = productRepository.findById(id)
                 .orElseThrow(() -> new ResourceNotFoundException("Product not found with id: " + id));
