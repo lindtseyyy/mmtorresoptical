@@ -72,4 +72,7 @@ public class Patient {
     @OneToMany(mappedBy = "patient")
     private Set<Prescription> prescriptions;
 
+    @OneToMany(mappedBy = "patient")
+    private Set<HealthHistory> healthHistory;
+
 }
