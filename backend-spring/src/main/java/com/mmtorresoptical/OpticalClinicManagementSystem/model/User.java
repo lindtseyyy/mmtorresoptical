@@ -50,4 +50,7 @@ public class User {
 
     @OneToOne(mappedBy = "user")
     private Prescription prescription;
+
+    @OneToOne(mappedBy = "user")
+    private HealthHistory healthHistory;
 }
