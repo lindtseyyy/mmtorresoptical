@@ -47,4 +47,7 @@ public class User {
     private OffsetDateTime createdAt = OffsetDateTime.now();
 
     private Boolean isArchived = false;
+
+    @OneToOne(mappedBy = "user")
+    private Prescription prescription;
 }
