@@ -4,6 +4,7 @@ import jakarta.persistence.*;
 import lombok.Data;
 import java.time.LocalDate;
 import java.time.OffsetDateTime;
+import java.util.List;
 import java.util.UUID;
 
 @Data
@@ -53,4 +54,7 @@ public class User {
 
     @OneToOne(mappedBy = "user")
     private HealthHistory healthHistory;
+
+    @OneToMany(mappedBy = "user")
+    private List<AuditLog> auditLogs;
 }
