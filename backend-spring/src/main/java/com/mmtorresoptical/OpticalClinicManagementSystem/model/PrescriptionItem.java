@@ -1,5 +1,9 @@
 package com.mmtorresoptical.OpticalClinicManagementSystem.model;
 
+import com.mmtorresoptical.OpticalClinicManagementSystem.enums.CorrectionType;
+import com.mmtorresoptical.OpticalClinicManagementSystem.enums.EyeSide;
+import com.mmtorresoptical.OpticalClinicManagementSystem.enums.FollowUpStatus;
+import com.mmtorresoptical.OpticalClinicManagementSystem.enums.LensType;
 import jakarta.persistence.*;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
@@ -19,13 +23,15 @@ public class PrescriptionItem {
     @Column(name = "prescription_item_id", updatable = false, nullable = false)
     private UUID prescriptionItemId;
 
+    @Enumerated(EnumType.STRING)
     @NotBlank
     @Column(name = "correction_type", length = 50)
-    private String correctionType;
+    private CorrectionType correctionType;
 
+    @Enumerated(EnumType.STRING)
     @NotBlank
     @Column(name = "eye_side", length = 10)
-    private String eyeSide; // LEFT / RIGHT / BOTH
+    private EyeSide eyeSide; // LEFT / RIGHT / BOTH
 
     // Optical values (decimal precision important) (optional)
     @Column(name = "sph", precision = 5, scale = 2)
@@ -44,8 +50,9 @@ public class PrescriptionItem {
     private BigDecimal pd;
 
     // Lens / frame details (optional)
+    @Enumerated(EnumType.STRING)
     @Column(name = "lens_type", length = 50)
-    private String lensType;
+    private LensType lensType;
 
     @Column(name = "frame_type_preference", length = 100)
     private String frameTypePreference;
@@ -78,8 +85,9 @@ public class PrescriptionItem {
     @Column(name = "follow_up_reason", columnDefinition = "TEXT")
     private String followUpReason;
 
+    @Enumerated(EnumType.STRING)
     @Column(name = "follow_up_status", length = 50)
-    private String followUpStatus;
+    private FollowUpStatus followUpStatus;
 
     // Notes
     @Column(name = "notes", columnDefinition = "TEXT")
