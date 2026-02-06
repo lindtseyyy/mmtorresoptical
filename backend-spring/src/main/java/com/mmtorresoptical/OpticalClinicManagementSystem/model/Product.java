@@ -4,6 +4,7 @@ import jakarta.persistence.*;
 import lombok.Data;
 import java.math.BigDecimal;
 import java.time.OffsetDateTime;
+import java.util.List;
 import java.util.UUID;
 
 @Data
@@ -41,4 +42,9 @@ public class Product {
     private OffsetDateTime dateAdded = OffsetDateTime.now();
 
     private Boolean isArchived = false;
+
+    //Relationships
+    @OneToMany(mappedBy = "product",
+            cascade = CascadeType.ALL)
+    private List<TransactionItem> transactionItems;
 }

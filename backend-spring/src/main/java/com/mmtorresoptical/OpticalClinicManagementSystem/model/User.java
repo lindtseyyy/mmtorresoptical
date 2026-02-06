@@ -1,5 +1,6 @@
 package com.mmtorresoptical.OpticalClinicManagementSystem.model;
 
+import com.mmtorresoptical.OpticalClinicManagementSystem.enums.Role;
 import jakarta.persistence.*;
 import lombok.Data;
 import java.time.LocalDate;
@@ -42,8 +43,9 @@ public class User {
     @Column(nullable = false)
     private String contactNumber;
 
+    @Enumerated(EnumType.STRING)
     @Column(nullable = false)
-    private String role; // "Admin" or "Staff"
+    private Role role; // "Admin" or "Staff"
 
     @Column(updatable = false)
     private OffsetDateTime createdAt = OffsetDateTime.now();
