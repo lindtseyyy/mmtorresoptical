@@ -9,6 +9,7 @@ import org.hibernate.annotations.CreationTimestamp;
 
 import java.time.LocalDate;
 import java.time.LocalDateTime;
+import java.util.List;
 import java.util.Set;
 import java.util.UUID;
 
@@ -75,4 +76,6 @@ public class Patient {
     @OneToMany(mappedBy = "patient")
     private Set<HealthHistory> healthHistory;
 
+    @OneToMany(mappedBy = "patient")
+    private List<Transaction> transactions;
 }

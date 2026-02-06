@@ -57,4 +57,7 @@ public class User {
 
     @OneToMany(mappedBy = "user")
     private List<AuditLog> auditLogs;
+
+    @OneToMany(mappedBy = "user")
+    private List<Transaction> transactions;
 }
