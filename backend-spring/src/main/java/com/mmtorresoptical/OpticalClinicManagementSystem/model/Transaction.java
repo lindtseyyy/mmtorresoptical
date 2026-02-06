@@ -45,10 +45,12 @@ public class Transaction {
     @Column(name = "cash_tender", precision = 10, scale = 2)
     private BigDecimal cashTender;
 
+    // Foreign Key — user (user_id)
     @ManyToOne
     @JoinColumn(name = "user_id", nullable = false)
     private User user;
 
+    // Foreign Key — patient (patient_id)
     @ManyToOne
     @JoinColumn(name = "patient_id", nullable = false)
     private Patient patient;
