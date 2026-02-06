@@ -8,6 +8,7 @@ import org.hibernate.annotations.CreationTimestamp;
 
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
+import java.util.List;
 import java.util.UUID;
 
 @Entity
@@ -29,6 +30,7 @@ public class Transaction {
     @Column(name = "total_amount", nullable = false, precision = 10, scale = 2)
     private BigDecimal totalAmount;
 
+    @Enumerated(EnumType.STRING)
     @NotNull
     @Column(name = "payment_type", nullable = false)
     private PaymentType paymentType;
@@ -45,6 +47,8 @@ public class Transaction {
     @Column(name = "cash_tender", precision = 10, scale = 2)
     private BigDecimal cashTender;
 
+
+    // Relationship
     // Foreign Key — user (user_id)
     @ManyToOne
     @JoinColumn(name = "user_id", nullable = false)
@@ -55,5 +59,8 @@ public class Transaction {
     @JoinColumn(name = "patient_id", nullable = false)
     private Patient patient;
 
+    @OneToMany(mappedBy = "transaction",
+            cascade = CascadeType.ALL)
+    private List<TransactionItem> transactionItems;
 }
 
