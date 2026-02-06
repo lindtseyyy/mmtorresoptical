@@ -8,7 +8,7 @@ spring:
     driver-class-name: org.postgresql.Driver
   jpa:
     hibernate:
-      ddl-auto: create-only
+      ddl-auto: create
     database: postgresql
     show-sql: true
 
@@ -16,5 +16,9 @@ app:
   jwt:
     secret: BTQ9bfbqfRzRNU9Gvj+nyUDZyKoCyPxvCdvmaJvYLUnIdnE6trUb+qmSSsLfwKur
     expiration-ms: 86400000 # 24 hours
+
 server:
   port: 8080
+
+encryption:
+  secret-key: 291b7360afa9fd8ffdd058d50a139221cee7305bd17ad6a00cfcf3e2f7e18f84
