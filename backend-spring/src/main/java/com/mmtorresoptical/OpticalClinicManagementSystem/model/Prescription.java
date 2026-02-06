@@ -7,6 +7,7 @@ import org.hibernate.annotations.CreationTimestamp;
 
 import java.time.LocalDate;
 import java.time.LocalDateTime;
+import java.util.List;
 import java.util.UUID;
 
 @Entity
@@ -33,12 +34,16 @@ public class Prescription {
     @Column(name = "is_archived", nullable = false)
     private Boolean archived = false;
 
-    @OneToOne
+    // Relationships
+    @ManyToOne
     @JoinColumn(name = "created_by", nullable = false)
     private User user;
 
     @ManyToOne
     @JoinColumn(name = "patient_id", nullable = false)
     private Patient patient;
+
+    @OneToMany(mappedBy =  "prescription")
+    private List<PrescriptionItem> prescriptionItems;
 
 }

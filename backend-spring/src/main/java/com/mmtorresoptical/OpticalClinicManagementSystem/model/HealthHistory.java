@@ -57,7 +57,7 @@ public class HealthHistory {
     @Column(name = "is_archived", nullable = false)
     private Boolean archived = false;
 
-    @OneToOne
+    @ManyToOne
     @JoinColumn(name = "created_by", nullable = false)
     private User user;
 

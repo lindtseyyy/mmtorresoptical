@@ -70,6 +70,7 @@ public class Patient {
     @Column(name = "created_at", nullable = false, updatable = false)
     private LocalDateTime createdAt;
 
+    // Relationships
     @OneToMany(mappedBy = "patient")
     private Set<Prescription> prescriptions;
 

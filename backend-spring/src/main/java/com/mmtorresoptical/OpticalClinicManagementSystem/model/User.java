@@ -5,6 +5,7 @@ import lombok.Data;
 import java.time.LocalDate;
 import java.time.OffsetDateTime;
 import java.util.List;
+import java.util.Set;
 import java.util.UUID;
 
 @Data
@@ -49,15 +50,20 @@ public class User {
 
     private Boolean isArchived = false;
 
-    @OneToOne(mappedBy = "user")
-    private Prescription prescription;
+    // Relationships
+    @OneToMany(mappedBy = "user")
+    private Set<Prescription> prescription;
 
-    @OneToOne(mappedBy = "user")
-    private HealthHistory healthHistory;
+    @OneToMany(mappedBy = "user")
+    private Set<PrescriptionItem> prescriptionItems;
+
+    @OneToMany(mappedBy = "user")
+    private Set<HealthHistory> healthHistory;
 
     @OneToMany(mappedBy = "user")
     private List<AuditLog> auditLogs;
 
     @OneToMany(mappedBy = "user")
     private List<Transaction> transactions;
+
 }
