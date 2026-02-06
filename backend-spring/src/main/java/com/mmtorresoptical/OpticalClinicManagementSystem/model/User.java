@@ -1,5 +1,6 @@
 package com.mmtorresoptical.OpticalClinicManagementSystem.model;
 
+import com.mmtorresoptical.OpticalClinicManagementSystem.enums.Gender;
 import com.mmtorresoptical.OpticalClinicManagementSystem.enums.Role;
 import jakarta.persistence.*;
 import lombok.Data;
@@ -32,7 +33,7 @@ public class User {
     private String lastName;
 
     @Column(nullable = false)
-    private String gender;
+    private Gender gender;
 
     @Column(nullable = false)
     private LocalDate birthDate;

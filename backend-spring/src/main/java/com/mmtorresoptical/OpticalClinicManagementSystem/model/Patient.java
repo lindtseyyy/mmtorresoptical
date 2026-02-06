@@ -1,5 +1,6 @@
 package com.mmtorresoptical.OpticalClinicManagementSystem.model;
 
+import com.mmtorresoptical.OpticalClinicManagementSystem.enums.Gender;
 import jakarta.persistence.*;
 import jakarta.validation.constraints.Email;
 import jakarta.validation.constraints.NotNull;
@@ -41,7 +42,7 @@ public class Patient {
     @Size(max = 10)
     @NotNull
     @Column(name = "gender", nullable = false, length = 10)
-    private String gender;
+    private Gender gender;
 
     @Size(max = 15)
     @NotNull
