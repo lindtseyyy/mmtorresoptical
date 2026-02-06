@@ -1,6 +1,8 @@
 package com.mmtorresoptical.OpticalClinicManagementSystem.controller;
 
 import com.mmtorresoptical.OpticalClinicManagementSystem.dto.UserRequestDTO;
+import com.mmtorresoptical.OpticalClinicManagementSystem.enums.Gender;
+import com.mmtorresoptical.OpticalClinicManagementSystem.enums.Role;
 import com.mmtorresoptical.OpticalClinicManagementSystem.exception.ResourceNotFoundException;
 import com.mmtorresoptical.OpticalClinicManagementSystem.model.User;
 import com.mmtorresoptical.OpticalClinicManagementSystem.repository.UserRepository;
@@ -126,12 +128,12 @@ public class UserController {
         user.setFirstName(userRequest.getFirstName());
         user.setMiddleName(userRequest.getMiddleName());
         user.setLastName(userRequest.getLastName());
-        user.setGender(userRequest.getGender());
+        user.setGender(Gender.valueOf(userRequest.getGender()));
         user.setBirthDate(userRequest.getBirthDate());
         user.setEmail(userRequest.getEmail());
         user.setContactNumber(userRequest.getContactNumber());
         user.setUsername(userRequest.getUsername());
-        user.setRole(userRequest.getRole());
+        user.setRole(Role.valueOf(userRequest.getRole()));
         user.setIsArchived(userRequest.getIsArchived());
     }
 }
