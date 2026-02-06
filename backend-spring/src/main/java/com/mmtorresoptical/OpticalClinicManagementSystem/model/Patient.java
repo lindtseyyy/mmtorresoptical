@@ -39,6 +39,7 @@ public class Patient {
     @Column(name = "last_name", nullable = false, length = 50)
     private String lastName;
 
+    @Enumerated(EnumType.STRING)
     @Size(max = 10)
     @NotNull
     @Column(name = "gender", nullable = false, length = 10)
