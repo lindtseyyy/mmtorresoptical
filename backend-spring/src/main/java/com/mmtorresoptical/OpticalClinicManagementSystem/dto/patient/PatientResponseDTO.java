@@ -1,7 +1,6 @@
 package com.mmtorresoptical.OpticalClinicManagementSystem.dto.patient;
 
 import lombok.Data;
-import org.springframework.boot.convert.DataSizeUnit;
 
 import java.time.LocalDate;
 import java.time.LocalDateTime;
