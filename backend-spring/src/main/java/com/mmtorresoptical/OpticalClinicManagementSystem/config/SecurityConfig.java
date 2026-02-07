@@ -4,11 +4,6 @@ import com.mmtorresoptical.OpticalClinicManagementSystem.repository.UserReposito
 import com.mmtorresoptical.OpticalClinicManagementSystem.security.JwtAuthenticationFilter;
 import com.mmtorresoptical.OpticalClinicManagementSystem.security.JwtTokenProvider;
 import com.mmtorresoptical.OpticalClinicManagementSystem.service.CustomUserDetailsService.CustomUserDetailsService;
-import io.jsonwebtoken.io.IOException;
-import jakarta.servlet.FilterChain;
-import jakarta.servlet.ServletException;
-import jakarta.servlet.http.HttpServletRequest;
-import jakarta.servlet.http.HttpServletResponse;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
@@ -22,7 +17,6 @@ import org.springframework.security.web.authentication.UsernamePasswordAuthentic
 import org.springframework.web.cors.CorsConfiguration;
 import org.springframework.web.cors.CorsConfigurationSource;
 import org.springframework.web.cors.UrlBasedCorsConfigurationSource;
-import org.springframework.web.filter.OncePerRequestFilter;
 
 import java.util.Arrays;
 
