@@ -1,5 +1,6 @@
 package com.mmtorresoptical.OpticalClinicManagementSystem.security;
 
+import com.mmtorresoptical.OpticalClinicManagementSystem.config.EncryptionConfig;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 
@@ -18,13 +19,9 @@ public class AesEncryptionService {
     private static final int IV_LENGTH = 12;      // Recommended for GCM
     private static final int TAG_LENGTH = 128;    // Authentication tag
 
-    @Value("${encryption.secret-key}")
-    private String secretKey;
-
-    public void printKey() {
-        System.out.println("Secret key: " + secretKey);
+    private String getKey() {
+        return EncryptionConfig.SECRET_KEY;
     }
-
     // ---------------- ENCRYPT ----------------
     public String encrypt(String plainText) {
 
@@ -39,7 +36,7 @@ public class AesEncryptionService {
             // Convert HEX → byte array
             // Wrap it as AES key object
             SecretKeySpec keySpec =
-                    new SecretKeySpec(hexStringToByteArray(secretKey), ALGORITHM);
+                    new SecretKeySpec(hexStringToByteArray(getKey()), ALGORITHM);
 
             // Use this IV
             // Use 128-bit security tag
@@ -89,7 +86,7 @@ public class AesEncryptionService {
             Cipher cipher = Cipher.getInstance(TRANSFORMATION);
 
             SecretKeySpec keySpec =
-                    new SecretKeySpec(hexStringToByteArray(secretKey), ALGORITHM);
+                    new SecretKeySpec(hexStringToByteArray(getKey()), ALGORITHM);
 
             GCMParameterSpec gcmSpec =
                     new GCMParameterSpec(TAG_LENGTH, iv);
