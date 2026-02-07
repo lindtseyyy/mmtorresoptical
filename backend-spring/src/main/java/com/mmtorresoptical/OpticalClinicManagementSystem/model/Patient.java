@@ -1,5 +1,6 @@
 package com.mmtorresoptical.OpticalClinicManagementSystem.model;
 
+import com.mmtorresoptical.OpticalClinicManagementSystem.converter.AesEncryptionConverter;
 import com.mmtorresoptical.OpticalClinicManagementSystem.enums.Gender;
 import jakarta.persistence.*;
 import jakarta.validation.constraints.Email;
@@ -24,45 +25,50 @@ public class Patient {
     @Column(name = "patient_id")
     private UUID patientId;
 
+    @Convert(converter = AesEncryptionConverter.class)
     @Size(max = 50)
     @NotNull
-    @Column(name = "first_name", nullable = false, length = 50)
+    @Column(name = "first_name", nullable = false, length = 50, columnDefinition = "TEXT")
     private String firstName;
 
+    @Convert(converter = AesEncryptionConverter.class)
     @Size(max = 50)
     @NotNull
-    @Column(name = "middle_name", nullable = false, length = 50)
+    @Column(name = "middle_name", nullable = false, length = 50, columnDefinition = "TEXT")
     private String middleName;
 
+    @Convert(converter = AesEncryptionConverter.class)
     @Size(max = 50)
     @NotNull
-    @Column(name = "last_name", nullable = false, length = 50)
+    @Column(name = "last_name", nullable = false, length = 50, columnDefinition = "TEXT")
     private String lastName;
 
     @Enumerated(EnumType.STRING)
-    @Size(max = 10)
     @NotNull
     @Column(name = "gender", nullable = false, length = 10)
     private Gender gender;
 
+    @Convert(converter = AesEncryptionConverter.class)
     @Size(max = 15)
     @NotNull
-    @Column(name = "contact_number", nullable = false, length = 15)
+    @Column(name = "contact_number", nullable = false, length = 15, columnDefinition = "TEXT")
     private String contactNumber;
 
+    @Convert(converter = AesEncryptionConverter.class)
     @Email
     @Size(max = 100)
     @NotNull
-    @Column(name = "email", nullable = false, length = 100, unique = true)
+    @Column(name = "email", nullable = false, length = 100, unique = true, columnDefinition = "TEXT")
     private String email;
 
     @NotNull
     @Column(name = "birth_date", nullable = false)
     private LocalDate birthDate;
 
+    @Convert(converter = AesEncryptionConverter.class)
     @Size(max = 255)
     @NotNull
-    @Column(name = "address", nullable = false)
+    @Column(name = "address", nullable = false, columnDefinition = "TEXT")
     private String address;
 
     @Column(name = "is_archived", nullable = false)
