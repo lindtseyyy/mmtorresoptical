@@ -1,5 +1,7 @@
 package com.mmtorresoptical.OpticalClinicManagementSystem.config;
 
+import com.mmtorresoptical.OpticalClinicManagementSystem.enums.Gender;
+import com.mmtorresoptical.OpticalClinicManagementSystem.enums.Role;
 import com.mmtorresoptical.OpticalClinicManagementSystem.model.User;
 import com.mmtorresoptical.OpticalClinicManagementSystem.repository.UserRepository;
 import org.springframework.boot.CommandLineRunner;
@@ -32,14 +34,14 @@ public class DataSeeder implements CommandLineRunner {
             adminUser.setUsername("admin");
             // IMPORTANT: Store the HASHED password
             adminUser.setPasswordHash(passwordEncoder.encode("admin123"));
-            adminUser.setRole("Admin");
+            adminUser.setRole(Role.ADMIN);
 
             // Set required personal information
             adminUser.setFirstName("Admin");
             adminUser.setLastName("Account");
             adminUser.setEmail("admin@mmtorres.com");
             adminUser.setContactNumber("0000000000"); // Placeholder
-            adminUser.setGender("Other"); // Placeholder
+            adminUser.setGender(Gender.OTHERS); // Placeholder
             adminUser.setBirthDate(LocalDate.of(1990, 1, 1)); // Placeholder
 
             // Set other fields
