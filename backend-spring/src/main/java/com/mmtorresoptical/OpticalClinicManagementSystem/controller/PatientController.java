@@ -49,7 +49,6 @@ public class PatientController {
         patient.setFirstNameHash(firstNameHash);
         patient.setMiddleNameHash(middleNameHash);
         patient.setLastNameHash(lastNameHash);
-        System.out.println("First Name Hash: " + patient.getFirstNameHash());
 
         patient.setGender(Gender.valueOf(patientRequest.getGender()));
         patient.setContactNumber(patientRequest.getContactNumber());
@@ -58,16 +57,14 @@ public class PatientController {
         patient.setAddress(patientRequest.getAddress());
 
         Patient savedPatient = patientRepository.save(patient);
-        System.out.println(savedPatient.getFirstName());
 
         PatientResponseDTO response = mapper.toResponse(savedPatient);
-        System.out.println(response.getFirstName());
 
         return ResponseEntity.status(HttpStatus.CREATED).body(response);
     }
 
     /**
-     * READ all non-archived users
+     * READ all non-archived patients
      */
     @GetMapping
     public ResponseEntity<List<Patient>> getAllPatients() {
