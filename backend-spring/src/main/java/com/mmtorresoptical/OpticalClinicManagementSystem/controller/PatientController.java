@@ -1,5 +1,6 @@
 package com.mmtorresoptical.OpticalClinicManagementSystem.controller;
 
+import com.mmtorresoptical.OpticalClinicManagementSystem.dto.UserRequestDTO;
 import com.mmtorresoptical.OpticalClinicManagementSystem.dto.patient.PatientRequestDTO;
 import com.mmtorresoptical.OpticalClinicManagementSystem.dto.patient.PatientResponseDTO;
 import com.mmtorresoptical.OpticalClinicManagementSystem.enums.Gender;
@@ -85,6 +86,20 @@ public class PatientController {
                 .orElseThrow(() -> new ResourceNotFoundException("Patient not found with id: " + id));
 
         return ResponseEntity.ok(retrievedPatient);
+    }
+
+    /**
+     * ARCHIVE a patient (Soft Delete)
+     */
+    @DeleteMapping("/{id}")
+    public ResponseEntity<Void> archiveUser(@PathVariable UUID id) {
+        Patient retrievedPatient = patientRepository.findById(id)
+                .orElseThrow(() -> new ResourceNotFoundException("Patient not found with id: " + id));
+
+        retrievedPatient.setIsArchived(true);
+        patientRepository.save(retrievedPatient);
+
+        return ResponseEntity.noContent().build();
     }
 
     private boolean patientExists(
