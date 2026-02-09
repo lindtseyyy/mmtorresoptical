@@ -3,8 +3,10 @@ package com.mmtorresoptical.OpticalClinicManagementSystem.controller;
 import com.mmtorresoptical.OpticalClinicManagementSystem.dto.patient.PatientRequestDTO;
 import com.mmtorresoptical.OpticalClinicManagementSystem.dto.patient.PatientResponseDTO;
 import com.mmtorresoptical.OpticalClinicManagementSystem.enums.Gender;
+import com.mmtorresoptical.OpticalClinicManagementSystem.exception.ResourceNotFoundException;
 import com.mmtorresoptical.OpticalClinicManagementSystem.mapper.PatientMapper;
 import com.mmtorresoptical.OpticalClinicManagementSystem.model.Patient;
+import com.mmtorresoptical.OpticalClinicManagementSystem.model.User;
 import com.mmtorresoptical.OpticalClinicManagementSystem.repository.PatientRepository;
 import com.mmtorresoptical.OpticalClinicManagementSystem.security.HmacHashService;
 import jakarta.validation.Valid;
@@ -13,6 +15,7 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
+import java.util.UUID;
 
 @RestController
 @RequestMapping("/api/patients")
@@ -71,6 +74,17 @@ public class PatientController {
         List<Patient> retrievedPatients = patientRepository.findAllByIsArchivedFalse();
 
         return ResponseEntity.ok(retrievedPatients);
+    }
+
+    /**
+     * READ a single patient by ID
+     */
+    @GetMapping("/{id}")
+    public ResponseEntity<Patient> getUserById(@PathVariable UUID id) {
+        Patient retrievedPatient = patientRepository.findById(id)
+                .orElseThrow(() -> new ResourceNotFoundException("Patient not found with id: " + id));
+
+        return ResponseEntity.ok(retrievedPatient);
     }
 
     private boolean patientExists(
