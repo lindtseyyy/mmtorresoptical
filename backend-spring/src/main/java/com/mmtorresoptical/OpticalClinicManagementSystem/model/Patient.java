@@ -43,6 +43,19 @@ public class Patient {
     @Column(name = "last_name", nullable = false, length = 50, columnDefinition = "TEXT")
     private String lastName;
 
+    // Hashed Value of Firstname, Middlename, Lastname
+    @NotNull
+    @Column(name = "first_name_hash", nullable = false, columnDefinition = "TEXT")
+    private String firstNameHash;
+
+    @NotNull
+    @Column(name = "middle_name_hash", nullable = false, columnDefinition = "TEXT")
+    private String middleNameHash;
+
+    @NotNull
+    @Column(name = "last_name_hash", nullable = false, columnDefinition = "TEXT")
+    private String lastNameHash;
+
     @Enumerated(EnumType.STRING)
     @NotNull
     @Column(name = "gender", nullable = false, length = 10)
