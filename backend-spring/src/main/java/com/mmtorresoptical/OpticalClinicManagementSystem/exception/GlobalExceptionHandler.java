@@ -12,6 +12,7 @@ import java.util.Map;
 @RestControllerAdvice
 public class GlobalExceptionHandler {
 
+    // For handling exceptions that violates NotValid annotation
     @ExceptionHandler(MethodArgumentNotValidException.class)
     public ResponseEntity<Object> handleValidation(
             MethodArgumentNotValidException ex) {
@@ -28,6 +29,16 @@ public class GlobalExceptionHandler {
         return ResponseEntity
                 .status(HttpStatus.BAD_REQUEST)
                 .body(errors);
+    }
+
+    // Custom not found exception
+    @ExceptionHandler(ResourceNotFoundException.class)
+    public ResponseEntity<Object> handlePatientExists(
+            ResourceNotFoundException ex) {
+
+        return ResponseEntity
+                .status(HttpStatus.CONFLICT)
+                .body(ex.getMessage());
     }
 }
 
