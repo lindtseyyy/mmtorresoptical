@@ -55,7 +55,7 @@ public class HealthHistory {
     private LocalDateTime createdAt;
 
     @Column(name = "is_archived", nullable = false)
-    private Boolean archived = false;
+    private Boolean isArchived = false;
 
     @ManyToOne
     @JoinColumn(name = "created_by", nullable = false)
