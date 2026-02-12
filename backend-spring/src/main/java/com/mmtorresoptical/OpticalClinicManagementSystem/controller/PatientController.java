@@ -1,5 +1,6 @@
 package com.mmtorresoptical.OpticalClinicManagementSystem.controller;
 
+import com.mmtorresoptical.OpticalClinicManagementSystem.dto.patient.PatientDetailsDTO;
 import com.mmtorresoptical.OpticalClinicManagementSystem.dto.patient.PatientRequestDTO;
 import com.mmtorresoptical.OpticalClinicManagementSystem.dto.patient.PatientResponseDTO;
 import com.mmtorresoptical.OpticalClinicManagementSystem.enums.Gender;
@@ -71,10 +72,12 @@ public class PatientController {
      * READ all non-archived patients
      */
     @GetMapping
-    public ResponseEntity<List<Patient>> getAllPatients() {
+    public ResponseEntity<List<PatientDetailsDTO>> getAllPatients() {
         List<Patient> retrievedPatients = patientRepository.findAllByIsArchivedFalse();
 
-        return ResponseEntity.ok(retrievedPatients);
+        List<PatientDetailsDTO> patientDetailsDTOS = retrievedPatients.stream().map(mapper::toDetails).toList();
+
+        return ResponseEntity.ok(patientDetailsDTOS);
     }
 
     /**
