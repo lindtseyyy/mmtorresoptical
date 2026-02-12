@@ -149,4 +149,24 @@ public class PatientController {
         );
     }
 
+    private String generateFullNameSortable(
+            String firstName,
+            String middleName,
+            String lastName
+    ) {
+        if (firstName == null || lastName == null) {
+            return null;
+        }
+
+        String fullName =
+                firstName + " " +
+                        (middleName != null ? middleName : "") + " " +
+                        lastName;
+
+        return fullName
+                .trim()
+                .replaceAll("\\s+", " ")
+                .toUpperCase();
+    }
+
 }
