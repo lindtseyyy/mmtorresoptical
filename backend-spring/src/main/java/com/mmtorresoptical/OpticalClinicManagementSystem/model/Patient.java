@@ -91,6 +91,10 @@ public class Patient {
     @Column(name = "created_at", nullable = false, updatable = false)
     private LocalDateTime createdAt;
 
+    @NotNull
+    @Column(name = "full_name_sortable", nullable = false, updatable = false)
+    private String fullNameSortable;
+
     // Relationships
     @OneToMany(mappedBy = "patient")
     private Set<Prescription> prescriptions;
