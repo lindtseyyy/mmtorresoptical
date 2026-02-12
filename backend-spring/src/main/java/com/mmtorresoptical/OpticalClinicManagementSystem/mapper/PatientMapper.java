@@ -16,6 +16,10 @@ public interface PatientMapper {
     )
     PatientResponseDTO toResponse(Patient patient);
 
+    @Mapping(
+            target = "gender",
+            expression = "java(patient.getGender().name())"
+    )
     PatientDetailsDTO toDetails(Patient patient);
 
     Patient dtoToPatient(PatientRequestDTO patientRequest);
