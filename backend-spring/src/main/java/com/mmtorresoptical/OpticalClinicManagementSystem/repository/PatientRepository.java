@@ -12,6 +12,8 @@ public interface PatientRepository extends JpaRepository<Patient, UUID> {
     // For finding patients
     Page<Patient> findAllByIsArchivedFalse(Pageable pageable);
 
+    Page<Patient> findAllByFullNameSortableContainingIgnoreCase(String keyword, Pageable pageable);
+
     Optional<Patient> findPatientByFirstNameAndMiddleNameAndLastName(String firstName, String middleName,String lastName);
     Optional<Patient> findPatientByEmail(String email);
 
