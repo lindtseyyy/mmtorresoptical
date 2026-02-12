@@ -159,6 +159,21 @@ public class PatientController {
         );
     }
 
+    @GetMapping("/search")
+    public ResponseEntity<Page<PatientDetailsDTO>> searchPatients (
+            @RequestParam String keyword,
+            @RequestParam(defaultValue = "0") int page,
+            @RequestParam(defaultValue = "10") int size
+    ) {
+        Pageable pageable = PageRequest.of(page, size);
+
+        Page<Patient> patientPage = patientRepository.findAllByFullNameSortableContainingIgnoreCase(keyword, pageable);
+
+        Page<PatientDetailsDTO> patientDetailsDTOPage = patientPage.map(mapper::toDetails);
+
+        return ResponseEntity.ok(patientDetailsDTOPage);
+    }
+
     private String generateFullNameSortable(
             String firstName,
             String middleName,
