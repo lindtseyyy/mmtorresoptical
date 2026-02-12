@@ -58,6 +58,8 @@ public class PatientController {
         patient.setBirthDate(patientRequest.getBirthDate());
         patient.setAddress(patientRequest.getAddress());
 
+        patient.setFullNameSortable(generateFullNameSortable(patient.getFirstName(),patient.getMiddleName(), patient.getLastName()));
+
         Patient savedPatient = patientRepository.save(patient);
 
         PatientResponseDTO response = mapper.toResponse(savedPatient);
@@ -84,6 +86,36 @@ public class PatientController {
                 .orElseThrow(() -> new ResourceNotFoundException("Patient not found with id: " + id));
 
         return ResponseEntity.ok(retrievedPatient);
+    }
+
+    /**
+     * UPDATE an existing patient
+     */
+    @PutMapping("/{id}")
+    public ResponseEntity<Object> updateUser(@PathVariable UUID id, @Valid @RequestBody PatientRequestDTO patientRequest) {
+        Patient retrievedPatient = patientRepository.findById(id)
+                .orElseThrow(() -> new ResourceNotFoundException("Patient not found with id: " + id));
+
+        String patientRequestFullName = hmacHashService.hash(patientRequest.getFirstName()) + hmacHashService.hash(patientRequest.getMiddleName()) + hmacHashService.hash(patientRequest.getLastName());
+        String retrievedPatientFullName = retrievedPatient.getFirstName() + retrievedPatient.getMiddleName() + retrievedPatient.getLastName();
+        // Check for conflicts
+        if (!retrievedPatientFullName.equals(patientRequestFullName) && patientRepository.findPatientByFirstNameAndMiddleNameAndLastName(patientRequest.getFirstName(), patientRequest.getMiddleName(), patientRequest.getLastName()).isPresent()) {
+            return ResponseEntity.status(HttpStatus.CONFLICT).body("Name is already taken");
+        }
+
+        // Check for conflicts
+        if (!retrievedPatient.getEmail().equals(patientRequest.getEmail()) && patientRepository.findPatientByEmail(retrievedPatient.getEmail()).isPresent()) {
+            return ResponseEntity.status(HttpStatus.CONFLICT).body("Email is already in use");
+        }
+
+        retrievedPatient = mapper.dtoToPatient(patientRequest);
+
+        retrievedPatient.setFirstNameHash(retrievedPatient.getFirstName());
+        retrievedPatient.setMiddleNameHash(retrievedPatient.getMiddleName());
+        retrievedPatient.setLastNameHash(retrievedPatient.getLastName());
+
+        Patient updatedPatient = patientRepository.save(retrievedPatient);
+        return ResponseEntity.ok(updatedPatient);
     }
 
     /**
