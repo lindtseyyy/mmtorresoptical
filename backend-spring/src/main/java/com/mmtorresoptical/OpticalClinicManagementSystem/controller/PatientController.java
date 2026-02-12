@@ -10,11 +10,14 @@ import com.mmtorresoptical.OpticalClinicManagementSystem.model.Patient;
 import com.mmtorresoptical.OpticalClinicManagementSystem.repository.PatientRepository;
 import com.mmtorresoptical.OpticalClinicManagementSystem.security.HmacHashService;
 import jakarta.validation.Valid;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.Sort;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
-import java.util.List;
 import java.util.UUID;
 
 @RestController
@@ -72,10 +75,14 @@ public class PatientController {
      * READ all non-archived patients
      */
     @GetMapping
-    public ResponseEntity<List<PatientDetailsDTO>> getAllPatients() {
-        List<Patient> retrievedPatients = patientRepository.findAllByIsArchivedFalse();
+    public ResponseEntity<Page<PatientDetailsDTO>> getAllPatients(@RequestParam(defaultValue = "0") int page,
+                                                        @RequestParam(defaultValue = "10") int size,
+                                                        @RequestParam(defaultValue = "fullNameSortable") String sortBy) {
+        Pageable pageable = PageRequest.of(page, size, Sort.by(sortBy).ascending());
 
-        List<PatientDetailsDTO> patientDetailsDTOS = retrievedPatients.stream().map(mapper::toDetails).toList();
+        Page<Patient> retrievedPatients = patientRepository.findAllByIsArchivedFalse(pageable);
+
+        Page<PatientDetailsDTO> patientDetailsDTOS = retrievedPatients.map(mapper::toDetails);
 
         return ResponseEntity.ok(patientDetailsDTOS);
     }
