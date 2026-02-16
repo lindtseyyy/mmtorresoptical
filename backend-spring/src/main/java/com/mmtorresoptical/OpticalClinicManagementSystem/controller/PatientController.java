@@ -296,16 +296,33 @@ public class PatientController {
         return ResponseEntity.noContent().build();
     }
 
+    /**
+     * Searches patients using a keyword.
+     *
+     * This endpoint:
+     * - Performs a case-insensitive search on patient names
+     * - Matches against the sortable full name field
+     * - Supports pagination
+     * - Returns detailed patient information
+     *
+     * @param keyword the search term used to match patient names
+     * @param page the page number (default = 0)
+     * @param size the number of records per page (default = 10)
+     * @return ResponseEntity containing a page of PatientDetailsDTO
+     */
     @GetMapping("/search")
     public ResponseEntity<Page<PatientDetailsDTO>> searchPatients (
             @RequestParam String keyword,
             @RequestParam(defaultValue = "0") int page,
             @RequestParam(defaultValue = "10") int size
     ) {
+        // Configure pagination
         Pageable pageable = PageRequest.of(page, size);
 
+        // Perform keyword search (case-insensitive)
         Page<Patient> patientPage = patientRepository.findAllByFullNameSortableContainingIgnoreCase(keyword, pageable);
 
+        // Map entities to detailed DTO responses
         Page<PatientDetailsDTO> patientDetailsDTOPage = patientPage.map(mapper::entityToDetailedResponse);
 
         return ResponseEntity.ok(patientDetailsDTOPage);
