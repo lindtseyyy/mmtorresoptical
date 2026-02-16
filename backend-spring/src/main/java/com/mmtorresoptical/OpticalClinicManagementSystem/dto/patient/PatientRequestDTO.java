@@ -37,5 +37,7 @@ public class PatientRequestDTO {
     @NotBlank(message = "Address is required")
     @Size(max = 255)
     private String address;
+
+    private Boolean isArchived = false;
 }
 
