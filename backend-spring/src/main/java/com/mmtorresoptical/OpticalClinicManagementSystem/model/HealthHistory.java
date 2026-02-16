@@ -26,31 +26,24 @@ public class HealthHistory {
     @Column(name = "exam_date", nullable = false)
     private LocalDate examDate;
 
-    @NotBlank
     @Column(name = "eye_conditions", columnDefinition = "TEXT")
     private String eyeConditions;
 
-    @NotBlank
     @Column(name = "systemic_conditions", columnDefinition = "TEXT")
     private String systemicConditions;
 
-    @NotBlank
     @Column(name = "medications", columnDefinition = "TEXT")
     private String medications;
 
-    @NotBlank
     @Column(name = "allergies", columnDefinition = "TEXT")
     private String allergies;
 
-    @NotBlank
     @Column(name = "visual_acuity_right", length = 20)
     private String visualAcuityRight;
 
-    @NotBlank
     @Column(name = "visual_acuity_left", length = 20)
     private String visualAcuityLeft;
 
-    @NotBlank
     @Column(name = "notes", columnDefinition = "TEXT")
     private String notes;
 
