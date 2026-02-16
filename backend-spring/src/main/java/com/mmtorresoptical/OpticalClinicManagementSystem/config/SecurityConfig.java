@@ -70,6 +70,12 @@ public class SecurityConfig {
                 .sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
                 .authorizeHttpRequests(authz -> authz
                         .requestMatchers("/api/auth/**").permitAll()
+
+                        // Admin Only
+                        .requestMatchers("/api/admin/**").hasRole("ADMIN")
+
+                        // Staff + Admin
+                        .requestMatchers("/api/**").hasAnyRole("ADMIN", "STAFF")
                         .anyRequest().authenticated()
                 )
                 // Add our JWT filter before the standard authentication filter
