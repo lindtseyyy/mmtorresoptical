@@ -75,6 +75,10 @@ public class Patient {
     private String email;
 
     @NotNull
+    @Column(name = "email_hash", nullable = false, columnDefinition = "TEXT")
+    private String emailHash;
+
+    @NotNull
     @Column(name = "birth_date", nullable = false)
     private LocalDate birthDate;
 
