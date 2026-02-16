@@ -267,14 +267,30 @@ public class PatientController {
     }
 
     /**
-     * ARCHIVE a patient (Soft Delete)
+     * Archives a patient record by ID.
+     *
+     * This endpoint performs a soft delete by:
+     * - Retrieving the patient record
+     * - Marking it as archived
+     * - Persisting the update
+     *
+     * The record remains in the database but is excluded
+     * from active queries.
+     *
+     * @param id the unique identifier of the patient
+     * @return ResponseEntity with no content
      */
+
     @DeleteMapping("/{id}")
-    public ResponseEntity<Void> archiveUser(@PathVariable UUID id) {
+    public ResponseEntity<Void> archivePatient(@PathVariable UUID id) {
+        // Retrieve patient or throw exception if not found
         Patient retrievedPatient = patientRepository.findById(id)
                 .orElseThrow(() -> new ResourceNotFoundException("Patient not found with id: " + id));
 
+        // Mark patient as archived (soft delete)
         retrievedPatient.setIsArchived(true);
+
+        // Persist archive update
         patientRepository.save(retrievedPatient);
 
         return ResponseEntity.noContent().build();
