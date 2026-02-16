@@ -1,5 +1,6 @@
 package com.mmtorresoptical.OpticalClinicManagementSystem.controller;
 
+import com.mmtorresoptical.OpticalClinicManagementSystem.dto.healthhistory.HealthHistoryDetailsDTO;
 import com.mmtorresoptical.OpticalClinicManagementSystem.dto.healthhistory.HealthHistoryRequestDTO;
 import com.mmtorresoptical.OpticalClinicManagementSystem.dto.healthhistory.HealthHistoryResponseDTO;
 import com.mmtorresoptical.OpticalClinicManagementSystem.dto.user.UserDTO;
@@ -14,6 +15,10 @@ import com.mmtorresoptical.OpticalClinicManagementSystem.repository.PatientRepos
 import com.mmtorresoptical.OpticalClinicManagementSystem.repository.UserRepository;
 import com.mmtorresoptical.OpticalClinicManagementSystem.security.CustomUserDetails;
 import jakarta.validation.Valid;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.Sort;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
@@ -30,18 +35,18 @@ public class HealthHistoryController {
     private final HealthHistoryRepository healthHistoryRepository;
     private final UserRepository userRepository;
     private final PatientRepository patientRepository;
-    private final HealthHistoryMapper mapper;
+    private final HealthHistoryMapper healthHistoryMapper;
     private final UserMapper userMapper;
 
     HealthHistoryController(HealthHistoryRepository healthHistoryRepository,
                             UserRepository userRepository,
                             PatientRepository patientRepository,
-                            HealthHistoryMapper mapper,
+                            HealthHistoryMapper healthHistoryMapper,
                             UserMapper userMapper) {
         this.healthHistoryRepository = healthHistoryRepository;
         this.userRepository = userRepository;
         this.patientRepository = patientRepository;
-        this.mapper = mapper;
+        this.healthHistoryMapper = healthHistoryMapper;
         this.userMapper = userMapper;
     }
 
@@ -82,7 +87,7 @@ public class HealthHistoryController {
 
         HealthHistory savedHistory = healthHistoryRepository.save(healthHistory);
 
-        HealthHistoryResponseDTO response = mapper.historyToResponseDTO(savedHistory);
+        HealthHistoryResponseDTO response = healthHistoryMapper.historyToResponseDTO(savedHistory);
 
         // Setting the createdBy
         UserDTO userDTO = userMapper.entityToDTO(retrievedUser);
@@ -90,6 +95,58 @@ public class HealthHistoryController {
 
         return ResponseEntity.status(HttpStatus.CREATED).body(response);
     }
+
+    /**
+     * Retrieves paginated and sorted health history records
+     * for a specific patient.
+     *
+     * This endpoint:
+     * - Filters records by patient ID
+     * - Excludes archived health histories
+     * - Supports pagination
+     * - Supports sorting by specified fields
+     * - Maps entities to detailed response DTOs
+     *
+     * Accessible only by users with ADMIN role.
+     *
+     * @param patientId the unique identifier of the patient
+     * @param page the page number (default = 0)
+     * @param size the number of records per page (default = 10)
+     * @param sortBy the field used for sorting (default = examDate)
+     * @param sortOrder the sorting direction: ascending or descending (default = descending)
+     * @return ResponseEntity containing a page of HealthHistoryDetailsDTO
+     */
+    @PreAuthorize("hasRole('ADMIN')")
+    @GetMapping("/{patientId}")
+    public ResponseEntity<Page<HealthHistoryDetailsDTO>> getAllPatientHealthHistories(@PathVariable UUID patientId,
+                                                                               @RequestParam(defaultValue = "0") int page,
+                                                                          @RequestParam(defaultValue = "10") int size,
+                                                                          @RequestParam(defaultValue = "examDate") String sortBy,
+                                                                          @RequestParam(defaultValue = "descending") String sortOrder) {
+
+        // Determine sorting direction from request parameter
+        Sort.Direction direction;
+
+        try {
+            direction = Sort.Direction.fromString(sortOrder);
+        } catch (IllegalArgumentException ex) {
+            // Default to descending if invalid input
+            direction = Sort.Direction.DESC;
+        }
+
+        // Create pageable configuration with sorting
+        Pageable pageable = PageRequest.of(page, size, Sort.by(direction, sortBy));
+
+        // Retrieve non-archived health histories for the patient
+        Page<HealthHistory> healthHistories = healthHistoryRepository.findAllByIsArchivedFalseAndPatient_PatientId(patientId, pageable);
+
+        // Map entities to detailed DTO responses
+        Page<HealthHistoryDetailsDTO> healthHistoryDetailsDTOS = healthHistories.map(healthHistoryMapper::historyToDetailsDTO);
+
+        return ResponseEntity.ok(healthHistoryDetailsDTOS);
+    }
+
+
 
 
 
