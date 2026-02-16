@@ -18,4 +18,5 @@ public interface PatientRepository extends JpaRepository<Patient, UUID> {
     Optional<Patient> findPatientByEmail(String email);
 
     Boolean existsByFirstNameHashAndMiddleNameHashAndLastNameHash(String firstNameHash, String middleNameHash,String lastNameHash);
+    Boolean existsByEmailHash(String emailHash);
 }
