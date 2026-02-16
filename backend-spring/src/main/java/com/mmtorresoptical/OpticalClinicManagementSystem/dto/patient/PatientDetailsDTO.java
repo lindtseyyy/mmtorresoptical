@@ -1,6 +1,6 @@
 package com.mmtorresoptical.OpticalClinicManagementSystem.dto.patient;
 
-import com.mmtorresoptical.OpticalClinicManagementSystem.model.HealthHistory;
+import com.mmtorresoptical.OpticalClinicManagementSystem.dto.healthhistory.HealthHistoryDetailsDTO;
 import com.mmtorresoptical.OpticalClinicManagementSystem.model.Prescription;
 import com.mmtorresoptical.OpticalClinicManagementSystem.model.Transaction;
 import lombok.Data;
@@ -27,6 +27,6 @@ public class PatientDetailsDTO {
 
     // Foreign keys / Child data
     private Set<Prescription> prescriptions;
-    private Set<HealthHistory> healthHistory;
+    private Set<HealthHistoryDetailsDTO> healthHistory;
     private List<Transaction> transactions;
 }
