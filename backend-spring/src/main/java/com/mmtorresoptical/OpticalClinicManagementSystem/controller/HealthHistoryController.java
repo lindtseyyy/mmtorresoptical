@@ -117,7 +117,7 @@ public class HealthHistoryController {
      * @return ResponseEntity containing a page of HealthHistoryDetailsDTO
      */
     @PreAuthorize("hasRole('ADMIN')")
-    @GetMapping("/{patientId}")
+    @GetMapping("/patient/{patientId}")
     public ResponseEntity<Page<HealthHistoryDetailsDTO>> getAllPatientHealthHistories(@PathVariable UUID patientId,
                                                                                @RequestParam(defaultValue = "0") int page,
                                                                           @RequestParam(defaultValue = "10") int size,
@@ -146,6 +146,31 @@ public class HealthHistoryController {
         return ResponseEntity.ok(healthHistoryDetailsDTOS);
     }
 
+    /**
+     * Retrieves detailed information for a specific health history record by ID.
+     *
+     * This endpoint:
+     * - Finds the health history using the provided ID
+     * - Throws an exception if the record does not exist
+     * - Maps the entity to a detailed response DTO
+     *
+     * Accessible only by users with ADMIN role.
+     *
+     * @param id the unique identifier of the health history record
+     * @return ResponseEntity containing HealthHistoryDetailsDTO
+     */
+    @PreAuthorize("hasRole('ADMIN')")
+    @GetMapping("/{id}")
+    public ResponseEntity<HealthHistoryDetailsDTO> getPatientHealthHistory(@PathVariable UUID id) {
+        // Retrieve health history or throw exception if not found
+        HealthHistory retrievedHealthHistory = healthHistoryRepository.findById(id)
+                .orElseThrow(() -> new ResourceNotFoundException("Health History not found with id: " + id));
+
+        // Map entity to detailed response DTO
+        HealthHistoryDetailsDTO healthHistoryDetailsDTO = healthHistoryMapper.historyToDetailsDTO(retrievedHealthHistory);
+
+        return ResponseEntity.ok(healthHistoryDetailsDTO);
+    }
 
 
 
