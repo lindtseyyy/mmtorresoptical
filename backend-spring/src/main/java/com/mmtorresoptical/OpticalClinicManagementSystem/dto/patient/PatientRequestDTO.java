@@ -12,7 +12,6 @@ public class PatientRequestDTO {
     @Size(max = 50)
     private String firstName;
 
-    @NotBlank(message = "Middle name is required")
     @Size(max = 50)
     private String middleName;
 
