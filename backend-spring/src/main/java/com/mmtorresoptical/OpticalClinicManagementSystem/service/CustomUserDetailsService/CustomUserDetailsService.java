@@ -2,6 +2,7 @@ package com.mmtorresoptical.OpticalClinicManagementSystem.service.CustomUserDeta
 
 import com.mmtorresoptical.OpticalClinicManagementSystem.model.User;
 import com.mmtorresoptical.OpticalClinicManagementSystem.repository.UserRepository;
+import com.mmtorresoptical.OpticalClinicManagementSystem.security.CustomUserDetails;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.core.userdetails.UserDetailsService;
 import org.springframework.security.core.userdetails.UsernameNotFoundException;
@@ -23,10 +24,6 @@ public class CustomUserDetailsService implements UserDetailsService {
         User user = userRepository.findByUsername(username)
                 .orElseThrow(() -> new UsernameNotFoundException("User '" + username + "' not found"));
 
-        return new org.springframework.security.core.userdetails.User(
-                user.getUsername(),
-                user.getPasswordHash(),
-                Collections.emptyList() // or roles/authorities
-        );
+        return new CustomUserDetails(user);
     }
 }
