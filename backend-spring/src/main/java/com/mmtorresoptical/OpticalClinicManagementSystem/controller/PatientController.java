@@ -112,37 +112,65 @@ public class PatientController {
     }
 
     /**
-     * READ all non-archived patients
+     * Retrieves a paginated and sorted list of all non-archived patients.
+     *
+     * This endpoint:
+     * - Filters out archived patient records
+     * - Supports pagination (page, size)
+     * - Supports sorting by a specified field
+     * - Maps patient entities to detailed response DTOs
+     *
+     * @param page the page number (default = 0)
+     * @param size the number of records per page (default = 10)
+     * @param sortBy the field used for sorting (default = fullNameSortable)
+     * @return ResponseEntity containing a page of PatientDetailsDTO
      */
     @GetMapping
     public ResponseEntity<Page<PatientDetailsDTO>> getAllPatients(@RequestParam(defaultValue = "0") int page,
                                                         @RequestParam(defaultValue = "10") int size,
                                                         @RequestParam(defaultValue = "fullNameSortable") String sortBy) {
+        // Create pageable configuration with sorting
         Pageable pageable = PageRequest.of(page, size, Sort.by(sortBy).ascending());
 
+        // Retrieve non-archived patients
         Page<Patient> retrievedPatients = patientRepository.findAllByIsArchivedFalse(pageable);
 
+        // Map entities to detailed DTO responses
         Page<PatientDetailsDTO> patientDetailsDTOS = retrievedPatients.map(mapper::entityToDetailedResponse);
 
         return ResponseEntity.ok(patientDetailsDTOS);
     }
 
     /**
-     * READ a single patient by ID
+     * Retrieves detailed information for a specific patient by ID.
+     *
+     * This endpoint:
+     * - Finds the patient using the provided ID
+     * - Throws an exception if the patient does not exist
+     * - Maps the patient entity to a detailed response DTO
+     * - Includes associated health history records
+     *
+     * @param id the unique identifier of the patient
+     * @return ResponseEntity containing PatientDetailsDTO
      */
+
     @GetMapping("/{id}")
-    public ResponseEntity<PatientDetailsDTO> getUserById(@PathVariable UUID id) {
+    public ResponseEntity<PatientDetailsDTO> getPatientById(@PathVariable UUID id) {
+        // Retrieve patient or throw exception if not found
         Patient retrievedPatient = patientRepository.findById(id)
                 .orElseThrow(() -> new ResourceNotFoundException("Patient not found with id: " + id));
 
+        // Map patient entity to detailed DTO
         PatientDetailsDTO responseDetails = mapper.entityToDetailedResponse(retrievedPatient);
 
+        // Map associated health history records
         Set<HealthHistoryDetailsDTO> historyDTOs =
                 retrievedPatient.getHealthHistory()
                         .stream()
                         .map(healthHistoryMapper::historyToDetailsDTO)
                         .collect(Collectors.toSet());
 
+        // Attach health history to response
         responseDetails.setHealthHistory(historyDTOs);
 
         return ResponseEntity.ok(responseDetails);
