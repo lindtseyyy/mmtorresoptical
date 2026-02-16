@@ -41,8 +41,20 @@ public class PatientController {
     }
 
     /**
-     * CREATE a new patient
+     * Creates a new patient record.
+     *
+     * This method:
+     * - Validates if the patient name already exists
+     * - Validates if the email is already registered
+     * - Hashes sensitive data (name and email)
+     * - Maps request data to the Patient entity
+     * - Saves the patient record to the database
+     * - Returns the created patient as a response DTO
+     *
+     * @param patientRequest the request payload containing patient information
+     * @return ResponseEntity containing the created PatientResponseDTO
      */
+
     @PostMapping
     public ResponseEntity<Object> createPatient(@Valid @RequestBody PatientRequestDTO patientRequest) {
 
@@ -56,11 +68,12 @@ public class PatientController {
 
         Patient patient = new Patient();
 
-        // Setting the names
+        // Set patient names
         patient.setFirstName(patientRequest.getFirstName());
         patient.setMiddleName(patientRequest.getMiddleName());
         patient.setLastName(patientRequest.getLastName());
 
+        // Generate HMAC hashes for sensitive name fields
         String firstNameHash = hmacHashService.hash(patientRequest.getFirstName());
         String middleNameHash = hmacHashService.hash(patientRequest.getMiddleName());
         String lastNameHash = hmacHashService.hash(patientRequest.getLastName());
@@ -69,30 +82,30 @@ public class PatientController {
         patient.setMiddleNameHash(middleNameHash);
         patient.setLastNameHash(lastNameHash);
 
-        // Setting gender
+        // Set patient gender
         patient.setGender(Gender.valueOf(patientRequest.getGender()));
 
-        // Setting contact number
+        // Set contact information
         patient.setContactNumber(patientRequest.getContactNumber());
 
-        // Setting email
+        // Set email and generate its hash
         patient.setEmail(patientRequest.getEmail());
         String emailHash = hmacHashService.hash(patientRequest.getEmail());
         patient.setEmailHash(emailHash);
 
-        // Setting birthdate
+        // Set birth date
         patient.setBirthDate(patientRequest.getBirthDate());
 
-        // Setting address
+        // Set patient address
         patient.setAddress(patientRequest.getAddress());
 
-        // Setting full name sortable
+        // Generate sortable full name for indexing/search
         patient.setFullNameSortable(generateFullNameSortable(patient.getFirstName(),patient.getMiddleName(), patient.getLastName()));
 
-        // Saving the patient
+        // Persist patient record
         Patient savedPatient = patientRepository.save(patient);
 
-        // Mapping the patient entity to responseDTO
+        // Map entity to response DTO
         PatientResponseDTO response = mapper.entityToResponse(savedPatient);
 
         return ResponseEntity.status(HttpStatus.CREATED).body(response);
