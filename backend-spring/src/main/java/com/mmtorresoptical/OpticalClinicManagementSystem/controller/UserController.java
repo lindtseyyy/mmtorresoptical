@@ -1,6 +1,6 @@
 package com.mmtorresoptical.OpticalClinicManagementSystem.controller;
 
-import com.mmtorresoptical.OpticalClinicManagementSystem.dto.UserRequestDTO;
+import com.mmtorresoptical.OpticalClinicManagementSystem.dto.user.UserRequestDTO;
 import com.mmtorresoptical.OpticalClinicManagementSystem.enums.Gender;
 import com.mmtorresoptical.OpticalClinicManagementSystem.enums.Role;
 import com.mmtorresoptical.OpticalClinicManagementSystem.exception.ResourceNotFoundException;
