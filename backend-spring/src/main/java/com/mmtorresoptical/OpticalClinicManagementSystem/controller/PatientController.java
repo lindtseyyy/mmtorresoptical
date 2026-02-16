@@ -297,6 +297,35 @@ public class PatientController {
     }
 
     /**
+     * Restores an archived patient record by ID.
+     *
+     * This endpoint:
+     * - Retrieves the patient record
+     * - Marks it as active (unarchived)
+     * - Persists the update
+     *
+     * Used to reverse a soft delete operation and make
+     * the patient visible again in active records.
+     *
+     * @param id the unique identifier of the patient
+     * @return ResponseEntity with no content
+     */
+    @PutMapping("/restore/{id}")
+    public ResponseEntity<Void> restorePatient(@PathVariable UUID id) {
+        // Retrieve patient or throw exception if not found
+        Patient retrievedPatient = patientRepository.findById(id)
+                .orElseThrow(() -> new ResourceNotFoundException("Patient not found with id: " + id));
+
+        // Mark patient as unarchived
+        retrievedPatient.setIsArchived(false);
+
+        // Persist unarchive update
+        patientRepository.save(retrievedPatient);
+
+        return ResponseEntity.noContent().build();
+    }
+
+    /**
      * Searches patients using a keyword.
      *
      * This endpoint:
