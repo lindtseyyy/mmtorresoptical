@@ -362,6 +362,18 @@ public class PatientController {
         );
     }
 
+    /**
+     * Determines whether a patient record already exists
+     * based on the provided email address.
+     *
+     * This method:
+     * - Hashes the email using HMAC
+     * - Queries the database using the hashed value
+     * - Prevents exposure of raw email data
+     *
+     * @param email the patient's email address
+     * @return true if a matching patient exists; false otherwise
+     */
     private boolean patientExistsByEmail(
             String email
     ) {
