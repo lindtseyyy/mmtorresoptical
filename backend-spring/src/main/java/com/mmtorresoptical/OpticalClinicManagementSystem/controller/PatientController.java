@@ -31,13 +31,13 @@ import java.util.stream.Collectors;
 public class PatientController {
 
     private final PatientRepository patientRepository;
-    private final PatientMapper mapper;
+    private final PatientMapper patientMapper;
     private final HealthHistoryMapper healthHistoryMapper;
     private final HmacHashService hmacHashService;
 
-    PatientController(PatientRepository patientRepository, PatientMapper mapper, HealthHistoryMapper healthHistoryMapper, HmacHashService hmacHashService) {
+    PatientController(PatientRepository patientRepository, PatientMapper patientMapper, HealthHistoryMapper healthHistoryMapper, HmacHashService hmacHashService) {
         this.patientRepository = patientRepository;
-        this.mapper = mapper;
+        this.patientMapper = patientMapper;
         this.healthHistoryMapper = healthHistoryMapper;
         this.hmacHashService = hmacHashService;
     }
@@ -112,7 +112,7 @@ public class PatientController {
         Patient savedPatient = patientRepository.save(patient);
 
         // Map entity to response DTO
-        PatientResponseDTO response = mapper.entityToResponse(savedPatient);
+        PatientResponseDTO response = patientMapper.entityToResponse(savedPatient);
 
         return ResponseEntity.status(HttpStatus.CREATED).body(response);
     }
@@ -142,7 +142,7 @@ public class PatientController {
         Page<Patient> retrievedPatients = patientRepository.findAllByIsArchivedFalse(pageable);
 
         // Map entities to detailed DTO responses
-        Page<PatientDetailsDTO> patientDetailsDTOS = retrievedPatients.map(mapper::entityToDetailedResponse);
+        Page<PatientDetailsDTO> patientDetailsDTOS = retrievedPatients.map(patientMapper::entityToDetailedResponse);
 
         return ResponseEntity.ok(patientDetailsDTOS);
     }
@@ -166,7 +166,7 @@ public class PatientController {
                 .orElseThrow(() -> new ResourceNotFoundException("Patient not found with id: " + id));
 
         // Map patient entity to detailed DTO
-        PatientDetailsDTO responseDetails = mapper.entityToDetailedResponse(retrievedPatient);
+        PatientDetailsDTO responseDetails = patientMapper.entityToDetailedResponse(retrievedPatient);
 
         // Map associated health history records
         Set<HealthHistoryDetailsDTO> historyDTOs =
@@ -257,11 +257,11 @@ public class PatientController {
         /* -----------------------------
            Apply updates to entity
         ----------------------------- */
-        mapper.updatePatientFromDto(patientRequest, retrievedPatient);
+        patientMapper.updatePatientFromDto(patientRequest, retrievedPatient);
 
         Patient updatedPatient = patientRepository.save(retrievedPatient);
 
-        PatientResponseDTO response = mapper.entityToResponse(updatedPatient);
+        PatientResponseDTO response = patientMapper.entityToResponse(updatedPatient);
 
         return ResponseEntity.ok(response);
     }
@@ -323,7 +323,7 @@ public class PatientController {
         Page<Patient> patientPage = patientRepository.findAllByFullNameSortableContainingIgnoreCase(keyword, pageable);
 
         // Map entities to detailed DTO responses
-        Page<PatientDetailsDTO> patientDetailsDTOPage = patientPage.map(mapper::entityToDetailedResponse);
+        Page<PatientDetailsDTO> patientDetailsDTOPage = patientPage.map(patientMapper::entityToDetailedResponse);
 
         return ResponseEntity.ok(patientDetailsDTOPage);
     }
