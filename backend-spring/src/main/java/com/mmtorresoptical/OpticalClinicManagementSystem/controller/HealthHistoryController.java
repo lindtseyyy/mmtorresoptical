@@ -91,6 +91,21 @@ public class HealthHistoryController {
         return ResponseEntity.status(HttpStatus.CREATED).body(response);
     }
 
+
+
+    /**
+     * Constructs a HealthHistory entity using the provided request DTO.
+     *
+     * This method:
+     * - Maps health history fields from the request
+     * - Sets the associated patient
+     * - Sets the user who created the record
+     *
+     * @param healthHistoryRequestDTO the request data containing health history details
+     * @param retrievedPatient the patient linked to this health history
+     * @param retrievedUser the user who created the record
+     * @return a populated HealthHistory entity ready for saving
+     */
     private static HealthHistory getHealthHistory(HealthHistoryRequestDTO healthHistoryRequestDTO, Patient retrievedPatient, User retrievedUser) {
         HealthHistory healthHistory = new HealthHistory();
         // Setting the relationship
