@@ -33,8 +33,7 @@ public class Patient {
 
     @Convert(converter = AesEncryptionConverter.class)
     @Size(max = 50)
-    @NotNull
-    @Column(name = "middle_name", nullable = false, length = 50, columnDefinition = "TEXT")
+    @Column(name = "middle_name", length = 50, columnDefinition = "TEXT")
     private String middleName;
 
     @Convert(converter = AesEncryptionConverter.class)
@@ -48,8 +47,7 @@ public class Patient {
     @Column(name = "first_name_hash", nullable = false, columnDefinition = "TEXT")
     private String firstNameHash;
 
-    @NotNull
-    @Column(name = "middle_name_hash", nullable = false, columnDefinition = "TEXT")
+    @Column(name = "middle_name_hash", columnDefinition = "TEXT")
     private String middleNameHash;
 
     @NotNull
