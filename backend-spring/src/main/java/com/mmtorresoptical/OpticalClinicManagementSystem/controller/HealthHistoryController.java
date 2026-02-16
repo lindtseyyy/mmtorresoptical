@@ -1,8 +1,9 @@
 package com.mmtorresoptical.OpticalClinicManagementSystem.controller;
 
+import com.mmtorresoptical.OpticalClinicManagementSystem.dto.healthhistory.CreateHealthHistoryRequestDTO;
 import com.mmtorresoptical.OpticalClinicManagementSystem.dto.healthhistory.HealthHistoryDetailsDTO;
-import com.mmtorresoptical.OpticalClinicManagementSystem.dto.healthhistory.HealthHistoryRequestDTO;
 import com.mmtorresoptical.OpticalClinicManagementSystem.dto.healthhistory.HealthHistoryResponseDTO;
+import com.mmtorresoptical.OpticalClinicManagementSystem.dto.healthhistory.UpdateHealthHistoryRequestDTO;
 import com.mmtorresoptical.OpticalClinicManagementSystem.dto.user.UserDTO;
 import com.mmtorresoptical.OpticalClinicManagementSystem.exception.ResourceNotFoundException;
 import com.mmtorresoptical.OpticalClinicManagementSystem.mapper.HealthHistoryMapper;
@@ -61,16 +62,16 @@ public class HealthHistoryController {
      *
      * Accessible only by users with ADMIN role.
      *
-     * @param healthHistoryRequestDTO the request payload containing health history details
+     * @param createHealthHistoryRequestDTO the request payload containing health history details
      * @return ResponseEntity containing the created HealthHistoryResponseDTO
      */
     @PreAuthorize("hasRole('ADMIN')")
     @PostMapping
-    public ResponseEntity<HealthHistoryResponseDTO> createHealthHistory(@Valid @RequestBody HealthHistoryRequestDTO healthHistoryRequestDTO) {
+    public ResponseEntity<HealthHistoryResponseDTO> createHealthHistory(@Valid @RequestBody CreateHealthHistoryRequestDTO createHealthHistoryRequestDTO) {
 
         // Retrieve the patient
         Patient retrievedPatient = patientRepository.findById(
-                healthHistoryRequestDTO.getPatientId()
+                createHealthHistoryRequestDTO.getPatientId()
         ).orElseThrow(() ->
                 new ResourceNotFoundException("Patient not found")
         );
@@ -83,7 +84,7 @@ public class HealthHistoryController {
                 new ResourceNotFoundException("User not found")
         );
 
-        HealthHistory healthHistory = getHealthHistory(healthHistoryRequestDTO, retrievedPatient, retrievedUser);
+        HealthHistory healthHistory = getHealthHistory(createHealthHistoryRequestDTO, retrievedPatient, retrievedUser);
 
         HealthHistory savedHistory = healthHistoryRepository.save(healthHistory);
 
@@ -172,8 +173,41 @@ public class HealthHistoryController {
         return ResponseEntity.ok(healthHistoryDetailsDTO);
     }
 
+    /**
+     * Updates an existing health history record by ID.
+     *
+     * This endpoint:
+     * - Retrieves the health history record
+     * - Applies updates from the request DTO
+     * - Persists the updated record
+     * - Returns the updated details
+     *
+     * Accessible only by users with ADMIN role.
+     *
+     * @param id the unique identifier of the health history record
+     * @param updateHealthHistoryRequestDTO the request payload containing updated health history details
+     * @return ResponseEntity containing HealthHistoryDetailsDTO
+     */
+    @PreAuthorize("hasRole('ADMIN')")
+    @PutMapping("/{id}")
+    public ResponseEntity<HealthHistoryDetailsDTO> updateHealthHistory(@PathVariable UUID id,
+                                                                           @Valid @RequestBody UpdateHealthHistoryRequestDTO updateHealthHistoryRequestDTO) {
 
+        // Retrieve health history or throw exception if not found
+        HealthHistory retrievedHealthHistory = healthHistoryRepository.findById(id)
+                .orElseThrow(() -> new ResourceNotFoundException("Health History not found with id: " + id));
 
+        // Apply updates from DTO to entity
+        healthHistoryMapper.updateHistoryFromDTO(updateHealthHistoryRequestDTO, retrievedHealthHistory);
+
+        // Apply updates from DTO to entity
+        HealthHistory updatedHealthHistory = healthHistoryRepository.save(retrievedHealthHistory);
+
+        // Map entity to detailed response DTO
+        HealthHistoryDetailsDTO healthHistoryDetailsDTO = healthHistoryMapper.historyToDetailsDTO(updatedHealthHistory);
+
+        return ResponseEntity.ok(healthHistoryDetailsDTO);
+    }
 
     /**
      * Constructs a HealthHistory entity using the provided request DTO.
@@ -183,26 +217,27 @@ public class HealthHistoryController {
      * - Sets the associated patient
      * - Sets the user who created the record
      *
-     * @param healthHistoryRequestDTO the request data containing health history details
+     * @param createHealthHistoryRequestDTO the request data containing health history details
      * @param retrievedPatient the patient linked to this health history
      * @param retrievedUser the user who created the record
      * @return a populated HealthHistory entity ready for saving
      */
-    private static HealthHistory getHealthHistory(HealthHistoryRequestDTO healthHistoryRequestDTO, Patient retrievedPatient, User retrievedUser) {
+    private static HealthHistory getHealthHistory(CreateHealthHistoryRequestDTO createHealthHistoryRequestDTO, Patient retrievedPatient, User retrievedUser) {
         HealthHistory healthHistory = new HealthHistory();
         // Setting the relationship
         healthHistory.setPatient(retrievedPatient);
         healthHistory.setUser(retrievedUser);
 
         // Setting the health history fields
-        healthHistory.setExamDate(healthHistoryRequestDTO.getExamDate());
-        healthHistory.setEyeConditions(healthHistoryRequestDTO.getEyeConditions());
-        healthHistory.setSystemicConditions(healthHistoryRequestDTO.getSystemicConditions());
-        healthHistory.setMedications(healthHistoryRequestDTO.getMedications());
-        healthHistory.setAllergies(healthHistoryRequestDTO.getAllergies());
-        healthHistory.setVisualAcuityLeft(healthHistoryRequestDTO.getVisualAcuityLeft());
-        healthHistory.setVisualAcuityRight(healthHistoryRequestDTO.getVisualAcuityRight());
-        healthHistory.setNotes(healthHistoryRequestDTO.getNotes());
+        healthHistory.setExamDate(createHealthHistoryRequestDTO.getExamDate());
+        healthHistory.setEyeConditions(createHealthHistoryRequestDTO.getEyeConditions());
+        healthHistory.setSystemicConditions(createHealthHistoryRequestDTO.getSystemicConditions());
+        healthHistory.setMedications(createHealthHistoryRequestDTO.getMedications());
+        healthHistory.setAllergies(createHealthHistoryRequestDTO.getAllergies());
+        healthHistory.setVisualAcuityLeft(createHealthHistoryRequestDTO.getVisualAcuityLeft());
+        healthHistory.setVisualAcuityRight(createHealthHistoryRequestDTO.getVisualAcuityRight());
+        healthHistory.setNotes(createHealthHistoryRequestDTO.getNotes());
+        healthHistory.setIsArchived(createHealthHistoryRequestDTO.getIsArchived());
         return healthHistory;
     }
 }
