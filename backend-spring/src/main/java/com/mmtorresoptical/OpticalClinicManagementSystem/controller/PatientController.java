@@ -20,6 +20,8 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
+import java.util.Objects;
+import java.util.Optional;
 import java.util.Set;
 import java.util.UUID;
 import java.util.stream.Collectors;
@@ -75,7 +77,11 @@ public class PatientController {
 
         // Generate HMAC hashes for sensitive name fields
         String firstNameHash = hmacHashService.hash(patientRequest.getFirstName());
-        String middleNameHash = hmacHashService.hash(patientRequest.getMiddleName());
+        String middleNameHash = Optional.ofNullable(patientRequest.getMiddleName())
+                .filter(name -> !name.isBlank())
+                .map(hmacHashService::hash)
+                .orElse(null);
+
         String lastNameHash = hmacHashService.hash(patientRequest.getLastName());
 
         patient.setFirstNameHash(firstNameHash);
@@ -153,7 +159,6 @@ public class PatientController {
      * @param id the unique identifier of the patient
      * @return ResponseEntity containing PatientDetailsDTO
      */
-
     @GetMapping("/{id}")
     public ResponseEntity<PatientDetailsDTO> getPatientById(@PathVariable UUID id) {
         // Retrieve patient or throw exception if not found
@@ -177,38 +182,68 @@ public class PatientController {
     }
 
     /**
-     * UPDATE an existing patient
+     * Updates an existing patient record by ID.
+     *
+     * This endpoint:
+     * - Retrieves the patient by ID
+     * - Validates name uniqueness if modified
+     * - Validates email uniqueness if modified
+     * - Recomputes hashed sensitive fields when needed
+     * - Updates patient information
+     * - Returns the updated patient record
+     *
+     * @param id the unique identifier of the patient
+     * @param patientRequest the request payload containing updated patient details
+     * @return ResponseEntity containing the updated PatientResponseDTO
      */
     @PutMapping("/{id}")
-    public ResponseEntity<Object> updateUser(@PathVariable UUID id, @Valid @RequestBody PatientRequestDTO patientRequest) {
+    public ResponseEntity<Object> updatePatient(@PathVariable UUID id, @Valid @RequestBody PatientRequestDTO patientRequest) {
+
+        // Retrieve patient or throw exception if not found
         Patient retrievedPatient = patientRepository.findById(id)
                 .orElseThrow(() -> new ResourceNotFoundException("Patient not found with id: " + id));
 
 
-        // CHECK NAME CONFLICT
-        String patientRequestFullName = patientRequest.getFirstName() + patientRequest.getMiddleName() + patientRequest.getLastName();
-        // The retrieved names here are hashed
-        String retrievedPatientFullName = retrievedPatient.getFirstName() + retrievedPatient.getMiddleName() + retrievedPatient.getLastName();
+        /* -----------------------------
+           Normalize input values
+        ----------------------------- */
+        String first = patientRequest.getFirstName();
+        String middle = Optional.ofNullable(patientRequest.getMiddleName()).orElse("");
+        String last = patientRequest.getLastName();
 
-        // Check for conflicts
-        if (!retrievedPatientFullName.equals(patientRequestFullName)) {
+        /* -----------------------------
+           Validate name uniqueness
+        ----------------------------- */
+        boolean nameChanged =
+                !retrievedPatient.getFirstName().equals(first) ||
+                        !Objects.equals(retrievedPatient.getMiddleName(), middle)
+                        ||
+                        !retrievedPatient.getLastName().equals(last);
 
-            boolean isNameExisting = patientExistsByFirstMiddleLastName(patientRequest.getFirstName(), patientRequest.getMiddleName(), patientRequest.getLastName());
+        if (nameChanged) {
+
+            boolean isNameExisting = patientExistsByFirstMiddleLastName(first, middle, last);
 
             if(isNameExisting) {
                 return ResponseEntity.status(HttpStatus.CONFLICT).body("Name is already taken");
             }
 
-            // Update the full name sortable
-            retrievedPatient.setFullNameSortable(generateFullNameSortable(patientRequest.getFirstName(), patientRequest.getMiddleName(), patientRequest.getLastName()));
+            // Update sortable full name
+            retrievedPatient.setFullNameSortable(generateFullNameSortable(first, middle, last));
 
-            // Update the hashed value of the names
-            retrievedPatient.setFirstNameHash(hmacHashService.hash(patientRequest.getFirstName()));
-            retrievedPatient.setMiddleNameHash(hmacHashService.hash(patientRequest.getMiddleName()));
-            retrievedPatient.setLastNameHash(hmacHashService.hash(patientRequest.getLastName()));
+            // Update hashed names
+            retrievedPatient.setFirstNameHash(hmacHashService.hash(first));
+            String middleNameHash = Optional.ofNullable(patientRequest.getMiddleName())
+                    .filter(name -> !name.isBlank())
+                    .map(hmacHashService::hash)
+                    .orElse(null);
+            retrievedPatient.setMiddleNameHash(middleNameHash);
+            retrievedPatient.setLastNameHash(hmacHashService.hash(last));
         }
 
-        // CHECK EMAIL CONFLICT
+        /* -----------------------------
+           Validate email uniqueness
+        ----------------------------- */
         if(!retrievedPatient.getEmail().equals(patientRequest.getEmail())) {
 
             boolean isEmailExisting = patientExistsByEmail(patientRequest.getEmail());
@@ -219,7 +254,9 @@ public class PatientController {
 
         }
 
-        // Perform the changes
+        /* -----------------------------
+           Apply updates to entity
+        ----------------------------- */
         mapper.updatePatientFromDto(patientRequest, retrievedPatient);
 
         Patient updatedPatient = patientRepository.save(retrievedPatient);
@@ -265,7 +302,10 @@ public class PatientController {
     ) {
 
         String firstHash = hmacHashService.hash(firstName);
-        String middleHash = hmacHashService.hash(middleName);
+        String middleHash = Optional.ofNullable(middleName)
+                .filter(name -> !middleName.isBlank())
+                .map(hmacHashService::hash)
+                .orElse(null);
         String lastHash = hmacHashService.hash(lastName);
 
         return patientRepository.existsByFirstNameHashAndMiddleNameHashAndLastNameHash(
