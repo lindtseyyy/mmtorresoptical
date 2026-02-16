@@ -10,5 +10,5 @@ import java.util.UUID;
 public interface HealthHistoryRepository extends JpaRepository<HealthHistory, UUID> {
 
     // For finding patient health history that are not archived
-    Page<HealthHistory> findAllByIsArchivedFalse(Pageable pageable);
+    Page<HealthHistory> findAllByIsArchivedFalseAndPatient_PatientId(UUID patientId, Pageable pageable);
 }
