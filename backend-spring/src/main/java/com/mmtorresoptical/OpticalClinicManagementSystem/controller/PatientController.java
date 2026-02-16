@@ -328,6 +328,20 @@ public class PatientController {
         return ResponseEntity.ok(patientDetailsDTOPage);
     }
 
+    /**
+     * Determines whether a patient record already exists
+     * based on first, middle, and last name.
+     *
+     * This method:
+     * - Hashes the provided name fields using HMAC
+     * - Handles nullable or blank middle names
+     * - Queries the database using hashed values
+     *
+     * @param firstName the patient's first name
+     * @param middleName the patient's middle name (nullable)
+     * @param lastName the patient's last name
+     * @return true if a matching patient exists; false otherwise
+     */
     private boolean patientExistsByFirstMiddleLastName(
             String firstName,
             String middleName,
