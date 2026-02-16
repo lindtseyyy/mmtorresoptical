@@ -105,6 +105,9 @@ public class PatientController {
         // Set patient address
         patient.setAddress(patientRequest.getAddress());
 
+        // Set archive status
+        patient.setIsArchived(patientRequest.getIsArchived());
+
         // Generate sortable full name for indexing/search
         patient.setFullNameSortable(generateFullNameSortable(patient.getFirstName(),patient.getMiddleName(), patient.getLastName()));
 
