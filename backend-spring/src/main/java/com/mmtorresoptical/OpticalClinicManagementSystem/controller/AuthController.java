@@ -47,7 +47,7 @@ public class AuthController {
         }
 
         // 3. If yes, generate a JWT token
-        String token = jwtTokenProvider.generateToken(user.getUsername());
+        String token = jwtTokenProvider.generateToken(user.getUsername(), user.getUserId());
 
         // 4. Return the token in a DTO
         return ResponseEntity.ok(new LoginResponseDTO(token));
