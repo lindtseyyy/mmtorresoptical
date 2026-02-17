@@ -171,16 +171,6 @@ public class PatientController {
         // Map patient entity to detailed DTO
         PatientDetailsDTO responseDetails = patientMapper.entityToDetailedResponse(retrievedPatient);
 
-        // Map associated health history records
-        Set<HealthHistoryDetailsDTO> historyDTOs =
-                retrievedPatient.getHealthHistory()
-                        .stream()
-                        .map(healthHistoryMapper::historyToDetailsDTO)
-                        .collect(Collectors.toSet());
-
-        // Attach health history to response
-        responseDetails.setHealthHistory(historyDTOs);
-
         return ResponseEntity.ok(responseDetails);
     }
 
