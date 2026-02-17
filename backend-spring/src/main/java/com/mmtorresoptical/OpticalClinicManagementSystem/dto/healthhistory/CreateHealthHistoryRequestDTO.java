@@ -10,9 +10,6 @@ import java.util.UUID;
 @Data
 public class CreateHealthHistoryRequestDTO {
 
-    @NotNull(message = "Patient ID is required")
-    private UUID patientId;
-
     @NotNull(message = "Exam date is required")
     private LocalDate examDate;
 
