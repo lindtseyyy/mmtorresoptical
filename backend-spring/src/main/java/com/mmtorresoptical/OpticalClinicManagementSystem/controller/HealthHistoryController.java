@@ -210,6 +210,64 @@ public class HealthHistoryController {
     }
 
     /**
+     * Archives a health history record by ID.
+     *
+     * This endpoint performs a soft delete by:
+     * - Retrieving the health history record
+     * - Marking it as archived
+     * - Persisting the update
+     *
+     * The record remains in the database but is excluded
+     * from active queries.
+     *
+     * @param id the unique identifier of the health history record
+     * @return ResponseEntity with no content
+     */
+    @DeleteMapping("/{id}")
+    public ResponseEntity<Void> archiveHealthHistory(@PathVariable UUID id) {
+        // Retrieve health history or throw exception if not found
+        HealthHistory retrievedHealthHistory = healthHistoryRepository.findById(id)
+                .orElseThrow(() -> new ResourceNotFoundException("Health History not found with id: " + id));
+
+        // Mark health history as archived (soft delete)
+        retrievedHealthHistory.setIsArchived(true);
+
+        // Persist archive update
+        healthHistoryRepository.save(retrievedHealthHistory);
+
+        return ResponseEntity.noContent().build();
+    }
+
+    /**
+     * Restores an archived health history record by ID.
+     *
+     * This endpoint:
+     * - Retrieves the health history record
+     * - Marks it as active (unarchived)
+     * - Persists the update
+     *
+     * Used to reverse a soft delete operation and make
+     * the record visible again in active queries.
+     *
+     * @param id the unique identifier of the health history record
+     * @return ResponseEntity with no content
+     */
+    @PutMapping("/{id}/restore")
+    public ResponseEntity<Void> restoreHealthHistory(@PathVariable UUID id) {
+        // Retrieve health history or throw exception if not found
+        HealthHistory retrievedHealthHistory = healthHistoryRepository.findById(id)
+                .orElseThrow(() -> new ResourceNotFoundException("Health History not found with id: " + id));
+
+        // Mark health history as active (unarchived)
+        retrievedHealthHistory.setIsArchived(false);
+
+        // Persist restoration update
+        healthHistoryRepository.save(retrievedHealthHistory);
+
+        return ResponseEntity.noContent().build();
+    }
+
+    /**
      * Constructs a HealthHistory entity using the provided request DTO.
      *
      * This method:
