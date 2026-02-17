@@ -30,7 +30,6 @@ import org.springframework.web.bind.annotation.*;
 import java.util.UUID;
 
 @RestController
-@RequestMapping("/api/admin/health-history")
 public class HealthHistoryController {
 
     private final HealthHistoryRepository healthHistoryRepository;
@@ -66,13 +65,11 @@ public class HealthHistoryController {
      * @return ResponseEntity containing the created HealthHistoryResponseDTO
      */
     @PreAuthorize("hasRole('ADMIN')")
-    @PostMapping
-    public ResponseEntity<HealthHistoryResponseDTO> createHealthHistory(@Valid @RequestBody CreateHealthHistoryRequestDTO createHealthHistoryRequestDTO) {
+    @PostMapping("api/admin/patient/{id}/health-histories")
+    public ResponseEntity<HealthHistoryResponseDTO> createHealthHistory(@PathVariable UUID id, @Valid @RequestBody CreateHealthHistoryRequestDTO createHealthHistoryRequestDTO) {
 
         // Retrieve the patient
-        Patient retrievedPatient = patientRepository.findById(
-                createHealthHistoryRequestDTO.getPatientId()
-        ).orElseThrow(() ->
+        Patient retrievedPatient = patientRepository.findById(id).orElseThrow(() ->
                 new ResourceNotFoundException("Patient not found")
         );
 
@@ -118,8 +115,8 @@ public class HealthHistoryController {
      * @return ResponseEntity containing a page of HealthHistoryDetailsDTO
      */
     @PreAuthorize("hasRole('ADMIN')")
-    @GetMapping("/patient/{patientId}")
-    public ResponseEntity<Page<HealthHistoryDetailsDTO>> getAllPatientHealthHistories(@PathVariable UUID patientId,
+    @GetMapping("api/admin/patient/{id}/health-histories")
+    public ResponseEntity<Page<HealthHistoryDetailsDTO>> getAllPatientHealthHistories(@PathVariable UUID id,
                                                                                @RequestParam(defaultValue = "0") int page,
                                                                           @RequestParam(defaultValue = "10") int size,
                                                                           @RequestParam(defaultValue = "examDate") String sortBy,
@@ -139,7 +136,7 @@ public class HealthHistoryController {
         Pageable pageable = PageRequest.of(page, size, Sort.by(direction, sortBy));
 
         // Retrieve non-archived health histories for the patient
-        Page<HealthHistory> healthHistories = healthHistoryRepository.findAllByIsArchivedFalseAndPatient_PatientId(patientId, pageable);
+        Page<HealthHistory> healthHistories = healthHistoryRepository.findAllByIsArchivedFalseAndPatient_PatientId(id, pageable);
 
         // Map entities to detailed DTO responses
         Page<HealthHistoryDetailsDTO> healthHistoryDetailsDTOS = healthHistories.map(healthHistoryMapper::historyToDetailsDTO);
@@ -161,7 +158,7 @@ public class HealthHistoryController {
      * @return ResponseEntity containing HealthHistoryDetailsDTO
      */
     @PreAuthorize("hasRole('ADMIN')")
-    @GetMapping("/{id}")
+    @GetMapping("api/admin/patient/health-histories/{id}")
     public ResponseEntity<HealthHistoryDetailsDTO> getPatientHealthHistory(@PathVariable UUID id) {
         // Retrieve health history or throw exception if not found
         HealthHistory retrievedHealthHistory = healthHistoryRepository.findById(id)
@@ -189,7 +186,7 @@ public class HealthHistoryController {
      * @return ResponseEntity containing HealthHistoryDetailsDTO
      */
     @PreAuthorize("hasRole('ADMIN')")
-    @PutMapping("/{id}")
+    @PutMapping("api/admin/patient/health-history/{id}")
     public ResponseEntity<HealthHistoryDetailsDTO> updateHealthHistory(@PathVariable UUID id,
                                                                            @Valid @RequestBody UpdateHealthHistoryRequestDTO updateHealthHistoryRequestDTO) {
 
@@ -223,7 +220,7 @@ public class HealthHistoryController {
      * @param id the unique identifier of the health history record
      * @return ResponseEntity with no content
      */
-    @DeleteMapping("/{id}")
+    @DeleteMapping("api/admin/patient/health-history/{id}")
     public ResponseEntity<Void> archiveHealthHistory(@PathVariable UUID id) {
         // Retrieve health history or throw exception if not found
         HealthHistory retrievedHealthHistory = healthHistoryRepository.findById(id)
@@ -252,7 +249,7 @@ public class HealthHistoryController {
      * @param id the unique identifier of the health history record
      * @return ResponseEntity with no content
      */
-    @PutMapping("/{id}/restore")
+    @PutMapping("api/admin/patient/health-history/{id}/restore")
     public ResponseEntity<Void> restoreHealthHistory(@PathVariable UUID id) {
         // Retrieve health history or throw exception if not found
         HealthHistory retrievedHealthHistory = healthHistoryRepository.findById(id)
