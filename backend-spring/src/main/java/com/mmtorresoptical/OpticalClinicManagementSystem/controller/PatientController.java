@@ -303,7 +303,7 @@ public class PatientController {
      * @param id the unique identifier of the patient
      * @return ResponseEntity with no content
      */
-    @PutMapping("/restore/{id}")
+    @PutMapping("/{id}/restore")
     public ResponseEntity<Void> restorePatient(@PathVariable UUID id) {
         // Retrieve patient or throw exception if not found
         Patient retrievedPatient = patientRepository.findById(id)
