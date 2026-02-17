@@ -24,9 +24,4 @@ public class PatientDetailsDTO {
     private String address;
     private Boolean isArchived;
     private LocalDateTime createdAt;
-
-    // Foreign keys / Child data
-    private Set<Prescription> prescriptions;
-    private Set<HealthHistoryDetailsDTO> healthHistory;
-    private List<Transaction> transactions;
 }
