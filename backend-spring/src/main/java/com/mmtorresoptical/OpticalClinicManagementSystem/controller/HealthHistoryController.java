@@ -65,7 +65,7 @@ public class HealthHistoryController {
      * @return ResponseEntity containing the created HealthHistoryResponseDTO
      */
     @PreAuthorize("hasRole('ADMIN')")
-    @PostMapping("api/admin/patient/{id}/health-histories")
+    @PostMapping("api/admin/patients/{id}/health-histories")
     public ResponseEntity<HealthHistoryResponseDTO> createHealthHistory(@PathVariable UUID id, @Valid @RequestBody CreateHealthHistoryRequestDTO createHealthHistoryRequestDTO) {
 
         // Retrieve the patient
@@ -115,7 +115,7 @@ public class HealthHistoryController {
      * @return ResponseEntity containing a page of HealthHistoryDetailsDTO
      */
     @PreAuthorize("hasRole('ADMIN')")
-    @GetMapping("api/admin/patient/{id}/health-histories")
+    @GetMapping("api/admin/patients/{id}/health-histories")
     public ResponseEntity<Page<HealthHistoryDetailsDTO>> getAllPatientHealthHistories(@PathVariable UUID id,
                                                                                @RequestParam(defaultValue = "0") int page,
                                                                           @RequestParam(defaultValue = "10") int size,
@@ -145,6 +145,56 @@ public class HealthHistoryController {
     }
 
     /**
+     * Retrieves paginated and sorted archived health history records
+     * for a specific patient.
+     *
+     * This endpoint:
+     * - Filters records by patient ID
+     * - Includes only archived health histories
+     * - Supports pagination
+     * - Supports sorting by specified fields
+     * - Maps entities to detailed response DTOs
+     *
+     * Accessible only by users with ADMIN role.
+     *
+     * @param patientId the unique identifier of the patient
+     * @param page the page number (default = 0)
+     * @param size the number of records per page (default = 10)
+     * @param sortBy the field used for sorting (default = examDate)
+     * @param sortOrder the sorting direction: ascending or descending (default = descending)
+     * @return ResponseEntity containing a page of HealthHistoryDetailsDTO
+     */
+    @PreAuthorize("hasRole('ADMIN')")
+    @GetMapping("api/admin/patients/{id}/health-histories/archived")
+    public ResponseEntity<Page<HealthHistoryDetailsDTO>> getAllArchivedPatientHealthHistories(@PathVariable UUID id,
+                                                                                      @RequestParam(defaultValue = "0") int page,
+                                                                                      @RequestParam(defaultValue = "10") int size,
+                                                                                      @RequestParam(defaultValue = "examDate") String sortBy,
+                                                                                      @RequestParam(defaultValue = "descending") String sortOrder) {
+
+        // Determine sorting direction from request parameter
+        Sort.Direction direction;
+
+        try {
+            direction = Sort.Direction.fromString(sortOrder);
+        } catch (IllegalArgumentException ex) {
+            // Default to descending if invalid input
+            direction = Sort.Direction.DESC;
+        }
+
+        // Create pageable configuration with sorting
+        Pageable pageable = PageRequest.of(page, size, Sort.by(direction, sortBy));
+
+        // Retrieve non-archived health histories for the patient
+        Page<HealthHistory> healthHistories = healthHistoryRepository.findAllByIsArchivedTrueAndPatient_PatientId(id, pageable);
+
+        // Map entities to detailed DTO responses
+        Page<HealthHistoryDetailsDTO> healthHistoryDetailsDTOS = healthHistories.map(healthHistoryMapper::historyToDetailsDTO);
+
+        return ResponseEntity.ok(healthHistoryDetailsDTOS);
+    }
+
+    /**
      * Retrieves detailed information for a specific health history record by ID.
      *
      * This endpoint:
@@ -158,7 +208,7 @@ public class HealthHistoryController {
      * @return ResponseEntity containing HealthHistoryDetailsDTO
      */
     @PreAuthorize("hasRole('ADMIN')")
-    @GetMapping("api/admin/patient/health-histories/{id}")
+    @GetMapping("api/admin/health-histories/{id}")
     public ResponseEntity<HealthHistoryDetailsDTO> getPatientHealthHistory(@PathVariable UUID id) {
         // Retrieve health history or throw exception if not found
         HealthHistory retrievedHealthHistory = healthHistoryRepository.findById(id)
@@ -186,7 +236,7 @@ public class HealthHistoryController {
      * @return ResponseEntity containing HealthHistoryDetailsDTO
      */
     @PreAuthorize("hasRole('ADMIN')")
-    @PutMapping("api/admin/patient/health-history/{id}")
+    @PutMapping("api/admin/health-histories/{id}")
     public ResponseEntity<HealthHistoryDetailsDTO> updateHealthHistory(@PathVariable UUID id,
                                                                            @Valid @RequestBody UpdateHealthHistoryRequestDTO updateHealthHistoryRequestDTO) {
 
@@ -220,7 +270,7 @@ public class HealthHistoryController {
      * @param id the unique identifier of the health history record
      * @return ResponseEntity with no content
      */
-    @DeleteMapping("api/admin/patient/health-history/{id}")
+    @DeleteMapping("api/admin/health-histories/{id}")
     public ResponseEntity<Void> archiveHealthHistory(@PathVariable UUID id) {
         // Retrieve health history or throw exception if not found
         HealthHistory retrievedHealthHistory = healthHistoryRepository.findById(id)
@@ -249,7 +299,7 @@ public class HealthHistoryController {
      * @param id the unique identifier of the health history record
      * @return ResponseEntity with no content
      */
-    @PutMapping("api/admin/patient/health-history/{id}/restore")
+    @PutMapping("api/admin/health-histories/{id}/restore")
     public ResponseEntity<Void> restoreHealthHistory(@PathVariable UUID id) {
         // Retrieve health history or throw exception if not found
         HealthHistory retrievedHealthHistory = healthHistoryRepository.findById(id)
