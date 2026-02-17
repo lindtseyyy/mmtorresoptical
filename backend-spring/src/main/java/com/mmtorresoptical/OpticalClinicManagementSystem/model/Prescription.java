@@ -23,7 +23,6 @@ public class Prescription {
     @Column(name = "exam_date", nullable = false)
     private LocalDate examDate;
 
-    @NotBlank
     @Column(name = "notes", columnDefinition = "TEXT")
     private String notes;
 
@@ -45,5 +44,4 @@ public class Prescription {
 
     @OneToMany(mappedBy =  "prescription")
     private List<PrescriptionItem> prescriptionItems;
-
 }
