@@ -11,4 +11,6 @@ public interface HealthHistoryRepository extends JpaRepository<HealthHistory, UU
 
     // For finding patient health history that are not archived
     Page<HealthHistory> findAllByIsArchivedFalseAndPatient_PatientId(UUID patientId, Pageable pageable);
+
+    Page<HealthHistory> findAllByIsArchivedTrueAndPatient_PatientId(UUID patientId, Pageable pageable);
 }
