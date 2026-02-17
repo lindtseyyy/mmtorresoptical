@@ -1,12 +1,10 @@
 package com.mmtorresoptical.OpticalClinicManagementSystem.controller;
 
-import com.mmtorresoptical.OpticalClinicManagementSystem.dto.healthhistory.HealthHistoryDetailsDTO;
 import com.mmtorresoptical.OpticalClinicManagementSystem.dto.patient.PatientDetailsDTO;
 import com.mmtorresoptical.OpticalClinicManagementSystem.dto.patient.PatientRequestDTO;
 import com.mmtorresoptical.OpticalClinicManagementSystem.dto.patient.PatientResponseDTO;
 import com.mmtorresoptical.OpticalClinicManagementSystem.enums.Gender;
 import com.mmtorresoptical.OpticalClinicManagementSystem.exception.ResourceNotFoundException;
-import com.mmtorresoptical.OpticalClinicManagementSystem.mapper.HealthHistoryMapper;
 import com.mmtorresoptical.OpticalClinicManagementSystem.mapper.PatientMapper;
 import com.mmtorresoptical.OpticalClinicManagementSystem.model.Patient;
 import com.mmtorresoptical.OpticalClinicManagementSystem.repository.PatientRepository;
@@ -27,18 +25,16 @@ import java.util.UUID;
 import java.util.stream.Collectors;
 
 @RestController
-@RequestMapping("/api/patients")
+@RequestMapping("/api/admin/patients")
 public class PatientController {
 
     private final PatientRepository patientRepository;
     private final PatientMapper patientMapper;
-    private final HealthHistoryMapper healthHistoryMapper;
     private final HmacHashService hmacHashService;
 
-    PatientController(PatientRepository patientRepository, PatientMapper patientMapper, HealthHistoryMapper healthHistoryMapper, HmacHashService hmacHashService) {
+    PatientController(PatientRepository patientRepository, PatientMapper patientMapper, HmacHashService hmacHashService) {
         this.patientRepository = patientRepository;
         this.patientMapper = patientMapper;
-        this.healthHistoryMapper = healthHistoryMapper;
         this.hmacHashService = hmacHashService;
     }
 
@@ -157,7 +153,6 @@ public class PatientController {
      * - Finds the patient using the provided ID
      * - Throws an exception if the patient does not exist
      * - Maps the patient entity to a detailed response DTO
-     * - Includes associated health history records
      *
      * @param id the unique identifier of the patient
      * @return ResponseEntity containing PatientDetailsDTO
