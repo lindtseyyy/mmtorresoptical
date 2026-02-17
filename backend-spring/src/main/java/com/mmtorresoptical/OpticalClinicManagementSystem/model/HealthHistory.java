@@ -1,5 +1,6 @@
 package com.mmtorresoptical.OpticalClinicManagementSystem.model;
 
+import com.mmtorresoptical.OpticalClinicManagementSystem.converter.AesEncryptionConverter;
 import jakarta.persistence.*;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
@@ -26,24 +27,31 @@ public class HealthHistory {
     @Column(name = "exam_date", nullable = false)
     private LocalDate examDate;
 
+    @Convert(converter = AesEncryptionConverter.class)
     @Column(name = "eye_conditions", columnDefinition = "TEXT")
     private String eyeConditions;
 
+    @Convert(converter = AesEncryptionConverter.class)
     @Column(name = "systemic_conditions", columnDefinition = "TEXT")
     private String systemicConditions;
 
+    @Convert(converter = AesEncryptionConverter.class)
     @Column(name = "medications", columnDefinition = "TEXT")
     private String medications;
 
+    @Convert(converter = AesEncryptionConverter.class)
     @Column(name = "allergies", columnDefinition = "TEXT")
     private String allergies;
 
-    @Column(name = "visual_acuity_right", length = 20)
+    @Convert(converter = AesEncryptionConverter.class)
+    @Column(name = "visual_acuity_right", columnDefinition = "TEXT")
     private String visualAcuityRight;
 
-    @Column(name = "visual_acuity_left", length = 20)
+    @Convert(converter = AesEncryptionConverter.class)
+    @Column(name = "visual_acuity_left", columnDefinition = "TEXT")
     private String visualAcuityLeft;
 
+    @Convert(converter = AesEncryptionConverter.class)
     @Column(name = "notes", columnDefinition = "TEXT")
     private String notes;
 
