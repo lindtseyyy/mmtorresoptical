@@ -77,18 +77,7 @@ public class PrescriptionController {
 
         Prescription savedPrescription = prescriptionRepository.save(prescription);
 
-        savedPrescription.getPrescriptionItems()
-                .forEach(i -> {
-                    System.out.println("ENTITY: " + i.getCorrectionType());
-                });
-
         PrescriptionResponseDTO prescriptionResponseDTO = prescriptionMapper.entityToResponseDTO(savedPrescription);
-
-        prescriptionResponseDTO.getPrescriptionItems()
-                .forEach(i -> {
-                    System.out.println("DTO: " + i.getCorrectionType());
-                });
-
 
         return ResponseEntity.ok(prescriptionResponseDTO);
     }
