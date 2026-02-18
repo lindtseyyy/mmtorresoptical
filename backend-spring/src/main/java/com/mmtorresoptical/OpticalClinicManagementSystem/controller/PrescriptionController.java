@@ -155,12 +155,25 @@ public class PrescriptionController {
     }
 
     @DeleteMapping("/api/admin/prescriptions/{id}")
-    public ResponseEntity<Void> archivePatient(@PathVariable UUID id) {
+    public ResponseEntity<Void> archivePrescription(@PathVariable UUID id) {
         // Retrieve prescription or throw exception if not found
         Prescription retrievedPrescription = prescriptionRepository.findById(id)
                 .orElseThrow(() -> new ResourceNotFoundException("Prescription not found with id: " + id));
 
         retrievedPrescription.setIsArchived(true);
+
+        prescriptionRepository.save(retrievedPrescription);
+
+        return ResponseEntity.noContent().build();
+    }
+
+    @PutMapping("/api/admin/prescriptions/{id}/restore")
+    public ResponseEntity<Void> restorePrescription(@PathVariable UUID id) {
+        // Retrieve prescription or throw exception if not found
+        Prescription retrievedPrescription = prescriptionRepository.findById(id)
+                .orElseThrow(() -> new ResourceNotFoundException("Prescription not found with id: " + id));
+
+        retrievedPrescription.setIsArchived(false);
 
         prescriptionRepository.save(retrievedPrescription);
 
