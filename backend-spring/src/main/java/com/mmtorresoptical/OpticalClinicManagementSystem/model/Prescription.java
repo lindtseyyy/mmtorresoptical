@@ -3,6 +3,9 @@ package com.mmtorresoptical.OpticalClinicManagementSystem.model;
 import jakarta.persistence.*;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
+import lombok.Data;
+import lombok.Getter;
+import lombok.Setter;
 import org.hibernate.annotations.CreationTimestamp;
 
 import java.time.LocalDate;
@@ -10,6 +13,8 @@ import java.time.LocalDateTime;
 import java.util.List;
 import java.util.UUID;
 
+@Getter
+@Setter
 @Entity
 @Table(name = "prescriptions")
 public class Prescription {
@@ -31,7 +36,7 @@ public class Prescription {
     private LocalDateTime createdAt;
 
     @Column(name = "is_archived", nullable = false)
-    private Boolean archived = false;
+    private Boolean isArchived = false;
 
     // Relationships
     @ManyToOne
@@ -42,6 +47,10 @@ public class Prescription {
     @JoinColumn(name = "patient_id", nullable = false)
     private Patient patient;
 
-    @OneToMany(mappedBy =  "prescription")
+    @OneToMany(
+            mappedBy = "prescription",
+            cascade = CascadeType.ALL,
+            orphanRemoval = true
+    )
     private List<PrescriptionItem> prescriptionItems;
 }
