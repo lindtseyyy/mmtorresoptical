@@ -1,23 +1,23 @@
 package com.mmtorresoptical.OpticalClinicManagementSystem.controller;
 
+import com.mmtorresoptical.OpticalClinicManagementSystem.dto.prescription.PrescriptionDetailsDTO;
+import com.mmtorresoptical.OpticalClinicManagementSystem.dto.prescription.PrescriptionListDTO;
 import com.mmtorresoptical.OpticalClinicManagementSystem.dto.prescription.PrescriptionRequestDTO;
 import com.mmtorresoptical.OpticalClinicManagementSystem.dto.prescription.PrescriptionResponseDTO;
 import com.mmtorresoptical.OpticalClinicManagementSystem.exception.ResourceNotFoundException;
 import com.mmtorresoptical.OpticalClinicManagementSystem.mapper.PrescriptionItemMapper;
 import com.mmtorresoptical.OpticalClinicManagementSystem.mapper.PrescriptionMapper;
-import com.mmtorresoptical.OpticalClinicManagementSystem.model.Patient;
-import com.mmtorresoptical.OpticalClinicManagementSystem.model.Prescription;
-import com.mmtorresoptical.OpticalClinicManagementSystem.model.PrescriptionItem;
-import com.mmtorresoptical.OpticalClinicManagementSystem.model.User;
+import com.mmtorresoptical.OpticalClinicManagementSystem.model.*;
 import com.mmtorresoptical.OpticalClinicManagementSystem.repository.PatientRepository;
 import com.mmtorresoptical.OpticalClinicManagementSystem.repository.PrescriptionRepository;
 import com.mmtorresoptical.OpticalClinicManagementSystem.service.CustomUserDetailsService.AuthenticatedUserService;
 import jakarta.validation.Valid;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.Sort;
 import org.springframework.http.ResponseEntity;
-import org.springframework.web.bind.annotation.PathVariable;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.RequestBody;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
 import java.util.UUID;
@@ -96,5 +96,48 @@ public class PrescriptionController {
         return ResponseEntity.ok(prescriptionResponseDTO);
     }
 
+    @GetMapping("/api/admin/patient/{id}/prescriptions")
+    public ResponseEntity<Page<PrescriptionListDTO>> getAllPatientPrescriptions(@PathVariable UUID id,
+                                                                              @RequestParam(defaultValue = "0") int page,
+                                                                              @RequestParam(defaultValue = "10") int size,
+                                                                              @RequestParam(defaultValue = "examDate") String sortBy,
+                                                                              @RequestParam(defaultValue = "descending") String sortOrder,
+                                                                              @RequestParam(defaultValue = "ACTIVE") String archivedStatus) {
+
+        // Determine sorting direction from request parameter
+        Sort.Direction direction;
+
+        try {
+            direction = Sort.Direction.fromString(sortOrder);
+        } catch (IllegalArgumentException ex) {
+            // Default to descending if invalid input
+            direction = Sort.Direction.DESC;
+        }
+
+        // Create pageable configuration with sorting
+        Pageable pageable = PageRequest.of(page, size, Sort.by(direction, sortBy));
+
+        Page<Prescription> prescriptions = switch (archivedStatus.toUpperCase()) {
+            case "ARCHIVED" -> prescriptionRepository.findAllByIsArchivedTrueAndPatient_PatientId(id, pageable);
+            case "ALL" -> prescriptionRepository.findAllByPatient_PatientId(id, pageable);
+            default -> // ACTIVE
+                    prescriptionRepository.findAllByIsArchivedFalseAndPatient_PatientId(id, pageable);
+        };
+
+        Page<PrescriptionListDTO> prescriptionListDTOS = prescriptions.map(prescriptionMapper::entityToListDTO);
+
+        return ResponseEntity.ok(prescriptionListDTOS);
+    }
+
+    @GetMapping("/api/admin/prescriptions/{id}")
+    public ResponseEntity<PrescriptionDetailsDTO> getPrescription(@PathVariable UUID id) {
+        // Retrieve prescription or throw exception if not found
+        Prescription retrievedPrescription = prescriptionRepository.findById(id)
+                .orElseThrow(() -> new ResourceNotFoundException("Prescription not found with id: " + id));
+
+        PrescriptionDetailsDTO prescriptionDetailsDTO = prescriptionMapper.entityToDetailsDTO(retrievedPrescription);
+
+        return ResponseEntity.ok(prescriptionDetailsDTO);
+    }
 
 }
