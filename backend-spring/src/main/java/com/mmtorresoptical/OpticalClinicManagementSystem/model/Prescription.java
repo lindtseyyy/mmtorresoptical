@@ -1,9 +1,8 @@
 package com.mmtorresoptical.OpticalClinicManagementSystem.model;
 
+import com.mmtorresoptical.OpticalClinicManagementSystem.converter.AesEncryptionConverter;
 import jakarta.persistence.*;
-import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
-import lombok.Data;
 import lombok.Getter;
 import lombok.Setter;
 import org.hibernate.annotations.CreationTimestamp;
@@ -28,6 +27,7 @@ public class Prescription {
     @Column(name = "exam_date", nullable = false)
     private LocalDate examDate;
 
+    @Convert(converter = AesEncryptionConverter.class)
     @Column(name = "notes", columnDefinition = "TEXT")
     private String notes;
 
