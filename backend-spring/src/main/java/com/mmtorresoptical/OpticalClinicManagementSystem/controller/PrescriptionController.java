@@ -1,9 +1,6 @@
 package com.mmtorresoptical.OpticalClinicManagementSystem.controller;
 
-import com.mmtorresoptical.OpticalClinicManagementSystem.dto.prescription.PrescriptionDetailsDTO;
-import com.mmtorresoptical.OpticalClinicManagementSystem.dto.prescription.PrescriptionListDTO;
-import com.mmtorresoptical.OpticalClinicManagementSystem.dto.prescription.PrescriptionRequestDTO;
-import com.mmtorresoptical.OpticalClinicManagementSystem.dto.prescription.PrescriptionResponseDTO;
+import com.mmtorresoptical.OpticalClinicManagementSystem.dto.prescription.*;
 import com.mmtorresoptical.OpticalClinicManagementSystem.exception.ResourceNotFoundException;
 import com.mmtorresoptical.OpticalClinicManagementSystem.mapper.PrescriptionItemMapper;
 import com.mmtorresoptical.OpticalClinicManagementSystem.mapper.PrescriptionMapper;
@@ -44,7 +41,7 @@ public class PrescriptionController {
     }
 
     @PostMapping("/api/admin/patient/{id}/prescriptions")
-    public ResponseEntity<PrescriptionResponseDTO> createPrescription(@PathVariable UUID id, @Valid @RequestBody PrescriptionRequestDTO prescriptionRequest) {
+    public ResponseEntity<PrescriptionResponseDTO> createPrescription(@PathVariable UUID id, @Valid @RequestBody CreatePrescriptionRequestDTO prescriptionRequest) {
 
         // Retrieve patient or throw exception if not found
         Patient retrievedPatient = patientRepository.findById(id)
@@ -139,5 +136,24 @@ public class PrescriptionController {
 
         return ResponseEntity.ok(prescriptionDetailsDTO);
     }
+
+    @PutMapping("/api/admin/prescriptions/{id}")
+    public ResponseEntity<PrescriptionDetailsDTO> updatePrescription(@PathVariable UUID id,
+                                                                     @Valid @RequestBody UpdatePrescriptionRequestDTO request) {
+        // Retrieve prescription or throw exception if not found
+        Prescription retrievedPrescription = prescriptionRepository.findById(id)
+                .orElseThrow(() -> new ResourceNotFoundException("Prescription not found with id: " + id));
+
+        retrievedPrescription.setExamDate(request.getExamDate());
+        retrievedPrescription.setNotes(request.getNotes());
+
+        Prescription updatedPrescription = prescriptionRepository.save(retrievedPrescription);
+
+        PrescriptionDetailsDTO prescriptionDetailsDTO = prescriptionMapper.entityToDetailsDTO(updatedPrescription);
+
+        return ResponseEntity.ok(prescriptionDetailsDTO);
+    }
+
+
 
 }
