@@ -162,7 +162,7 @@ public class PrescriptionController {
 
         retrievedPrescription.setIsArchived(true);
 
-        Prescription updatedPrescription = prescriptionRepository.save(retrievedPrescription);
+        prescriptionRepository.save(retrievedPrescription);
 
         return ResponseEntity.noContent().build();
     }
