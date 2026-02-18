@@ -1,5 +1,6 @@
 package com.mmtorresoptical.OpticalClinicManagementSystem.model;
 
+import com.mmtorresoptical.OpticalClinicManagementSystem.converter.*;
 import com.mmtorresoptical.OpticalClinicManagementSystem.enums.CorrectionType;
 import com.mmtorresoptical.OpticalClinicManagementSystem.enums.EyeSide;
 import com.mmtorresoptical.OpticalClinicManagementSystem.enums.FollowUpStatus;
@@ -26,56 +27,68 @@ public class PrescriptionItem {
     @Column(name = "prescription_item_id", updatable = false, nullable = false)
     private UUID prescriptionItemId;
 
-    @Enumerated(EnumType.STRING)
+    @Convert(converter = AesCorrectionTypeConverter.class)
     @NotNull
-    @Column(name = "correction_type", length = 50)
+    @Column(name = "correction_type", columnDefinition = "TEXT")
     private CorrectionType correctionType;
 
-    @Enumerated(EnumType.STRING)
+    @Convert(converter = AesEyeSideConverter.class)
     @NotNull
-    @Column(name = "eye_side", length = 10)
+    @Column(name = "eye_side", columnDefinition = "TEXT")
     private EyeSide eyeSide; // LEFT / RIGHT / BOTH
 
     // Optical values (decimal precision important) (optional)
-    @Column(name = "sph", precision = 5, scale = 2)
+    @Convert(converter = AesBigDecimalConverter.class)
+    @Column(name = "sph", columnDefinition = "TEXT")
     private BigDecimal sph;
 
-    @Column(name = "cyl", precision = 5, scale = 2)
+    @Convert(converter = AesBigDecimalConverter.class)
+    @Column(name = "cyl", columnDefinition = "TEXT")
     private BigDecimal cyl;
 
-    @Column(name = "axis")
+    @Convert(converter = AesIntegerConverter.class)
+    @Column(name = "axis", columnDefinition = "TEXT")
     private Integer axis;
 
-    @Column(name = "add_power", precision = 5, scale = 2)
+    @Convert(converter = AesBigDecimalConverter.class)
+    @Column(name = "add_power", columnDefinition = "TEXT")
     private BigDecimal addPower;
 
-    @Column(name = "pd", precision = 5, scale = 2)
+    @Convert(converter = AesBigDecimalConverter.class)
+    @Column(name = "pd", columnDefinition = "TEXT")
     private BigDecimal pd;
 
     // Lens / frame details (optional)
-    @Enumerated(EnumType.STRING)
-    @Column(name = "lens_type", length = 50)
+    @Convert(converter = AesLensTypeConverter.class)
+    @Column(name = "lens_type", columnDefinition = "TEXT")
     private LensType lensType;
 
-    @Column(name = "frame_type_preference", length = 100)
+    @Convert(converter = AesEncryptionConverter.class)
+    @Column(name = "frame_type_preference", columnDefinition = "TEXT")
     private String frameTypePreference;
 
+    @Convert(converter = AesEncryptionConverter.class)
     @Column(name = "lens_coatings", columnDefinition = "TEXT")
     private String lensCoatings;
 
-    @Column(name = "lens_material", length = 50)
+    @Convert(converter = AesEncryptionConverter.class)
+    @Column(name = "lens_material", columnDefinition = "TEXT")
     private String lensMaterial;
 
-    @Column(name = "lens_wear_type", length = 50)
+    @Convert(converter = AesEncryptionConverter.class)
+    @Column(name = "lens_wear_type", columnDefinition = "TEXT")
     private String lensWearType;
 
-    @Column(name = "lens_material_cl", length = 50)
+    @Convert(converter = AesEncryptionConverter.class)
+    @Column(name = "lens_material_cl", columnDefinition = "TEXT")
     private String lensMaterialCl;
 
-    @Column(name = "base_curve", precision = 5, scale = 2)
+    @Convert(converter = AesBigDecimalConverter.class)
+    @Column(name = "base_curve", columnDefinition = "TEXT")
     private BigDecimal baseCurve;
 
-    @Column(name = "diameter", precision = 5, scale = 2)
+    @Convert(converter = AesBigDecimalConverter.class)
+    @Column(name = "diameter", columnDefinition = "TEXT")
     private BigDecimal diameter;
 
     // Follow-up tracking (optional)
@@ -85,14 +98,16 @@ public class PrescriptionItem {
     @Column(name = "follow_up_date")
     private LocalDate followUpDate;
 
+    @Convert(converter = AesEncryptionConverter.class)
     @Column(name = "follow_up_reason", columnDefinition = "TEXT")
     private String followUpReason;
 
-    @Enumerated(EnumType.STRING)
-    @Column(name = "follow_up_status", length = 50)
+    @Convert(converter = AesFollowUpStatusConverter.class)
+    @Column(name = "follow_up_status", columnDefinition = "TEXT")
     private FollowUpStatus followUpStatus;
 
     // Notes
+    @Convert(converter = AesEncryptionConverter.class)
     @Column(name = "notes", columnDefinition = "TEXT")
     private String notes;
 
