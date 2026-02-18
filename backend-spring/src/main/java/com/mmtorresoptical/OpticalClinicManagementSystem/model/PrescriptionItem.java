@@ -5,8 +5,9 @@ import com.mmtorresoptical.OpticalClinicManagementSystem.enums.EyeSide;
 import com.mmtorresoptical.OpticalClinicManagementSystem.enums.FollowUpStatus;
 import com.mmtorresoptical.OpticalClinicManagementSystem.enums.LensType;
 import jakarta.persistence.*;
-import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
+import lombok.Getter;
+import lombok.Setter;
 import org.hibernate.annotations.CreationTimestamp;
 
 import java.math.BigDecimal;
@@ -14,6 +15,8 @@ import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.util.UUID;
 
+@Getter
+@Setter
 @Entity
 @Table(name = "prescription_items")
 public class PrescriptionItem {
@@ -24,12 +27,12 @@ public class PrescriptionItem {
     private UUID prescriptionItemId;
 
     @Enumerated(EnumType.STRING)
-    @NotBlank
+    @NotNull
     @Column(name = "correction_type", length = 50)
     private CorrectionType correctionType;
 
     @Enumerated(EnumType.STRING)
-    @NotBlank
+    @NotNull
     @Column(name = "eye_side", length = 10)
     private EyeSide eyeSide; // LEFT / RIGHT / BOTH
 
@@ -98,14 +101,17 @@ public class PrescriptionItem {
     @Column(name = "created_at", updatable = false)
     private LocalDateTime createdAt;
 
+    @Column(name = "is_archived", nullable = false)
+    private Boolean isArchived = false;
+
     // Relationship
     @ManyToOne
     @JoinColumn(name = "created_by", nullable = false)
     private User user;
 
     // MANY items → ONE prescription
-    @ManyToOne(fetch = FetchType.LAZY)
+//    @ManyToOne(fetch = FetchType.LAZY)
+    @ManyToOne
     @JoinColumn(name = "prescription_id", nullable = false)
     private Prescription prescription;
-
 }
