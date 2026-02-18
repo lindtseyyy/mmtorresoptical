@@ -8,7 +8,7 @@ import java.time.LocalDate;
 import java.util.List;
 
 @Data
-public class PrescriptionRequestDTO {
+public class CreatePrescriptionRequestDTO {
 
     @NotNull(message = "Exam date is required")
     private LocalDate examDate;
