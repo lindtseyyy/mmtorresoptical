@@ -7,7 +7,7 @@ import com.mmtorresoptical.OpticalClinicManagementSystem.mapper.PrescriptionMapp
 import com.mmtorresoptical.OpticalClinicManagementSystem.model.*;
 import com.mmtorresoptical.OpticalClinicManagementSystem.repository.PatientRepository;
 import com.mmtorresoptical.OpticalClinicManagementSystem.repository.PrescriptionRepository;
-import com.mmtorresoptical.OpticalClinicManagementSystem.service.CustomUserDetailsService.AuthenticatedUserService;
+import com.mmtorresoptical.OpticalClinicManagementSystem.services.AuthenticatedUserService;
 import jakarta.validation.Valid;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
@@ -81,7 +81,7 @@ public class PrescriptionController {
                 .getItemsRequestDTOList()
                 .stream()
                 .map(itemDTO -> {
-                    PrescriptionItem item = prescriptionItemMapper.requestDTOtoEntity(itemDTO);
+                    PrescriptionItem item = prescriptionItemMapper.createRequestDTOtoEntity(itemDTO);
 
                     item.setPrescription(prescription);
                     item.setUser(authenticatedUser);
