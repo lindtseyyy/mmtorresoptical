@@ -2,6 +2,7 @@ package com.mmtorresoptical.OpticalClinicManagementSystem.controller;
 
 import com.mmtorresoptical.OpticalClinicManagementSystem.dto.prescriptionitems.CreatePrescriptionItemRequestDTO;
 import com.mmtorresoptical.OpticalClinicManagementSystem.dto.prescriptionitems.PrescriptionItemDetailsDTO;
+import com.mmtorresoptical.OpticalClinicManagementSystem.dto.prescriptionitems.UpdatePrescriptionItemRequestDTO;
 import com.mmtorresoptical.OpticalClinicManagementSystem.services.ControllerService.PrescriptionItemsService;
 import com.mmtorresoptical.OpticalClinicManagementSystem.services.ControllerService.PrescriptionService;
 import jakarta.validation.Valid;
@@ -38,6 +39,39 @@ public class PrescriptionItemsController {
         Page<PrescriptionItemDetailsDTO> prescriptionItemDetailsDTOPage = prescriptionItemsService.getAllPrescriptionItems(id, page, size, sortBy, sortOrder, archivedStatus);
 
         return ResponseEntity.ok(prescriptionItemDetailsDTOPage);
+    }
+
+    @GetMapping("/api/admin/prescription-items/{id}")
+    public ResponseEntity<PrescriptionItemDetailsDTO> getPrescriptionItem(@PathVariable UUID id) {
+
+        PrescriptionItemDetailsDTO prescriptionItemDetailsDTO = prescriptionItemsService.getPrescription(id);
+
+        return ResponseEntity.ok(prescriptionItemDetailsDTO);
+    }
+
+    @PutMapping("/api/admin/prescription-items/{id}")
+    public ResponseEntity<PrescriptionItemDetailsDTO> updatePrescriptionItem(@PathVariable UUID id,
+                                                                             @Valid @RequestBody UpdatePrescriptionItemRequestDTO updatePrescriptionItemRequestDTO) {
+
+        PrescriptionItemDetailsDTO prescriptionItemDetailsDTO = prescriptionItemsService.updatePrescription(id, updatePrescriptionItemRequestDTO);
+
+        return ResponseEntity.ok(prescriptionItemDetailsDTO);
+    }
+
+    @DeleteMapping("/api/admin/prescription-items/{id}")
+    public ResponseEntity<Void> archivePrescriptionItem(@PathVariable UUID id) {
+
+        prescriptionItemsService.archivePrescriptionItem(id);
+
+        return ResponseEntity.noContent().build();
+    }
+
+    @PutMapping("/api/admin/prescription-items/{id}/restore")
+    public ResponseEntity<Void> restorePrescriptionItem(@PathVariable UUID id) {
+
+        prescriptionItemsService.restorePrescriptionItem(id);
+
+        return ResponseEntity.noContent().build();
     }
 
 }
