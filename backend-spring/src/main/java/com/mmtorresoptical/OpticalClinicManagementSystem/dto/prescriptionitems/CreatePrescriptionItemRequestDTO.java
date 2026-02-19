@@ -7,7 +7,7 @@ import java.math.BigDecimal;
 import java.time.LocalDate;
 
 @Data
-public class PrescriptionItemRequestDTO {
+public class CreatePrescriptionItemRequestDTO {
 
     @NotBlank(message = "Correction Type is required")
     private String correctionType;
