@@ -1,60 +1,44 @@
 package com.mmtorresoptical.OpticalClinicManagementSystem.controller;
 
-import com.mmtorresoptical.OpticalClinicManagementSystem.dto.user.UserRequestDTO;
+import com.mmtorresoptical.OpticalClinicManagementSystem.dto.user.CreateUserRequestDTO;
+import com.mmtorresoptical.OpticalClinicManagementSystem.dto.user.UpdateUserRequestDTO;
+import com.mmtorresoptical.OpticalClinicManagementSystem.dto.user.UserDetailsDTO;
+import com.mmtorresoptical.OpticalClinicManagementSystem.dto.user.UserResponseDTO;
 import com.mmtorresoptical.OpticalClinicManagementSystem.enums.Gender;
 import com.mmtorresoptical.OpticalClinicManagementSystem.enums.Role;
 import com.mmtorresoptical.OpticalClinicManagementSystem.exception.ResourceNotFoundException;
 import com.mmtorresoptical.OpticalClinicManagementSystem.model.User;
 import com.mmtorresoptical.OpticalClinicManagementSystem.repository.UserRepository;
+import com.mmtorresoptical.OpticalClinicManagementSystem.services.ControllerService.UserService;
 import jakarta.validation.Valid;
+import lombok.RequiredArgsConstructor;
+import org.springframework.data.domain.Page;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.web.bind.annotation.*;
 
-import java.util.List;
 import java.util.UUID;
 
 @RestController
-@RequestMapping("/api/users")
+@RequiredArgsConstructor
+@RequestMapping("/api/admin/users")
 public class UserController {
 
+    private final UserService userService;
     private final UserRepository userRepository;
     private final PasswordEncoder passwordEncoder;
-
-    UserController(UserRepository userRepository, PasswordEncoder passwordEncoder) {
-        this.userRepository = userRepository;
-        this.passwordEncoder = passwordEncoder;
-    }
 
     /**
      * CREATE a new user
      * Change return type from ResponseEntity<?> to ResponseEntity<Object>
      */
     @PostMapping
-    public ResponseEntity<Object> createUser(@Valid @RequestBody UserRequestDTO userRequest) {
-        // 1. Check if username or email already exists
-        if (userRepository.findByUsername(userRequest.getUsername()).isPresent()) {
-            // This String body is now allowed
-            return ResponseEntity.status(HttpStatus.CONFLICT).body("Username is already taken");
-        }
-        if (userRepository.findByEmail(userRequest.getEmail()).isPresent()) {
-            // This String body is now allowed
-            return ResponseEntity.status(HttpStatus.CONFLICT).body("Email is already in use");
-        }
-
-        User user = new User();
-        mapDtoToEntity(user, userRequest);
-
-        if (userRequest.getPassword() == null || userRequest.getPassword().isBlank()) {
-            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body("Password is required for new users");
-        }
-        user.setPasswordHash(passwordEncoder.encode(userRequest.getPassword()));
-
-        User savedUser = userRepository.save(user);
+    public ResponseEntity<UserResponseDTO> createUser(@Valid @RequestBody CreateUserRequestDTO userRequest) {
+        UserResponseDTO userResponseDTO = userService.createUser(userRequest);
 
         // This User object body is also allowed
-        return ResponseEntity.status(HttpStatus.CREATED).body(savedUser);
+        return ResponseEntity.status(HttpStatus.CREATED).body(userResponseDTO);
     }
 
     /**
@@ -62,9 +46,15 @@ public class UserController {
      * (No change needed here, but ResponseEntity<List<User>> is fine)
      */
     @GetMapping
-    public ResponseEntity<List<User>> getAllUsers() {
-        List<User> users = userRepository.findAllByIsArchivedFalse();
-        return ResponseEntity.ok(users);
+    public ResponseEntity<Page<UserDetailsDTO>> getAllUsers(@RequestParam(defaultValue = "0") int page,
+                                                  @RequestParam(defaultValue = "10") int size,
+                                                  @RequestParam(defaultValue = "fullNameSortable") String sortBy,
+                                                  @RequestParam(defaultValue = "asc") String sortOrder,
+                                                  @RequestParam(defaultValue = "ACTIVE") String archivedStatus) {
+
+        Page<UserDetailsDTO> userDetailsDTOPage = userService.getAllUsers(page, size, sortBy, sortOrder, archivedStatus);
+
+        return ResponseEntity.ok(userDetailsDTOPage);
     }
 
     /**
@@ -72,9 +62,9 @@ public class UserController {
      * (No change needed here)
      */
     @GetMapping("/{id}")
-    public ResponseEntity<User> getUserById(@PathVariable UUID id) {
-        User user = userRepository.findById(id)
-                .orElseThrow(() -> new ResourceNotFoundException("User not found with id: " + id));
+    public ResponseEntity<UserDetailsDTO> getUserById(@PathVariable UUID id) {
+        UserDetailsDTO user = userService.getUser(id);
+
         return ResponseEntity.ok(user);
     }
 
@@ -83,26 +73,11 @@ public class UserController {
      * Change return type from ResponseEntity<User> to ResponseEntity<Object>
      */
     @PutMapping("/{id}")
-    public ResponseEntity<Object> updateUser(@PathVariable UUID id, @Valid @RequestBody UserRequestDTO userRequest) {
-        User user = userRepository.findById(id)
-                .orElseThrow(() -> new ResourceNotFoundException("User not found with id: " + id));
+    public ResponseEntity<UserDetailsDTO> updateUser(@PathVariable UUID id, @Valid @RequestBody UpdateUserRequestDTO userRequest) {
 
-        // Check for conflicts
-        if (!user.getUsername().equals(userRequest.getUsername()) && userRepository.findByUsername(userRequest.getUsername()).isPresent()) {
-            return ResponseEntity.status(HttpStatus.CONFLICT).body("Username is already taken");
-        }
-        if (!user.getEmail().equals(userRequest.getEmail()) && userRepository.findByEmail(userRequest.getEmail()).isPresent()) {
-            return ResponseEntity.status(HttpStatus.CONFLICT).body("Email is already in use");
-        }
+        UserDetailsDTO userDetailsDTO = userService.updateUser(id, userRequest);
 
-        mapDtoToEntity(user, userRequest);
-
-        if (userRequest.getPassword() != null && !userRequest.getPassword().isBlank()) {
-            user.setPasswordHash(passwordEncoder.encode(userRequest.getPassword()));
-        }
-
-        User updatedUser = userRepository.save(user);
-        return ResponseEntity.ok(updatedUser);
+        return ResponseEntity.ok(userDetailsDTO);
     }
 
     /**
@@ -111,11 +86,14 @@ public class UserController {
      */
     @DeleteMapping("/{id}")
     public ResponseEntity<Void> archiveUser(@PathVariable UUID id) {
-        User user = userRepository.findById(id)
-                .orElseThrow(() -> new ResourceNotFoundException("User not found with id: " + id));
+        userService.archiveUser(id);
 
-        user.setIsArchived(true);
-        userRepository.save(user);
+        return ResponseEntity.noContent().build();
+    }
+
+    @PutMapping("/{id}/restore")
+    public ResponseEntity<Void> restoreUser(@PathVariable UUID id) {
+        userService.restoreUser(id);
 
         return ResponseEntity.noContent().build();
     }
@@ -124,7 +102,7 @@ public class UserController {
     /**
      * Helper method to map DTO fields to the User entity
      */
-    private void mapDtoToEntity(User user, UserRequestDTO userRequest) {
+    private void mapDtoToEntity(User user, CreateUserRequestDTO userRequest) {
         user.setFirstName(userRequest.getFirstName());
         user.setMiddleName(userRequest.getMiddleName());
         user.setLastName(userRequest.getLastName());
