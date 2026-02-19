@@ -10,13 +10,12 @@ import com.mmtorresoptical.OpticalClinicManagementSystem.mapper.PatientMapper;
 import com.mmtorresoptical.OpticalClinicManagementSystem.model.Patient;
 import com.mmtorresoptical.OpticalClinicManagementSystem.repository.PatientRepository;
 import com.mmtorresoptical.OpticalClinicManagementSystem.security.HmacHashService;
+import com.mmtorresoptical.OpticalClinicManagementSystem.utils.NameUtils;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
-import org.springframework.http.HttpStatus;
-import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
 
 import java.util.Objects;
@@ -85,7 +84,7 @@ public class PatientService {
         patient.setIsArchived(patientRequest.getIsArchived());
 
         // Generate sortable full name for indexing/search
-        patient.setFullNameSortable(generateFullNameSortable(patient.getFirstName(),patient.getMiddleName(), patient.getLastName()));
+        patient.setFullNameSortable(NameUtils.generateFullNameSortable(patient.getFirstName(),patient.getMiddleName(), patient.getLastName()));
 
         // Persist patient record
         Patient savedPatient = patientRepository.save(patient);
@@ -145,7 +144,7 @@ public class PatientService {
             }
 
             // Update sortable full name
-            retrievedPatient.setFullNameSortable(generateFullNameSortable(first, middle, last));
+            retrievedPatient.setFullNameSortable(NameUtils.generateFullNameSortable(first, middle, last));
 
             // Update hashed names
             retrievedPatient.setFirstNameHash(hmacHashService.hash(first));
@@ -271,42 +270,4 @@ public class PatientService {
                 emailHash
         );
     }
-
-    /**
-     * Generates a normalized full name string for sorting and search operations.
-     *
-     * This method:
-     * - Combines first, middle, and last names
-     * - Handles nullable middle names
-     * - Removes extra whitespace
-     * - Converts the result to uppercase
-     *
-     * The output is used for consistent sorting and
-     * case-insensitive searching.
-     *
-     * @param firstName the patient's first name
-     * @param middleName the patient's middle name (nullable)
-     * @param lastName the patient's last name
-     * @return a normalized sortable full name, or null if required fields are missing
-     */
-    private String generateFullNameSortable(
-            String firstName,
-            String middleName,
-            String lastName
-    ) {
-        if (firstName == null || lastName == null) {
-            return null;
-        }
-
-        String fullName =
-                firstName + " " +
-                        (middleName != null ? middleName : "") + " " +
-                        lastName;
-
-        return fullName
-                .trim()
-                .replaceAll("\\s+", " ")
-                .toUpperCase();
-    }
-
 }
