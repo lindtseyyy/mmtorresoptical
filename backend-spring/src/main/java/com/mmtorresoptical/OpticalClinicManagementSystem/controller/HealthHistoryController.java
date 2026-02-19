@@ -120,7 +120,7 @@ public class HealthHistoryController {
                                                                                @RequestParam(defaultValue = "0") int page,
                                                                           @RequestParam(defaultValue = "10") int size,
                                                                           @RequestParam(defaultValue = "examDate") String sortBy,
-                                                                          @RequestParam(defaultValue = "descending") String sortOrder) {
+                                                                          @RequestParam(defaultValue = "desc") String sortOrder) {
 
         // Determine sorting direction from request parameter
         Sort.Direction direction;
