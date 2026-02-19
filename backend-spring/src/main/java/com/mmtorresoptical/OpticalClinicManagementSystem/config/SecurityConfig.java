@@ -3,7 +3,7 @@ package com.mmtorresoptical.OpticalClinicManagementSystem.config;
 import com.mmtorresoptical.OpticalClinicManagementSystem.repository.UserRepository;
 import com.mmtorresoptical.OpticalClinicManagementSystem.security.JwtAuthenticationFilter;
 import com.mmtorresoptical.OpticalClinicManagementSystem.security.JwtTokenProvider;
-import com.mmtorresoptical.OpticalClinicManagementSystem.service.CustomUserDetailsService.CustomUserDetailsService;
+import com.mmtorresoptical.OpticalClinicManagementSystem.services.CustomUserDetailsService;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
