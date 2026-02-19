@@ -4,6 +4,7 @@ import com.mmtorresoptical.OpticalClinicManagementSystem.enums.Gender;
 import com.mmtorresoptical.OpticalClinicManagementSystem.enums.Role;
 import com.mmtorresoptical.OpticalClinicManagementSystem.model.User;
 import com.mmtorresoptical.OpticalClinicManagementSystem.repository.UserRepository;
+import com.mmtorresoptical.OpticalClinicManagementSystem.utils.NameUtils;
 import org.springframework.boot.CommandLineRunner;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Component;
@@ -47,6 +48,9 @@ public class DataSeeder implements CommandLineRunner {
             // Set other fields
             adminUser.setIsArchived(false);
             // 'createdAt' and 'userId' should be auto-generated
+
+            // Set the full name sortable
+            adminUser.setFullNameSortable(NameUtils.generateFullNameSortable(adminUser.getFirstName(), adminUser.getMiddleName(), adminUser.getLastName()));
 
             // Save the user to the database
             userRepository.save(adminUser);
