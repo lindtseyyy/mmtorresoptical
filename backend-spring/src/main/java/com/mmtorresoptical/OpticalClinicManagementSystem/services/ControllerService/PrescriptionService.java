@@ -126,8 +126,8 @@ public class PrescriptionService {
                 .orElseThrow(() -> new ResourceNotFoundException("Prescription not found with id: " + id));
 
         // Update the fields
-        retrievedPrescription.setExamDate(request.getExamDate());
-        retrievedPrescription.setNotes(request.getNotes());
+        retrievedPrescription.setExamDate(updatePrescriptionRequestDTO.getExamDate());
+        retrievedPrescription.setNotes(updatePrescriptionRequestDTO.getNotes());
 
         // Persist the update prescription
         Prescription updatedPrescription = prescriptionRepository.save(retrievedPrescription);
