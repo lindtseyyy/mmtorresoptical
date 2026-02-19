@@ -1,4 +1,4 @@
-package com.mmtorresoptical.OpticalClinicManagementSystem.service.CustomUserDetailsService;
+package com.mmtorresoptical.OpticalClinicManagementSystem.services;
 
 import com.mmtorresoptical.OpticalClinicManagementSystem.exception.ResourceNotFoundException;
 import com.mmtorresoptical.OpticalClinicManagementSystem.model.User;
