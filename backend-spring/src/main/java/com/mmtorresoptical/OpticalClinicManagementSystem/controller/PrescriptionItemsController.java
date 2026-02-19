@@ -35,7 +35,7 @@ public class PrescriptionItemsController {
                                                                                  @RequestParam(defaultValue = "0") int page,
                                                                                  @RequestParam(defaultValue = "10") int size,
                                                                                  @RequestParam(defaultValue = "createdAt") String sortBy,
-                                                                                 @RequestParam(defaultValue = "ascending") String sortOrder,
+                                                                                 @RequestParam(defaultValue = "asc") String sortOrder,
                                                                                  @RequestParam(defaultValue = "ACTIVE") String archivedStatus) {
 
 
