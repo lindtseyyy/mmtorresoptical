@@ -3,40 +3,23 @@ package com.mmtorresoptical.OpticalClinicManagementSystem.controller;
 import com.mmtorresoptical.OpticalClinicManagementSystem.dto.patient.PatientDetailsDTO;
 import com.mmtorresoptical.OpticalClinicManagementSystem.dto.patient.PatientRequestDTO;
 import com.mmtorresoptical.OpticalClinicManagementSystem.dto.patient.PatientResponseDTO;
-import com.mmtorresoptical.OpticalClinicManagementSystem.enums.Gender;
-import com.mmtorresoptical.OpticalClinicManagementSystem.exception.ResourceNotFoundException;
-import com.mmtorresoptical.OpticalClinicManagementSystem.mapper.PatientMapper;
-import com.mmtorresoptical.OpticalClinicManagementSystem.model.Patient;
-import com.mmtorresoptical.OpticalClinicManagementSystem.repository.PatientRepository;
-import com.mmtorresoptical.OpticalClinicManagementSystem.security.HmacHashService;
+import com.mmtorresoptical.OpticalClinicManagementSystem.services.ControllerService.PatientService;
 import jakarta.validation.Valid;
+import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
-import org.springframework.data.domain.PageRequest;
-import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
-import java.util.Objects;
-import java.util.Optional;
-import java.util.Set;
 import java.util.UUID;
-import java.util.stream.Collectors;
 
 @RestController
+@RequiredArgsConstructor
 @RequestMapping("/api/admin/patients")
 public class PatientController {
 
-    private final PatientRepository patientRepository;
-    private final PatientMapper patientMapper;
-    private final HmacHashService hmacHashService;
-
-    PatientController(PatientRepository patientRepository, PatientMapper patientMapper, HmacHashService hmacHashService) {
-        this.patientRepository = patientRepository;
-        this.patientMapper = patientMapper;
-        this.hmacHashService = hmacHashService;
-    }
+    private final PatientService patientService;
 
     /**
      * Creates a new patient record.
@@ -52,66 +35,10 @@ public class PatientController {
      * @param patientRequest the request payload containing patient information
      * @return ResponseEntity containing the created PatientResponseDTO
      */
-
     @PostMapping
     public ResponseEntity<Object> createPatient(@Valid @RequestBody PatientRequestDTO patientRequest) {
 
-        if(patientExistsByFirstMiddleLastName(patientRequest.getFirstName(), patientRequest.getMiddleName(), patientRequest.getLastName())) {
-            return ResponseEntity.status(HttpStatus.CONFLICT).body("Patient's name is already existing in the records.");
-        }
-
-        if(patientExistsByEmail(patientRequest.getEmail())) {
-            return ResponseEntity.status(HttpStatus.CONFLICT).body("Patient's email is already existing in the records.");
-        }
-
-        Patient patient = new Patient();
-
-        // Set patient names
-        patient.setFirstName(patientRequest.getFirstName());
-        patient.setMiddleName(patientRequest.getMiddleName());
-        patient.setLastName(patientRequest.getLastName());
-
-        // Generate HMAC hashes for sensitive name fields
-        String firstNameHash = hmacHashService.hash(patientRequest.getFirstName());
-        String middleNameHash = Optional.ofNullable(patientRequest.getMiddleName())
-                .filter(name -> !name.isBlank())
-                .map(hmacHashService::hash)
-                .orElse(null);
-
-        String lastNameHash = hmacHashService.hash(patientRequest.getLastName());
-
-        patient.setFirstNameHash(firstNameHash);
-        patient.setMiddleNameHash(middleNameHash);
-        patient.setLastNameHash(lastNameHash);
-
-        // Set patient gender
-        patient.setGender(Gender.valueOf(patientRequest.getGender()));
-
-        // Set contact information
-        patient.setContactNumber(patientRequest.getContactNumber());
-
-        // Set email and generate its hash
-        patient.setEmail(patientRequest.getEmail());
-        String emailHash = hmacHashService.hash(patientRequest.getEmail());
-        patient.setEmailHash(emailHash);
-
-        // Set birth date
-        patient.setBirthDate(patientRequest.getBirthDate());
-
-        // Set patient address
-        patient.setAddress(patientRequest.getAddress());
-
-        // Set archive status
-        patient.setIsArchived(patientRequest.getIsArchived());
-
-        // Generate sortable full name for indexing/search
-        patient.setFullNameSortable(generateFullNameSortable(patient.getFirstName(),patient.getMiddleName(), patient.getLastName()));
-
-        // Persist patient record
-        Patient savedPatient = patientRepository.save(patient);
-
-        // Map entity to response DTO
-        PatientResponseDTO response = patientMapper.entityToResponse(savedPatient);
+        PatientResponseDTO response = patientService.createPatient(patientRequest);
 
         return ResponseEntity.status(HttpStatus.CREATED).body(response);
     }
@@ -132,16 +59,10 @@ public class PatientController {
      */
     @GetMapping
     public ResponseEntity<Page<PatientDetailsDTO>> getAllPatients(@RequestParam(defaultValue = "0") int page,
-                                                        @RequestParam(defaultValue = "10") int size,
-                                                        @RequestParam(defaultValue = "fullNameSortable") String sortBy) {
-        // Create pageable configuration with sorting
-        Pageable pageable = PageRequest.of(page, size, Sort.by(sortBy).ascending());
+                                                                  @RequestParam(defaultValue = "10") int size,
+                                                                  @RequestParam(defaultValue = "fullNameSortable") String sortBy, Sort sort) {
 
-        // Retrieve non-archived patients
-        Page<Patient> retrievedPatients = patientRepository.findAllByIsArchivedFalse(pageable);
-
-        // Map entities to detailed DTO responses
-        Page<PatientDetailsDTO> patientDetailsDTOS = retrievedPatients.map(patientMapper::entityToDetailedResponse);
+        Page<PatientDetailsDTO> patientDetailsDTOS = patientService.getAllPatients(page, size, sortBy);
 
         return ResponseEntity.ok(patientDetailsDTOS);
     }
@@ -159,12 +80,8 @@ public class PatientController {
      */
     @GetMapping("/{id}")
     public ResponseEntity<PatientDetailsDTO> getPatientById(@PathVariable UUID id) {
-        // Retrieve patient or throw exception if not found
-        Patient retrievedPatient = patientRepository.findById(id)
-                .orElseThrow(() -> new ResourceNotFoundException("Patient not found with id: " + id));
 
-        // Map patient entity to detailed DTO
-        PatientDetailsDTO responseDetails = patientMapper.entityToDetailedResponse(retrievedPatient);
+        PatientDetailsDTO responseDetails = patientService.getPatientById(id);
 
         return ResponseEntity.ok(responseDetails);
     }
@@ -187,69 +104,7 @@ public class PatientController {
     @PutMapping("/{id}")
     public ResponseEntity<Object> updatePatient(@PathVariable UUID id, @Valid @RequestBody PatientRequestDTO patientRequest) {
 
-        // Retrieve patient or throw exception if not found
-        Patient retrievedPatient = patientRepository.findById(id)
-                .orElseThrow(() -> new ResourceNotFoundException("Patient not found with id: " + id));
-
-
-        /* -----------------------------
-           Normalize input values
-        ----------------------------- */
-        String first = patientRequest.getFirstName();
-        String middle = Optional.ofNullable(patientRequest.getMiddleName()).orElse("");
-        String last = patientRequest.getLastName();
-
-        /* -----------------------------
-           Validate name uniqueness
-        ----------------------------- */
-        boolean nameChanged =
-                !retrievedPatient.getFirstName().equals(first) ||
-                        !Objects.equals(retrievedPatient.getMiddleName(), middle)
-                        ||
-                        !retrievedPatient.getLastName().equals(last);
-
-        if (nameChanged) {
-
-            boolean isNameExisting = patientExistsByFirstMiddleLastName(first, middle, last);
-
-            if(isNameExisting) {
-                return ResponseEntity.status(HttpStatus.CONFLICT).body("Name is already taken");
-            }
-
-            // Update sortable full name
-            retrievedPatient.setFullNameSortable(generateFullNameSortable(first, middle, last));
-
-            // Update hashed names
-            retrievedPatient.setFirstNameHash(hmacHashService.hash(first));
-            String middleNameHash = Optional.ofNullable(patientRequest.getMiddleName())
-                    .filter(name -> !name.isBlank())
-                    .map(hmacHashService::hash)
-                    .orElse(null);
-            retrievedPatient.setMiddleNameHash(middleNameHash);
-            retrievedPatient.setLastNameHash(hmacHashService.hash(last));
-        }
-
-        /* -----------------------------
-           Validate email uniqueness
-        ----------------------------- */
-        if(!retrievedPatient.getEmail().equals(patientRequest.getEmail())) {
-
-            boolean isEmailExisting = patientExistsByEmail(patientRequest.getEmail());
-
-            if (isEmailExisting) {
-                return ResponseEntity.status(HttpStatus.CONFLICT).body("Email is already in use");
-            }
-
-        }
-
-        /* -----------------------------
-           Apply updates to entity
-        ----------------------------- */
-        patientMapper.updatePatientFromDto(patientRequest, retrievedPatient);
-
-        Patient updatedPatient = patientRepository.save(retrievedPatient);
-
-        PatientResponseDTO response = patientMapper.entityToResponse(updatedPatient);
+        PatientResponseDTO response = patientService.updatePatient(id, patientRequest);
 
         return ResponseEntity.ok(response);
     }
@@ -268,19 +123,10 @@ public class PatientController {
      * @param id the unique identifier of the patient
      * @return ResponseEntity with no content
      */
-
     @DeleteMapping("/{id}")
     public ResponseEntity<Void> archivePatient(@PathVariable UUID id) {
-        // Retrieve patient or throw exception if not found
-        Patient retrievedPatient = patientRepository.findById(id)
-                .orElseThrow(() -> new ResourceNotFoundException("Patient not found with id: " + id));
 
-        // Mark patient as archived (soft delete)
-        retrievedPatient.setIsArchived(true);
-
-        // Persist archive update
-        patientRepository.save(retrievedPatient);
-
+        patientService.archivePatient(id);
         return ResponseEntity.noContent().build();
     }
 
@@ -300,15 +146,8 @@ public class PatientController {
      */
     @PutMapping("/{id}/restore")
     public ResponseEntity<Void> restorePatient(@PathVariable UUID id) {
-        // Retrieve patient or throw exception if not found
-        Patient retrievedPatient = patientRepository.findById(id)
-                .orElseThrow(() -> new ResourceNotFoundException("Patient not found with id: " + id));
 
-        // Mark patient as unarchived
-        retrievedPatient.setIsArchived(false);
-
-        // Persist unarchive update
-        patientRepository.save(retrievedPatient);
+        patientService.restorePatient(id);
 
         return ResponseEntity.noContent().build();
     }
@@ -333,110 +172,10 @@ public class PatientController {
             @RequestParam(defaultValue = "0") int page,
             @RequestParam(defaultValue = "10") int size
     ) {
-        // Configure pagination
-        Pageable pageable = PageRequest.of(page, size);
 
-        // Perform keyword search (case-insensitive)
-        Page<Patient> patientPage = patientRepository.findAllByFullNameSortableContainingIgnoreCase(keyword, pageable);
-
-        // Map entities to detailed DTO responses
-        Page<PatientDetailsDTO> patientDetailsDTOPage = patientPage.map(patientMapper::entityToDetailedResponse);
+        Page<PatientDetailsDTO> patientDetailsDTOPage = patientService.searchPatients(keyword, page, size);
 
         return ResponseEntity.ok(patientDetailsDTOPage);
-    }
-
-    /**
-     * Determines whether a patient record already exists
-     * based on first, middle, and last name.
-     *
-     * This method:
-     * - Hashes the provided name fields using HMAC
-     * - Handles nullable or blank middle names
-     * - Queries the database using hashed values
-     *
-     * @param firstName the patient's first name
-     * @param middleName the patient's middle name (nullable)
-     * @param lastName the patient's last name
-     * @return true if a matching patient exists; false otherwise
-     */
-    private boolean patientExistsByFirstMiddleLastName(
-            String firstName,
-            String middleName,
-            String lastName
-    ) {
-
-        String firstHash = hmacHashService.hash(firstName);
-        String middleHash = Optional.ofNullable(middleName)
-                .filter(name -> !middleName.isBlank())
-                .map(hmacHashService::hash)
-                .orElse(null);
-        String lastHash = hmacHashService.hash(lastName);
-
-        return patientRepository.existsByFirstNameHashAndMiddleNameHashAndLastNameHash(
-                firstHash,
-                middleHash,
-                lastHash
-        );
-    }
-
-    /**
-     * Determines whether a patient record already exists
-     * based on the provided email address.
-     *
-     * This method:
-     * - Hashes the email using HMAC
-     * - Queries the database using the hashed value
-     * - Prevents exposure of raw email data
-     *
-     * @param email the patient's email address
-     * @return true if a matching patient exists; false otherwise
-     */
-    private boolean patientExistsByEmail(
-            String email
-    ) {
-
-        String emailHash = hmacHashService.hash(email);
-
-        return patientRepository.existsByEmailHash(
-                emailHash
-        );
-    }
-
-    /**
-     * Generates a normalized full name string for sorting and search operations.
-     *
-     * This method:
-     * - Combines first, middle, and last names
-     * - Handles nullable middle names
-     * - Removes extra whitespace
-     * - Converts the result to uppercase
-     *
-     * The output is used for consistent sorting and
-     * case-insensitive searching.
-     *
-     * @param firstName the patient's first name
-     * @param middleName the patient's middle name (nullable)
-     * @param lastName the patient's last name
-     * @return a normalized sortable full name, or null if required fields are missing
-     */
-    private String generateFullNameSortable(
-            String firstName,
-            String middleName,
-            String lastName
-    ) {
-        if (firstName == null || lastName == null) {
-            return null;
-        }
-
-        String fullName =
-                firstName + " " +
-                        (middleName != null ? middleName : "") + " " +
-                        lastName;
-
-        return fullName
-                .trim()
-                .replaceAll("\\s+", " ")
-                .toUpperCase();
     }
 
 }
