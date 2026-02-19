@@ -1,6 +1,6 @@
 package com.mmtorresoptical.OpticalClinicManagementSystem.dto.prescription;
 
-import com.mmtorresoptical.OpticalClinicManagementSystem.dto.prescriptionitems.PrescriptionItemRequestDTO;
+import com.mmtorresoptical.OpticalClinicManagementSystem.dto.prescriptionitems.CreatePrescriptionItemRequestDTO;
 import jakarta.validation.constraints.NotNull;
 import lombok.Data;
 
@@ -15,5 +15,5 @@ public class CreatePrescriptionRequestDTO {
     private String notes;
     private Boolean isArchived = false;
 
-    List<PrescriptionItemRequestDTO> itemsRequestDTOList;
+    List<CreatePrescriptionItemRequestDTO> itemsRequestDTOList;
 }
