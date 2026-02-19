@@ -1,4 +1,4 @@
-package com.mmtorresoptical.OpticalClinicManagementSystem.service.CustomUserDetailsService;
+package com.mmtorresoptical.OpticalClinicManagementSystem.services;
 
 import com.mmtorresoptical.OpticalClinicManagementSystem.model.User;
 import com.mmtorresoptical.OpticalClinicManagementSystem.repository.UserRepository;
@@ -7,8 +7,6 @@ import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.core.userdetails.UserDetailsService;
 import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.stereotype.Service;
-
-import java.util.Collections;
 
 @Service
 public class CustomUserDetailsService implements UserDetailsService {
