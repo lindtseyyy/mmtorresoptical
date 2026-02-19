@@ -8,7 +8,9 @@ import com.mmtorresoptical.OpticalClinicManagementSystem.model.*;
 import com.mmtorresoptical.OpticalClinicManagementSystem.repository.PatientRepository;
 import com.mmtorresoptical.OpticalClinicManagementSystem.repository.PrescriptionRepository;
 import com.mmtorresoptical.OpticalClinicManagementSystem.services.AuthenticatedUserService;
+import com.mmtorresoptical.OpticalClinicManagementSystem.services.ControllerService.PrescriptionService;
 import jakarta.validation.Valid;
+import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
@@ -20,25 +22,10 @@ import java.util.List;
 import java.util.UUID;
 
 @RestController
+@RequiredArgsConstructor
 public class PrescriptionController {
 
-    private final PrescriptionRepository prescriptionRepository;
-    private final PatientRepository patientRepository;
-    private final PrescriptionMapper prescriptionMapper;
-    private final PrescriptionItemMapper prescriptionItemMapper;
-    private final AuthenticatedUserService authenticatedUserService;
-
-    PrescriptionController(PrescriptionRepository prescriptionRepository,
-                           PatientRepository patientRepository,
-                           PrescriptionMapper prescriptionMapper,
-                           PrescriptionItemMapper prescriptionItemMapper,
-                           AuthenticatedUserService authenticatedUserService) {
-        this.prescriptionRepository = prescriptionRepository;
-        this.patientRepository = patientRepository;
-        this.prescriptionMapper = prescriptionMapper;
-        this.prescriptionItemMapper = prescriptionItemMapper;
-        this.authenticatedUserService = authenticatedUserService;
-    }
+    private final PrescriptionService prescriptionService;
 
     /**
      * Creates a new prescription for a specific patient.
@@ -58,45 +45,7 @@ public class PrescriptionController {
     @PostMapping("/api/admin/patient/{id}/prescriptions")
     public ResponseEntity<PrescriptionResponseDTO> createPrescription(@PathVariable UUID id, @Valid @RequestBody CreatePrescriptionRequestDTO prescriptionRequest) {
 
-        // Retrieve patient or throw exception if not found
-        Patient retrievedPatient = patientRepository.findById(id)
-                .orElseThrow(() -> new ResourceNotFoundException("Patient not found with id: " + id));
-
-        // Retrieve user
-        User authenticatedUser = authenticatedUserService.getCurrentUser();
-
-        // Create new prescription
-        Prescription prescription = new Prescription();
-
-        // Set parent fields
-        prescription.setExamDate(prescriptionRequest.getExamDate());
-        prescription.setNotes(prescriptionRequest.getNotes());
-        prescription.setIsArchived(prescriptionRequest.getIsArchived());
-
-        prescription.setPatient(retrievedPatient);
-        prescription.setUser(authenticatedUser);
-
-        // Map prescription items
-        List<PrescriptionItem> items = prescriptionRequest
-                .getItemsRequestDTOList()
-                .stream()
-                .map(itemDTO -> {
-                    PrescriptionItem item = prescriptionItemMapper.createRequestDTOtoEntity(itemDTO);
-
-                    item.setPrescription(prescription);
-                    item.setUser(authenticatedUser);
-
-                    return item;
-                }).toList();
-
-        // Set the relationship
-        prescription.setPrescriptionItems(items);
-
-        // Save the prescription
-        Prescription savedPrescription = prescriptionRepository.save(prescription);
-
-        // Map the prescription entity to prescription response DTO
-        PrescriptionResponseDTO prescriptionResponseDTO = prescriptionMapper.entityToResponseDTO(savedPrescription);
+        PrescriptionResponseDTO prescriptionResponseDTO = prescriptionService.createPrescription(id, prescriptionRequest);
 
         return ResponseEntity.ok(prescriptionResponseDTO);
     }
@@ -128,32 +77,9 @@ public class PrescriptionController {
                                                                               @RequestParam(defaultValue = "descending") String sortOrder,
                                                                               @RequestParam(defaultValue = "ACTIVE") String archivedStatus) {
 
-        // Determine sorting direction from request parameter
-        Sort.Direction direction;
+        Page<PrescriptionListDTO> prescriptionListDTOPage = prescriptionService.getAllPatientPrescriptions(id, page, size, sortBy, sortOrder, archivedStatus);
 
-        try {
-            direction = Sort.Direction.fromString(sortOrder);
-        } catch (IllegalArgumentException ex) {
-            // Default to descending if invalid input
-            direction = Sort.Direction.DESC;
-        }
-
-        // Create pageable configuration with sorting
-        Pageable pageable = PageRequest.of(page, size, Sort.by(direction, sortBy));
-
-        // Fetches prescriptions associated with the given patient ID
-        // Filters based on the archived status
-        Page<Prescription> prescriptions = switch (archivedStatus.toUpperCase()) {
-            case "ARCHIVED" -> prescriptionRepository.findAllByIsArchivedTrueAndPatient_PatientId(id, pageable);
-            case "ALL" -> prescriptionRepository.findAllByPatient_PatientId(id, pageable);
-            default -> // ACTIVE
-                    prescriptionRepository.findAllByIsArchivedFalseAndPatient_PatientId(id, pageable);
-        };
-
-        // Map each of prescription entity to prescription listDTO
-        Page<PrescriptionListDTO> prescriptionListDTOS = prescriptions.map(prescriptionMapper::entityToListDTO);
-
-        return ResponseEntity.ok(prescriptionListDTOS);
+        return ResponseEntity.ok(prescriptionListDTOPage);
     }
 
     /**
@@ -170,13 +96,8 @@ public class PrescriptionController {
      */
     @GetMapping("/api/admin/prescriptions/{id}")
     public ResponseEntity<PrescriptionDetailsDTO> getPrescription(@PathVariable UUID id) {
-        // Retrieve prescription or throw exception if not found
-        Prescription retrievedPrescription = prescriptionRepository.findById(id)
-                .orElseThrow(() -> new ResourceNotFoundException("Prescription not found with id: " + id));
 
-        // Map prescription entity to prescription details DTO
-        PrescriptionDetailsDTO prescriptionDetailsDTO = prescriptionMapper.entityToDetailsDTO(retrievedPrescription);
-
+        PrescriptionDetailsDTO prescriptionDetailsDTO = prescriptionService.getPrescription(id);
         return ResponseEntity.ok(prescriptionDetailsDTO);
     }
 
@@ -197,19 +118,8 @@ public class PrescriptionController {
     @PutMapping("/api/admin/prescriptions/{id}")
     public ResponseEntity<PrescriptionDetailsDTO> updatePrescription(@PathVariable UUID id,
                                                                      @Valid @RequestBody UpdatePrescriptionRequestDTO request) {
-        // Retrieve prescription or throw exception if not found
-        Prescription retrievedPrescription = prescriptionRepository.findById(id)
-                .orElseThrow(() -> new ResourceNotFoundException("Prescription not found with id: " + id));
 
-        // Update the fields
-        retrievedPrescription.setExamDate(request.getExamDate());
-        retrievedPrescription.setNotes(request.getNotes());
-
-        // Persist the update prescription
-        Prescription updatedPrescription = prescriptionRepository.save(retrievedPrescription);
-
-        // Map the prescription entity to prescription details DTO
-        PrescriptionDetailsDTO prescriptionDetailsDTO = prescriptionMapper.entityToDetailsDTO(updatedPrescription);
+        PrescriptionDetailsDTO prescriptionDetailsDTO = prescriptionService.updatePrescription(id, request);
 
         return ResponseEntity.ok(prescriptionDetailsDTO);
     }
@@ -229,16 +139,8 @@ public class PrescriptionController {
      */
     @DeleteMapping("/api/admin/prescriptions/{id}")
     public ResponseEntity<Void> archivePrescription(@PathVariable UUID id) {
-        // Retrieve prescription or throw exception if not found
-        Prescription retrievedPrescription = prescriptionRepository.findById(id)
-                .orElseThrow(() -> new ResourceNotFoundException("Prescription not found with id: " + id));
 
-        // Update the isArchived field
-        retrievedPrescription.setIsArchived(true);
-
-        // Persist the updated prescription
-        prescriptionRepository.save(retrievedPrescription);
-
+        prescriptionService.archivePrescription(id);
         return ResponseEntity.noContent().build();
     }
 
@@ -257,15 +159,7 @@ public class PrescriptionController {
      */
     @PutMapping("/api/admin/prescriptions/{id}/restore")
     public ResponseEntity<Void> restorePrescription(@PathVariable UUID id) {
-        // Retrieve prescription or throw exception if not found
-        Prescription retrievedPrescription = prescriptionRepository.findById(id)
-                .orElseThrow(() -> new ResourceNotFoundException("Prescription not found with id: " + id));
-
-        // Update the isArchived field
-        retrievedPrescription.setIsArchived(false);
-
-        // Persist the updated prescription
-        prescriptionRepository.save(retrievedPrescription);
+        prescriptionService.restorePrescription(id);
 
         return ResponseEntity.noContent().build();
     }
