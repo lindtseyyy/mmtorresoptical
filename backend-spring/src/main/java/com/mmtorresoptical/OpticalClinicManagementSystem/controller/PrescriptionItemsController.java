@@ -9,6 +9,7 @@ import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
@@ -20,6 +21,7 @@ public class PrescriptionItemsController {
     private final PrescriptionService prescriptionService;
     private final PrescriptionItemsService prescriptionItemsService;
 
+    @PreAuthorize("hasRole('ADMIN')")
     @PostMapping("/api/admin/prescriptions/{id}/prescription-items")
     public ResponseEntity<List<PrescriptionItemDetailsDTO>> addPrescriptionItems(@PathVariable UUID id, @Valid @RequestBody List<CreatePrescriptionItemRequestDTO> createPrescriptionRequestDTOList) {
         List<PrescriptionItemDetailsDTO> response = prescriptionService.addItems(id, createPrescriptionRequestDTOList);
@@ -27,6 +29,7 @@ public class PrescriptionItemsController {
         return ResponseEntity.ok(response);
     }
 
+    @PreAuthorize("hasRole('ADMIN')")
     @GetMapping("/api/admin/prescriptions/{id}/prescription-items")
     public ResponseEntity<Page<PrescriptionItemDetailsDTO>> getAllPrescriptionItems(@PathVariable UUID id,
                                                                                  @RequestParam(defaultValue = "0") int page,
@@ -41,6 +44,7 @@ public class PrescriptionItemsController {
         return ResponseEntity.ok(prescriptionItemDetailsDTOPage);
     }
 
+    @PreAuthorize("hasRole('ADMIN')")
     @GetMapping("/api/admin/prescription-items/{id}")
     public ResponseEntity<PrescriptionItemDetailsDTO> getPrescriptionItem(@PathVariable UUID id) {
 
@@ -49,6 +53,7 @@ public class PrescriptionItemsController {
         return ResponseEntity.ok(prescriptionItemDetailsDTO);
     }
 
+    @PreAuthorize("hasRole('ADMIN')")
     @PutMapping("/api/admin/prescription-items/{id}")
     public ResponseEntity<PrescriptionItemDetailsDTO> updatePrescriptionItem(@PathVariable UUID id,
                                                                              @Valid @RequestBody UpdatePrescriptionItemRequestDTO updatePrescriptionItemRequestDTO) {
@@ -58,6 +63,7 @@ public class PrescriptionItemsController {
         return ResponseEntity.ok(prescriptionItemDetailsDTO);
     }
 
+    @PreAuthorize("hasRole('ADMIN')")
     @DeleteMapping("/api/admin/prescription-items/{id}")
     public ResponseEntity<Void> archivePrescriptionItem(@PathVariable UUID id) {
 
@@ -66,6 +72,7 @@ public class PrescriptionItemsController {
         return ResponseEntity.noContent().build();
     }
 
+    @PreAuthorize("hasRole('ADMIN')")
     @PutMapping("/api/admin/prescription-items/{id}/restore")
     public ResponseEntity<Void> restorePrescriptionItem(@PathVariable UUID id) {
 

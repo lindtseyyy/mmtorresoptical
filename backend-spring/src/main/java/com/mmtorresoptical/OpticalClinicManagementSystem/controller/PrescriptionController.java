@@ -16,6 +16,7 @@ import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
@@ -42,6 +43,7 @@ public class PrescriptionController {
      *                            details and item entries
      * @return ResponseEntity containing the created PrescriptionResponseDTO
      */
+    @PreAuthorize("hasRole('ADMIN')")
     @PostMapping("/api/admin/patient/{id}/prescriptions")
     public ResponseEntity<PrescriptionResponseDTO> createPrescription(@PathVariable UUID id, @Valid @RequestBody CreatePrescriptionRequestDTO prescriptionRequest) {
 
@@ -69,6 +71,7 @@ public class PrescriptionController {
      *                       ACTIVE, ARCHIVED, or ALL (default = ACTIVE)
      * @return ResponseEntity containing a page of PrescriptionListDTO
      */
+    @PreAuthorize("hasRole('ADMIN')")
     @GetMapping("/api/admin/patient/{id}/prescriptions")
     public ResponseEntity<Page<PrescriptionListDTO>> getAllPatientPrescriptions(@PathVariable UUID id,
                                                                               @RequestParam(defaultValue = "0") int page,
@@ -94,6 +97,7 @@ public class PrescriptionController {
      * @param id the UUID of the prescription to retrieve
      * @return ResponseEntity containing PrescriptionDetailsDTO
      */
+    @PreAuthorize("hasRole('ADMIN')")
     @GetMapping("/api/admin/prescriptions/{id}")
     public ResponseEntity<PrescriptionDetailsDTO> getPrescription(@PathVariable UUID id) {
 
@@ -115,6 +119,7 @@ public class PrescriptionController {
      * @param request the request body containing updated prescription information
      * @return ResponseEntity containing the updated PrescriptionDetailsDTO
      */
+    @PreAuthorize("hasRole('ADMIN')")
     @PutMapping("/api/admin/prescriptions/{id}")
     public ResponseEntity<PrescriptionDetailsDTO> updatePrescription(@PathVariable UUID id,
                                                                      @Valid @RequestBody UpdatePrescriptionRequestDTO request) {
@@ -137,6 +142,7 @@ public class PrescriptionController {
      * @param id the UUID of the prescription to archive
      * @return ResponseEntity with no content upon successful archival
      */
+    @PreAuthorize("hasRole('ADMIN')")
     @DeleteMapping("/api/admin/prescriptions/{id}")
     public ResponseEntity<Void> archivePrescription(@PathVariable UUID id) {
 
@@ -157,6 +163,7 @@ public class PrescriptionController {
      * @param id the UUID of the prescription to restore
      * @return ResponseEntity with no content upon successful restoration
      */
+    @PreAuthorize("hasRole('ADMIN')")
     @PutMapping("/api/admin/prescriptions/{id}/restore")
     public ResponseEntity<Void> restorePrescription(@PathVariable UUID id) {
         prescriptionService.restorePrescription(id);

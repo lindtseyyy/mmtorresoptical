@@ -10,6 +10,7 @@ import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Sort;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.UUID;
@@ -35,6 +36,7 @@ public class PatientController {
      * @param patientRequest the request payload containing patient information
      * @return ResponseEntity containing the created PatientResponseDTO
      */
+    @PreAuthorize("hasRole('ADMIN')")
     @PostMapping
     public ResponseEntity<Object> createPatient(@Valid @RequestBody PatientRequestDTO patientRequest) {
 
@@ -57,6 +59,7 @@ public class PatientController {
      * @param sortBy the field used for sorting (default = fullNameSortable)
      * @return ResponseEntity containing a page of PatientDetailsDTO
      */
+    @PreAuthorize("hasRole('ADMIN')")
     @GetMapping
     public ResponseEntity<Page<PatientDetailsDTO>> getAllPatients(@RequestParam(defaultValue = "0") int page,
                                                                   @RequestParam(defaultValue = "10") int size,
@@ -78,6 +81,7 @@ public class PatientController {
      * @param id the unique identifier of the patient
      * @return ResponseEntity containing PatientDetailsDTO
      */
+    @PreAuthorize("hasRole('ADMIN')")
     @GetMapping("/{id}")
     public ResponseEntity<PatientDetailsDTO> getPatientById(@PathVariable UUID id) {
 
@@ -101,6 +105,7 @@ public class PatientController {
      * @param patientRequest the request payload containing updated patient details
      * @return ResponseEntity containing the updated PatientResponseDTO
      */
+    @PreAuthorize("hasRole('ADMIN')")
     @PutMapping("/{id}")
     public ResponseEntity<Object> updatePatient(@PathVariable UUID id, @Valid @RequestBody PatientRequestDTO patientRequest) {
 
@@ -123,6 +128,7 @@ public class PatientController {
      * @param id the unique identifier of the patient
      * @return ResponseEntity with no content
      */
+    @PreAuthorize("hasRole('ADMIN')")
     @DeleteMapping("/{id}")
     public ResponseEntity<Void> archivePatient(@PathVariable UUID id) {
 
@@ -144,6 +150,7 @@ public class PatientController {
      * @param id the unique identifier of the patient
      * @return ResponseEntity with no content
      */
+    @PreAuthorize("hasRole('ADMIN')")
     @PutMapping("/{id}/restore")
     public ResponseEntity<Void> restorePatient(@PathVariable UUID id) {
 
@@ -166,6 +173,7 @@ public class PatientController {
      * @param size the number of records per page (default = 10)
      * @return ResponseEntity containing a page of PatientDetailsDTO
      */
+    @PreAuthorize("hasRole('ADMIN')")
     @GetMapping("/search")
     public ResponseEntity<Page<PatientDetailsDTO>> searchPatients (
             @RequestParam String keyword,
