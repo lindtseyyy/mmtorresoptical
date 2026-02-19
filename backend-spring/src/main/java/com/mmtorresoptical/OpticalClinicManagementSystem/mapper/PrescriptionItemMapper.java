@@ -3,9 +3,9 @@ package com.mmtorresoptical.OpticalClinicManagementSystem.mapper;
 import com.mmtorresoptical.OpticalClinicManagementSystem.dto.prescriptionitems.CreatePrescriptionItemRequestDTO;
 import com.mmtorresoptical.OpticalClinicManagementSystem.dto.prescriptionitems.PrescriptionItemDetailsDTO;
 import com.mmtorresoptical.OpticalClinicManagementSystem.dto.prescriptionitems.PrescriptionItemResponseDTO;
+import com.mmtorresoptical.OpticalClinicManagementSystem.dto.prescriptionitems.UpdatePrescriptionItemRequestDTO;
 import com.mmtorresoptical.OpticalClinicManagementSystem.model.PrescriptionItem;
-import org.mapstruct.Mapper;
-import org.mapstruct.Mapping;
+import org.mapstruct.*;
 
 @Mapper(
         componentModel = "spring",
@@ -58,4 +58,8 @@ public interface PrescriptionItemMapper {
             source = "user"
     )
     PrescriptionItemDetailsDTO entityToDetailsDTO(PrescriptionItem item);
+
+    @BeanMapping(nullValuePropertyMappingStrategy =
+            NullValuePropertyMappingStrategy.IGNORE)
+    void updatePrescriptionItemFromDTO(UpdatePrescriptionItemRequestDTO updatedItem, @MappingTarget PrescriptionItem prescriptionItem);
 }
