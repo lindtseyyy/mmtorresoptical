@@ -2,8 +2,10 @@ package com.mmtorresoptical.OpticalClinicManagementSystem.model;
 
 import jakarta.persistence.*;
 import lombok.Data;
+import org.hibernate.annotations.CreationTimestamp;
+
 import java.math.BigDecimal;
-import java.time.OffsetDateTime;
+import java.time.LocalDateTime;
 import java.util.List;
 import java.util.UUID;
 
@@ -38,8 +40,9 @@ public class Product {
     @Column(nullable = false)
     private Integer overstockedThreshold;
 
+    @CreationTimestamp
     @Column(updatable = false)
-    private OffsetDateTime dateAdded = OffsetDateTime.now();
+    private LocalDateTime createdAt;
 
     private Boolean isArchived = false;
 
