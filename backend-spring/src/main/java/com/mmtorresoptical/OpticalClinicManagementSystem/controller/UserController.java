@@ -26,8 +26,6 @@ import java.util.UUID;
 public class UserController {
 
     private final UserService userService;
-    private final UserRepository userRepository;
-    private final PasswordEncoder passwordEncoder;
 
     /**
      * CREATE a new user
@@ -96,22 +94,5 @@ public class UserController {
         userService.restoreUser(id);
 
         return ResponseEntity.noContent().build();
-    }
-
-
-    /**
-     * Helper method to map DTO fields to the User entity
-     */
-    private void mapDtoToEntity(User user, CreateUserRequestDTO userRequest) {
-        user.setFirstName(userRequest.getFirstName());
-        user.setMiddleName(userRequest.getMiddleName());
-        user.setLastName(userRequest.getLastName());
-        user.setGender(Gender.valueOf(userRequest.getGender()));
-        user.setBirthDate(userRequest.getBirthDate());
-        user.setEmail(userRequest.getEmail());
-        user.setContactNumber(userRequest.getContactNumber());
-        user.setUsername(userRequest.getUsername());
-        user.setRole(Role.valueOf(userRequest.getRole()));
-        user.setIsArchived(userRequest.getIsArchived());
     }
 }
