@@ -64,6 +64,9 @@ public class User {
 
     // Relationships
     @OneToMany(mappedBy = "user")
+    private List<Product> products;
+
+    @OneToMany(mappedBy = "user")
     private Set<Prescription> prescription;
 
     @OneToMany(mappedBy = "user")
