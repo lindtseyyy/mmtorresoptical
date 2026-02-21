@@ -1,53 +1,43 @@
 package com.mmtorresoptical.OpticalClinicManagementSystem.controller;
 
-import com.mmtorresoptical.OpticalClinicManagementSystem.dto.ProductRequestDTO;
-import com.mmtorresoptical.OpticalClinicManagementSystem.exception.ResourceNotFoundException;
-import com.mmtorresoptical.OpticalClinicManagementSystem.model.Product;
+import com.mmtorresoptical.OpticalClinicManagementSystem.dto.product.CreateProductRequestDTO;
+import com.mmtorresoptical.OpticalClinicManagementSystem.dto.product.ProductDetailsDTO;
+import com.mmtorresoptical.OpticalClinicManagementSystem.dto.product.ProductResponseDTO;
+import com.mmtorresoptical.OpticalClinicManagementSystem.dto.product.UpdateProductRequestDTO;
 import com.mmtorresoptical.OpticalClinicManagementSystem.repository.ProductRepository;
+import com.mmtorresoptical.OpticalClinicManagementSystem.services.ControllerService.ProductService;
 import jakarta.validation.Valid;
+import lombok.RequiredArgsConstructor;
+import org.springframework.data.domain.Page;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 
+import java.math.BigDecimal;
 import java.util.List;
 import java.util.UUID;
 
 @RestController
+@RequiredArgsConstructor
 @RequestMapping("/api/products")
 public class ProductController {
 
+    private final ProductService productService;
     private final ProductRepository productRepository;
-
-    ProductController(ProductRepository productRepository) {
-        this.productRepository = productRepository;
-    }
 
     /**
      * CREATE a new product
      * (Called from AddProduct.tsx)
      */
+    @PreAuthorize("hasRole('ADMIN')")
     @PostMapping
-    public ResponseEntity<Product> createProduct(@Valid @RequestBody ProductRequestDTO productRequest) {
-        // 1. Create new Product entity from DTO
-        Product product = new Product();
-        product.setProductName(productRequest.getProductName());
-        product.setCategory(productRequest.getCategory());
-        product.setSupplier(productRequest.getSupplier());
-        product.setUnitPrice(productRequest.getUnitPrice());
-        product.setQuantity(productRequest.getQuantity());
-        product.setLowLevelThreshold(productRequest.getLowLevelThreshold());
-        product.setOverstockedThreshold(productRequest.getOverstockedThreshold());
-        product.setIsArchived(productRequest.getIsArchived());
+    public ResponseEntity<List<ProductResponseDTO>> createProduct(@Valid @RequestBody List<CreateProductRequestDTO> createProductRequestDTOList) {
 
-        // Handle optional image, set default if not provided
-        product.setImageDir(productRequest.getImageDir() != null ? productRequest.getImageDir() : "/default-product.png");
-
-        // 2. Save product
-        Product savedProduct = productRepository.save(product);
-        System.out.println("savedProduct: " + savedProduct);
+        List<ProductResponseDTO> productResponseDTOList = productService.createProduct(createProductRequestDTOList);
 
         // 3. Return 201 Created with the new product object
-        return ResponseEntity.status(HttpStatus.CREATED).body(savedProduct);
+        return ResponseEntity.status(HttpStatus.CREATED).body(productResponseDTOList);
     }
 
     /**
@@ -56,10 +46,48 @@ public class ProductController {
      * This replaces your /search endpoint for a simpler implementation
      */
     @GetMapping
-    public ResponseEntity<List<Product>> getAllProducts() {
-        // Find all products that are not archived
-        List<Product> products = productRepository.findAllByIsArchivedFalse();
-        return ResponseEntity.ok(products);
+    public ResponseEntity<Page<ProductDetailsDTO>> getAllProducts(
+                                                                  @RequestParam(required = false) String keyword,
+
+                                                                  @RequestParam(required = false) String category,
+                                                                  @RequestParam(required = false) String supplier,
+
+                                                                  @RequestParam(required = false) BigDecimal minPrice,
+                                                                  @RequestParam(required = false) BigDecimal maxPrice,
+
+                                                                  @RequestParam(required = false) Integer minQty,
+                                                                  @RequestParam(required = false) Integer maxQty,
+
+                                                                  @RequestParam(defaultValue = "0") int page,
+                                                                  @RequestParam(defaultValue = "10") int size,
+
+                                                                  @RequestParam(defaultValue = "productName") String sortBy,
+                                                                  @RequestParam(defaultValue = "asc") String sortOrder,
+
+                                                                  @RequestParam(defaultValue = "ACTIVE") String archivedStatus) {
+
+        // Validation for sortBy column
+        List<String> allowedSortByValues = List.of("productName", "quantity", "unitPrice");
+
+        if(!allowedSortByValues.contains(sortBy)) {
+            sortBy = "productName";
+        }
+
+        Page<ProductDetailsDTO> productDetailsDTOPage = productService.getAllProducts(
+                keyword,
+                category,
+                supplier,
+                minPrice,
+                maxPrice,
+                minQty,
+                maxQty,
+                page,
+                size,
+                sortBy,
+                sortOrder,
+                archivedStatus);
+
+        return ResponseEntity.ok(productDetailsDTOPage);
     }
 
     /**
@@ -67,10 +95,9 @@ public class ProductController {
      * (Called from EditProduct.tsx)
      */
     @GetMapping("/{id}")
-    public ResponseEntity<Product> getProductById(@PathVariable UUID id) {
-        Product product = productRepository.findById(id)
-                .orElseThrow(() -> new ResourceNotFoundException("Product not found with id: " + id));
-        return ResponseEntity.ok(product);
+    public ResponseEntity<ProductDetailsDTO> getProductById(@PathVariable UUID id) {
+        ProductDetailsDTO productDetailsDTO = productService.getProduct(id);
+        return ResponseEntity.ok(productDetailsDTO);
     }
 
     /**
@@ -78,25 +105,11 @@ public class ProductController {
      * (Called from EditProduct.tsx)
      */
     @PutMapping("/{id}")
-    public ResponseEntity<Product> updateProduct(@PathVariable UUID id, @Valid @RequestBody ProductRequestDTO productRequest) {
-        // 1. Find the existing product
-        Product product = productRepository.findById(id)
-                .orElseThrow(() -> new ResourceNotFoundException("Product not found with id: " + id));
+    public ResponseEntity<ProductDetailsDTO> updateProduct(@PathVariable UUID id, @Valid @RequestBody UpdateProductRequestDTO productRequest) {
 
-        // 2. Update the entity's fields from the DTO
-        product.setProductName(productRequest.getProductName());
-        product.setCategory(productRequest.getCategory());
-        product.setSupplier(productRequest.getSupplier());
-        product.setUnitPrice(productRequest.getUnitPrice());
-        product.setQuantity(productRequest.getQuantity());
-        product.setLowLevelThreshold(productRequest.getLowLevelThreshold());
-        product.setOverstockedThreshold(productRequest.getOverstockedThreshold());
-        product.setIsArchived(productRequest.getIsArchived());
-        product.setImageDir(productRequest.getImageDir() != null ? productRequest.getImageDir() : "/default-product.png");
+        ProductDetailsDTO productDetailsDTO = productService.updateProduct(id, productRequest);
 
-        // 3. Save the updated product
-        Product updatedProduct = productRepository.save(product);
-        return ResponseEntity.ok(updatedProduct);
+        return ResponseEntity.ok(productDetailsDTO);
     }
 
     /**
@@ -105,15 +118,21 @@ public class ProductController {
      */
     @DeleteMapping("/{id}")
     public ResponseEntity<Void> archiveProduct(@PathVariable UUID id) {
-        // 1. Find the existing product
-        Product product = productRepository.findById(id)
-                .orElseThrow(() -> new ResourceNotFoundException("Product not found with id: " + id));
 
-        // 2. Set the 'isArchived' flag to true
-        product.setIsArchived(true);
+        productService.archiveProduct(id);
 
-        // 3. Save the change
-        productRepository.save(product);
+        // 4. Return No Content (204)
+        return ResponseEntity.noContent().build();
+    }
+
+    /**
+     * ARCHIVE a product (Soft Delete)
+     * (Called from ManageInventory.tsx)
+     */
+    @PutMapping("/{id}/restore")
+    public ResponseEntity<Void> restoreProduct(@PathVariable UUID id) {
+
+        productService.restoreProduct(id);
 
         // 4. Return No Content (204)
         return ResponseEntity.noContent().build();
