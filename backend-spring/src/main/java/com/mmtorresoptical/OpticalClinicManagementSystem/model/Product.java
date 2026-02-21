@@ -47,4 +47,9 @@ public class Product {
     @OneToMany(mappedBy = "product",
             cascade = CascadeType.ALL)
     private List<TransactionItem> transactionItems;
+
+    // Relationships
+    @ManyToOne
+    @JoinColumn(name = "created_by", nullable = false)
+    private User user;
 }
