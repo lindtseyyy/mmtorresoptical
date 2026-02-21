@@ -1,11 +1,11 @@
-package com.mmtorresoptical.OpticalClinicManagementSystem.dto;
+package com.mmtorresoptical.OpticalClinicManagementSystem.dto.product;
 
 import jakarta.validation.constraints.*;
 import lombok.Data;
 import java.math.BigDecimal;
 
 @Data
-public class ProductRequestDTO {
+public class CreateProductRequestDTO {
     @NotEmpty(message = "Product name is required")
     private String productName;
 
