@@ -1,5 +1,7 @@
 package com.mmtorresoptical.OpticalClinicManagementSystem.repository;
 import com.mmtorresoptical.OpticalClinicManagementSystem.model.Product;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
 import java.util.List;
@@ -15,4 +17,7 @@ public interface ProductRepository extends JpaRepository<Product, UUID> {
 
     // This finds all products that are NOT archived
     List<Product> findAllByIsArchivedFalse();
+
+    Page<Product> findAllByIsArchivedFalse(Pageable pageable);
+    Page<Product> findAllByIsArchivedTrue(Pageable pageable);
 }
