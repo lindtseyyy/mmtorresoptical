@@ -1,6 +1,6 @@
 package com.mmtorresoptical.OpticalClinicManagementSystem.dto.healthhistory;
 
-import com.mmtorresoptical.OpticalClinicManagementSystem.dto.user.UserDTO;
+import com.mmtorresoptical.OpticalClinicManagementSystem.dto.user.UserSummaryDTO;
 import lombok.Data;
 
 import java.time.LocalDate;
@@ -21,5 +21,5 @@ public class HealthHistoryResponseDTO {
     private String notes;
     private LocalDateTime createdAt;
     private Boolean isArchived;
-    private UserDTO createdBy;
+    private UserSummaryDTO createdBy;
 }
