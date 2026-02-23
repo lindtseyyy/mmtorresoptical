@@ -4,18 +4,12 @@ import com.mmtorresoptical.OpticalClinicManagementSystem.dto.user.CreateUserRequ
 import com.mmtorresoptical.OpticalClinicManagementSystem.dto.user.UpdateUserRequestDTO;
 import com.mmtorresoptical.OpticalClinicManagementSystem.dto.user.UserDetailsDTO;
 import com.mmtorresoptical.OpticalClinicManagementSystem.dto.user.UserResponseDTO;
-import com.mmtorresoptical.OpticalClinicManagementSystem.enums.Gender;
-import com.mmtorresoptical.OpticalClinicManagementSystem.enums.Role;
-import com.mmtorresoptical.OpticalClinicManagementSystem.exception.ResourceNotFoundException;
-import com.mmtorresoptical.OpticalClinicManagementSystem.model.User;
-import com.mmtorresoptical.OpticalClinicManagementSystem.repository.UserRepository;
 import com.mmtorresoptical.OpticalClinicManagementSystem.services.ControllerService.UserService;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
-import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.UUID;
