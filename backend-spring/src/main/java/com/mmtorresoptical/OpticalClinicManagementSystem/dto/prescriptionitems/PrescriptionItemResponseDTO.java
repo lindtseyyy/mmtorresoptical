@@ -1,6 +1,6 @@
 package com.mmtorresoptical.OpticalClinicManagementSystem.dto.prescriptionitems;
 
-import com.mmtorresoptical.OpticalClinicManagementSystem.dto.user.UserDTO;
+import com.mmtorresoptical.OpticalClinicManagementSystem.dto.user.UserSummaryDTO;
 import lombok.Getter;
 import lombok.Setter;
 
@@ -38,5 +38,5 @@ public class PrescriptionItemResponseDTO {
 
     private Boolean isArchived;
     private LocalDateTime createdAt;
-    private UserDTO createdBy;
+    private UserSummaryDTO createdBy;
 }
