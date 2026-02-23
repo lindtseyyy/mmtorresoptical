@@ -4,8 +4,8 @@ import com.mmtorresoptical.OpticalClinicManagementSystem.dto.patient.PatientDeta
 import com.mmtorresoptical.OpticalClinicManagementSystem.dto.patient.PatientRequestDTO;
 import com.mmtorresoptical.OpticalClinicManagementSystem.dto.patient.PatientResponseDTO;
 import com.mmtorresoptical.OpticalClinicManagementSystem.enums.Gender;
-import com.mmtorresoptical.OpticalClinicManagementSystem.exception.ConflictException;
-import com.mmtorresoptical.OpticalClinicManagementSystem.exception.ResourceNotFoundException;
+import com.mmtorresoptical.OpticalClinicManagementSystem.exception.custom.ConflictException;
+import com.mmtorresoptical.OpticalClinicManagementSystem.exception.custom.ResourceNotFoundException;
 import com.mmtorresoptical.OpticalClinicManagementSystem.mapper.PatientMapper;
 import com.mmtorresoptical.OpticalClinicManagementSystem.model.Patient;
 import com.mmtorresoptical.OpticalClinicManagementSystem.repository.PatientRepository;
