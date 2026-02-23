@@ -4,8 +4,8 @@ import com.mmtorresoptical.OpticalClinicManagementSystem.dto.user.UpdateUserRequ
 import com.mmtorresoptical.OpticalClinicManagementSystem.dto.user.UserDetailsDTO;
 import com.mmtorresoptical.OpticalClinicManagementSystem.dto.user.CreateUserRequestDTO;
 import com.mmtorresoptical.OpticalClinicManagementSystem.dto.user.UserResponseDTO;
-import com.mmtorresoptical.OpticalClinicManagementSystem.exception.ConflictException;
-import com.mmtorresoptical.OpticalClinicManagementSystem.exception.ResourceNotFoundException;
+import com.mmtorresoptical.OpticalClinicManagementSystem.exception.custom.ConflictException;
+import com.mmtorresoptical.OpticalClinicManagementSystem.exception.custom.ResourceNotFoundException;
 import com.mmtorresoptical.OpticalClinicManagementSystem.mapper.UserMapper;
 import com.mmtorresoptical.OpticalClinicManagementSystem.model.User;
 import com.mmtorresoptical.OpticalClinicManagementSystem.repository.UserRepository;
