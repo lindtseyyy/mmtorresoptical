@@ -1,6 +1,6 @@
 package com.mmtorresoptical.OpticalClinicManagementSystem.dto.prescription;
 
-import com.mmtorresoptical.OpticalClinicManagementSystem.dto.user.UserDTO;
+import com.mmtorresoptical.OpticalClinicManagementSystem.dto.user.UserSummaryDTO;
 import lombok.Data;
 
 import java.time.LocalDate;
@@ -15,6 +15,6 @@ public class PrescriptionListDTO {
     private String notes;
     private LocalDateTime createdAt;
     private Boolean isArchived;
-    private UserDTO createdBy;
+    private UserSummaryDTO createdBy;
 
 }
