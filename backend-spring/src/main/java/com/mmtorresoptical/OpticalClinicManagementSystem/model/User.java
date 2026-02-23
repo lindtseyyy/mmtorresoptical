@@ -67,6 +67,9 @@ public class User {
     private List<Product> products;
 
     @OneToMany(mappedBy = "user")
+    private List<Transaction> transactions;
+
+    @OneToMany(mappedBy = "user")
     private Set<Prescription> prescription;
 
     @OneToMany(mappedBy = "user")
@@ -78,7 +81,7 @@ public class User {
     @OneToMany(mappedBy = "user")
     private List<AuditLog> auditLogs;
 
-    @OneToMany(mappedBy = "user")
-    private List<Transaction> transactions;
+    @OneToMany(mappedBy = "voidedBy")
+    private List<Transaction> voidedTransactions;
 
 }
