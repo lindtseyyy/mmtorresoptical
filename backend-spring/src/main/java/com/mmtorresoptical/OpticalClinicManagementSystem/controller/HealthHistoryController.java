@@ -4,8 +4,8 @@ import com.mmtorresoptical.OpticalClinicManagementSystem.dto.healthhistory.Creat
 import com.mmtorresoptical.OpticalClinicManagementSystem.dto.healthhistory.HealthHistoryDetailsDTO;
 import com.mmtorresoptical.OpticalClinicManagementSystem.dto.healthhistory.HealthHistoryResponseDTO;
 import com.mmtorresoptical.OpticalClinicManagementSystem.dto.healthhistory.UpdateHealthHistoryRequestDTO;
-import com.mmtorresoptical.OpticalClinicManagementSystem.dto.user.UserDTO;
-import com.mmtorresoptical.OpticalClinicManagementSystem.exception.ResourceNotFoundException;
+import com.mmtorresoptical.OpticalClinicManagementSystem.dto.user.UserSummaryDTO;
+import com.mmtorresoptical.OpticalClinicManagementSystem.exception.custom.ResourceNotFoundException;
 import com.mmtorresoptical.OpticalClinicManagementSystem.mapper.HealthHistoryMapper;
 import com.mmtorresoptical.OpticalClinicManagementSystem.mapper.UserMapper;
 import com.mmtorresoptical.OpticalClinicManagementSystem.model.HealthHistory;
@@ -88,8 +88,8 @@ public class HealthHistoryController {
         HealthHistoryResponseDTO response = healthHistoryMapper.historyToResponseDTO(savedHistory);
 
         // Setting the createdBy
-        UserDTO userDTO = userMapper.entityToDTO(retrievedUser);
-        response.setCreatedBy(userDTO);
+        UserSummaryDTO userSummaryDTO = userMapper.entityToDTO(retrievedUser);
+        response.setCreatedBy(userSummaryDTO);
 
         return ResponseEntity.status(HttpStatus.CREATED).body(response);
     }
