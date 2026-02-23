@@ -1,6 +1,6 @@
 package com.mmtorresoptical.OpticalClinicManagementSystem.services;
 
-import com.mmtorresoptical.OpticalClinicManagementSystem.exception.ResourceNotFoundException;
+import com.mmtorresoptical.OpticalClinicManagementSystem.exception.custom.ResourceNotFoundException;
 import com.mmtorresoptical.OpticalClinicManagementSystem.model.User;
 import com.mmtorresoptical.OpticalClinicManagementSystem.repository.UserRepository;
 import com.mmtorresoptical.OpticalClinicManagementSystem.security.CustomUserDetails;
