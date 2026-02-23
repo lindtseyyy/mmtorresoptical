@@ -4,20 +4,19 @@ import com.mmtorresoptical.OpticalClinicManagementSystem.dto.product.CreateProdu
 import com.mmtorresoptical.OpticalClinicManagementSystem.dto.product.ProductDetailsDTO;
 import com.mmtorresoptical.OpticalClinicManagementSystem.dto.product.ProductResponseDTO;
 import com.mmtorresoptical.OpticalClinicManagementSystem.dto.product.UpdateProductRequestDTO;
-import com.mmtorresoptical.OpticalClinicManagementSystem.dto.user.UserDetailsDTO;
-import com.mmtorresoptical.OpticalClinicManagementSystem.exception.ResourceNotFoundException;
+import com.mmtorresoptical.OpticalClinicManagementSystem.exception.custom.ResourceNotFoundException;
 import com.mmtorresoptical.OpticalClinicManagementSystem.mapper.ProductMapper;
 import com.mmtorresoptical.OpticalClinicManagementSystem.model.Product;
 import com.mmtorresoptical.OpticalClinicManagementSystem.model.User;
 import com.mmtorresoptical.OpticalClinicManagementSystem.repository.ProductRepository;
 import com.mmtorresoptical.OpticalClinicManagementSystem.services.AuthenticatedUserService;
 import com.mmtorresoptical.OpticalClinicManagementSystem.specification.ProductSpecification;
+import com.mmtorresoptical.OpticalClinicManagementSystem.utils.UUIDUtils;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.*;
 import org.springframework.data.jpa.domain.Specification;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
-import org.springframework.web.bind.annotation.RequestParam;
 
 import java.math.BigDecimal;
 import java.util.List;
@@ -69,7 +68,7 @@ public class ProductService {
             String sortOrder,
             String archivedStatus) {
 
-        if (keyword != null && isUUID(keyword)) {
+        if (keyword != null && UUIDUtils.isUUID(keyword)) {
 
             Optional<Product> product =
                     productRepository.findById(UUID.fromString(keyword));
@@ -176,12 +175,4 @@ public class ProductService {
         productRepository.save(retrievedProduct);
     }
 
-    private boolean isUUID(String keyword) {
-        try {
-            UUID.fromString(keyword);
-            return true;
-        } catch (IllegalArgumentException e) {
-            return false;
-        }
-    }
 }
