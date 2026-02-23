@@ -4,12 +4,16 @@ import com.mmtorresoptical.OpticalClinicManagementSystem.enums.DiscountType;
 import jakarta.persistence.*;
 import jakarta.validation.constraints.Min;
 import jakarta.validation.constraints.NotNull;
-import org.hibernate.annotations.CreationTimestamp;
+import lombok.Getter;
+import lombok.Setter;
 
 import java.math.BigDecimal;
-import java.time.LocalDateTime;
+import java.util.ArrayList;
+import java.util.List;
 import java.util.UUID;
 
+@Getter
+@Setter
 @Entity
 @Table(name = "transaction_items")
 public class TransactionItem {
@@ -39,12 +43,12 @@ public class TransactionItem {
     @Column(name = "discount_value", precision = 10, scale = 2)
     private BigDecimal discountValue;
 
-    // Flags
-    @Column(name = "is_refunded", nullable = false)
-    private Boolean refunded = false;
+    @Column(name = "refunded_quantity")
+    private Integer refundedQuantity;
 
     @Column(name = "is_discounted", nullable = false)
-    private Boolean discounted = false;
+    private Boolean isDiscounted = false;
+
 
     //Relationships
     // MANY items → ONE transaction
@@ -57,33 +61,11 @@ public class TransactionItem {
     @JoinColumn(name = "product_id", nullable = false)
     private Product product;
 
-    // Methods
-    @PrePersist
-    @PreUpdate
-    protected void calculateSubtotal() {
+    @OneToMany(
+            mappedBy = "transactionItem",
+            cascade = CascadeType.ALL,
+            orphanRemoval = true
+    )
+    private List<Refund> refunds = new ArrayList<>();
 
-        BigDecimal baseAmount =
-                unitPrice.multiply(BigDecimal.valueOf(quantity));
-
-        BigDecimal discountAmount = BigDecimal.ZERO;
-
-        if (discountType != null && discountValue != null) {
-
-            switch (discountType) {
-
-                case PERCENT:
-                    discountAmount =
-                            baseAmount.multiply(discountValue)
-                                    .divide(BigDecimal.valueOf(100));
-                    break;
-
-                case FIXED:
-                    discountAmount = discountValue;
-                    break;
-            }
-        }
-
-        this.subtotal = baseAmount.subtract(discountAmount);
-    }
 }
-
