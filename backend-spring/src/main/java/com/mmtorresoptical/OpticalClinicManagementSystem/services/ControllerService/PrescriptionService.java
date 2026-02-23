@@ -3,7 +3,7 @@ package com.mmtorresoptical.OpticalClinicManagementSystem.services.ControllerSer
 import com.mmtorresoptical.OpticalClinicManagementSystem.dto.prescription.*;
 import com.mmtorresoptical.OpticalClinicManagementSystem.dto.prescriptionitems.CreatePrescriptionItemRequestDTO;
 import com.mmtorresoptical.OpticalClinicManagementSystem.dto.prescriptionitems.PrescriptionItemDetailsDTO;
-import com.mmtorresoptical.OpticalClinicManagementSystem.exception.ResourceNotFoundException;
+import com.mmtorresoptical.OpticalClinicManagementSystem.exception.custom.ResourceNotFoundException;
 import com.mmtorresoptical.OpticalClinicManagementSystem.mapper.PrescriptionItemMapper;
 import com.mmtorresoptical.OpticalClinicManagementSystem.mapper.PrescriptionMapper;
 import com.mmtorresoptical.OpticalClinicManagementSystem.model.Patient;
