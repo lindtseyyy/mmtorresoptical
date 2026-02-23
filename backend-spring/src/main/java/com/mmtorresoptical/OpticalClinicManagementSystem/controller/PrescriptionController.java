@@ -1,25 +1,14 @@
 package com.mmtorresoptical.OpticalClinicManagementSystem.controller;
 
 import com.mmtorresoptical.OpticalClinicManagementSystem.dto.prescription.*;
-import com.mmtorresoptical.OpticalClinicManagementSystem.exception.ResourceNotFoundException;
-import com.mmtorresoptical.OpticalClinicManagementSystem.mapper.PrescriptionItemMapper;
-import com.mmtorresoptical.OpticalClinicManagementSystem.mapper.PrescriptionMapper;
-import com.mmtorresoptical.OpticalClinicManagementSystem.model.*;
-import com.mmtorresoptical.OpticalClinicManagementSystem.repository.PatientRepository;
-import com.mmtorresoptical.OpticalClinicManagementSystem.repository.PrescriptionRepository;
-import com.mmtorresoptical.OpticalClinicManagementSystem.services.AuthenticatedUserService;
 import com.mmtorresoptical.OpticalClinicManagementSystem.services.ControllerService.PrescriptionService;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
-import org.springframework.data.domain.PageRequest;
-import org.springframework.data.domain.Pageable;
-import org.springframework.data.domain.Sort;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 
-import java.util.List;
 import java.util.UUID;
 
 @RestController
