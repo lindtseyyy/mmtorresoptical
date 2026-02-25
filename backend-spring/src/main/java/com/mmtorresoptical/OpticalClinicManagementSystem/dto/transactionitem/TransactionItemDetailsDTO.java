@@ -18,7 +18,6 @@ public class TransactionItemDetailsDTO {
     private Integer quantity;
     private BigDecimal unitPrice;
     private BigDecimal subtotal;
-    private Boolean isRefunded;
     private Boolean isDiscounted;
     private String discountType;
     private BigDecimal discountValue;
