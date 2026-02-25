@@ -46,9 +46,8 @@ public class TransactionItem {
     @Column(name = "refunded_quantity")
     private Integer refundedQuantity;
 
-    @Column(name = "is_discounted", nullable = false)
-    private Boolean isDiscounted = false;
-
+    @Column(name = "refund_reason", columnDefinition = "TEXT")
+    private String refundReason;
 
     //Relationships
     // MANY items → ONE transaction
