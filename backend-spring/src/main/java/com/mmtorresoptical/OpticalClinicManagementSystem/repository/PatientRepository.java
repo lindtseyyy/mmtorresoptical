@@ -1,14 +1,16 @@
 package com.mmtorresoptical.OpticalClinicManagementSystem.repository;
 
 import com.mmtorresoptical.OpticalClinicManagementSystem.model.Patient;
+import com.mmtorresoptical.OpticalClinicManagementSystem.model.Product;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.data.jpa.repository.JpaSpecificationExecutor;
 
 import java.util.Optional;
 import java.util.UUID;
 
-public interface PatientRepository extends JpaRepository<Patient, UUID> {
+public interface PatientRepository extends JpaRepository<Patient, UUID>, JpaSpecificationExecutor<Patient> {
     // For finding patients
     Page<Patient> findAllByIsArchivedFalse(Pageable pageable);
 
