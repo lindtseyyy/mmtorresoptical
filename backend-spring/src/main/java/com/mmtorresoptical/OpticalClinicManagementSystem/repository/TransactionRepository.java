@@ -9,5 +9,6 @@ import java.util.UUID;
 
 public interface TransactionRepository extends JpaRepository<Transaction, UUID>, JpaSpecificationExecutor<Transaction> {
 
+    Boolean existsByReferenceNumber(String referenceNumber);
 
 }
