@@ -1,10 +1,14 @@
 package com.mmtorresoptical.OpticalClinicManagementSystem.services.ControllerService;
 
+import com.mmtorresoptical.OpticalClinicManagementSystem.dto.audit.transaction.TransactionAuditDTO;
 import com.mmtorresoptical.OpticalClinicManagementSystem.dto.refund.RefundTransactionRequestDTO;
 import com.mmtorresoptical.OpticalClinicManagementSystem.dto.transaction.*;
 import com.mmtorresoptical.OpticalClinicManagementSystem.dto.refund.RefundItemDTO;
+import com.mmtorresoptical.OpticalClinicManagementSystem.enums.ActionType;
 import com.mmtorresoptical.OpticalClinicManagementSystem.enums.PaymentType;
+import com.mmtorresoptical.OpticalClinicManagementSystem.enums.ResourceType;
 import com.mmtorresoptical.OpticalClinicManagementSystem.enums.TransactionStatus;
+import com.mmtorresoptical.OpticalClinicManagementSystem.exception.custom.BadRequestException;
 import com.mmtorresoptical.OpticalClinicManagementSystem.exception.custom.InsufficientStockException;
 import com.mmtorresoptical.OpticalClinicManagementSystem.exception.custom.ResourceNotFoundException;
 import com.mmtorresoptical.OpticalClinicManagementSystem.mapper.TransactionItemMapper;
@@ -13,6 +17,7 @@ import com.mmtorresoptical.OpticalClinicManagementSystem.model.*;
 import com.mmtorresoptical.OpticalClinicManagementSystem.repository.*;
 import com.mmtorresoptical.OpticalClinicManagementSystem.services.AuthenticatedUserService;
 import com.mmtorresoptical.OpticalClinicManagementSystem.specification.TransactionSpecification;
+import com.mmtorresoptical.OpticalClinicManagementSystem.services.helper.JSONService;
 import com.mmtorresoptical.OpticalClinicManagementSystem.utils.UUIDUtils;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.*;
@@ -40,6 +45,8 @@ public class TransactionService {
     private final ProductRepository productRepository;
     private final TransactionItemMapper transactionItemMapper;
     private final RefundRepository refundRepository;
+    private final AuditLogService auditLogService;
+    private final JSONService jsonService;
 
     @Transactional
     public TransactionResponseDTO createTransaction(TransactionRequestDTO transactionRequestDTO) {
@@ -52,6 +59,14 @@ public class TransactionService {
             // Retrieve patient or throw exception if not found
             patient = patientRepository.findById(patientId)
                     .orElseThrow(() -> new ResourceNotFoundException("Patient not found with id: " + patientId));
+        }
+
+        String ref = transactionRequestDTO.getReferenceNumber();
+
+        if (ref != null &&
+                transactionRepository.existsByReferenceNumber(ref)) {
+
+            throw new BadRequestException("Reference number already used");
         }
 
         Transaction transaction = transactionMapper.requestDTOtoEntity(transactionRequestDTO);
@@ -94,18 +109,12 @@ public class TransactionService {
 
                     if (dto.getDiscountType() != null && dto.getDiscountValue() != null) {
 
-                        switch (dto.getDiscountType()) {
-
-                            case PERCENT:
-                                discountAmount =
-                                        baseAmount.multiply(dto.getDiscountValue())
-                                                .divide(BigDecimal.valueOf(100));
-                                break;
-
-                            case FIXED:
-                                discountAmount = dto.getDiscountValue();
-                                break;
-                        }
+                        discountAmount = switch (dto.getDiscountType()) {
+                            case PERCENT -> baseAmount.multiply(dto.getDiscountValue())
+                                    .divide(BigDecimal.valueOf(100), 2,  // scale (decimal places)
+                                            RoundingMode.HALF_UP);
+                            case FIXED -> dto.getDiscountValue();
+                        };
                     }
 
 
@@ -126,11 +135,18 @@ public class TransactionService {
         transaction.setTransactionStatus(TransactionStatus.COMPLETED);
 
         Transaction savedTransaction = transactionRepository.saveAndFlush(transaction);
-        System.out.println(savedTransaction.getTransactionDate());
 
-        TransactionResponseDTO s = transactionMapper.entityToResponseDTO(savedTransaction);
-        System.out.println(s.getTransactionDate());
-        return s;
+        // Audit Logging
+        TransactionAuditDTO auditDTO = transactionMapper.entityToAuditDTO(savedTransaction);
+        String detailsJson = jsonService.toJson(auditDTO);
+        auditLogService.log(ActionType.CREATE,
+                ResourceType.TRANSACTION,
+                savedTransaction.getTransactionId(),
+                "Created transaction record",
+                detailsJson
+                );
+
+        return transactionMapper.entityToResponseDTO(savedTransaction);
     }
 
     public Page<TransactionListDTO> getAllTransactions(
@@ -323,7 +339,7 @@ public class TransactionService {
             refund.setRefundQuantity(newRefundQty);
             refund.setRefundReason(dto.getRefundReason());
             refund.setRefundedAt(LocalDateTime.now());
-            refund.setRefundedBy(authenticatedUserService.getCurrentUser());
+            refund.setUser(authenticatedUserService.getCurrentUser());
 
             refundRepository.save(refund);
 
