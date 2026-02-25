@@ -1,8 +1,6 @@
 package com.mmtorresoptical.OpticalClinicManagementSystem.dto.transactionitem;
 
 import com.mmtorresoptical.OpticalClinicManagementSystem.dto.product.ProductSummaryDTO;
-import com.mmtorresoptical.OpticalClinicManagementSystem.enums.DiscountType;
-import jakarta.persistence.Column;
 import lombok.Data;
 
 import java.math.BigDecimal;
@@ -18,7 +16,6 @@ public class TransactionItemResponseDTO {
     private Integer quantity;
     private BigDecimal unitPrice;
     private BigDecimal subtotal;
-    private Boolean isRefunded;
     private Boolean isDiscounted;
     private String discountType;
     private BigDecimal discountValue;
