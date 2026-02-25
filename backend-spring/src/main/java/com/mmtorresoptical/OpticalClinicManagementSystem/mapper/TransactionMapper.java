@@ -1,5 +1,6 @@
 package com.mmtorresoptical.OpticalClinicManagementSystem.mapper;
 
+import com.mmtorresoptical.OpticalClinicManagementSystem.dto.audit.transaction.TransactionAuditDTO;
 import com.mmtorresoptical.OpticalClinicManagementSystem.dto.transaction.TransactionDetailsDTO;
 import com.mmtorresoptical.OpticalClinicManagementSystem.dto.transaction.TransactionListDTO;
 import com.mmtorresoptical.OpticalClinicManagementSystem.dto.transaction.TransactionRequestDTO;
@@ -11,7 +12,7 @@ import org.mapstruct.Mapping;
 import java.math.BigDecimal;
 
 @Mapper(componentModel = "spring",
-uses = {UserMapper.class, PatientMapper.class})
+uses = {UserMapper.class, PatientMapper.class, TransactionItemMapper.class})
 public interface TransactionMapper {
 
     Transaction requestDTOtoEntity(TransactionRequestDTO transactionRequestDTO);
@@ -89,6 +90,25 @@ public interface TransactionMapper {
             source = "transactionDate"
     )
     TransactionListDTO entityToListDTO(Transaction transaction);
+
+
+    @Mapping(
+            target = "paymentProofUrl",
+            source = "gcashPaymentImgDir"
+    )
+    @Mapping(
+            target = "voidedByUserId",
+            source = "voidedBy.userId"
+    )
+    @Mapping(
+            target = "patientId",
+            source = "patient.patientId"
+    )
+    @Mapping(
+            target = "createdByUserId",
+            source = "user.userId"
+    )
+    TransactionAuditDTO entityToAuditDTO(Transaction transaction);
 
     default BigDecimal calculateChange(BigDecimal cashTender, BigDecimal totalAmount) {
         return cashTender.subtract(totalAmount);
