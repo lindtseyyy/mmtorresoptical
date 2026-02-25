@@ -3,6 +3,7 @@ package com.mmtorresoptical.OpticalClinicManagementSystem.dto.product;
 import lombok.Data;
 
 import java.math.BigDecimal;
+import java.time.LocalDateTime;
 import java.util.UUID;
 
 @Data
@@ -17,5 +18,6 @@ public class ProductDetailsDTO {
     private Integer quantity;
     private Integer lowLevelThreshold;
     private Integer overstockedThreshold;
-    private Boolean isArchived = false;
+    private Boolean isArchived;
+    private LocalDateTime createdAt;
 }
