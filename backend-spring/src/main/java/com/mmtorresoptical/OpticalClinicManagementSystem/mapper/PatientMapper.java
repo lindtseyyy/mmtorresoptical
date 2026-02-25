@@ -1,5 +1,6 @@
 package com.mmtorresoptical.OpticalClinicManagementSystem.mapper;
 
+import com.mmtorresoptical.OpticalClinicManagementSystem.dto.audit.patient.PatientAuditDTO;
 import com.mmtorresoptical.OpticalClinicManagementSystem.dto.patient.PatientDetailsDTO;
 import com.mmtorresoptical.OpticalClinicManagementSystem.dto.patient.PatientRequestDTO;
 import com.mmtorresoptical.OpticalClinicManagementSystem.dto.patient.PatientResponseDTO;
@@ -24,6 +25,12 @@ public interface PatientMapper {
             expression = "java(patient.getGender().name())"
     )
     PatientDetailsDTO entityToDetailedResponse(Patient patient);
+
+    @Mapping(
+            target = "gender",
+            expression = "java(patient.getGender().name())"
+    )
+    PatientAuditDTO entityToAuditDTO(Patient patient);
 
     Patient dtoToPatient(PatientRequestDTO patientRequest);
 
