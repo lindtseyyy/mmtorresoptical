@@ -2,6 +2,11 @@ package com.mmtorresoptical.OpticalClinicManagementSystem.utils;
 
 public class NameUtils {
 
+    private NameUtils() {
+        throw new UnsupportedOperationException(
+                "Utility class cannot be instantiated");
+    }
+
     /**
      * Generates a normalized full name string for sorting and search operations.
      *
