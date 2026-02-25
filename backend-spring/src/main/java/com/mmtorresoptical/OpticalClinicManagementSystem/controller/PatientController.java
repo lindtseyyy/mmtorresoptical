@@ -61,11 +61,15 @@ public class PatientController {
      */
     @PreAuthorize("hasRole('ADMIN')")
     @GetMapping
-    public ResponseEntity<Page<PatientDetailsDTO>> getAllPatients(@RequestParam(defaultValue = "0") int page,
+    public ResponseEntity<Page<PatientDetailsDTO>> getAllPatients(
+            @RequestParam(required = false) String keyword,
+            @RequestParam(defaultValue = "0") int page,
+            @RequestParam(defaultValue = "ACTIVE") String archivedStatus,
                                                                   @RequestParam(defaultValue = "10") int size,
-                                                                  @RequestParam(defaultValue = "fullNameSortable") String sortBy, Sort sort) {
+                                                                  @RequestParam(defaultValue = "fullNameSortable") String sortBy,
+            @RequestParam(defaultValue = "asc") String sortOrder) {
 
-        Page<PatientDetailsDTO> patientDetailsDTOS = patientService.getAllPatients(page, size, sortBy);
+        Page<PatientDetailsDTO> patientDetailsDTOS = patientService.getAllPatients(keyword, page, size, sortBy, sortOrder, archivedStatus);
 
         return ResponseEntity.ok(patientDetailsDTOS);
     }
