@@ -27,7 +27,7 @@ public class Refund {
     private BigDecimal refundAmount;
 
     @ManyToOne@JoinColumn(name = "user_id", nullable = false)
-    private User refundedBy;
+    private User user;
 
     @ManyToOne
     @JoinColumn(name = "transaction_item_id", nullable = false)
