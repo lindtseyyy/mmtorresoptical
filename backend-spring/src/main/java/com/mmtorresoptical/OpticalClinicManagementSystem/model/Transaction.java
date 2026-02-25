@@ -40,7 +40,7 @@ public class Transaction {
     private PaymentType paymentType;
 
     // OPTIONAL — for GCash
-    @Column(name = "reference_number", length = 100)
+    @Column(name = "reference_number", length = 100, unique = true)
     private String referenceNumber;
 
     // OPTIONAL — for GCash / online payments
@@ -75,7 +75,7 @@ public class Transaction {
 
     // Foreign Key — patient (patient_id)
     @ManyToOne(optional = true)
-    @JoinColumn(name = "patient_id", nullable = false)
+    @JoinColumn(name = "patient_id")
     private Patient patient;
 
     @OneToMany(mappedBy = "transaction",
