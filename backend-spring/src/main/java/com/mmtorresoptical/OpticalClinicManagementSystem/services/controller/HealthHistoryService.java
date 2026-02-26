@@ -1,4 +1,4 @@
-package com.mmtorresoptical.OpticalClinicManagementSystem.services.ControllerService;
+package com.mmtorresoptical.OpticalClinicManagementSystem.services.controller;
 
 import com.mmtorresoptical.OpticalClinicManagementSystem.dto.healthhistory.CreateHealthHistoryRequestDTO;
 import com.mmtorresoptical.OpticalClinicManagementSystem.dto.healthhistory.HealthHistoryDetailsDTO;
@@ -12,7 +12,7 @@ import com.mmtorresoptical.OpticalClinicManagementSystem.model.User;
 import com.mmtorresoptical.OpticalClinicManagementSystem.repository.HealthHistoryRepository;
 import com.mmtorresoptical.OpticalClinicManagementSystem.repository.PatientRepository;
 import com.mmtorresoptical.OpticalClinicManagementSystem.services.AuthenticatedUserService;
-import com.mmtorresoptical.OpticalClinicManagementSystem.services.ControllerService.AuditLogService.resources.HealthHistoryAuditHelper;
+import com.mmtorresoptical.OpticalClinicManagementSystem.services.auditlog.resources.HealthHistoryAuditHelper;
 import com.mmtorresoptical.OpticalClinicManagementSystem.specification.HealthHistorySpecification;
 import com.mmtorresoptical.OpticalClinicManagementSystem.utils.UUIDUtils;
 import lombok.RequiredArgsConstructor;
@@ -70,6 +70,7 @@ public class HealthHistoryService {
                                                               String sortBy,
                                                               String sortOrder,
                                                               String archivedStatus) {
+
         Specification<HealthHistory> spec = Specification.allOf();
 
         if (keyword != null && UUIDUtils.isUUID(keyword)) {
