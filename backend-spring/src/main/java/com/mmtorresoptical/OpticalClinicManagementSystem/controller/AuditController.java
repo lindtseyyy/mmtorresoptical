@@ -3,7 +3,7 @@ package com.mmtorresoptical.OpticalClinicManagementSystem.controller;
 import com.mmtorresoptical.OpticalClinicManagementSystem.dto.audit.AuditDetailsDTO;
 import com.mmtorresoptical.OpticalClinicManagementSystem.enums.ActionType;
 import com.mmtorresoptical.OpticalClinicManagementSystem.enums.ResourceType;
-import com.mmtorresoptical.OpticalClinicManagementSystem.services.ControllerService.AuditLogService;
+import com.mmtorresoptical.OpticalClinicManagementSystem.services.ControllerService.AuditLogService.AuditLogService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
 import org.springframework.web.bind.annotation.GetMapping;
