@@ -19,5 +19,4 @@ public class PrescriptionDetailsDTO {
     private Boolean isArchived;
     private UserSummaryDTO createdBy;
 
-    private List<PrescriptionItemResponseDTO> prescriptionItems;
 }
