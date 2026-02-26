@@ -4,7 +4,7 @@ import com.mmtorresoptical.OpticalClinicManagementSystem.dto.refund.RefundTransa
 import com.mmtorresoptical.OpticalClinicManagementSystem.dto.transaction.*;
 import com.mmtorresoptical.OpticalClinicManagementSystem.enums.PaymentType;
 import com.mmtorresoptical.OpticalClinicManagementSystem.enums.TransactionStatus;
-import com.mmtorresoptical.OpticalClinicManagementSystem.services.ControllerService.TransactionService;
+import com.mmtorresoptical.OpticalClinicManagementSystem.services.controller.TransactionService;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
