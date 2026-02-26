@@ -5,7 +5,7 @@ import com.mmtorresoptical.OpticalClinicManagementSystem.dto.product.ProductDeta
 import com.mmtorresoptical.OpticalClinicManagementSystem.dto.product.ProductResponseDTO;
 import com.mmtorresoptical.OpticalClinicManagementSystem.dto.product.UpdateProductRequestDTO;
 import com.mmtorresoptical.OpticalClinicManagementSystem.repository.ProductRepository;
-import com.mmtorresoptical.OpticalClinicManagementSystem.services.ControllerService.ProductService;
+import com.mmtorresoptical.OpticalClinicManagementSystem.services.controller.ProductService;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
