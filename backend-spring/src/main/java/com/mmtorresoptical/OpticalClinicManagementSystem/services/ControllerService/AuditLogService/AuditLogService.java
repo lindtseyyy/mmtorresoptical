@@ -1,4 +1,4 @@
-package com.mmtorresoptical.OpticalClinicManagementSystem.services.ControllerService;
+package com.mmtorresoptical.OpticalClinicManagementSystem.services.ControllerService.AuditLogService;
 
 import com.mmtorresoptical.OpticalClinicManagementSystem.dto.audit.AuditDetailsDTO;
 import com.mmtorresoptical.OpticalClinicManagementSystem.enums.ActionType;
