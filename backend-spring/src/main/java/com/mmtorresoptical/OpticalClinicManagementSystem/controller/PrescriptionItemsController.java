@@ -58,7 +58,7 @@ public class PrescriptionItemsController {
     public ResponseEntity<PrescriptionItemDetailsDTO> updatePrescriptionItem(@PathVariable UUID id,
                                                                              @Valid @RequestBody UpdatePrescriptionItemRequestDTO updatePrescriptionItemRequestDTO) {
 
-        PrescriptionItemDetailsDTO prescriptionItemDetailsDTO = prescriptionItemsService.updatePrescription(id, updatePrescriptionItemRequestDTO);
+        PrescriptionItemDetailsDTO prescriptionItemDetailsDTO = prescriptionItemsService.updatePrescriptionItem(id, updatePrescriptionItemRequestDTO);
 
         return ResponseEntity.ok(prescriptionItemDetailsDTO);
     }
