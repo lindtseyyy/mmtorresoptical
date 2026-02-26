@@ -1,7 +1,7 @@
 package com.mmtorresoptical.OpticalClinicManagementSystem.controller;
 
 import com.mmtorresoptical.OpticalClinicManagementSystem.dto.prescription.*;
-import com.mmtorresoptical.OpticalClinicManagementSystem.services.ControllerService.PrescriptionService;
+import com.mmtorresoptical.OpticalClinicManagementSystem.services.controller.PrescriptionService;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
@@ -9,6 +9,7 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 
+import java.time.LocalDate;
 import java.util.UUID;
 
 @RestController
@@ -63,13 +64,16 @@ public class PrescriptionController {
     @PreAuthorize("hasRole('ADMIN')")
     @GetMapping("/api/admin/patient/{id}/prescriptions")
     public ResponseEntity<Page<PrescriptionListDTO>> getAllPatientPrescriptions(@PathVariable UUID id,
-                                                                              @RequestParam(defaultValue = "0") int page,
+                                                                                @RequestParam(required = false) String keyword,
+                                                                              @RequestParam(required = false) LocalDate minDate,
+                                                                                @RequestParam(required = false) LocalDate maxDate,
+                                                                                @RequestParam(defaultValue = "0") int page,
                                                                               @RequestParam(defaultValue = "10") int size,
                                                                               @RequestParam(defaultValue = "examDate") String sortBy,
                                                                               @RequestParam(defaultValue = "desc") String sortOrder,
                                                                               @RequestParam(defaultValue = "ACTIVE") String archivedStatus) {
 
-        Page<PrescriptionListDTO> prescriptionListDTOPage = prescriptionService.getAllPatientPrescriptions(id, page, size, sortBy, sortOrder, archivedStatus);
+        Page<PrescriptionListDTO> prescriptionListDTOPage = prescriptionService.getAllPatientPrescriptions(id, keyword, minDate, maxDate, page, size, sortBy, sortOrder, archivedStatus);
 
         return ResponseEntity.ok(prescriptionListDTOPage);
     }
