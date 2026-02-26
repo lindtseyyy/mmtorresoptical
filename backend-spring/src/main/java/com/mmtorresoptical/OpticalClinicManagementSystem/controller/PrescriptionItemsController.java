@@ -3,8 +3,8 @@ package com.mmtorresoptical.OpticalClinicManagementSystem.controller;
 import com.mmtorresoptical.OpticalClinicManagementSystem.dto.prescriptionitems.CreatePrescriptionItemRequestDTO;
 import com.mmtorresoptical.OpticalClinicManagementSystem.dto.prescriptionitems.PrescriptionItemDetailsDTO;
 import com.mmtorresoptical.OpticalClinicManagementSystem.dto.prescriptionitems.UpdatePrescriptionItemRequestDTO;
-import com.mmtorresoptical.OpticalClinicManagementSystem.services.ControllerService.PrescriptionItemsService;
-import com.mmtorresoptical.OpticalClinicManagementSystem.services.ControllerService.PrescriptionService;
+import com.mmtorresoptical.OpticalClinicManagementSystem.services.controller.PrescriptionItemsService;
+import com.mmtorresoptical.OpticalClinicManagementSystem.services.controller.PrescriptionService;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
@@ -12,6 +12,7 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 
+import java.time.LocalDate;
 import java.util.List;
 import java.util.UUID;
 
@@ -32,6 +33,9 @@ public class PrescriptionItemsController {
     @PreAuthorize("hasRole('ADMIN')")
     @GetMapping("/api/admin/prescriptions/{id}/prescription-items")
     public ResponseEntity<Page<PrescriptionItemDetailsDTO>> getAllPrescriptionItems(@PathVariable UUID id,
+                                                                                    @RequestParam(required = false) String keyword,
+                                                                                    @RequestParam(required = false) LocalDate minDate,
+                                                                                    @RequestParam(required = false) LocalDate maxDate,
                                                                                  @RequestParam(defaultValue = "0") int page,
                                                                                  @RequestParam(defaultValue = "10") int size,
                                                                                  @RequestParam(defaultValue = "createdAt") String sortBy,
@@ -39,7 +43,7 @@ public class PrescriptionItemsController {
                                                                                  @RequestParam(defaultValue = "ACTIVE") String archivedStatus) {
 
 
-        Page<PrescriptionItemDetailsDTO> prescriptionItemDetailsDTOPage = prescriptionItemsService.getAllPrescriptionItems(id, page, size, sortBy, sortOrder, archivedStatus);
+        Page<PrescriptionItemDetailsDTO> prescriptionItemDetailsDTOPage = prescriptionItemsService.getAllPrescriptionItems(id, keyword, minDate, maxDate, page, size, sortBy, sortOrder, archivedStatus);
 
         return ResponseEntity.ok(prescriptionItemDetailsDTOPage);
     }
