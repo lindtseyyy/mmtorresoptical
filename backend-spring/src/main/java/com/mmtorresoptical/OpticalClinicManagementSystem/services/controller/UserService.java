@@ -1,4 +1,4 @@
-package com.mmtorresoptical.OpticalClinicManagementSystem.services.ControllerService;
+package com.mmtorresoptical.OpticalClinicManagementSystem.services.controller;
 
 import com.mmtorresoptical.OpticalClinicManagementSystem.dto.user.UpdateUserRequestDTO;
 import com.mmtorresoptical.OpticalClinicManagementSystem.dto.user.UserDetailsDTO;
@@ -9,8 +9,10 @@ import com.mmtorresoptical.OpticalClinicManagementSystem.exception.custom.Resour
 import com.mmtorresoptical.OpticalClinicManagementSystem.mapper.UserMapper;
 import com.mmtorresoptical.OpticalClinicManagementSystem.model.User;
 import com.mmtorresoptical.OpticalClinicManagementSystem.repository.UserRepository;
+import com.mmtorresoptical.OpticalClinicManagementSystem.services.auditlog.resources.UserAuditHelper;
 import com.mmtorresoptical.OpticalClinicManagementSystem.utils.NameUtils;
 import lombok.RequiredArgsConstructor;
+import org.springframework.beans.BeanUtils;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
@@ -28,6 +30,7 @@ public class UserService {
     private final UserRepository userRepository;
     private final PasswordEncoder passwordEncoder;
     private final UserMapper userMapper;
+    private final UserAuditHelper userAuditHelper;
 
     public UserResponseDTO createUser(CreateUserRequestDTO userRequest) {
         // 1. Check if username or email or contact number already exists
@@ -53,6 +56,9 @@ public class UserService {
         user.setPasswordHash(passwordEncoder.encode(userRequest.getPassword()));
 
         User savedUser = userRepository.save(user);
+
+        // Audit Logging
+        userAuditHelper.logCreate(savedUser);
 
         return userMapper.entityToResponseDTO(savedUser);
     }
@@ -98,6 +104,10 @@ public class UserService {
     public UserDetailsDTO updateUser(UUID id, UpdateUserRequestDTO userRequest) {
 
         User retrievedUser = getUserById(id);
+
+        // Create a copy for logging (BEFORE snapshot)
+        User beforeUpdate = new User();
+        BeanUtils.copyProperties(retrievedUser, beforeUpdate);
 
         /* -----------------------------
            Normalize input values
@@ -157,6 +167,9 @@ public class UserService {
 
         User updatedUser = userRepository.save(retrievedUser);
 
+        // Audit Logging
+        userAuditHelper.logUpdate(beforeUpdate, updatedUser);
+
         return userMapper.entityToDetailsDTO(updatedUser);
     }
 
@@ -167,6 +180,9 @@ public class UserService {
         retrievedUser.setIsArchived(true);
 
         userRepository.save(retrievedUser);
+
+        // Audit Logging
+        userAuditHelper.logArchive(retrievedUser);
     }
 
     public void restoreUser(UUID id) {
@@ -176,6 +192,9 @@ public class UserService {
         retrievedUser.setIsArchived(false);
 
         userRepository.save(retrievedUser);
+
+        // Audit Logging
+        userAuditHelper.logRestore(retrievedUser);
     }
 
     private User getUserById(UUID id) {
