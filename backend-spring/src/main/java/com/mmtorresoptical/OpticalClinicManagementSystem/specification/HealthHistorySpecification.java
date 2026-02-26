@@ -64,7 +64,7 @@ public class HealthHistorySpecification {
             }
 
             return cb.lessThanOrEqualTo(
-                    root.get("transactionDate"),
+                    root.get("examDate"),
                     end
             );
         };
