@@ -1,4 +1,4 @@
-package com.mmtorresoptical.OpticalClinicManagementSystem.services.ControllerService.AuditLogService;
+package com.mmtorresoptical.OpticalClinicManagementSystem.services.auditlog.basehelper;
 
 public interface AuditLogHelper<T> {
 
