@@ -1,12 +1,9 @@
-package com.mmtorresoptical.OpticalClinicManagementSystem.services.ControllerService;
+package com.mmtorresoptical.OpticalClinicManagementSystem.services.controller;
 
-import com.mmtorresoptical.OpticalClinicManagementSystem.dto.audit.transaction.TransactionAuditDTO;
 import com.mmtorresoptical.OpticalClinicManagementSystem.dto.refund.RefundTransactionRequestDTO;
 import com.mmtorresoptical.OpticalClinicManagementSystem.dto.transaction.*;
 import com.mmtorresoptical.OpticalClinicManagementSystem.dto.refund.RefundItemDTO;
-import com.mmtorresoptical.OpticalClinicManagementSystem.enums.ActionType;
 import com.mmtorresoptical.OpticalClinicManagementSystem.enums.PaymentType;
-import com.mmtorresoptical.OpticalClinicManagementSystem.enums.ResourceType;
 import com.mmtorresoptical.OpticalClinicManagementSystem.enums.TransactionStatus;
 import com.mmtorresoptical.OpticalClinicManagementSystem.exception.custom.BadRequestException;
 import com.mmtorresoptical.OpticalClinicManagementSystem.exception.custom.InsufficientStockException;
@@ -16,8 +13,8 @@ import com.mmtorresoptical.OpticalClinicManagementSystem.mapper.TransactionMappe
 import com.mmtorresoptical.OpticalClinicManagementSystem.model.*;
 import com.mmtorresoptical.OpticalClinicManagementSystem.repository.*;
 import com.mmtorresoptical.OpticalClinicManagementSystem.services.AuthenticatedUserService;
+import com.mmtorresoptical.OpticalClinicManagementSystem.services.auditlog.resources.TransactionAuditHelper;
 import com.mmtorresoptical.OpticalClinicManagementSystem.specification.TransactionSpecification;
-import com.mmtorresoptical.OpticalClinicManagementSystem.services.helper.JSONService;
 import com.mmtorresoptical.OpticalClinicManagementSystem.utils.UUIDUtils;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.*;
@@ -45,8 +42,7 @@ public class TransactionService {
     private final ProductRepository productRepository;
     private final TransactionItemMapper transactionItemMapper;
     private final RefundRepository refundRepository;
-    private final AuditLogService auditLogService;
-    private final JSONService jsonService;
+    private final TransactionAuditHelper transactionAuditHelper;
 
     @Transactional
     public TransactionResponseDTO createTransaction(TransactionRequestDTO transactionRequestDTO) {
@@ -137,14 +133,7 @@ public class TransactionService {
         Transaction savedTransaction = transactionRepository.saveAndFlush(transaction);
 
         // Audit Logging
-        TransactionAuditDTO auditDTO = transactionMapper.entityToAuditDTO(savedTransaction);
-        String detailsJson = jsonService.toJson(auditDTO);
-        auditLogService.log(ActionType.CREATE,
-                ResourceType.TRANSACTION,
-                savedTransaction.getTransactionId(),
-                "Created transaction record",
-                detailsJson
-                );
+        transactionAuditHelper.logCreate(savedTransaction);
 
         return transactionMapper.entityToResponseDTO(savedTransaction);
     }
