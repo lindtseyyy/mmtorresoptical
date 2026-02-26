@@ -1,5 +1,6 @@
 package com.mmtorresoptical.OpticalClinicManagementSystem.mapper;
 
+import com.mmtorresoptical.OpticalClinicManagementSystem.dto.audit.prescription.PrescriptionAuditDTO;
 import com.mmtorresoptical.OpticalClinicManagementSystem.dto.prescription.PrescriptionDetailsDTO;
 import com.mmtorresoptical.OpticalClinicManagementSystem.dto.prescription.PrescriptionListDTO;
 import com.mmtorresoptical.OpticalClinicManagementSystem.dto.prescription.PrescriptionResponseDTO;
@@ -18,6 +19,12 @@ public interface PrescriptionMapper {
             source = "user"
     )
     PrescriptionResponseDTO entityToResponseDTO(Prescription prescription);
+
+    @Mapping(
+            target = "createdByUserId",
+            source = "user.userId"
+    )
+    PrescriptionAuditDTO entityToAuditDTO(Prescription prescription);
 
     @Mapping(
             target = "createdBy",
