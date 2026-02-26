@@ -1,25 +1,21 @@
-package com.mmtorresoptical.OpticalClinicManagementSystem.services.ControllerService;
+package com.mmtorresoptical.OpticalClinicManagementSystem.services.controller;
 
-import com.mmtorresoptical.OpticalClinicManagementSystem.dto.audit.base.update.AuditUpdateEvent;
-import com.mmtorresoptical.OpticalClinicManagementSystem.dto.audit.patient.PatientAuditDTO;
 import com.mmtorresoptical.OpticalClinicManagementSystem.dto.patient.PatientDetailsDTO;
 import com.mmtorresoptical.OpticalClinicManagementSystem.dto.patient.PatientRequestDTO;
 import com.mmtorresoptical.OpticalClinicManagementSystem.dto.patient.PatientResponseDTO;
-import com.mmtorresoptical.OpticalClinicManagementSystem.enums.ActionType;
 import com.mmtorresoptical.OpticalClinicManagementSystem.enums.Gender;
-import com.mmtorresoptical.OpticalClinicManagementSystem.enums.ResourceType;
 import com.mmtorresoptical.OpticalClinicManagementSystem.exception.custom.ConflictException;
 import com.mmtorresoptical.OpticalClinicManagementSystem.exception.custom.ResourceNotFoundException;
 import com.mmtorresoptical.OpticalClinicManagementSystem.mapper.PatientMapper;
 import com.mmtorresoptical.OpticalClinicManagementSystem.model.Patient;
 import com.mmtorresoptical.OpticalClinicManagementSystem.repository.PatientRepository;
 import com.mmtorresoptical.OpticalClinicManagementSystem.security.HmacHashService;
-import com.mmtorresoptical.OpticalClinicManagementSystem.services.ControllerService.AuditLogService.AuditLogService;
-import com.mmtorresoptical.OpticalClinicManagementSystem.services.helper.JSONService;
+import com.mmtorresoptical.OpticalClinicManagementSystem.services.auditlog.resources.PatientAuditHelper;
 import com.mmtorresoptical.OpticalClinicManagementSystem.specification.PatientSpecification;
 import com.mmtorresoptical.OpticalClinicManagementSystem.utils.NameUtils;
 import com.mmtorresoptical.OpticalClinicManagementSystem.utils.UUIDUtils;
 import lombok.RequiredArgsConstructor;
+import org.springframework.beans.BeanUtils;
 import org.springframework.data.domain.*;
 import org.springframework.data.jpa.domain.Specification;
 import org.springframework.stereotype.Service;
@@ -34,9 +30,7 @@ public class PatientService {
     private final PatientRepository patientRepository;
     private final PatientMapper patientMapper;
     private final HmacHashService hmacHashService;
-    private final JSONService jsonService;
-    private final AuditLogService auditLogService;
-
+    private final PatientAuditHelper patientAuditHelper;
 
     public PatientResponseDTO createPatient(PatientRequestDTO patientRequest) {
         if(patientExistsByFirstMiddleLastName(patientRequest.getFirstName(), patientRequest.getMiddleName(), patientRequest.getLastName())) {
@@ -98,16 +92,7 @@ public class PatientService {
         Patient savedPatient = patientRepository.save(patient);
 
         // Audit Logging
-        PatientAuditDTO auditDTO =
-                patientMapper.entityToAuditDTO(savedPatient);
-
-        String detailsJson = jsonService.toJson(auditDTO);
-        auditLogService.log(ActionType.CREATE,
-                ResourceType.PATIENT,
-                savedPatient.getPatientId(),
-                "Created patient record",
-                detailsJson
-        );
+        patientAuditHelper.logCreate(savedPatient);
 
         // Map entity to response DTO and return
         return patientMapper.entityToResponse(savedPatient);
@@ -172,9 +157,9 @@ public class PatientService {
                 .orElseThrow(() -> new ResourceNotFoundException("Patient not found with id: " + id));
 
 
-        // Capture BEFORE snapshot
-        PatientAuditDTO before =
-                patientMapper.entityToAuditDTO(retrievedPatient);
+        // Create a copy for logging (BEFORE snapshot)
+        Patient beforeUpdate = new Patient();
+        BeanUtils.copyProperties(retrievedPatient, beforeUpdate);
 
         /* -----------------------------
            Normalize input values
@@ -234,19 +219,7 @@ public class PatientService {
         Patient updatedPatient = patientRepository.save(retrievedPatient);
 
         // Audit Logging
-        PatientAuditDTO after =
-                patientMapper.entityToAuditDTO(updatedPatient);
-
-        AuditUpdateEvent<PatientAuditDTO> event =
-                new AuditUpdateEvent<>(before, after);
-
-        String detailsJson = jsonService.toJson(event);
-        auditLogService.log(ActionType.UPDATE,
-                ResourceType.PATIENT,
-                updatedPatient.getPatientId(),
-                "Updated patient record",
-                detailsJson
-        );
+        patientAuditHelper.logUpdate(beforeUpdate, updatedPatient);
 
         return patientMapper.entityToResponse(updatedPatient);
     }
@@ -263,16 +236,7 @@ public class PatientService {
         patientRepository.save(retrievedPatient);
 
         // Audit Logging
-        PatientAuditDTO auditDTO =
-                patientMapper.entityToAuditDTO(retrievedPatient);
-
-        String detailsJson = jsonService.toJson(auditDTO);
-        auditLogService.log(ActionType.ARCHIVE,
-                ResourceType.PATIENT,
-                retrievedPatient.getPatientId(),
-                "Archived patient record",
-                detailsJson
-        );
+        patientAuditHelper.logArchive(retrievedPatient);
     }
 
     public void restorePatient(UUID id) {
@@ -287,27 +251,7 @@ public class PatientService {
         patientRepository.save(retrievedPatient);
 
         // Audit Logging
-        PatientAuditDTO auditDTO =
-                patientMapper.entityToAuditDTO(retrievedPatient);
-
-        String detailsJson = jsonService.toJson(auditDTO);
-        auditLogService.log(ActionType.RESTORE,
-                ResourceType.PATIENT,
-                retrievedPatient.getPatientId(),
-                "Restore patient record",
-                detailsJson
-        );
-    }
-
-    public Page<PatientDetailsDTO> searchPatients(String keyword, int page, int size) {
-        // Configure pagination
-        Pageable pageable = PageRequest.of(page, size);
-
-        // Perform keyword search (case-insensitive)
-        Page<Patient> patientPage = patientRepository.findAllByFullNameSortableContainingIgnoreCase(keyword, pageable);
-
-        // Map entities to detailed DTO responses and return
-        return patientPage.map(patientMapper::entityToDetailedResponse);
+        patientAuditHelper.logRestore(retrievedPatient);
     }
 
     /**
