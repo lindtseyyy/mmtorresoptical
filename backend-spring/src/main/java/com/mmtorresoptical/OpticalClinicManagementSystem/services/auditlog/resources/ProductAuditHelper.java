@@ -1,4 +1,4 @@
-package com.mmtorresoptical.OpticalClinicManagementSystem.services.ControllerService.AuditLogService.resources;
+package com.mmtorresoptical.OpticalClinicManagementSystem.services.auditlog.resources;
 
 import com.mmtorresoptical.OpticalClinicManagementSystem.dto.audit.base.update.AuditUpdateEvent;
 import com.mmtorresoptical.OpticalClinicManagementSystem.dto.audit.product.ProductAuditDTO;
@@ -6,8 +6,8 @@ import com.mmtorresoptical.OpticalClinicManagementSystem.enums.ActionType;
 import com.mmtorresoptical.OpticalClinicManagementSystem.enums.ResourceType;
 import com.mmtorresoptical.OpticalClinicManagementSystem.mapper.ProductMapper;
 import com.mmtorresoptical.OpticalClinicManagementSystem.model.Product;
-import com.mmtorresoptical.OpticalClinicManagementSystem.services.ControllerService.AuditLogService.AuditLogService;
-import com.mmtorresoptical.OpticalClinicManagementSystem.services.ControllerService.AuditLogService.BatchAuditLogHelper;
+import com.mmtorresoptical.OpticalClinicManagementSystem.services.auditlog.AuditLogService;
+import com.mmtorresoptical.OpticalClinicManagementSystem.services.auditlog.basehelper.BatchAuditLogHelper;
 import com.mmtorresoptical.OpticalClinicManagementSystem.services.helper.JSONService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
