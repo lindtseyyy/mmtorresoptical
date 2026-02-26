@@ -4,12 +4,7 @@ import com.mmtorresoptical.OpticalClinicManagementSystem.dto.healthhistory.Creat
 import com.mmtorresoptical.OpticalClinicManagementSystem.dto.healthhistory.HealthHistoryDetailsDTO;
 import com.mmtorresoptical.OpticalClinicManagementSystem.dto.healthhistory.HealthHistoryResponseDTO;
 import com.mmtorresoptical.OpticalClinicManagementSystem.dto.healthhistory.UpdateHealthHistoryRequestDTO;
-import com.mmtorresoptical.OpticalClinicManagementSystem.mapper.HealthHistoryMapper;
-import com.mmtorresoptical.OpticalClinicManagementSystem.mapper.UserMapper;
-import com.mmtorresoptical.OpticalClinicManagementSystem.repository.HealthHistoryRepository;
-import com.mmtorresoptical.OpticalClinicManagementSystem.repository.PatientRepository;
-import com.mmtorresoptical.OpticalClinicManagementSystem.repository.UserRepository;
-import com.mmtorresoptical.OpticalClinicManagementSystem.services.ControllerService.HealthHistoryService;
+import com.mmtorresoptical.OpticalClinicManagementSystem.services.controller.HealthHistoryService;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
