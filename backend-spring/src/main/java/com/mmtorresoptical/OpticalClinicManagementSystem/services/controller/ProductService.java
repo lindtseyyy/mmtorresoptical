@@ -1,24 +1,21 @@
-package com.mmtorresoptical.OpticalClinicManagementSystem.services.ControllerService;
+package com.mmtorresoptical.OpticalClinicManagementSystem.services.controller;
 
-import com.mmtorresoptical.OpticalClinicManagementSystem.dto.audit.base.update.AuditUpdateEvent;
-import com.mmtorresoptical.OpticalClinicManagementSystem.dto.audit.product.ProductAuditDTO;
-import com.mmtorresoptical.OpticalClinicManagementSystem.dto.audit.transaction.TransactionAuditDTO;
 import com.mmtorresoptical.OpticalClinicManagementSystem.dto.product.CreateProductRequestDTO;
 import com.mmtorresoptical.OpticalClinicManagementSystem.dto.product.ProductDetailsDTO;
 import com.mmtorresoptical.OpticalClinicManagementSystem.dto.product.ProductResponseDTO;
 import com.mmtorresoptical.OpticalClinicManagementSystem.dto.product.UpdateProductRequestDTO;
-import com.mmtorresoptical.OpticalClinicManagementSystem.enums.ActionType;
-import com.mmtorresoptical.OpticalClinicManagementSystem.enums.ResourceType;
 import com.mmtorresoptical.OpticalClinicManagementSystem.exception.custom.ResourceNotFoundException;
 import com.mmtorresoptical.OpticalClinicManagementSystem.mapper.ProductMapper;
 import com.mmtorresoptical.OpticalClinicManagementSystem.model.Product;
 import com.mmtorresoptical.OpticalClinicManagementSystem.model.User;
 import com.mmtorresoptical.OpticalClinicManagementSystem.repository.ProductRepository;
 import com.mmtorresoptical.OpticalClinicManagementSystem.services.AuthenticatedUserService;
+import com.mmtorresoptical.OpticalClinicManagementSystem.services.auditlog.resources.ProductAuditHelper;
 import com.mmtorresoptical.OpticalClinicManagementSystem.services.helper.JSONService;
 import com.mmtorresoptical.OpticalClinicManagementSystem.specification.ProductSpecification;
 import com.mmtorresoptical.OpticalClinicManagementSystem.utils.UUIDUtils;
 import lombok.RequiredArgsConstructor;
+import org.springframework.beans.BeanUtils;
 import org.springframework.data.domain.*;
 import org.springframework.data.jpa.domain.Specification;
 import org.springframework.stereotype.Service;
@@ -36,7 +33,7 @@ public class ProductService {
     private final ProductRepository productRepository;
     private final ProductMapper productMapper;
     private final AuthenticatedUserService authenticatedUserService;
-    private final AuditLogService auditLogService;
+    private final ProductAuditHelper productAuditHelper;
     private final JSONService jsonService;
 
     @Transactional
@@ -61,27 +58,12 @@ public class ProductService {
 
         // Audit Logging
         int count = newProducts.size();
-        System.out.println(count);
-
-        UUID resourceId = null;
-        String details;
 
         if (count == 1) {
-            resourceId = newProducts.get(0).getProductId();
-            details = "Created product record";
+            productAuditHelper.logCreate(newProducts.get(0));
         } else {
-            details = "Created " + count + " product records";
+            productAuditHelper.logCreateBatch(newProducts);
         }
-
-        List<ProductAuditDTO> auditDTOList =
-                productMapper.entityListToAuditDTOList(newProducts);
-        String detailsJson = jsonService.toJson(auditDTOList);
-        auditLogService.log(ActionType.CREATE,
-                ResourceType.PRODUCT,
-                resourceId,
-                details,
-                detailsJson
-        );
 
         return newProducts.stream().map(productMapper::entityToResponseDTO).toList();
     }
@@ -177,9 +159,9 @@ public class ProductService {
         Product retrievedProduct = productRepository.findById(id)
                 .orElseThrow(() -> new ResourceNotFoundException("Product not found with id: " + id));
 
-        // Capture BEFORE snapshot for auditing
-        ProductAuditDTO before =
-                productMapper.entityToAuditDTO(retrievedProduct);
+        // Create a copy for logging (BEFORE snapshot)
+        Product beforeUpdate = new Product();
+        BeanUtils.copyProperties(retrievedProduct, beforeUpdate);
 
         productMapper.updateProductFromUpdateRequestDTO(updateProductRequestDTO, retrievedProduct);
 
@@ -189,19 +171,7 @@ public class ProductService {
         Product updatedProduct = productRepository.save(retrievedProduct);
 
         // Audit Logging
-        ProductAuditDTO after =
-                productMapper.entityToAuditDTO(updatedProduct);
-
-        AuditUpdateEvent<ProductAuditDTO> event =
-                new AuditUpdateEvent<>(before, after);
-
-        String detailsJson = jsonService.toJson(event);
-        auditLogService.log(ActionType.UPDATE,
-                ResourceType.PRODUCT,
-                updatedProduct.getProductId(),
-                "Updated product record",
-                detailsJson
-        );
+        productAuditHelper.logUpdate(beforeUpdate, updatedProduct);
 
         return productMapper.entityToDetailsDTO(updatedProduct);
     }
@@ -216,14 +186,7 @@ public class ProductService {
         productRepository.save(retrievedProduct);
 
         // Audit Logging
-        ProductAuditDTO auditDTO = productMapper.entityToAuditDTO(retrievedProduct);
-        String detailsJson = jsonService.toJson(auditDTO);
-        auditLogService.log(ActionType.ARCHIVE,
-                ResourceType.PRODUCT,
-                retrievedProduct.getProductId(),
-                "Archived product record",
-                detailsJson
-        );
+        productAuditHelper.logArchive(retrievedProduct);
     }
 
     public void restoreProduct(UUID id) {
@@ -236,14 +199,7 @@ public class ProductService {
         productRepository.save(retrievedProduct);
 
         // Audit Logging
-        ProductAuditDTO auditDTO = productMapper.entityToAuditDTO(retrievedProduct);
-        String detailsJson = jsonService.toJson(auditDTO);
-        auditLogService.log(ActionType.RESTORE,
-                ResourceType.PRODUCT,
-                retrievedProduct.getProductId(),
-                "Restored product record",
-                detailsJson
-        );
+        productAuditHelper.logRestore(retrievedProduct);
     }
 
 }
