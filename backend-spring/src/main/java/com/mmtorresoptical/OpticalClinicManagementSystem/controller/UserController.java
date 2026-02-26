@@ -4,7 +4,7 @@ import com.mmtorresoptical.OpticalClinicManagementSystem.dto.user.CreateUserRequ
 import com.mmtorresoptical.OpticalClinicManagementSystem.dto.user.UpdateUserRequestDTO;
 import com.mmtorresoptical.OpticalClinicManagementSystem.dto.user.UserDetailsDTO;
 import com.mmtorresoptical.OpticalClinicManagementSystem.dto.user.UserResponseDTO;
-import com.mmtorresoptical.OpticalClinicManagementSystem.services.ControllerService.UserService;
+import com.mmtorresoptical.OpticalClinicManagementSystem.services.controller.UserService;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
