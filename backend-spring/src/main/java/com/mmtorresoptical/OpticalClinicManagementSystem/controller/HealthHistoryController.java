@@ -4,51 +4,29 @@ import com.mmtorresoptical.OpticalClinicManagementSystem.dto.healthhistory.Creat
 import com.mmtorresoptical.OpticalClinicManagementSystem.dto.healthhistory.HealthHistoryDetailsDTO;
 import com.mmtorresoptical.OpticalClinicManagementSystem.dto.healthhistory.HealthHistoryResponseDTO;
 import com.mmtorresoptical.OpticalClinicManagementSystem.dto.healthhistory.UpdateHealthHistoryRequestDTO;
-import com.mmtorresoptical.OpticalClinicManagementSystem.dto.user.UserSummaryDTO;
-import com.mmtorresoptical.OpticalClinicManagementSystem.exception.custom.ResourceNotFoundException;
 import com.mmtorresoptical.OpticalClinicManagementSystem.mapper.HealthHistoryMapper;
 import com.mmtorresoptical.OpticalClinicManagementSystem.mapper.UserMapper;
-import com.mmtorresoptical.OpticalClinicManagementSystem.model.HealthHistory;
-import com.mmtorresoptical.OpticalClinicManagementSystem.model.Patient;
-import com.mmtorresoptical.OpticalClinicManagementSystem.model.User;
 import com.mmtorresoptical.OpticalClinicManagementSystem.repository.HealthHistoryRepository;
 import com.mmtorresoptical.OpticalClinicManagementSystem.repository.PatientRepository;
 import com.mmtorresoptical.OpticalClinicManagementSystem.repository.UserRepository;
-import com.mmtorresoptical.OpticalClinicManagementSystem.security.CustomUserDetails;
+import com.mmtorresoptical.OpticalClinicManagementSystem.services.ControllerService.HealthHistoryService;
 import jakarta.validation.Valid;
+import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
-import org.springframework.data.domain.PageRequest;
-import org.springframework.data.domain.Pageable;
-import org.springframework.data.domain.Sort;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
-import org.springframework.security.core.Authentication;
-import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.web.bind.annotation.*;
 
+import java.time.LocalDate;
 import java.util.UUID;
 
 @RestController
+@RequiredArgsConstructor
 public class HealthHistoryController {
 
-    private final HealthHistoryRepository healthHistoryRepository;
-    private final UserRepository userRepository;
-    private final PatientRepository patientRepository;
-    private final HealthHistoryMapper healthHistoryMapper;
-    private final UserMapper userMapper;
+    private final HealthHistoryService healthHistoryService;
 
-    HealthHistoryController(HealthHistoryRepository healthHistoryRepository,
-                            UserRepository userRepository,
-                            PatientRepository patientRepository,
-                            HealthHistoryMapper healthHistoryMapper,
-                            UserMapper userMapper) {
-        this.healthHistoryRepository = healthHistoryRepository;
-        this.userRepository = userRepository;
-        this.patientRepository = patientRepository;
-        this.healthHistoryMapper = healthHistoryMapper;
-        this.userMapper = userMapper;
-    }
 
     /**
      * Creates a new health history record for a specific patient.
@@ -68,30 +46,9 @@ public class HealthHistoryController {
     @PostMapping("api/admin/patients/{id}/health-histories")
     public ResponseEntity<HealthHistoryResponseDTO> createHealthHistory(@PathVariable UUID id, @Valid @RequestBody CreateHealthHistoryRequestDTO createHealthHistoryRequestDTO) {
 
-        // Retrieve the patient
-        Patient retrievedPatient = patientRepository.findById(id).orElseThrow(() ->
-                new ResourceNotFoundException("Patient not found")
-        );
+        HealthHistoryResponseDTO healthHistoryResponseDTO = healthHistoryService.createHealthHistory(id, createHealthHistoryRequestDTO);
 
-        // Retrieve the user who perform the operation
-        Authentication auth = SecurityContextHolder.getContext().getAuthentication();
-        CustomUserDetails user = (CustomUserDetails) auth.getPrincipal();
-        UUID userId = user.getUserId();
-        User retrievedUser = userRepository.findById(userId).orElseThrow(() ->
-                new ResourceNotFoundException("User not found")
-        );
-
-        HealthHistory healthHistory = getHealthHistory(createHealthHistoryRequestDTO, retrievedPatient, retrievedUser);
-
-        HealthHistory savedHistory = healthHistoryRepository.save(healthHistory);
-
-        HealthHistoryResponseDTO response = healthHistoryMapper.historyToResponseDTO(savedHistory);
-
-        // Setting the createdBy
-        UserSummaryDTO userSummaryDTO = userMapper.entityToDTO(retrievedUser);
-        response.setCreatedBy(userSummaryDTO);
-
-        return ResponseEntity.status(HttpStatus.CREATED).body(response);
+        return ResponseEntity.status(HttpStatus.CREATED).body(healthHistoryResponseDTO);
     }
 
     /**
@@ -117,79 +74,24 @@ public class HealthHistoryController {
     @PreAuthorize("hasRole('ADMIN')")
     @GetMapping("api/admin/patients/{id}/health-histories")
     public ResponseEntity<Page<HealthHistoryDetailsDTO>> getAllPatientHealthHistories(@PathVariable UUID id,
+                                                                               @RequestParam(required = false) String keyword,
+                                                                               @RequestParam(required = false) LocalDate minExamDate,
+                                                                               @RequestParam(required = false) LocalDate maxExamDate,
                                                                                @RequestParam(defaultValue = "0") int page,
-                                                                          @RequestParam(defaultValue = "10") int size,
-                                                                          @RequestParam(defaultValue = "examDate") String sortBy,
-                                                                          @RequestParam(defaultValue = "desc") String sortOrder) {
+                                                                                      @RequestParam(defaultValue = "10") int size, @RequestParam(defaultValue = "examDate") String sortBy,
+                                                                          @RequestParam(defaultValue = "desc") String sortOrder,
+                                                                                      @RequestParam(defaultValue = "ACTIVE") String archivedStatus) {
 
-        // Determine sorting direction from request parameter
-        Sort.Direction direction;
-
-        try {
-            direction = Sort.Direction.fromString(sortOrder);
-        } catch (IllegalArgumentException ex) {
-            // Default to descending if invalid input
-            direction = Sort.Direction.DESC;
-        }
-
-        // Create pageable configuration with sorting
-        Pageable pageable = PageRequest.of(page, size, Sort.by(direction, sortBy));
-
-        // Retrieve non-archived health histories for the patient
-        Page<HealthHistory> healthHistories = healthHistoryRepository.findAllByIsArchivedFalseAndPatient_PatientId(id, pageable);
-
-        // Map entities to detailed DTO responses
-        Page<HealthHistoryDetailsDTO> healthHistoryDetailsDTOS = healthHistories.map(healthHistoryMapper::historyToDetailsDTO);
-
-        return ResponseEntity.ok(healthHistoryDetailsDTOS);
-    }
-
-    /**
-     * Retrieves paginated and sorted archived health history records
-     * for a specific patient.
-     *
-     * This endpoint:
-     * - Filters records by patient ID
-     * - Includes only archived health histories
-     * - Supports pagination
-     * - Supports sorting by specified fields
-     * - Maps entities to detailed response DTOs
-     *
-     * Accessible only by users with ADMIN role.
-     *
-     * @param patientId the unique identifier of the patient
-     * @param page the page number (default = 0)
-     * @param size the number of records per page (default = 10)
-     * @param sortBy the field used for sorting (default = examDate)
-     * @param sortOrder the sorting direction: ascending or descending (default = descending)
-     * @return ResponseEntity containing a page of HealthHistoryDetailsDTO
-     */
-    @PreAuthorize("hasRole('ADMIN')")
-    @GetMapping("api/admin/patients/{id}/health-histories/archived")
-    public ResponseEntity<Page<HealthHistoryDetailsDTO>> getAllArchivedPatientHealthHistories(@PathVariable UUID id,
-                                                                                      @RequestParam(defaultValue = "0") int page,
-                                                                                      @RequestParam(defaultValue = "10") int size,
-                                                                                      @RequestParam(defaultValue = "examDate") String sortBy,
-                                                                                      @RequestParam(defaultValue = "descending") String sortOrder) {
-
-        // Determine sorting direction from request parameter
-        Sort.Direction direction;
-
-        try {
-            direction = Sort.Direction.fromString(sortOrder);
-        } catch (IllegalArgumentException ex) {
-            // Default to descending if invalid input
-            direction = Sort.Direction.DESC;
-        }
-
-        // Create pageable configuration with sorting
-        Pageable pageable = PageRequest.of(page, size, Sort.by(direction, sortBy));
-
-        // Retrieve non-archived health histories for the patient
-        Page<HealthHistory> healthHistories = healthHistoryRepository.findAllByIsArchivedTrueAndPatient_PatientId(id, pageable);
-
-        // Map entities to detailed DTO responses
-        Page<HealthHistoryDetailsDTO> healthHistoryDetailsDTOS = healthHistories.map(healthHistoryMapper::historyToDetailsDTO);
+        Page<HealthHistoryDetailsDTO> healthHistoryDetailsDTOS = healthHistoryService.getAllHistoryDetails(
+                id,
+                keyword,
+                minExamDate,
+                maxExamDate,
+                page,
+                size,
+                sortBy,
+                sortOrder,
+                archivedStatus);
 
         return ResponseEntity.ok(healthHistoryDetailsDTOS);
     }
@@ -210,12 +112,8 @@ public class HealthHistoryController {
     @PreAuthorize("hasRole('ADMIN')")
     @GetMapping("api/admin/health-histories/{id}")
     public ResponseEntity<HealthHistoryDetailsDTO> getPatientHealthHistory(@PathVariable UUID id) {
-        // Retrieve health history or throw exception if not found
-        HealthHistory retrievedHealthHistory = healthHistoryRepository.findById(id)
-                .orElseThrow(() -> new ResourceNotFoundException("Health History not found with id: " + id));
 
-        // Map entity to detailed response DTO
-        HealthHistoryDetailsDTO healthHistoryDetailsDTO = healthHistoryMapper.historyToDetailsDTO(retrievedHealthHistory);
+        HealthHistoryDetailsDTO healthHistoryDetailsDTO = healthHistoryService.getHealthHistory(id);
 
         return ResponseEntity.ok(healthHistoryDetailsDTO);
     }
@@ -240,18 +138,8 @@ public class HealthHistoryController {
     public ResponseEntity<HealthHistoryDetailsDTO> updateHealthHistory(@PathVariable UUID id,
                                                                            @Valid @RequestBody UpdateHealthHistoryRequestDTO updateHealthHistoryRequestDTO) {
 
-        // Retrieve health history or throw exception if not found
-        HealthHistory retrievedHealthHistory = healthHistoryRepository.findById(id)
-                .orElseThrow(() -> new ResourceNotFoundException("Health History not found with id: " + id));
 
-        // Apply updates from DTO to entity
-        healthHistoryMapper.updateHistoryFromDTO(updateHealthHistoryRequestDTO, retrievedHealthHistory);
-
-        // Apply updates from DTO to entity
-        HealthHistory updatedHealthHistory = healthHistoryRepository.save(retrievedHealthHistory);
-
-        // Map entity to detailed response DTO
-        HealthHistoryDetailsDTO healthHistoryDetailsDTO = healthHistoryMapper.historyToDetailsDTO(updatedHealthHistory);
+        HealthHistoryDetailsDTO healthHistoryDetailsDTO = healthHistoryService.updateHealthHistory(id, updateHealthHistoryRequestDTO);
 
         return ResponseEntity.ok(healthHistoryDetailsDTO);
     }
@@ -272,15 +160,8 @@ public class HealthHistoryController {
      */
     @DeleteMapping("api/admin/health-histories/{id}")
     public ResponseEntity<Void> archiveHealthHistory(@PathVariable UUID id) {
-        // Retrieve health history or throw exception if not found
-        HealthHistory retrievedHealthHistory = healthHistoryRepository.findById(id)
-                .orElseThrow(() -> new ResourceNotFoundException("Health History not found with id: " + id));
 
-        // Mark health history as archived (soft delete)
-        retrievedHealthHistory.setIsArchived(true);
-
-        // Persist archive update
-        healthHistoryRepository.save(retrievedHealthHistory);
+        healthHistoryService.archiveHealthHistory(id);
 
         return ResponseEntity.noContent().build();
     }
@@ -301,48 +182,8 @@ public class HealthHistoryController {
      */
     @PutMapping("api/admin/health-histories/{id}/restore")
     public ResponseEntity<Void> restoreHealthHistory(@PathVariable UUID id) {
-        // Retrieve health history or throw exception if not found
-        HealthHistory retrievedHealthHistory = healthHistoryRepository.findById(id)
-                .orElseThrow(() -> new ResourceNotFoundException("Health History not found with id: " + id));
-
-        // Mark health history as active (unarchived)
-        retrievedHealthHistory.setIsArchived(false);
-
-        // Persist restoration update
-        healthHistoryRepository.save(retrievedHealthHistory);
+        healthHistoryService.restoreHealthHistory(id);
 
         return ResponseEntity.noContent().build();
-    }
-
-    /**
-     * Constructs a HealthHistory entity using the provided request DTO.
-     *
-     * This method:
-     * - Maps health history fields from the request
-     * - Sets the associated patient
-     * - Sets the user who created the record
-     *
-     * @param createHealthHistoryRequestDTO the request data containing health history details
-     * @param retrievedPatient the patient linked to this health history
-     * @param retrievedUser the user who created the record
-     * @return a populated HealthHistory entity ready for saving
-     */
-    private static HealthHistory getHealthHistory(CreateHealthHistoryRequestDTO createHealthHistoryRequestDTO, Patient retrievedPatient, User retrievedUser) {
-        HealthHistory healthHistory = new HealthHistory();
-        // Setting the relationship
-        healthHistory.setPatient(retrievedPatient);
-        healthHistory.setUser(retrievedUser);
-
-        // Setting the health history fields
-        healthHistory.setExamDate(createHealthHistoryRequestDTO.getExamDate());
-        healthHistory.setEyeConditions(createHealthHistoryRequestDTO.getEyeConditions());
-        healthHistory.setSystemicConditions(createHealthHistoryRequestDTO.getSystemicConditions());
-        healthHistory.setMedications(createHealthHistoryRequestDTO.getMedications());
-        healthHistory.setAllergies(createHealthHistoryRequestDTO.getAllergies());
-        healthHistory.setVisualAcuityLeft(createHealthHistoryRequestDTO.getVisualAcuityLeft());
-        healthHistory.setVisualAcuityRight(createHealthHistoryRequestDTO.getVisualAcuityRight());
-        healthHistory.setNotes(createHealthHistoryRequestDTO.getNotes());
-        healthHistory.setIsArchived(createHealthHistoryRequestDTO.getIsArchived());
-        return healthHistory;
     }
 }
