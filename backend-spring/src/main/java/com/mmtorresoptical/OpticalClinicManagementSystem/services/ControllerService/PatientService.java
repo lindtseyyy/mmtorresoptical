@@ -2,7 +2,6 @@ package com.mmtorresoptical.OpticalClinicManagementSystem.services.ControllerSer
 
 import com.mmtorresoptical.OpticalClinicManagementSystem.dto.audit.base.update.AuditUpdateEvent;
 import com.mmtorresoptical.OpticalClinicManagementSystem.dto.audit.patient.PatientAuditDTO;
-import com.mmtorresoptical.OpticalClinicManagementSystem.dto.audit.product.ProductAuditDTO;
 import com.mmtorresoptical.OpticalClinicManagementSystem.dto.patient.PatientDetailsDTO;
 import com.mmtorresoptical.OpticalClinicManagementSystem.dto.patient.PatientRequestDTO;
 import com.mmtorresoptical.OpticalClinicManagementSystem.dto.patient.PatientResponseDTO;
@@ -15,6 +14,7 @@ import com.mmtorresoptical.OpticalClinicManagementSystem.mapper.PatientMapper;
 import com.mmtorresoptical.OpticalClinicManagementSystem.model.Patient;
 import com.mmtorresoptical.OpticalClinicManagementSystem.repository.PatientRepository;
 import com.mmtorresoptical.OpticalClinicManagementSystem.security.HmacHashService;
+import com.mmtorresoptical.OpticalClinicManagementSystem.services.ControllerService.AuditLogService.AuditLogService;
 import com.mmtorresoptical.OpticalClinicManagementSystem.services.helper.JSONService;
 import com.mmtorresoptical.OpticalClinicManagementSystem.specification.PatientSpecification;
 import com.mmtorresoptical.OpticalClinicManagementSystem.utils.NameUtils;
@@ -148,7 +148,7 @@ public class PatientService {
         }
 
         // Create pageable configuration with sorting
-        Pageable pageable = PageRequest.of(page, size, Sort.by(sortBy).ascending());
+        Pageable pageable = PageRequest.of(page, size, Sort.by(direction, sortBy));
 
         // Retrieve non-archived patients
         Page<Patient> retrievedPatients = patientRepository.findAll(spec, pageable);
@@ -241,7 +241,7 @@ public class PatientService {
                 new AuditUpdateEvent<>(before, after);
 
         String detailsJson = jsonService.toJson(event);
-        auditLogService.log(ActionType.CREATE,
+        auditLogService.log(ActionType.UPDATE,
                 ResourceType.PATIENT,
                 updatedPatient.getPatientId(),
                 "Updated patient record",
