@@ -7,5 +7,7 @@ public enum ActionType {
     LOGIN,
     LOGOUT,
     ARCHIVE,
-    RESTORE
+    RESTORE,
+    VOID,
+    REFUND
 }
