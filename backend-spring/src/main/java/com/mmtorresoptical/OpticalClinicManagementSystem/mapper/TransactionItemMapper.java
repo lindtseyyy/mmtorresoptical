@@ -9,6 +9,7 @@ import org.mapstruct.Mapper;
 import org.mapstruct.Mapping;
 
 import java.math.BigDecimal;
+import java.util.List;
 
 @Mapper(componentModel = "spring",
 uses = {RefundMapper.class})
@@ -32,4 +33,10 @@ public interface TransactionItemMapper {
             source = "product.productId"
     )
     TransactionItemAuditDTO entityToAuditDTO(TransactionItem transactionItem);
+
+    @Mapping(
+            target = "productId",
+            source = "product.productId"
+    )
+    List<TransactionItemAuditDTO> entityListToAuditDTOList(List<TransactionItem> transactionItem);
 }
