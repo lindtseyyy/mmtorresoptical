@@ -3,6 +3,7 @@ package com.mmtorresoptical.OpticalClinicManagementSystem.services.controller;
 import com.mmtorresoptical.OpticalClinicManagementSystem.dto.refund.RefundTransactionRequestDTO;
 import com.mmtorresoptical.OpticalClinicManagementSystem.dto.transaction.*;
 import com.mmtorresoptical.OpticalClinicManagementSystem.dto.refund.RefundItemDTO;
+import com.mmtorresoptical.OpticalClinicManagementSystem.enums.DiscountType;
 import com.mmtorresoptical.OpticalClinicManagementSystem.enums.PaymentType;
 import com.mmtorresoptical.OpticalClinicManagementSystem.enums.TransactionStatus;
 import com.mmtorresoptical.OpticalClinicManagementSystem.exception.custom.BadRequestException;
@@ -26,6 +27,7 @@ import java.math.BigDecimal;
 import java.math.RoundingMode;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
@@ -245,6 +247,9 @@ public class TransactionService {
         transaction.setVoidedBy(authenticatedUser);
         transaction.setVoidedAt(LocalDateTime.now());
         transaction.setVoidReason(voidTransactionRequestDTO.getReason());
+
+        // Audit Logging
+        transactionAuditHelper.logVoid(transaction);
     }
 
     @Transactional
@@ -252,6 +257,7 @@ public class TransactionService {
             RefundTransactionRequestDTO request
     ) {
 
+        List<TransactionItem> refundItems = new ArrayList<>();
         for (RefundItemDTO dto : request.getItems()) {
 
             TransactionItem item =
@@ -263,7 +269,7 @@ public class TransactionService {
                                             + dto.getTransactionItemId()
                             )
                     );
-
+            refundItems.add(item);
             Transaction txn = item.getTransaction();
 
             // Block voided txn
@@ -302,23 +308,41 @@ public class TransactionService {
                             BigDecimal.valueOf(dto.getRefundQuantity())
                     );
 
-            // Optional: discount proration
-            if (item.getDiscountValue() != null) {
+            if (item.getDiscountType() != null && item.getDiscountValue() != null) {
 
-                BigDecimal discountPerUnit =
-                        item.getDiscountValue()
-                                .divide(
-                                        BigDecimal.valueOf(item.getQuantity()),
-                                        RoundingMode.HALF_UP
-                                );
+                if (item.getDiscountType() == DiscountType.FIXED) {
 
-                BigDecimal refundDiscount =
-                        discountPerUnit.multiply(
-                                BigDecimal.valueOf(dto.getRefundQuantity())
-                        );
+                    BigDecimal discountPerUnit =
+                            item.getDiscountValue()
+                                    .divide(
+                                            BigDecimal.valueOf(item.getQuantity()),
+                                            2,
+                                            RoundingMode.HALF_UP
+                                    );
 
-                refundAmount =
-                        refundAmount.subtract(refundDiscount);
+                    BigDecimal refundDiscount =
+                            discountPerUnit.multiply(
+                                    BigDecimal.valueOf(dto.getRefundQuantity())
+                            );
+
+                    refundAmount = refundAmount.subtract(refundDiscount);
+
+                } else if (item.getDiscountType() == DiscountType.PERCENT) {
+
+                    BigDecimal percent =
+                            item.getDiscountValue()
+                                    .divide(BigDecimal.valueOf(100), 4, RoundingMode.HALF_UP);
+
+                    BigDecimal discountPerUnit =
+                            item.getUnitPrice().multiply(percent);
+
+                    BigDecimal refundDiscount =
+                            discountPerUnit.multiply(
+                                    BigDecimal.valueOf(dto.getRefundQuantity())
+                            );
+
+                    refundAmount = refundAmount.subtract(refundDiscount);
+                }
             }
 
             Refund refund = new Refund();
@@ -343,6 +367,15 @@ public class TransactionService {
                 request.getItems().get(0)
                         .getTransactionItemId()
         );
+
+        // Audit Logging
+        int count = request.getItems().size();
+
+        if (count == 1) {
+            transactionAuditHelper.logRefund(refundItems.get(0));
+        } else {
+            transactionAuditHelper.logRefundBatch(refundItems);
+        }
     }
 
     private void updateTransactionRefundStatus(
