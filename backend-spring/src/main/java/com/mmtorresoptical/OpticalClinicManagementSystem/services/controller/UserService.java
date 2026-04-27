@@ -1,14 +1,19 @@
 package com.mmtorresoptical.OpticalClinicManagementSystem.services.controller;
 
+import com.mmtorresoptical.OpticalClinicManagementSystem.dto.user.UpdateSecurityCredentialsRequestDTO;
+import com.mmtorresoptical.OpticalClinicManagementSystem.dto.user.ResetSecurityCredentialsRequestDTO;
+import com.mmtorresoptical.OpticalClinicManagementSystem.dto.user.SecurityCredentialsUpdateResponseDTO;
 import com.mmtorresoptical.OpticalClinicManagementSystem.dto.user.UpdateUserRequestDTO;
 import com.mmtorresoptical.OpticalClinicManagementSystem.dto.user.UserDetailsDTO;
 import com.mmtorresoptical.OpticalClinicManagementSystem.dto.user.CreateUserRequestDTO;
 import com.mmtorresoptical.OpticalClinicManagementSystem.dto.user.UserResponseDTO;
+import com.mmtorresoptical.OpticalClinicManagementSystem.exception.custom.BadRequestException;
 import com.mmtorresoptical.OpticalClinicManagementSystem.exception.custom.ConflictException;
 import com.mmtorresoptical.OpticalClinicManagementSystem.exception.custom.ResourceNotFoundException;
 import com.mmtorresoptical.OpticalClinicManagementSystem.mapper.UserMapper;
 import com.mmtorresoptical.OpticalClinicManagementSystem.model.User;
 import com.mmtorresoptical.OpticalClinicManagementSystem.repository.UserRepository;
+import com.mmtorresoptical.OpticalClinicManagementSystem.services.AuthenticatedUserService;
 import com.mmtorresoptical.OpticalClinicManagementSystem.services.auditlog.resources.UserAuditHelper;
 import com.mmtorresoptical.OpticalClinicManagementSystem.utils.NameUtils;
 import lombok.RequiredArgsConstructor;
@@ -31,6 +36,7 @@ public class UserService {
     private final PasswordEncoder passwordEncoder;
     private final UserMapper userMapper;
     private final UserAuditHelper userAuditHelper;
+    private final AuthenticatedUserService authenticatedUserService;
 
     public UserResponseDTO createUser(CreateUserRequestDTO userRequest) {
         // 1. Check if username or email or contact number already exists
@@ -176,6 +182,49 @@ public class UserService {
         userAuditHelper.logUpdate(beforeUpdate, updatedUser);
 
         return userMapper.entityToDetailsDTO(updatedUser);
+    }
+
+    public SecurityCredentialsUpdateResponseDTO updateOwnSecurityCredentials(UpdateSecurityCredentialsRequestDTO request) {
+        User retrievedUser = authenticatedUserService.getCurrentUser();
+        validateCurrentPassword(retrievedUser, request.getCurrentPassword());
+
+        User beforeUpdate = new User();
+        BeanUtils.copyProperties(retrievedUser, beforeUpdate);
+
+        retrievedUser.setSecurityQuestion(request.getSecurityQuestion());
+        retrievedUser.setSecurityAnswerHash(passwordEncoder.encode(request.getSecurityAnswer()));
+
+        User updatedUser = userRepository.save(retrievedUser);
+        userAuditHelper.logUpdate(beforeUpdate, updatedUser);
+
+        SecurityCredentialsUpdateResponseDTO response = new SecurityCredentialsUpdateResponseDTO();
+        response.setMessage("Security credentials updated successfully.");
+        response.setSecurityQuestion(updatedUser.getSecurityQuestion());
+        return response;
+    }
+
+    public SecurityCredentialsUpdateResponseDTO resetSecurityCredentials(UUID id, ResetSecurityCredentialsRequestDTO request) {
+        User retrievedUser = getUserById(id);
+
+        User beforeUpdate = new User();
+        BeanUtils.copyProperties(retrievedUser, beforeUpdate);
+
+        retrievedUser.setSecurityQuestion(request.getNewSecurityQuestion());
+        retrievedUser.setSecurityAnswerHash(passwordEncoder.encode(request.getNewSecurityAnswer()));
+
+        User updatedUser = userRepository.save(retrievedUser);
+        userAuditHelper.logUpdate(beforeUpdate, updatedUser);
+
+        SecurityCredentialsUpdateResponseDTO response = new SecurityCredentialsUpdateResponseDTO();
+        response.setMessage("Security credentials reset successfully.");
+        response.setSecurityQuestion(updatedUser.getSecurityQuestion());
+        return response;
+    }
+
+    private void validateCurrentPassword(User user, String currentPassword) {
+        if (currentPassword == null || currentPassword.isBlank() || !passwordEncoder.matches(currentPassword, user.getPasswordHash())) {
+            throw new BadRequestException("Invalid current password");
+        }
     }
 
     public void archiveUser(UUID id) {
