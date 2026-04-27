@@ -48,6 +48,15 @@ public class User {
     @Column(name = "contact_number", nullable = false)
     private String contactNumber;
 
+    @Column(name = "security_question", nullable = false)
+    private String securityQuestion;
+
+    @Column(name = "security_answer_hash", nullable = false)
+    private String securityAnswerHash;
+
+    @Column(name = "is_pw_reset_required", nullable = false)
+    private boolean isPwResetRequired = false;
+
     @Enumerated(EnumType.STRING)
     @Column(name = "role", nullable = false)
     private Role role; // "Admin" or "Staff"

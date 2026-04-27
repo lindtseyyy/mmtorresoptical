@@ -45,6 +45,10 @@ public class DataSeeder implements CommandLineRunner {
             adminUser.setGender(Gender.OTHERS); // Placeholder
             adminUser.setBirthDate(LocalDate.of(1990, 1, 1)); // Placeholder
 
+            // Security Question
+            adminUser.setSecurityQuestion("What is the name of your dog?");
+            adminUser.setSecurityAnswerHash(passwordEncoder.encode("Primo"));
+
             // Set other fields
             adminUser.setIsArchived(false);
             // 'createdAt' and 'userId' should be auto-generated

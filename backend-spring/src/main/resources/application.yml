@@ -8,7 +8,7 @@ spring:
     driver-class-name: org.postgresql.Driver
   jpa:
     hibernate:
-      ddl-auto: create
+      ddl-auto: create-drop
     database: postgresql
     show-sql: true
 
@@ -22,3 +22,6 @@ server:
 
 encryption:
   secret-key: 291b7360afa9fd8ffdd058d50a139221cee7305bd17ad6a00cfcf3e2f7e18f84
+
+hash:
+  pepper: pass123

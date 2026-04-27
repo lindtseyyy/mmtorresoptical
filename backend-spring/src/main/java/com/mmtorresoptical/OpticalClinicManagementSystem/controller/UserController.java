@@ -23,7 +23,6 @@ public class UserController {
 
     /**
      * CREATE a new user
-     * Change return type from ResponseEntity<?> to ResponseEntity<Object>
      */
     @PostMapping
     public ResponseEntity<UserResponseDTO> createUser(@Valid @RequestBody CreateUserRequestDTO userRequest) {
@@ -35,7 +34,6 @@ public class UserController {
 
     /**
      * READ all non-archived users
-     * (No change needed here, but ResponseEntity<List<User>> is fine)
      */
     @GetMapping
     public ResponseEntity<Page<UserDetailsDTO>> getAllUsers(@RequestParam(defaultValue = "0") int page,
@@ -51,7 +49,6 @@ public class UserController {
 
     /**
      * READ a single user by ID
-     * (No change needed here)
      */
     @GetMapping("/{id}")
     public ResponseEntity<UserDetailsDTO> getUserById(@PathVariable UUID id) {
@@ -62,7 +59,6 @@ public class UserController {
 
     /**
      * UPDATE an existing user
-     * Change return type from ResponseEntity<User> to ResponseEntity<Object>
      */
     @PutMapping("/{id}")
     public ResponseEntity<UserDetailsDTO> updateUser(@PathVariable UUID id, @Valid @RequestBody UpdateUserRequestDTO userRequest) {
