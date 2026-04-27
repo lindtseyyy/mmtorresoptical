@@ -1,4 +1,4 @@
-package com.mmtorresoptical.OpticalClinicManagementSystem.dto;
+package com.mmtorresoptical.OpticalClinicManagementSystem.dto.auth;
 
 import jakarta.validation.constraints.Email;
 import jakarta.validation.constraints.NotEmpty;
