@@ -45,5 +45,12 @@ public class CreateUserRequestDTO {
     @NotEmpty(message = "Role is required")
     private String role; // "Admin" or "Staff"
 
+    @NotEmpty(message = "Security question is required")
+    private String securityQuestion;
+
+    @NotEmpty(message = "Security answer is required")
+    @Size(min = 3, message = "Security answer must be at least 3 characters")
+    private String securityAnswer;
+
     private Boolean isArchived = false;
 }

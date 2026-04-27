@@ -19,5 +19,6 @@ public class UserResponseDTO {
     private String username;
     private String role; // "Admin" or "Staff"
     private Boolean isArchived = false;
+    private String securityQuestion;
 
 }

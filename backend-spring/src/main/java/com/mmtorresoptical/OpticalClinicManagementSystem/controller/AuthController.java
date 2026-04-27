@@ -1,8 +1,8 @@
 package com.mmtorresoptical.OpticalClinicManagementSystem.controller;
 
 import com.mmtorresoptical.OpticalClinicManagementSystem.dto.ForgotPasswordQuestionRequestDTO;
-import com.mmtorresoptical.OpticalClinicManagementSystem.dto.LoginRequestDTO;
-import com.mmtorresoptical.OpticalClinicManagementSystem.dto.LoginResponseDTO;
+import com.mmtorresoptical.OpticalClinicManagementSystem.dto.auth.LoginRequestDTO;
+import com.mmtorresoptical.OpticalClinicManagementSystem.dto.auth.LoginResponseDTO;
 import com.mmtorresoptical.OpticalClinicManagementSystem.dto.MessageResponseDTO;
 import com.mmtorresoptical.OpticalClinicManagementSystem.dto.PasswordResetRequestDTO;
 import com.mmtorresoptical.OpticalClinicManagementSystem.dto.SecurityQuestionResponseDTO;

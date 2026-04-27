@@ -53,7 +53,12 @@ public class UserService {
         if (userRequest.getPassword() == null || userRequest.getPassword().isBlank()) {
             throw new ConflictException("Password is required for new users");
         }
+        if (userRequest.getSecurityAnswer() == null || userRequest.getSecurityAnswer().isBlank()) {
+            throw new ConflictException("Security answer is required for new users");
+        }
+
         user.setPasswordHash(passwordEncoder.encode(userRequest.getPassword()));
+        user.setSecurityAnswerHash(passwordEncoder.encode(userRequest.getSecurityAnswer()));
 
         User savedUser = userRepository.save(user);
 

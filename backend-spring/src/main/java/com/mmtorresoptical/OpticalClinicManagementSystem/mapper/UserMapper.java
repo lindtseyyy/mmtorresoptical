@@ -10,6 +10,7 @@ public interface UserMapper {
 
     UserSummaryDTO entityToDTO(User user);
 
+    @Mapping(target = "securityAnswerHash", ignore = true)
     User requestDTOtoEntity(CreateUserRequestDTO requestDTO);
 
     @Mapping(
