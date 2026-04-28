@@ -1,11 +1,7 @@
 package com.mmtorresoptical.OpticalClinicManagementSystem.controller.report;
 
-import com.mmtorresoptical.OpticalClinicManagementSystem.services.report.ComprehensiveInventoryReportDataset;
-import com.mmtorresoptical.OpticalClinicManagementSystem.services.report.ReportAggregationService;
 import com.mmtorresoptical.OpticalClinicManagementSystem.enums.ReportType;
-import com.mmtorresoptical.OpticalClinicManagementSystem.services.report.TabularReportDataset;
-import com.mmtorresoptical.OpticalClinicManagementSystem.services.report.generator.pdf.PdfBoxInventoryAnalyticsReportGenerator;
-import com.mmtorresoptical.OpticalClinicManagementSystem.services.report.generator.pdf.PdfReportGenerator;
+import com.mmtorresoptical.OpticalClinicManagementSystem.services.report.PdfReportService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ContentDisposition;
 import org.springframework.http.HttpHeaders;
@@ -25,27 +21,14 @@ import java.time.format.DateTimeFormatter;
 @RequestMapping("/api/reports")
 public class PdfReportExportController {
 
-    private final ReportAggregationService reportAggregationService;
-    private final PdfReportGenerator pdfReportGenerator;
-    private final PdfBoxInventoryAnalyticsReportGenerator pdfBoxInventoryAnalyticsReportGenerator;
+    private final PdfReportService pdfReportService;
 
     @GetMapping("/pdf/{reportType}")
     public ResponseEntity<byte[]> exportReport(@PathVariable ReportType reportType) {
         String filename = reportType.name().toLowerCase() + "_" + LocalDateTime.now()
                 .format(DateTimeFormatter.ofPattern("yyyy-MM-dd_HH-mm-ss")) + ".pdf";
 
-        if (reportType == ReportType.INVENTORY_ANALYTICS) {
-            ComprehensiveInventoryReportDataset dataset = reportAggregationService.buildInventoryAnalyticsReport();
-            byte[] pdfBytes = pdfBoxInventoryAnalyticsReportGenerator.generate(dataset);
-
-            HttpHeaders headers = new HttpHeaders();
-            headers.setContentType(MediaType.APPLICATION_PDF);
-            headers.setContentDisposition(ContentDisposition.attachment().filename(filename).build());
-            return new ResponseEntity<>(pdfBytes, headers, HttpStatus.OK);
-        }
-
-        TabularReportDataset dataset = reportAggregationService.buildReport(reportType);
-        byte[] pdfData = pdfReportGenerator.generate(dataset);
+        byte[] pdfData = pdfReportService.exportReport(reportType);
 
         HttpHeaders headers = new HttpHeaders();
         headers.setContentType(MediaType.APPLICATION_PDF);
