@@ -1,6 +1,7 @@
 package com.mmtorresoptical.OpticalClinicManagementSystem.services.report;
 
 import com.mmtorresoptical.OpticalClinicManagementSystem.dto.product.ProductDetailsDTO;
+import com.mmtorresoptical.OpticalClinicManagementSystem.objects.TopSellingProductDTO;
 import lombok.Builder;
 import lombok.Data;
 
@@ -16,4 +17,5 @@ public class ComprehensiveInventoryReportDataset {
     private long totalOverstockCount;
     private List<ProductDetailsDTO> lowStockProducts;
     private List<ProductDetailsDTO> overstockProducts;
+    private List<TopSellingProductDTO> topSellingProducts;
 }

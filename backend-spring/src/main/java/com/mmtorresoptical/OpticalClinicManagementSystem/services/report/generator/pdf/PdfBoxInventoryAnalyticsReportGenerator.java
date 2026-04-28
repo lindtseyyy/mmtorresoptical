@@ -2,6 +2,7 @@ package com.mmtorresoptical.OpticalClinicManagementSystem.services.report.genera
 
 import com.mmtorresoptical.OpticalClinicManagementSystem.dto.product.ProductDetailsDTO;
 import com.mmtorresoptical.OpticalClinicManagementSystem.services.report.ComprehensiveInventoryReportDataset;
+import com.mmtorresoptical.OpticalClinicManagementSystem.objects.TopSellingProductDTO;
 import com.mmtorresoptical.OpticalClinicManagementSystem.services.report.ReportMetadata;
 import org.apache.pdfbox.pdmodel.PDDocument;
 import org.apache.pdfbox.pdmodel.PDPage;
@@ -57,8 +58,11 @@ public class PdfBoxInventoryAnalyticsReportGenerator {
             "Low Stock Products", "Low Stock Threshold");
 
         state = writeSectionHeader(document, state, "Overstock Products");
-        writeProductTable(document, state, dataset.getOverstockProducts(),
+        state = writeProductTable(document, state, dataset.getOverstockProducts(),
             "Overstock Products", "Overstock Threshold");
+
+        state = writeSectionHeader(document, state, "Top-Selling Products");
+        state = writeTopSellingProductsTable(document, state, dataset.getTopSellingProducts());
 
         state.contentStream.close();
     }
@@ -176,6 +180,48 @@ public class PdfBoxInventoryAnalyticsReportGenerator {
         return state;
     }
 
+    private PageState writeTopSellingProductsTable(PDDocument document,
+                                                   PageState state,
+                                                   List<TopSellingProductDTO> products) throws IOException {
+        List<TopSellingProductDTO> safeProducts = products == null ? Collections.emptyList() : products;
+        if (safeProducts.isEmpty()) {
+            return writeBodyLine(document, state, "No products available.");
+        }
+
+        List<String> headers = List.of("Product Name", "Category", "Total Quantity Sold", "Total Revenue");
+        float tableWidth = state.page.getMediaBox().getWidth() - (MARGIN * 2);
+        float[] columnWidths = new float[] {
+                tableWidth * 0.40f,
+                tableWidth * 0.25f,
+                tableWidth * 0.175f,
+                tableWidth * 0.175f
+        };
+
+        state = ensureTableHeaderSpace(document, state, "Top-Selling Products", headers, columnWidths);
+
+        for (TopSellingProductDTO product : safeProducts) {
+            if (state.y - ROW_HEIGHT < MARGIN) {
+                state.contentStream.close();
+                state = startPage(document);
+                state = writeSectionHeader(document, state, "Top-Selling Products");
+                drawRow(state.contentStream, headers, MARGIN, state.y, columnWidths, true);
+                state.y -= ROW_HEIGHT;
+            }
+
+            List<String> values = List.of(
+                    resolveTopSellingProductName(product),
+                    resolveTopSellingCategory(product),
+                    resolveTotalSold(product),
+                    resolveTotalRevenue(product)
+            );
+            drawRow(state.contentStream, values, MARGIN, state.y, columnWidths, false);
+            state.y -= ROW_HEIGHT;
+        }
+
+        state.y -= 15f;
+        return state;
+    }
+
     private PageState ensureTableHeaderSpace(PDDocument document,
                                              PageState state,
                                              String sectionTitle,
@@ -266,6 +312,34 @@ public class PdfBoxInventoryAnalyticsReportGenerator {
                 ? product.getLowLevelThreshold()
                 : product.getOverstockedThreshold();
         return threshold == null ? "N/A" : threshold.toString();
+    }
+
+    private String resolveTopSellingProductName(TopSellingProductDTO product) {
+        if (product == null || product.productName() == null || product.productName().isBlank()) {
+            return "Unknown";
+        }
+        return product.productName();
+    }
+
+    private String resolveTopSellingCategory(TopSellingProductDTO product) {
+        if (product == null || product.category() == null || product.category().isBlank()) {
+            return "N/A";
+        }
+        return product.category();
+    }
+
+    private String resolveTotalSold(TopSellingProductDTO product) {
+        if (product == null || product.totalSold() == null) {
+            return "N/A";
+        }
+        return product.totalSold().toString();
+    }
+
+    private String resolveTotalRevenue(TopSellingProductDTO product) {
+        if (product == null || product.totalRevenue() == null) {
+            return "N/A";
+        }
+        return formatCurrency(product.totalRevenue());
     }
 
     private PageState writeBodyLine(PDDocument document, PageState state, String text) throws IOException {

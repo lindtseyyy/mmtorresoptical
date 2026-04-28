@@ -170,4 +170,17 @@ public class InventoryAnalyticsService {
         return inventoryAnalyticsRepository.findTopSellingProducts(startDateTime, endDateTime);
     }
 
+    public List<TopSellingProductDTO> getTopSellingProductsAllTimeTopN(int topN) {
+        if (topN <= 0) {
+            return List.of();
+        }
+
+        Pageable pageable = PageRequest.of(0, topN);
+        return inventoryAnalyticsRepository.findTopSellingProducts(
+                LocalDate.of(1970, 1, 1).atStartOfDay(),
+                LocalDate.now().plusDays(1).atStartOfDay(),
+                pageable
+        );
+    }
+
 }

@@ -40,6 +40,7 @@ public class ReportAggregationService {
     }
 
     public ComprehensiveInventoryReportDataset buildInventoryAnalyticsReport() {
+        int topN = 10;
         ReportMetadata metadata = ReportMetadata.builder()
                 .generatedAt(Instant.now())
                 .generatedBy(resolveGeneratedBy())
@@ -55,6 +56,7 @@ public class ReportAggregationService {
                 .totalOverstockCount(analytics.getCountOverstockedProducts())
                 .lowStockProducts(inventoryAnalyticsService.getAllLowStockProducts())
                 .overstockProducts(inventoryAnalyticsService.getAllOverStockedProducts())
+                .topSellingProducts(inventoryAnalyticsService.getTopSellingProductsAllTimeTopN(topN))
                 .build();
     }
 
