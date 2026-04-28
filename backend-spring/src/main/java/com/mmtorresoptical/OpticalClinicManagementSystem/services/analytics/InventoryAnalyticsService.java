@@ -83,6 +83,24 @@ public class InventoryAnalyticsService {
         return products.map(productMapper::entityToDetailsDTO);
     }
 
+    public List<ProductDetailsDTO> getAllLowStockProducts() {
+        Sort sort = Sort.by(Sort.Direction.ASC, "quantity");
+        List<Product> products = inventoryAnalyticsRepository.findLowStockProducts(sort);
+
+        return products.stream()
+                .map(productMapper::entityToDetailsDTO)
+                .toList();
+    }
+
+    public List<ProductDetailsDTO> getAllOverStockedProducts() {
+        Sort sort = Sort.by(Sort.Direction.DESC, "quantity");
+        List<Product> products = inventoryAnalyticsRepository.findOverstockedProducts(sort);
+
+        return products.stream()
+                .map(productMapper::entityToDetailsDTO)
+                .toList();
+    }
+
     public List<TopSellingProductDTO> getTopSellingProducts(LocalDate startDate,
                                                             LocalDate endDate,
                                                             int page,
@@ -124,6 +142,32 @@ public class InventoryAnalyticsService {
         Pageable pageable = PageRequest.of(page, size);
 
         return inventoryAnalyticsRepository.findTopSellingProducts(startDateTime,endDateTime, pageable);
+    }
+
+    public List<TopSellingProductDTO> getAllTopSellingProducts(LocalDate startDate,
+                                                               LocalDate endDate) {
+
+        LocalDateTime startDateTime = null;
+        LocalDateTime  endDateTime = null;
+
+        if(startDate != null) {
+            startDateTime = startDate.atStartOfDay();
+        }
+
+        if(endDate != null) {
+            endDateTime = endDate.plusDays(1).atStartOfDay();
+        }
+
+        // Default to full range instead of null
+        if (startDate == null) {
+            startDateTime = LocalDate.of(1970, 1, 1).atStartOfDay();
+        }
+
+        if (endDate == null) {
+            endDateTime = LocalDate.now().plusDays(1).atStartOfDay();
+        }
+
+        return inventoryAnalyticsRepository.findTopSellingProducts(startDateTime, endDateTime);
     }
 
 }

@@ -1,0 +1,56 @@
+package com.mmtorresoptical.OpticalClinicManagementSystem.controller.report;
+
+import com.mmtorresoptical.OpticalClinicManagementSystem.services.report.ComprehensiveInventoryReportDataset;
+import com.mmtorresoptical.OpticalClinicManagementSystem.services.report.ReportAggregationService;
+import com.mmtorresoptical.OpticalClinicManagementSystem.services.report.ReportType;
+import com.mmtorresoptical.OpticalClinicManagementSystem.services.report.TabularReportDataset;
+import com.mmtorresoptical.OpticalClinicManagementSystem.services.report.generator.pdf.PdfBoxInventoryAnalyticsReportGenerator;
+import com.mmtorresoptical.OpticalClinicManagementSystem.services.report.generator.pdf.PdfReportGenerator;
+import lombok.RequiredArgsConstructor;
+import org.springframework.http.ContentDisposition;
+import org.springframework.http.HttpHeaders;
+import org.springframework.http.HttpStatus;
+import org.springframework.http.MediaType;
+import org.springframework.http.ResponseEntity;
+import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PathVariable;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RestController;
+
+import java.time.LocalDateTime;
+import java.time.format.DateTimeFormatter;
+
+@RestController
+@RequiredArgsConstructor
+@RequestMapping("/api/reports")
+public class PdfReportExportController {
+
+    private final ReportAggregationService reportAggregationService;
+    private final PdfReportGenerator pdfReportGenerator;
+    private final PdfBoxInventoryAnalyticsReportGenerator pdfBoxInventoryAnalyticsReportGenerator;
+
+    @GetMapping("/pdf/{reportType}")
+    public ResponseEntity<byte[]> exportReport(@PathVariable ReportType reportType) {
+        String filename = reportType.name().toLowerCase() + "_" + LocalDateTime.now()
+                .format(DateTimeFormatter.ofPattern("yyyy-MM-dd_HH-mm-ss")) + ".pdf";
+
+        if (reportType == ReportType.INVENTORY_ANALYTICS) {
+            ComprehensiveInventoryReportDataset dataset = reportAggregationService.buildInventoryAnalyticsReport();
+            byte[] pdfBytes = pdfBoxInventoryAnalyticsReportGenerator.generate(dataset);
+
+            HttpHeaders headers = new HttpHeaders();
+            headers.setContentType(MediaType.APPLICATION_PDF);
+            headers.setContentDisposition(ContentDisposition.attachment().filename(filename).build());
+            return new ResponseEntity<>(pdfBytes, headers, HttpStatus.OK);
+        }
+
+        TabularReportDataset dataset = reportAggregationService.buildReport(reportType);
+        byte[] pdfData = pdfReportGenerator.generate(dataset);
+
+        HttpHeaders headers = new HttpHeaders();
+        headers.setContentType(MediaType.APPLICATION_PDF);
+        headers.setContentDisposition(ContentDisposition.attachment().filename(filename).build());
+
+        return new ResponseEntity<>(pdfData, headers, HttpStatus.OK);
+    }
+}

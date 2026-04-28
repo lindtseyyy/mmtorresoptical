@@ -19,6 +19,7 @@ import org.springframework.web.cors.CorsConfigurationSource;
 import org.springframework.web.cors.UrlBasedCorsConfigurationSource;
 
 import java.util.Arrays;
+import java.util.List;
 
 @Configuration
 @EnableWebSecurity
@@ -43,6 +44,8 @@ public class SecurityConfig {
 
         // Allow all standard headers
         configuration.setAllowedHeaders(Arrays.asList("Authorization", "Content-Type", "Origin", "Accept"));
+
+        configuration.setExposedHeaders(List.of("Content-Disposition"));
 
         // Allow credentials (important for sending/receiving cookies or auth tokens)
         configuration.setAllowCredentials(true);

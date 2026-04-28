@@ -35,7 +35,7 @@ public class AuditLog {
     @Column(name = "resource_type", nullable = false)
     private ResourceType resourceType;
 
-    @Column(name = "resource_id", nullable = false)
+    @Column(name = "resource_id")
     private UUID resourceId;
 
     @NotBlank

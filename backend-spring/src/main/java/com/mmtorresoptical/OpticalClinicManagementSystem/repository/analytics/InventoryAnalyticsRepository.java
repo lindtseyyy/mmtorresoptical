@@ -4,6 +4,7 @@ import com.mmtorresoptical.OpticalClinicManagementSystem.model.Product;
 import com.mmtorresoptical.OpticalClinicManagementSystem.objects.TopSellingProductDTO;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.Sort;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
@@ -65,6 +66,18 @@ public interface InventoryAnalyticsRepository extends JpaRepository<Product, UUI
     Page<Product> findLowStockProducts(Pageable pageable);
 
 
+        /*
+         * LOW STOCK LIST (Sortable)
+         */
+        @Query("""
+                SELECT p
+                FROM Product p
+                WHERE p.quantity <= p.lowLevelThreshold
+                    AND p.isArchived = false
+        """)
+        List<Product> findLowStockProducts(Sort sort);
+
+
     /*
      * OVERSTOCKED LIST (Paginated)
      */
@@ -75,6 +88,18 @@ public interface InventoryAnalyticsRepository extends JpaRepository<Product, UUI
           AND p.isArchived = false
     """)
     Page<Product> findOverstockedProducts(Pageable pageable);
+
+
+        /*
+         * OVERSTOCKED LIST (Sortable)
+         */
+        @Query("""
+                SELECT p
+                FROM Product p
+                WHERE p.quantity >= p.overstockedThreshold
+                    AND p.isArchived = false
+        """)
+        List<Product> findOverstockedProducts(Sort sort);
 
 
     /*
@@ -124,5 +149,53 @@ public interface InventoryAnalyticsRepository extends JpaRepository<Product, UUI
             @Param("startDate") LocalDateTime startDate,
             @Param("endDate") LocalDateTime endDate,
             Pageable pageable
+    );
+
+
+    /*
+     * TOP SELLING PRODUCTS BETWEEN DATE RANGE
+     * Fully parameterized
+     */
+    @Query("""
+    SELECT new com.mmtorresoptical.OpticalClinicManagementSystem.objects.TopSellingProductDTO(
+        p.productId,
+        p.productName,
+        p.unitPrice,
+        SUM(ti.quantity - COALESCE(ti.refundedQuantity, 0)),
+        SUM(
+            ti.subtotal
+            -
+            COALESCE(
+                (SELECT SUM(r.refundAmount)
+                 FROM Refund r
+                 WHERE r.transactionItem = ti),
+                0
+            )
+        )
+    )
+    FROM TransactionItem ti
+    JOIN ti.transaction t
+    JOIN ti.product p
+    WHERE t.transactionStatus IN (
+        com.mmtorresoptical.OpticalClinicManagementSystem.enums.TransactionStatus.COMPLETED,
+        com.mmtorresoptical.OpticalClinicManagementSystem.enums.TransactionStatus.PARTIALLY_REFUNDED
+    )
+      AND t.transactionDate >= :startDate
+      AND t.transactionDate < :endDate
+    GROUP BY p.productId, p.productName, p.unitPrice
+    ORDER BY SUM(
+        ti.subtotal
+        -
+        COALESCE(
+            (SELECT SUM(r.refundAmount)
+             FROM Refund r
+             WHERE r.transactionItem = ti),
+            0
+        )
+    ) DESC
+""")
+    List<TopSellingProductDTO> findTopSellingProducts(
+            @Param("startDate") LocalDateTime startDate,
+            @Param("endDate") LocalDateTime endDate
     );
 }
