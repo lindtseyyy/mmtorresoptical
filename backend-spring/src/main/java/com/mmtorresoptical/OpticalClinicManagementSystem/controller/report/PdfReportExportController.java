@@ -25,7 +25,7 @@ public class PdfReportExportController {
 
     @GetMapping("/pdf/{reportType}")
     public ResponseEntity<byte[]> exportReport(@PathVariable ReportType reportType) {
-        String filename = reportType.name().toLowerCase() + "_" + LocalDateTime.now()
+        String filename = reportType.getFilenamePrefix() + "_" + LocalDateTime.now()
                 .format(DateTimeFormatter.ofPattern("yyyy-MM-dd_HH-mm-ss")) + ".pdf";
 
         byte[] pdfData = pdfReportService.exportReport(reportType);

@@ -24,7 +24,7 @@ public class ReportAggregationService {
                 .generatedAt(Instant.now())
                 .generatedBy(resolveGeneratedBy())
                 .reportType(reportType)
-                .title(reportType != null ? reportType.name() : "UNKNOWN")
+                .title(reportType != null ? reportType.getDisplayTitle() : "UNKNOWN")
                 .build();
 
         if (reportType == null) {
