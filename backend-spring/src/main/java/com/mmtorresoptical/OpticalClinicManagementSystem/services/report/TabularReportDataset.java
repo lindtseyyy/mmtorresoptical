@@ -16,12 +16,23 @@ public class TabularReportDataset {
     private ReportMetadata metadata;
     private List<String> columns;
     private List<List<Object>> rows;
+    @Builder.Default
+    private String emptyMessage = "No records available.";
 
     public static TabularReportDataset empty(ReportMetadata metadata) {
         return TabularReportDataset.builder()
                 .metadata(metadata)
                 .columns(Collections.emptyList())
                 .rows(Collections.emptyList())
+                .build();
+    }
+
+    public static TabularReportDataset empty(ReportMetadata metadata, String emptyMessage) {
+        return TabularReportDataset.builder()
+                .metadata(metadata)
+                .columns(Collections.emptyList())
+                .rows(Collections.emptyList())
+                .emptyMessage(emptyMessage)
                 .build();
     }
 }

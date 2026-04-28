@@ -210,6 +210,23 @@ public class TransactionService {
         return transactionMapper.entityToDetailsDTO(transaction);
     }
 
+    public List<Transaction> getTransactionsForReport(
+            LocalDate minDate,
+            LocalDate maxDate
+    ) {
+        Specification<Transaction> spec = Specification.allOf();
+
+        if (minDate != null || maxDate != null) {
+            spec = spec.and(
+                    TransactionSpecification.dateBetween(minDate, maxDate)
+            );
+        }
+
+        Sort sort = Sort.by(Sort.Direction.DESC, "transactionDate");
+
+                return transactionRepository.findAll(spec, sort);
+    }
+
     @Transactional
     public void voidTransaction(UUID transactionId, VoidTransactionRequestDTO voidTransactionRequestDTO) {
 

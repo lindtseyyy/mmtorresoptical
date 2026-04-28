@@ -7,6 +7,7 @@ import com.mmtorresoptical.OpticalClinicManagementSystem.services.report.generat
 import lombok.RequiredArgsConstructor;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.format.annotation.DateTimeFormat;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ContentDisposition;
 import org.springframework.http.HttpHeaders;
@@ -15,9 +16,11 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.server.ResponseStatusException;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
+import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
+import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
 
@@ -32,13 +35,17 @@ public class ExcelReportExportController {
     private final ExcelReportGenerator excelReportGenerator;
 
     @GetMapping("/{reportType}")
-    public ResponseEntity<byte[]> exportExcel(@PathVariable ReportType reportType) {
+    public ResponseEntity<byte[]> exportExcel(
+            @PathVariable ReportType reportType,
+            @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate minDate,
+            @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate maxDate
+    ) {
         if (!reportType.supportsExcel()) {
             throw new ResponseStatusException(HttpStatus.BAD_REQUEST,
                     "Excel export not supported for " + reportType.name() + " reports.");
         }
 
-        TabularReportDataset dataset = reportAggregationService.buildReport(reportType);
+        TabularReportDataset dataset = reportAggregationService.buildReport(reportType, minDate, maxDate);
 
         logger.info("Exporting Excel report: reportType={}, columns={}, rows={}",
                 reportType,

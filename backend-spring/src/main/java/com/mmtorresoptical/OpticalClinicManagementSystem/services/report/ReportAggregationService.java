@@ -2,14 +2,17 @@ package com.mmtorresoptical.OpticalClinicManagementSystem.services.report;
 
 import com.mmtorresoptical.OpticalClinicManagementSystem.dto.product.ProductDetailsDTO;
 import com.mmtorresoptical.OpticalClinicManagementSystem.enums.ReportType;
+import com.mmtorresoptical.OpticalClinicManagementSystem.model.Transaction;
 import com.mmtorresoptical.OpticalClinicManagementSystem.objects.TopSellingProductDTO;
 import com.mmtorresoptical.OpticalClinicManagementSystem.services.analytics.InventoryAnalyticsService;
+import com.mmtorresoptical.OpticalClinicManagementSystem.services.controller.TransactionService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
 
 import java.time.Instant;
+import java.time.LocalDate;
 import java.util.Arrays;
 import java.util.List;
 
@@ -18,8 +21,9 @@ import java.util.List;
 public class ReportAggregationService {
 
     private final InventoryAnalyticsService inventoryAnalyticsService;
+    private final TransactionService transactionService;
 
-    public TabularReportDataset buildReport(ReportType reportType) {
+    public TabularReportDataset buildReport(ReportType reportType, LocalDate minDate, LocalDate maxDate) {
         ReportMetadata metadata = ReportMetadata.builder()
                 .generatedAt(Instant.now())
                 .generatedBy(resolveGeneratedBy())
@@ -35,6 +39,7 @@ public class ReportAggregationService {
             case INVENTORY_LOW_STOCK -> buildInventoryLowStockReport(metadata);
             case INVENTORY_OVERSTOCK -> buildInventoryOverstockReport(metadata);
             case INVENTORY_TOP_SELLING -> buildInventoryTopSellingReport(metadata);
+            case TRANSACTIONS -> buildTransactionsReport(metadata, minDate, maxDate);
             default -> TabularReportDataset.empty(metadata);
         };
     }
@@ -135,6 +140,44 @@ public class ReportAggregationService {
                 product.totalRevenue()
             ))
             .toList();
+
+        return TabularReportDataset.builder()
+                .metadata(metadata)
+                .columns(columns)
+                .rows(rows)
+                .build();
+    }
+
+    private TabularReportDataset buildTransactionsReport(
+            ReportMetadata metadata,
+            LocalDate minDate,
+            LocalDate maxDate
+    ) {
+        List<Transaction> transactions = transactionService.getTransactionsForReport(minDate, maxDate);
+
+        if (transactions.isEmpty()) {
+            return TabularReportDataset.empty(metadata, "No transactions available.");
+        }
+
+        List<String> columns = Arrays.asList(
+                "Transaction ID",
+                "Transaction Date",
+                "Total Amount",
+                "Payment Type",
+                "Status",
+                "Reference No"
+        );
+
+        List<List<Object>> rows = transactions.stream()
+                .map(transaction -> Arrays.<Object>asList(
+                        transaction.getTransactionId(),
+                        transaction.getTransactionDate(),
+                        transaction.getTotalAmount(),
+                        transaction.getPaymentType(),
+                        transaction.getTransactionStatus(),
+                        transaction.getReferenceNumber()
+                ))
+                .toList();
 
         return TabularReportDataset.builder()
                 .metadata(metadata)

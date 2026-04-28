@@ -53,7 +53,7 @@ public class PdfBoxTabularReportGenerator implements PdfReportGenerator {
         state = writeMetadataHeader(document, state, dataset.getMetadata());
 
         if (columns.isEmpty() || rows.isEmpty()) {
-            state = writeBodyLine(document, state, "No products available.");
+            state = writeBodyLine(document, state, dataset.getEmptyMessage());
             state.contentStream.close();
             return;
         }

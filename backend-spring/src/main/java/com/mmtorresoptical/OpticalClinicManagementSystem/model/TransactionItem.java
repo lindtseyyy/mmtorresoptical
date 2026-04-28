@@ -8,8 +8,8 @@ import lombok.Getter;
 import lombok.Setter;
 
 import java.math.BigDecimal;
-import java.util.ArrayList;
-import java.util.List;
+import java.util.HashSet;
+import java.util.Set;
 import java.util.UUID;
 
 @Getter
@@ -65,6 +65,6 @@ public class TransactionItem {
             cascade = CascadeType.ALL,
             orphanRemoval = true
     )
-    private List<Refund> refunds = new ArrayList<>();
+    private Set<Refund> refunds = new HashSet<>();
 
 }

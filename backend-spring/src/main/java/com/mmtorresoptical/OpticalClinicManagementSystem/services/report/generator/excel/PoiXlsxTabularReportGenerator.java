@@ -73,7 +73,7 @@ public class PoiXlsxTabularReportGenerator implements ExcelReportGenerator {
 
             if (rows.isEmpty()) {
                 Row emptyRow = sheet.createRow(rowNum++);
-                emptyRow.createCell(0).setCellValue("No products available.");
+                emptyRow.createCell(0).setCellValue(dataset.getEmptyMessage());
             } else {
                 Row headerRow = sheet.createRow(rowNum++);
                 for (int columnIndex = 0; columnIndex < columns.size(); columnIndex++) {
