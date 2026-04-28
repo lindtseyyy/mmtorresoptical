@@ -19,7 +19,7 @@ public interface TransactionItemMapper {
 
     @Mapping(
             target = "discountType",
-            expression = "java(transactionItem.getDiscountType().name())"
+            expression = "java(transactionItem.getDiscountType() != null ? transactionItem.getDiscountType().name() : null)"
     )
     @Mapping(
             target = "subtotal",

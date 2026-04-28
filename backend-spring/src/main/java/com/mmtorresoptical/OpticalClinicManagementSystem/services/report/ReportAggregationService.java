@@ -128,7 +128,7 @@ public class ReportAggregationService {
         List<List<Object>> rows = products.stream()
             .map(product -> Arrays.<Object>asList(
                 product.productName(),
-                null,
+                product.category(),
                 product.totalSold(),
                 product.totalRevenue()
             ))
