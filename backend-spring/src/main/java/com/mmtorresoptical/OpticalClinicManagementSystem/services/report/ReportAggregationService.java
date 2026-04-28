@@ -1,6 +1,7 @@
 package com.mmtorresoptical.OpticalClinicManagementSystem.services.report;
 
 import com.mmtorresoptical.OpticalClinicManagementSystem.dto.product.ProductDetailsDTO;
+import com.mmtorresoptical.OpticalClinicManagementSystem.enums.ReportType;
 import com.mmtorresoptical.OpticalClinicManagementSystem.objects.TopSellingProductDTO;
 import com.mmtorresoptical.OpticalClinicManagementSystem.services.analytics.InventoryAnalyticsService;
 import lombok.RequiredArgsConstructor;

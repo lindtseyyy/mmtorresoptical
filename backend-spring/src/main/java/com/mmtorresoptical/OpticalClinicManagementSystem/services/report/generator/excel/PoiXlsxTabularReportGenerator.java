@@ -71,26 +71,31 @@ public class PoiXlsxTabularReportGenerator implements ExcelReportGenerator {
 
             rowNum++;
 
-            Row headerRow = sheet.createRow(rowNum++);
-            for (int columnIndex = 0; columnIndex < columns.size(); columnIndex++) {
-                Cell cell = headerRow.createCell(columnIndex);
-                cell.setCellValue(columns.get(columnIndex));
-            }
-
-            for (List<Object> rowData : rows) {
-                Row row = sheet.createRow(rowNum++);
-                if (rowData == null) {
-                    continue;
+            if (rows.isEmpty()) {
+                Row emptyRow = sheet.createRow(rowNum++);
+                emptyRow.createCell(0).setCellValue("No products available.");
+            } else {
+                Row headerRow = sheet.createRow(rowNum++);
+                for (int columnIndex = 0; columnIndex < columns.size(); columnIndex++) {
+                    Cell cell = headerRow.createCell(columnIndex);
+                    cell.setCellValue(columns.get(columnIndex));
                 }
 
-                for (int columnIndex = 0; columnIndex < rowData.size(); columnIndex++) {
-                    Cell cell = row.createCell(columnIndex);
-                    setCellValue(cell, rowData.get(columnIndex));
-                }
-            }
+                for (List<Object> rowData : rows) {
+                    Row row = sheet.createRow(rowNum++);
+                    if (rowData == null) {
+                        continue;
+                    }
 
-            for (int columnIndex = 0; columnIndex < columns.size(); columnIndex++) {
-                sheet.autoSizeColumn(columnIndex);
+                    for (int columnIndex = 0; columnIndex < rowData.size(); columnIndex++) {
+                        Cell cell = row.createCell(columnIndex);
+                        setCellValue(cell, rowData.get(columnIndex));
+                    }
+                }
+
+                for (int columnIndex = 0; columnIndex < columns.size(); columnIndex++) {
+                    sheet.autoSizeColumn(columnIndex);
+                }
             }
 
             workbook.write(outputStream);

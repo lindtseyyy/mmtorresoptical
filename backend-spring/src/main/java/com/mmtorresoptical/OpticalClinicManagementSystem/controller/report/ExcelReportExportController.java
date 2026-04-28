@@ -1,7 +1,7 @@
 package com.mmtorresoptical.OpticalClinicManagementSystem.controller.report;
 
 import com.mmtorresoptical.OpticalClinicManagementSystem.services.report.ReportAggregationService;
-import com.mmtorresoptical.OpticalClinicManagementSystem.services.report.ReportType;
+import com.mmtorresoptical.OpticalClinicManagementSystem.enums.ReportType;
 import com.mmtorresoptical.OpticalClinicManagementSystem.services.report.TabularReportDataset;
 import com.mmtorresoptical.OpticalClinicManagementSystem.services.report.generator.excel.ExcelReportGenerator;
 import lombok.RequiredArgsConstructor;

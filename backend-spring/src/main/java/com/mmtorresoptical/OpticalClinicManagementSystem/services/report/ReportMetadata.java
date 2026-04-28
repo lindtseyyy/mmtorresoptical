@@ -1,5 +1,6 @@
 package com.mmtorresoptical.OpticalClinicManagementSystem.services.report;
 
+import com.mmtorresoptical.OpticalClinicManagementSystem.enums.ReportType;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;

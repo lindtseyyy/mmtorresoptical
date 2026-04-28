@@ -11,6 +11,9 @@ import org.springframework.stereotype.Service;
 
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
+import java.time.Instant;
+import java.time.ZoneId;
+import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
@@ -23,6 +26,7 @@ public class PdfBoxTabularReportGenerator implements PdfReportGenerator {
     private static final float HEADER_FONT_SIZE = 11f;
     private static final float BODY_FONT_SIZE = 10f;
     private static final float MARGIN = 50f;
+    private static final float LINE_HEIGHT = 14f;
     private static final float ROW_HEIGHT = 18f;
     private static final float CELL_PADDING = 2f;
 
@@ -45,59 +49,96 @@ public class PdfBoxTabularReportGenerator implements PdfReportGenerator {
     private void renderDocument(PDDocument document, TabularReportDataset dataset) throws IOException {
         List<String> columns = dataset.getColumns() == null ? Collections.emptyList() : dataset.getColumns();
         List<List<Object>> rows = dataset.getRows() == null ? Collections.emptyList() : dataset.getRows();
-        String title = resolveTitle(dataset.getMetadata());
+        PageState state = startPage(document);
+        state = writeMetadataHeader(document, state, dataset.getMetadata());
 
-        if (columns.isEmpty()) {
-            PDPage page = new PDPage(PDRectangle.LETTER);
-            document.addPage(page);
-            try (PDPageContentStream contentStream = new PDPageContentStream(document, page)) {
-                float y = page.getMediaBox().getHeight() - MARGIN;
-                y = writeTitle(contentStream, title, y);
-                writeText(contentStream, "No data available", MARGIN, y - ROW_HEIGHT, BODY_FONT, BODY_FONT_SIZE);
-            }
+        if (columns.isEmpty() || rows.isEmpty()) {
+            state = writeBodyLine(document, state, "No products available.");
+            state.contentStream.close();
             return;
         }
 
+        float tableWidth = state.page.getMediaBox().getWidth() - (MARGIN * 2);
+        float columnWidth = tableWidth / columns.size();
+
+        state = ensureTableHeaderSpace(document, state, columns, columnWidth);
+        drawRow(state.contentStream, columns, MARGIN, state.y, columnWidth, true);
+        state.y -= ROW_HEIGHT;
+
         int rowIndex = 0;
         while (rowIndex < rows.size()) {
-            PDPage page = new PDPage(PDRectangle.LETTER);
-            document.addPage(page);
-            try (PDPageContentStream contentStream = new PDPageContentStream(document, page)) {
-                float y = page.getMediaBox().getHeight() - MARGIN;
-                y = writeTitle(contentStream, title, y);
-                float tableWidth = page.getMediaBox().getWidth() - (MARGIN * 2);
-                float columnWidth = tableWidth / columns.size();
-
-                float tableTopY = y - ROW_HEIGHT;
-                drawRow(contentStream, columns, MARGIN, tableTopY, columnWidth, true);
-                float currentY = tableTopY - ROW_HEIGHT;
-
-                while (rowIndex < rows.size()) {
-                    if (currentY < MARGIN + ROW_HEIGHT) {
-                        break;
-                    }
-                    List<String> rowValues = normalizeRow(rows.get(rowIndex), columns.size());
-                    drawRow(contentStream, rowValues, MARGIN, currentY, columnWidth, false);
-                    rowIndex++;
-                    currentY -= ROW_HEIGHT;
-                }
+            if (state.y - ROW_HEIGHT < MARGIN) {
+                state.contentStream.close();
+                state = startPage(document);
+                drawRow(state.contentStream, columns, MARGIN, state.y, columnWidth, true);
+                state.y -= ROW_HEIGHT;
             }
+
+            List<String> rowValues = normalizeRow(rows.get(rowIndex), columns.size());
+            drawRow(state.contentStream, rowValues, MARGIN, state.y, columnWidth, false);
+            state.y -= ROW_HEIGHT;
+            rowIndex++;
         }
 
-        if (rows.isEmpty()) {
-            PDPage page = new PDPage(PDRectangle.LETTER);
-            document.addPage(page);
-            try (PDPageContentStream contentStream = new PDPageContentStream(document, page)) {
-                float y = page.getMediaBox().getHeight() - MARGIN;
-                y = writeTitle(contentStream, title, y);
-                writeText(contentStream, "No data available", MARGIN, y - ROW_HEIGHT, BODY_FONT, BODY_FONT_SIZE);
-            }
-        }
+        state.contentStream.close();
     }
 
-    private float writeTitle(PDPageContentStream contentStream, String title, float y) throws IOException {
-        writeText(contentStream, title, MARGIN, y, HEADER_FONT, TITLE_FONT_SIZE);
-        return y - (TITLE_FONT_SIZE + 8f);
+    private PageState startPage(PDDocument document) throws IOException {
+        PDPage page = new PDPage(PDRectangle.LETTER);
+        document.addPage(page);
+        PDPageContentStream contentStream = new PDPageContentStream(document, page);
+        float y = page.getMediaBox().getHeight() - MARGIN;
+        return new PageState(page, contentStream, y);
+    }
+
+    private PageState ensureSpace(PDDocument document, PageState state, float requiredHeight) throws IOException {
+        if (state.y - requiredHeight < MARGIN) {
+            state.contentStream.close();
+            return startPage(document);
+        }
+        return state;
+    }
+
+    private PageState writeMetadataHeader(PDDocument document,
+                                          PageState state,
+                                          ReportMetadata metadata) throws IOException {
+        String title = resolveTitle(metadata);
+        String generatedBy = metadata == null ? "N/A" : metadata.getGeneratedBy();
+        Instant generatedAtValue = metadata == null ? null : metadata.getGeneratedAt();
+        String generatedAt = generatedAtValue == null
+                ? "N/A"
+                : DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss")
+                    .withZone(ZoneId.systemDefault())
+                    .format(generatedAtValue);
+
+        state = ensureSpace(document, state, TITLE_FONT_SIZE + (LINE_HEIGHT * 3) + 20f);
+
+        writeText(state.contentStream, title, MARGIN, state.y, HEADER_FONT, TITLE_FONT_SIZE);
+        state.y -= LINE_HEIGHT + 5f;
+        writeText(state.contentStream, "Generated By: " + generatedBy, MARGIN, state.y, BODY_FONT, BODY_FONT_SIZE);
+        state.y -= LINE_HEIGHT;
+        writeText(state.contentStream, "Generated At: " + generatedAt, MARGIN, state.y, BODY_FONT, BODY_FONT_SIZE);
+        state.y -= 10f;
+
+        state.contentStream.moveTo(MARGIN, state.y);
+        state.contentStream.lineTo(state.page.getMediaBox().getWidth() - MARGIN, state.y);
+        state.contentStream.stroke();
+
+        state.y -= 20f;
+
+        return state;
+    }
+
+    private PageState ensureTableHeaderSpace(PDDocument document,
+                                             PageState state,
+                                             List<String> headers,
+                                             float columnWidth) throws IOException {
+        float requiredHeight = (ROW_HEIGHT * 2) + 15f;
+        if (state.y - requiredHeight < MARGIN) {
+            state.contentStream.close();
+            state = startPage(document);
+        }
+        return state;
     }
 
     private void drawRow(PDPageContentStream contentStream,
@@ -116,9 +157,16 @@ public class PdfBoxTabularReportGenerator implements PdfReportGenerator {
 
             String text = values.get(i) == null ? "" : values.get(i);
             String fittedText = fitToWidth(text, font, fontSize, columnWidth - (CELL_PADDING * 2));
-            float textY = y - (ROW_HEIGHT - fontSize) / 2f - 2f;
+            float textY = y - 13f;
             writeText(contentStream, fittedText, cellX + CELL_PADDING, textY, font, fontSize);
         }
+    }
+
+    private PageState writeBodyLine(PDDocument document, PageState state, String text) throws IOException {
+        state = ensureSpace(document, state, LINE_HEIGHT);
+        writeText(state.contentStream, text, MARGIN, state.y, BODY_FONT, BODY_FONT_SIZE);
+        state.y -= LINE_HEIGHT;
+        return state;
     }
 
     private void writeText(PDPageContentStream contentStream,
@@ -183,5 +231,17 @@ public class PdfBoxTabularReportGenerator implements PdfReportGenerator {
             return metadata.getReportType().name();
         }
         return "Report";
+    }
+
+    private static class PageState {
+        private final PDPage page;
+        private final PDPageContentStream contentStream;
+        private float y;
+
+        private PageState(PDPage page, PDPageContentStream contentStream, float y) {
+            this.page = page;
+            this.contentStream = contentStream;
+            this.y = y;
+        }
     }
 }

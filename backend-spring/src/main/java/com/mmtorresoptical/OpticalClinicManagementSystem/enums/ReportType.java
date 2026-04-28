@@ -1,4 +1,4 @@
-package com.mmtorresoptical.OpticalClinicManagementSystem.services.report;
+package com.mmtorresoptical.OpticalClinicManagementSystem.enums;
 
 public enum ReportType {
     INVENTORY_LOW_STOCK,
