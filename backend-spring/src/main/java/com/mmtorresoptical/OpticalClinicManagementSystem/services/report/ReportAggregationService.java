@@ -50,9 +50,6 @@ public class ReportAggregationService {
         }
 
         return switch (reportType) {
-            case INVENTORY_LOW_STOCK -> buildInventoryLowStockReport(metadata);
-            case INVENTORY_OVERSTOCK -> buildInventoryOverstockReport(metadata);
-            case INVENTORY_TOP_SELLING -> buildInventoryTopSellingReport(metadata);
             case TRANSACTIONS -> buildTransactionsReport(metadata, minDate, maxDate);
             case PATIENTS -> buildPatientReportAsTabular(metadata, minDate, maxDate);
             default -> TabularReportDataset.empty(metadata);
@@ -77,89 +74,6 @@ public class ReportAggregationService {
                 .lowStockProducts(inventoryAnalyticsService.getAllLowStockProducts())
                 .overstockProducts(inventoryAnalyticsService.getAllOverStockedProducts())
                 .topSellingProducts(inventoryAnalyticsService.getTopSellingProductsAllTimeTopN(topN))
-                .build();
-    }
-
-    private TabularReportDataset buildInventoryLowStockReport(ReportMetadata metadata) {
-        List<ProductDetailsDTO> products = inventoryAnalyticsService.getAllLowStockProducts();
-        List<String> columns = List.of(
-                "Product Name",
-                "Category",
-                "Supplier",
-                "Unit Price",
-                "Quantity",
-                "Low Stock Threshold"
-        );
-
-        List<List<Object>> rows = products.stream()
-            .map(product -> Arrays.<Object>asList(
-                product.getProductName(),
-                product.getCategory(),
-                product.getSupplier(),
-                product.getUnitPrice(),
-                product.getQuantity(),
-                product.getLowLevelThreshold()
-            ))
-            .toList();
-
-        return TabularReportDataset.builder()
-                .metadata(metadata)
-                .columns(columns)
-                .rows(rows)
-                .build();
-    }
-
-    private TabularReportDataset buildInventoryOverstockReport(ReportMetadata metadata) {
-        List<ProductDetailsDTO> products = inventoryAnalyticsService.getAllOverStockedProducts();
-        List<String> columns = Arrays.asList(
-                "Product Name",
-                "Category",
-                "Supplier",
-                "Unit Price",
-                "Quantity",
-                "Overstock Threshold"
-        );
-
-        List<List<Object>> rows = products.stream()
-            .map(product -> Arrays.<Object>asList(
-                product.getProductName(),
-                product.getCategory(),
-                product.getSupplier(),
-                product.getUnitPrice(),
-                product.getQuantity(),
-                product.getOverstockedThreshold()
-            ))
-            .toList();
-
-        return TabularReportDataset.builder()
-                .metadata(metadata)
-                .columns(columns)
-                .rows(rows)
-                .build();
-    }
-
-    private TabularReportDataset buildInventoryTopSellingReport(ReportMetadata metadata) {
-        List<TopSellingProductDTO> products = inventoryAnalyticsService.getAllTopSellingProducts(null, null);
-        List<String> columns = Arrays.asList(
-                "Product Name",
-                "Category",
-                "Total Quantity Sold",
-                "Total Revenue"
-        );
-
-        List<List<Object>> rows = products.stream()
-            .map(product -> Arrays.<Object>asList(
-                product.productName(),
-                product.category(),
-                product.totalSold(),
-                product.totalRevenue()
-            ))
-            .toList();
-
-        return TabularReportDataset.builder()
-                .metadata(metadata)
-                .columns(columns)
-                .rows(rows)
                 .build();
     }
 

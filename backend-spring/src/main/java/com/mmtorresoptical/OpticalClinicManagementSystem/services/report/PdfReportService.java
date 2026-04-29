@@ -5,7 +5,6 @@ import com.mmtorresoptical.OpticalClinicManagementSystem.exception.custom.BadReq
 import com.mmtorresoptical.OpticalClinicManagementSystem.services.report.generator.pdf.PdfBoxInventoryAnalyticsReportGenerator;
 import com.mmtorresoptical.OpticalClinicManagementSystem.services.report.generator.pdf.PdfBoxPatientReportGenerator;
 import com.mmtorresoptical.OpticalClinicManagementSystem.services.report.generator.pdf.PdfBoxTransactionReportGenerator;
-import com.mmtorresoptical.OpticalClinicManagementSystem.services.report.generator.pdf.PdfReportGenerator;
 import com.mmtorresoptical.OpticalClinicManagementSystem.services.report.transactionpdf.TransactionHierarchicalReportDataset;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
@@ -18,33 +17,31 @@ public class PdfReportService {
 
     private final ReportAggregationService reportAggregationService;
     private final TransactionPdfAggregationService transactionPdfAggregationService;
-    private final PdfReportGenerator pdfReportGenerator;
     private final PdfBoxInventoryAnalyticsReportGenerator pdfBoxInventoryAnalyticsReportGenerator;
     private final PdfBoxTransactionReportGenerator pdfBoxTransactionReportGenerator;
     private final PdfBoxPatientReportGenerator pdfBoxPatientReportGenerator;
 
     public byte[] exportReport(ReportType reportType, LocalDate minDate, LocalDate maxDate) {
-        if (reportType == ReportType.TRANSACTIONS) {
-            if (minDate == null || maxDate == null) {
-                throw new BadRequestException(
-                        "Both minDate and maxDate are required for transaction reports.");
+        return switch (reportType) {
+            case TRANSACTIONS -> {
+                if (minDate == null || maxDate == null) {
+                    throw new BadRequestException(
+                            "Both minDate and maxDate are required for transaction reports.");
+                }
+                TransactionHierarchicalReportDataset dataset =
+                        transactionPdfAggregationService.buildTransactionReport(minDate, maxDate);
+                yield pdfBoxTransactionReportGenerator.generate(dataset);
             }
-            TransactionHierarchicalReportDataset dataset =
-                    transactionPdfAggregationService.buildTransactionReport(minDate, maxDate);
-            return pdfBoxTransactionReportGenerator.generate(dataset);
-        }
-
-        if (reportType == ReportType.INVENTORY_ANALYTICS) {
-            ComprehensiveInventoryReportDataset dataset = reportAggregationService.buildInventoryAnalyticsReport();
-            return pdfBoxInventoryAnalyticsReportGenerator.generate(dataset);
-        }
-
-        if (reportType == ReportType.PATIENTS) {
-            PatientReportDataset dataset = reportAggregationService.buildPatientReport(reportType, minDate, maxDate);
-            return pdfBoxPatientReportGenerator.generate(dataset);
-        }
-
-        TabularReportDataset dataset = reportAggregationService.buildReport(reportType, minDate, maxDate);
-        return pdfReportGenerator.generate(dataset);
+            case INVENTORY_ANALYTICS -> {
+                ComprehensiveInventoryReportDataset dataset =
+                        reportAggregationService.buildInventoryAnalyticsReport();
+                yield pdfBoxInventoryAnalyticsReportGenerator.generate(dataset);
+            }
+            case PATIENTS -> {
+                PatientReportDataset dataset =
+                        reportAggregationService.buildPatientReport(reportType, minDate, maxDate);
+                yield pdfBoxPatientReportGenerator.generate(dataset);
+            }
+        };
     }
 }
