@@ -34,6 +34,17 @@ public class TransactionPdfAggregationService {
 
         List<Transaction> transactions = transactionService.getTransactionsForReport(minDate, maxDate);
 
+        // Deduplicate — @EntityGraph JOINs on nested collections can produce
+        // duplicate root entities in the result list
+        transactions = new ArrayList<>(transactions.stream()
+                .collect(Collectors.toMap(
+                        Transaction::getTransactionId,
+                        t -> t,
+                        (existing, duplicate) -> existing,
+                        LinkedHashMap::new
+                ))
+                .values());
+
         if (transactions.isEmpty()) {
             return TransactionHierarchicalReportDataset.builder()
                     .metadata(metadata)
@@ -94,7 +105,16 @@ public class TransactionPdfAggregationService {
 
         List<TransactionItemEntry> itemEntries = Collections.emptyList();
         if (transaction.getTransactionItems() != null) {
+            // Deduplicate items — @EntityGraph JOINs on refunds can produce
+            // duplicate TransactionItem entries when an item has multiple refunds
             itemEntries = transaction.getTransactionItems().stream()
+                    .collect(Collectors.toMap(
+                            TransactionItem::getTransactionItemId,
+                            item -> item,
+                            (existing, duplicate) -> existing,
+                            LinkedHashMap::new
+                    ))
+                    .values().stream()
                     .map(this::mapItemToEntry)
                     .toList();
         }
