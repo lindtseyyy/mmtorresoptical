@@ -2,6 +2,8 @@ package com.mmtorresoptical.OpticalClinicManagementSystem.controller.report;
 
 import com.mmtorresoptical.OpticalClinicManagementSystem.enums.ReportType;
 import com.mmtorresoptical.OpticalClinicManagementSystem.exception.custom.BadRequestException;
+import com.mmtorresoptical.OpticalClinicManagementSystem.services.report.PatientReportDataset;
+import com.mmtorresoptical.OpticalClinicManagementSystem.services.report.ReportAggregationService;
 import com.mmtorresoptical.OpticalClinicManagementSystem.services.report.TransactionPdfAggregationService;
 import com.mmtorresoptical.OpticalClinicManagementSystem.services.report.transactionpdf.TransactionHierarchicalReportDataset;
 import lombok.RequiredArgsConstructor;
@@ -21,6 +23,7 @@ import java.time.LocalDate;
 public class ReportDataController {
 
     private final TransactionPdfAggregationService transactionPdfAggregationService;
+    private final ReportAggregationService reportAggregationService;
 
     @GetMapping("/data/{reportType}")
     public ResponseEntity<?> getReportData(
@@ -28,19 +31,23 @@ public class ReportDataController {
             @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate minDate,
             @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate maxDate
     ) {
-        if (reportType != ReportType.TRANSACTIONS) {
-            throw new BadRequestException(
-                    "Report data endpoint currently only supports TRANSACTIONS report type.");
-        }
-
-        if (minDate == null || maxDate == null) {
-            throw new BadRequestException(
-                    "Both minDate and maxDate are required for transaction report data.");
-        }
-
-        TransactionHierarchicalReportDataset dataset =
-                transactionPdfAggregationService.buildTransactionReport(minDate, maxDate);
-
-        return ResponseEntity.ok(dataset);
+        return switch (reportType) {
+            case TRANSACTIONS -> {
+                if (minDate == null || maxDate == null) {
+                    throw new BadRequestException(
+                            "Both minDate and maxDate are required for transaction report data.");
+                }
+                TransactionHierarchicalReportDataset dataset =
+                        transactionPdfAggregationService.buildTransactionReport(minDate, maxDate);
+                yield ResponseEntity.ok(dataset);
+            }
+            case PATIENTS -> {
+                PatientReportDataset dataset =
+                        reportAggregationService.buildPatientReport(reportType, minDate, maxDate);
+                yield ResponseEntity.ok(dataset);
+            }
+            default -> throw new BadRequestException(
+                    "Report data endpoint currently supports TRANSACTIONS and PATIENTS report types.");
+        };
     }
 }
