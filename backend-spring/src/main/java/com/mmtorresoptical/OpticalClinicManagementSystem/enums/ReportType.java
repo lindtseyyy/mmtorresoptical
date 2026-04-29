@@ -6,7 +6,6 @@ public enum ReportType {
     INVENTORY_TOP_SELLING,
     INVENTORY_ANALYTICS,
     TRANSACTIONS,
-    PRESCRIPTIONS,
     PATIENTS;
 
     public String getDisplayTitle() {
