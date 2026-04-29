@@ -8,5 +8,6 @@ public enum ResourceType {
     HEALTH_HISTORY,
     TRANSACTION,
     TRANSACTION_ITEMS,
-    PRODUCT
+    PRODUCT,
+    REPORT
 }

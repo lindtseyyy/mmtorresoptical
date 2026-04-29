@@ -9,5 +9,6 @@ public enum ActionType {
     ARCHIVE,
     RESTORE,
     VOID,
-    REFUND
+    REFUND,
+    EXPORT
 }
