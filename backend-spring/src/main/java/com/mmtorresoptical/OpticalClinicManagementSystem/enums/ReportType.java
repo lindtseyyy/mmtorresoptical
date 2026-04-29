@@ -7,8 +7,7 @@ public enum ReportType {
     INVENTORY_ANALYTICS,
     TRANSACTIONS,
     PRESCRIPTIONS,
-    PATIENTS,
-    SALES_SUMMARY;
+    PATIENTS;
 
     public String getDisplayTitle() {
         if (this == INVENTORY_ANALYTICS) {
