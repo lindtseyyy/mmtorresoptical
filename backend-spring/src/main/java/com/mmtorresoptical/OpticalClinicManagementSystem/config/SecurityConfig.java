@@ -77,6 +77,12 @@ public class SecurityConfig {
                         // Admin Only
                         .requestMatchers("/api/admin/**").hasRole("ADMIN")
 
+                        // Swagger UI
+                        .requestMatchers(
+                                "/swagger-ui/**",
+                                "/v3/api-docs/**"
+                        ).permitAll()
+
                         // Staff + Admin
                         .requestMatchers("/api/**").hasAnyRole("ADMIN", "STAFF")
                         .anyRequest().authenticated()
