@@ -2,6 +2,7 @@ package com.mmtorresoptical.OpticalClinicManagementSystem.controller.report;
 
 import com.mmtorresoptical.OpticalClinicManagementSystem.enums.ReportType;
 import com.mmtorresoptical.OpticalClinicManagementSystem.exception.custom.BadRequestException;
+import com.mmtorresoptical.OpticalClinicManagementSystem.services.report.ComprehensiveInventoryReportDataset;
 import com.mmtorresoptical.OpticalClinicManagementSystem.services.report.PatientReportDataset;
 import com.mmtorresoptical.OpticalClinicManagementSystem.services.report.ReportAggregationService;
 import com.mmtorresoptical.OpticalClinicManagementSystem.services.report.TransactionPdfAggregationService;
@@ -46,8 +47,13 @@ public class ReportDataController {
                         reportAggregationService.buildPatientReport(reportType, minDate, maxDate);
                 yield ResponseEntity.ok(dataset);
             }
+            case INVENTORY_ANALYTICS -> {
+                ComprehensiveInventoryReportDataset dataset =
+                        reportAggregationService.buildInventoryAnalyticsReport();
+                yield ResponseEntity.ok(dataset);
+            }
             default -> throw new BadRequestException(
-                    "Report data endpoint currently supports TRANSACTIONS and PATIENTS report types.");
+                    "Report data endpoint currently supports TRANSACTIONS, PATIENTS, and INVENTORY_ANALYTICS report types.");
         };
     }
 }
