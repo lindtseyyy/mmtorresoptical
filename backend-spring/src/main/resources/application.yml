@@ -19,6 +19,11 @@ app:
     secret: ${JWT_SECRET}
     expiration-ms: 86400000
 
+  database:
+    backup:
+      use-docker: true
+      docker-container: postgres-db
+
 server:
   port: 8080
 

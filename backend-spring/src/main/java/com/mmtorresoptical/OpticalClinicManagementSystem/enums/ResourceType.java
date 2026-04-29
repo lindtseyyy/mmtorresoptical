@@ -9,5 +9,6 @@ public enum ResourceType {
     TRANSACTION,
     TRANSACTION_ITEMS,
     PRODUCT,
-    REPORT
+    REPORT,
+    DATABASE
 }

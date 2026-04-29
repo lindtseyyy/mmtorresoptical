@@ -1,6 +1,7 @@
 package com.mmtorresoptical.OpticalClinicManagementSystem.exception.handler;
 
 import com.mmtorresoptical.OpticalClinicManagementSystem.exception.custom.BadRequestException;
+import com.mmtorresoptical.OpticalClinicManagementSystem.exception.custom.ConflictException;
 import com.mmtorresoptical.OpticalClinicManagementSystem.exception.custom.InsufficientStockException;
 import com.mmtorresoptical.OpticalClinicManagementSystem.exception.custom.ResourceNotFoundException;
 import org.springframework.http.HttpStatus;
@@ -84,6 +85,24 @@ public class GlobalExceptionHandler {
     ) {
         return ResponseEntity
                 .status(HttpStatus.BAD_REQUEST)
+                .body(ex.getMessage());
+    }
+
+    @ExceptionHandler(ConflictException.class)
+    public ResponseEntity<String> handleConflict(
+            ConflictException ex
+    ) {
+        return ResponseEntity
+                .status(HttpStatus.CONFLICT)
+                .body(ex.getMessage());
+    }
+
+    @ExceptionHandler(RuntimeException.class)
+    public ResponseEntity<String> handleRuntimeException(
+            RuntimeException ex
+    ) {
+        return ResponseEntity
+                .status(HttpStatus.INTERNAL_SERVER_ERROR)
                 .body(ex.getMessage());
     }
 }
