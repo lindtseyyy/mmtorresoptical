@@ -1,11 +1,13 @@
 spring:
   application:
     name: OpticalClinicManagementSystem
+
   datasource:
-    url: jdbc:postgresql://localhost:5432/mmtorresoptical
-    username: postgres
-    password: postgres123
+    url: ${SPRING_DATASOURCE_URL}
+    username: ${SPRING_DATASOURCE_USERNAME}
+    password: ${SPRING_DATASOURCE_PASSWORD}
     driver-class-name: org.postgresql.Driver
+
   jpa:
     hibernate:
       ddl-auto: update
@@ -14,14 +16,14 @@ spring:
 
 app:
   jwt:
-    secret: BTQ9bfbqfRzRNU9Gvj+nyUDZyKoCyPxvCdvmaJvYLUnIdnE6trUb+qmSSsLfwKur
-    expiration-ms: 86400000 # 24 hours
+    secret: ${JWT_SECRET}
+    expiration-ms: 86400000
 
 server:
   port: 8080
 
 encryption:
-  secret-key: 291b7360afa9fd8ffdd058d50a139221cee7305bd17ad6a00cfcf3e2f7e18f84
+  secret-key: ${ENCRYPTION_SECRET_KEY}
 
 hash:
-  pepper: pass123
+  pepper: ${HASH_PEPPER}

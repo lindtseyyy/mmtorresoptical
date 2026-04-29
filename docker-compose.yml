@@ -1,0 +1,25 @@
+services:
+
+  db:
+    image: postgres:16
+    container_name: postgres_db
+    environment:
+      POSTGRES_DB: mmtorresoptical
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: postgres123
+    ports:
+      - "5432:5432"
+
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+
+  backend:
+    image: lindtsey/mmtorresoptical-backend:latest
+
+    environment:
+      SPRING_DATASOURCE_URL: jdbc:postgresql://db:5432/mmtorresoptical
+      SPRING_DATASOURCE_USERNAME: postgres
+      SPRING_DATASOURCE_PASSWORD: postgres123
+
+volumes:
+  postgres_data:
