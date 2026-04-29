@@ -1,12 +1,12 @@
 package com.mmtorresoptical.OpticalClinicManagementSystem.controller;
 
-import com.mmtorresoptical.OpticalClinicManagementSystem.dto.ForgotPasswordQuestionRequestDTO;
+import com.mmtorresoptical.OpticalClinicManagementSystem.dto.auth.ForgotPasswordQuestionRequestDTO;
 import com.mmtorresoptical.OpticalClinicManagementSystem.dto.auth.LoginRequestDTO;
 import com.mmtorresoptical.OpticalClinicManagementSystem.dto.auth.LoginResponseDTO;
-import com.mmtorresoptical.OpticalClinicManagementSystem.dto.MessageResponseDTO;
-import com.mmtorresoptical.OpticalClinicManagementSystem.dto.PasswordResetRequestDTO;
-import com.mmtorresoptical.OpticalClinicManagementSystem.dto.SecurityQuestionResponseDTO;
-import com.mmtorresoptical.OpticalClinicManagementSystem.dto.VerifySecurityAnswerRequestDTO;
+import com.mmtorresoptical.OpticalClinicManagementSystem.dto.auth.MessageResponseDTO;
+import com.mmtorresoptical.OpticalClinicManagementSystem.dto.auth.PasswordResetRequestDTO;
+import com.mmtorresoptical.OpticalClinicManagementSystem.dto.auth.SecurityQuestionResponseDTO;
+import com.mmtorresoptical.OpticalClinicManagementSystem.dto.auth.VerifySecurityAnswerRequestDTO;
 import com.mmtorresoptical.OpticalClinicManagementSystem.exception.custom.BadRequestException;
 import com.mmtorresoptical.OpticalClinicManagementSystem.model.User;
 import com.mmtorresoptical.OpticalClinicManagementSystem.repository.UserRepository;
