@@ -3,6 +3,7 @@ package com.mmtorresoptical.OpticalClinicManagementSystem.dto.user;
 import lombok.Data;
 
 import java.time.LocalDate;
+import java.time.LocalDateTime;
 import java.util.UUID;
 
 @Data
@@ -19,5 +20,6 @@ public class UserDetailsDTO {
     private String username;
     private String role; // "Admin" or "Staff"
     private Boolean isArchived = false;
+    private LocalDateTime createdAt;
 
 }
