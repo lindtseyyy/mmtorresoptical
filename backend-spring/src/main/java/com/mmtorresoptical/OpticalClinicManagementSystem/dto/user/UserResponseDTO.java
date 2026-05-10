@@ -1,5 +1,6 @@
 package com.mmtorresoptical.OpticalClinicManagementSystem.dto.user;
 
+import com.fasterxml.jackson.annotation.JsonProperty;
 import lombok.Data;
 
 import java.time.LocalDate;
@@ -20,6 +21,7 @@ public class UserResponseDTO {
     private String username;
     private String role; // "Admin" or "Staff"
     private Boolean isArchived = false;
+    @JsonProperty("isPwChangeRequired")
     private boolean isPwChangeRequired;
     private String securityQuestion;
     private LocalDateTime createdAt;
