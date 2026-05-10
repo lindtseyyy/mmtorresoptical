@@ -1,8 +1,10 @@
-import { useNavigate } from "react-router-dom";
+import { useNavigate, Link } from "react-router-dom";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { UserForm } from "@/components/forms/UserForm";
 import type { UserFormData } from "@/types";
 import { createAddUserMutationOptions } from "@/query/userQuery";
+import { ArrowLeft } from "lucide-react";
+import { Button } from "@/components/ui/button";
 
 const AddUser: React.FC = () => {
   const navigate = useNavigate();
@@ -18,11 +20,19 @@ const AddUser: React.FC = () => {
 
   return (
     <div className="mx-auto max-w-3xl space-y-6">
-      <div>
-        <h2 className="text-3xl font-bold">Add New User</h2>
-        <p className="text-muted-foreground">
-          Create a new system user account
-        </p>
+      <div className="flex items-start justify-between">
+        <div>
+          <h2 className="text-3xl font-bold">Add New User</h2>
+          <p className="text-muted-foreground">
+            Create a new system user account
+          </p>
+        </div>
+        <Button variant="secondary" size="sm" className="text-sm" asChild>
+          <Link to="/users">
+            <ArrowLeft className="mr-1 h-4 w-4" />
+            Back to Users
+          </Link>
+        </Button>
       </div>
       <UserForm
         onFormSubmit={handleFormSubmit}
