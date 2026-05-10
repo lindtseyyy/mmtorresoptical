@@ -156,7 +156,14 @@ const ManageUsers: React.FC = () => {
                       @{user.username} | {user.email}
                     </p>
                     <p className="text-xs text-muted-foreground">
-                      Joined: {new Date(user.createdAt).toLocaleDateString()}
+                      Joined: {new Date(user.createdAt).toLocaleString("en-US", {
+                        year: "numeric",
+                        month: "long",
+                        day: "numeric",
+                        hour: "numeric",
+                        minute: "2-digit",
+                        hour12: true,
+                      })}
                     </p>
                   </div>
                   {user.userId !== currentUserId && (
