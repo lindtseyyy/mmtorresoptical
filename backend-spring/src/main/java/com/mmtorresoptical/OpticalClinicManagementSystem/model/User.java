@@ -54,8 +54,8 @@ public class User {
     @Column(name = "security_answer_hash", nullable = false)
     private String securityAnswerHash;
 
-    @Column(name = "is_pw_reset_required", nullable = false)
-    private boolean isPwResetRequired = false;
+    @Column(name = "is_pw_change_required", nullable = false)
+    private boolean isPwChangeRequired = true;
 
     @Enumerated(EnumType.STRING)
     @Column(name = "role", nullable = false)

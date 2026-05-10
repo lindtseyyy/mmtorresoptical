@@ -20,5 +20,6 @@ public class UserDetailsDTO {
     private String username;
     private String role; // "Admin" or "Staff"
     private Boolean isArchived = false;
+    private boolean isPwChangeRequired;
     private LocalDateTime createdAt;
 }
