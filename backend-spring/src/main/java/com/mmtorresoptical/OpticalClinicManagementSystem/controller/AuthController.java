@@ -1,6 +1,7 @@
 package com.mmtorresoptical.OpticalClinicManagementSystem.controller;
 
 import com.mmtorresoptical.OpticalClinicManagementSystem.dto.auth.ChangePasswordRequestDTO;
+import com.mmtorresoptical.OpticalClinicManagementSystem.dto.auth.EnforcePasswordChangeRequestDTO;
 import com.mmtorresoptical.OpticalClinicManagementSystem.dto.auth.ForgotPasswordQuestionRequestDTO;
 import com.mmtorresoptical.OpticalClinicManagementSystem.dto.auth.LoginRequestDTO;
 import com.mmtorresoptical.OpticalClinicManagementSystem.dto.auth.LoginResponseDTO;
@@ -61,7 +62,7 @@ public class AuthController {
         String token = jwtTokenProvider.generateToken(user.getUsername(), user.getUserId());
 
         // 4. Return the token in a DTO
-        return ResponseEntity.ok(new LoginResponseDTO(token));
+        return ResponseEntity.ok(new LoginResponseDTO(token, user.isPwChangeRequired()));
     }
 
     @PostMapping("/change-password")
@@ -77,6 +78,21 @@ public class AuthController {
         }
 
         user.setPasswordHash(passwordEncoder.encode(request.getNewPassword()));
+        userRepository.save(user);
+
+        return ResponseEntity.ok(new MessageResponseDTO("Password changed successfully"));
+    }
+
+    @PostMapping("/enforce-password-change")
+    public ResponseEntity<MessageResponseDTO> enforcePasswordChange(@Valid @RequestBody EnforcePasswordChangeRequestDTO request) {
+        User user = authenticatedUserService.getCurrentUser();
+
+        if (passwordEncoder.matches(request.getNewPassword(), user.getPasswordHash())) {
+            throw new BadRequestException("New password must be different from current password");
+        }
+
+        user.setPasswordHash(passwordEncoder.encode(request.getNewPassword()));
+        user.setPwChangeRequired(false);
         userRepository.save(user);
 
         return ResponseEntity.ok(new MessageResponseDTO("Password changed successfully"));
