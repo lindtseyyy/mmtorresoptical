@@ -72,7 +72,10 @@ public class SecurityConfig {
                 .csrf(csrf -> csrf.disable())
                 .sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
                 .authorizeHttpRequests(authz -> authz
-                        .requestMatchers("/api/auth/**").permitAll()
+                        // Auth endpoints (login, forgot-password, change-password)
+                        .requestMatchers("/api/auth/login", "/api/auth/forgot-password/**", "/api/auth/change-password").permitAll()
+                        // Admin-only auth actions
+                        .requestMatchers("/api/auth/admin/**").hasRole("ADMIN")
 
                         // Admin Only
                         .requestMatchers("/api/admin/**").hasRole("ADMIN")
