@@ -1,5 +1,6 @@
 package com.mmtorresoptical.OpticalClinicManagementSystem.controller;
 
+import com.mmtorresoptical.OpticalClinicManagementSystem.dto.auth.ChangePasswordRequestDTO;
 import com.mmtorresoptical.OpticalClinicManagementSystem.dto.auth.ForgotPasswordQuestionRequestDTO;
 import com.mmtorresoptical.OpticalClinicManagementSystem.dto.auth.LoginRequestDTO;
 import com.mmtorresoptical.OpticalClinicManagementSystem.dto.auth.LoginResponseDTO;
@@ -11,6 +12,7 @@ import com.mmtorresoptical.OpticalClinicManagementSystem.exception.custom.BadReq
 import com.mmtorresoptical.OpticalClinicManagementSystem.model.User;
 import com.mmtorresoptical.OpticalClinicManagementSystem.repository.UserRepository;
 import com.mmtorresoptical.OpticalClinicManagementSystem.security.JwtTokenProvider;
+import com.mmtorresoptical.OpticalClinicManagementSystem.services.AuthenticatedUserService;
 
 import jakarta.validation.Valid;
 import org.springframework.http.ResponseEntity;
@@ -26,11 +28,13 @@ public class AuthController {
     private final UserRepository userRepository;
     private final PasswordEncoder passwordEncoder;
     private final JwtTokenProvider jwtTokenProvider;
+    private final AuthenticatedUserService authenticatedUserService;
 
-    AuthController(UserRepository userRepository, PasswordEncoder passwordEncoder, JwtTokenProvider jwtTokenProvider) {
+    AuthController(UserRepository userRepository, PasswordEncoder passwordEncoder, JwtTokenProvider jwtTokenProvider, AuthenticatedUserService authenticatedUserService) {
         this.userRepository = userRepository;
         this.passwordEncoder = passwordEncoder;
         this.jwtTokenProvider = jwtTokenProvider;
+        this.authenticatedUserService = authenticatedUserService;
     }
 
     @PostMapping("/login")
@@ -57,6 +61,24 @@ public class AuthController {
 
         // 4. Return the token in a DTO
         return ResponseEntity.ok(new LoginResponseDTO(token));
+    }
+
+    @PostMapping("/change-password")
+    public ResponseEntity<MessageResponseDTO> changePassword(@Valid @RequestBody ChangePasswordRequestDTO request) {
+        User user = authenticatedUserService.getCurrentUser();
+
+        if (!passwordEncoder.matches(request.getCurrentPassword(), user.getPasswordHash())) {
+            throw new BadRequestException("Current password is incorrect");
+        }
+
+        if (passwordEncoder.matches(request.getNewPassword(), user.getPasswordHash())) {
+            throw new BadRequestException("New password must be different from current password");
+        }
+
+        user.setPasswordHash(passwordEncoder.encode(request.getNewPassword()));
+        userRepository.save(user);
+
+        return ResponseEntity.ok(new MessageResponseDTO("Password changed successfully"));
     }
 
     @PostMapping("/forgot-password/question")
