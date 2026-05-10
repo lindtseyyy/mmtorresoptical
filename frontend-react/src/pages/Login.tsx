@@ -31,13 +31,17 @@ const Login: React.FC = () => {
       const response = await api.post("/auth/login", data);
 
       // --- SUCCESS ---
-      const token = response.data.accessToken;
+      const { accessToken, isPwChangeRequired } = response.data;
 
       // Store the token (e.g., in localStorage)
-      localStorage.setItem("authToken", token);
+      localStorage.setItem("authToken", accessToken);
 
-      // Redirect to the main page
-      navigate("/");
+      // Redirect based on password change requirement
+      if (isPwChangeRequired) {
+        navigate("/enforce-password-change");
+      } else {
+        navigate("/");
+      }
     } catch (error) {
       // --- FAILURE ---
       if (axios.isAxiosError(error) && error.response) {

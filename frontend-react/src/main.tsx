@@ -17,12 +17,17 @@ import ManageInventory from "./pages/ManageInventory.tsx";
 import ManageUsers from "./pages/ManageUsers.tsx";
 import AddProduct from "./pages/AddProduct.tsx"; // 👈 ADD THIS
 import EditProduct from "./pages/EditProduct.tsx"; // 👈 ADD THIS
-import AddUser from "./pages/AddUser.tsx"; // 👈 ADD THI
+import AddUser from "./pages/AddUser.tsx";
 import EditUser from "./pages/EditUser.tsx";
+import EnforcePasswordChange from "./pages/EnforcePasswordChange.tsx";
 // We don't need App.tsx for routing anymore
 const queryClient = new QueryClient();
 
 const router = createBrowserRouter([
+  {
+    path: "/enforce-password-change",
+    element: <EnforcePasswordChange />,
+  },
   {
     path: "/login",
     element: <Login />,
