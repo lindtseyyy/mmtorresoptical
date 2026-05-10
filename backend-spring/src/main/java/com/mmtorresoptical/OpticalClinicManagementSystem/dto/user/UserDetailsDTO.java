@@ -21,5 +21,4 @@ public class UserDetailsDTO {
     private String role; // "Admin" or "Staff"
     private Boolean isArchived = false;
     private LocalDateTime createdAt;
-
 }
