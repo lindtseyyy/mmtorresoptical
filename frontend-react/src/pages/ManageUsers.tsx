@@ -12,10 +12,22 @@ import {
   createUsersListQueryOptions,
 } from "@/query/userQuery";
 
+const getCurrentUserId = (): string | null => {
+  const token = localStorage.getItem("authToken");
+  if (!token) return null;
+  try {
+    const payload = JSON.parse(atob(token.split(".")[1]));
+    return payload.userId ?? null;
+  } catch {
+    return null;
+  }
+};
+
 const ManageUsers: React.FC = () => {
   const [searchQuery, setSearchQuery] = useState("");
   const navigate = useNavigate();
   const queryClient = useQueryClient();
+  const currentUserId = getCurrentUserId();
 
   const { data: users, isLoading } = useQuery(createUsersListQueryOptions());
   console.log("Fetched users:", users);
@@ -35,7 +47,13 @@ const ManageUsers: React.FC = () => {
       user.email.toLowerCase().includes(searchQuery.toLowerCase())
   );
 
-  const activeUsers = filteredUsers?.filter((u) => !u.isArchived) || [];
+  const activeUsers = (filteredUsers?.filter((u) => !u.isArchived) || []).sort(
+    (a, b) => {
+      if (a.userId === currentUserId) return -1;
+      if (b.userId === currentUserId) return 1;
+      return 0;
+    }
+  );
 
   const stats = {
     total: activeUsers.length || 0,
@@ -116,6 +134,9 @@ const ManageUsers: React.FC = () => {
                       <h3 className="font-semibold">
                         {user.firstName} {user.lastName}
                       </h3>
+                      {user.userId === currentUserId && (
+                        <Badge className="bg-violet-600">You</Badge>
+                      )}
                       <Badge
                         variant={
                           user.role === "Admin" ? "default" : "secondary"
@@ -138,23 +159,25 @@ const ManageUsers: React.FC = () => {
                       Joined: {new Date(user.createdAt).toLocaleDateString()}
                     </p>
                   </div>
-                  <div className="flex gap-2">
-                    <Button
-                      variant="outline"
-                      size="sm"
-                      onClick={() => navigate(`/users/edit/${user.userId}`)}
-                    >
-                      <Pencil className="h-4 w-4" />
-                    </Button>
-                    <Button
-                      variant="outline"
-                      size="sm"
-                      onClick={() => archiveMutation.mutate(user.userId)}
-                      disabled={archiveMutation.isPending}
-                    >
-                      <Archive className="h-4 w-4" />
-                    </Button>
-                  </div>
+                  {user.userId !== currentUserId && (
+                    <div className="flex gap-2">
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        onClick={() => navigate(`/users/edit/${user.userId}`)}
+                      >
+                        <Pencil className="h-4 w-4" />
+                      </Button>
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        onClick={() => archiveMutation.mutate(user.userId)}
+                        disabled={archiveMutation.isPending}
+                      >
+                        <Archive className="h-4 w-4" />
+                      </Button>
+                    </div>
+                  )}
                 </div>
               ))}
             </div>
