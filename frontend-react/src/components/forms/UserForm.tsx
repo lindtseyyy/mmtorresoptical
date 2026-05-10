@@ -5,7 +5,7 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import { userSchema, type UserFormData } from "@/types";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { Checkbox } from "@/components/ui/checkbox";
+import { Switch } from "@/components/ui/switch";
 import {
   Select,
   SelectContent,
@@ -346,13 +346,13 @@ export const UserForm: React.FC<UserFormProps> = ({
               render={({ field }) => (
                 <FormItem className="flex flex-row items-center space-x-2 space-y-0">
                   <FormControl>
-                    <Checkbox
+                    <Switch
                       checked={field.value}
                       onCheckedChange={field.onChange}
                     />
                   </FormControl>
                   <FormLabel className="text-sm font-normal">
-                    Mark as archived
+                    {field.value ? "Unarchive User" : "Archive User"}
                   </FormLabel>
                 </FormItem>
               )}
