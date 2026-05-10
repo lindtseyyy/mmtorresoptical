@@ -20,6 +20,7 @@ import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.Optional;
+import java.util.UUID;
 
 @RestController
 @RequestMapping("/api/auth")
@@ -79,6 +80,17 @@ public class AuthController {
         userRepository.save(user);
 
         return ResponseEntity.ok(new MessageResponseDTO("Password changed successfully"));
+    }
+
+    @PutMapping("/admin/reset-password/{id}")
+    public ResponseEntity<MessageResponseDTO> adminResetPassword(@PathVariable UUID id) {
+        User user = userRepository.findById(id)
+                .orElseThrow(() -> new BadRequestException("User not found"));
+
+        user.setPwChangeRequired(true);
+        userRepository.save(user);
+
+        return ResponseEntity.ok(new MessageResponseDTO("Password reset successfully"));
     }
 
     @PostMapping("/forgot-password/question")
