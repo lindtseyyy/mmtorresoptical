@@ -29,14 +29,17 @@ import {
   CardTitle,
 } from "@/components/ui/card";
 import { useNavigate } from "react-router-dom";
-import { Eye, EyeOff } from "lucide-react";
+import { Eye, EyeOff, KeyRound } from "lucide-react";
 import { z } from "zod";
+import { resetPassword } from "@/api/userApi";
+import { toast } from "sonner";
 
 interface UserFormProps {
   defaultValues?: Partial<UserFormData>; // Partial for edit
   onFormSubmit: (data: UserFormData) => Promise<any>;
   isLoading: boolean;
   isEditMode: boolean;
+  userId?: string;
 }
 
 export const UserForm: React.FC<UserFormProps> = ({
@@ -44,9 +47,26 @@ export const UserForm: React.FC<UserFormProps> = ({
   defaultValues,
   isLoading,
   isEditMode,
+  userId,
 }) => {
   const navigate = useNavigate();
   const [showPassword, setShowPassword] = useState(false);
+  const [resettingPw, setResettingPw] = useState(false);
+
+  const handleResetPassword = async () => {
+    if (!userId) return;
+    setResettingPw(true);
+    try {
+      await resetPassword(userId);
+      toast.success("Password reset", {
+        description: "User will be required to change password on next login.",
+      });
+    } catch {
+      toast.error("Failed to reset password");
+    } finally {
+      setResettingPw(false);
+    }
+  };
 
   const formSchema = isEditMode
     ? userSchema.partial() // everything optional, including password
@@ -273,45 +293,40 @@ export const UserForm: React.FC<UserFormProps> = ({
                 )}
               />
             </div>
-            <div className="grid gap-4 md:grid-cols-2">
-              <FormField
-                control={form.control}
-                name="password"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>
-                      Password {isEditMode ? "(Optional)" : "*"}
-                    </FormLabel>
-                    <div className="relative">
-                      <FormControl>
-                        <Input
-                          type={showPassword ? "text" : "password"}
-                          placeholder="Enter password"
-                          {...field}
-                        />
-                      </FormControl>
-                      <button
-                        type="button"
-                        onClick={() => setShowPassword(!showPassword)}
-                        className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground"
-                      >
-                        {showPassword ? (
-                          <EyeOff className="h-4 w-4" />
-                        ) : (
-                          <Eye className="h-4 w-4" />
-                        )}
-                      </button>
-                    </div>
-                    {isEditMode && (
-                      <CardDescription>
-                        Leave blank to keep unchanged
-                      </CardDescription>
-                    )}
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
-            </div>
+            {!isEditMode && (
+              <div className="grid gap-4 md:grid-cols-2">
+                <FormField
+                  control={form.control}
+                  name="password"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Password *</FormLabel>
+                      <div className="relative">
+                        <FormControl>
+                          <Input
+                            type={showPassword ? "text" : "password"}
+                            placeholder="Enter password"
+                            {...field}
+                          />
+                        </FormControl>
+                        <button
+                          type="button"
+                          onClick={() => setShowPassword(!showPassword)}
+                          className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground"
+                        >
+                          {showPassword ? (
+                            <EyeOff className="h-4 w-4" />
+                          ) : (
+                            <Eye className="h-4 w-4" />
+                          )}
+                        </button>
+                      </div>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+              </div>
+            )}
             <FormField
               control={form.control}
               name="isArchived"
@@ -337,10 +352,34 @@ export const UserForm: React.FC<UserFormProps> = ({
           <CardHeader>
             <CardTitle>Security Information</CardTitle>
             <CardDescription>
-              Set up account recovery credentials
+              {isEditMode
+                ? "Manage account recovery and password"
+                : "Set up account recovery credentials"}
             </CardDescription>
           </CardHeader>
           <CardContent className="space-y-4">
+            {isEditMode && (
+              <div className="rounded-lg border p-4">
+                <div className="flex items-center justify-between">
+                  <div>
+                    <p className="font-medium">Password</p>
+                    <p className="text-sm text-muted-foreground">
+                      Force the user to change their password on next login
+                    </p>
+                  </div>
+                  <Button
+                    type="button"
+                    variant="outline"
+                    size="sm"
+                    onClick={handleResetPassword}
+                    disabled={resettingPw}
+                  >
+                    <KeyRound className="mr-1 h-4 w-4" />
+                    {resettingPw ? "Resetting..." : "Reset Password"}
+                  </Button>
+                </div>
+              </div>
+            )}
             <FormField
               control={form.control}
               name="securityQuestion"

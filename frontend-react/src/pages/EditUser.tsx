@@ -60,6 +60,7 @@ const EditUser: React.FC = () => {
         isLoading={isPending}
         isEditMode={true}
         defaultValues={formDefaultValues}
+        userId={id}
       />
     </div>
   );

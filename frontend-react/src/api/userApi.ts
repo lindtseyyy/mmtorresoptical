@@ -77,4 +77,9 @@ const updateUser = async ({
   return await api.put(`/admin/users/${id}`, cleanData);
 };
 
-export { fetchUsers, fetchUser, archiveUser, registerUser, updateUser }; 
+// API call to reset a user's password (flag for forced change)
+const resetPassword = async (id: string) => {
+  return await api.put(`/auth/admin/reset-password/${id}`);
+};
+
+export { fetchUsers, fetchUser, archiveUser, registerUser, updateUser, resetPassword }; 
