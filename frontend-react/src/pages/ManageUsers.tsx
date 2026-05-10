@@ -173,7 +173,8 @@ const ManageUsers: React.FC = () => {
                         size="sm"
                         onClick={() => navigate(`/users/edit/${user.userId}`)}
                       >
-                        <Pencil className="h-4 w-4" />
+                        <Pencil className="mr-1 h-4 w-4" />
+                        Edit
                       </Button>
                       <Button
                         variant="outline"
@@ -181,7 +182,8 @@ const ManageUsers: React.FC = () => {
                         onClick={() => archiveMutation.mutate(user.userId)}
                         disabled={archiveMutation.isPending}
                       >
-                        <Archive className="h-4 w-4" />
+                        <Archive className="mr-1 h-4 w-4" />
+                        Archive
                       </Button>
                     </div>
                   )}
