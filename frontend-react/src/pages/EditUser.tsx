@@ -61,6 +61,7 @@ const EditUser: React.FC = () => {
         isEditMode={true}
         defaultValues={formDefaultValues}
         userId={id}
+        isPwChangeRequired={user?.isPwChangeRequired}
       />
     </div>
   );

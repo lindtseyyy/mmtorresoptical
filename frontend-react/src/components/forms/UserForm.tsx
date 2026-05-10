@@ -33,6 +33,7 @@ import { Eye, EyeOff, KeyRound } from "lucide-react";
 import { z } from "zod";
 import { resetPassword } from "@/api/userApi";
 import { toast } from "sonner";
+import { useQueryClient } from "@tanstack/react-query";
 
 interface UserFormProps {
   defaultValues?: Partial<UserFormData>; // Partial for edit
@@ -40,6 +41,7 @@ interface UserFormProps {
   isLoading: boolean;
   isEditMode: boolean;
   userId?: string;
+  isPwChangeRequired?: boolean;
 }
 
 export const UserForm: React.FC<UserFormProps> = ({
@@ -48,18 +50,29 @@ export const UserForm: React.FC<UserFormProps> = ({
   isLoading,
   isEditMode,
   userId,
+  isPwChangeRequired,
 }) => {
   const navigate = useNavigate();
+  const queryClient = useQueryClient();
   const [showPassword, setShowPassword] = useState(false);
   const [resettingPw, setResettingPw] = useState(false);
+  const [pwRequired, setPwRequired] = useState(isPwChangeRequired);
 
   const handleResetPassword = async () => {
     if (!userId) return;
+    if (pwRequired) {
+      toast.info("Already required", {
+        description: "This user is already required to change their password on next login.",
+      });
+      return;
+    }
     setResettingPw(true);
     try {
       await resetPassword(userId);
+      setPwRequired(true);
+      queryClient.invalidateQueries({ queryKey: ["user", userId] });
       toast.success("Password reset", {
-        description: "User will be required to change password on next login.",
+        description: "User will be required to change their password on next login.",
       });
     } catch {
       toast.error("Failed to reset password");

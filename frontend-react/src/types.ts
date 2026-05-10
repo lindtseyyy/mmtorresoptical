@@ -122,5 +122,6 @@ export interface User {
   contactNumber: string;
   role: "Admin" | "Staff";
   isArchived: boolean;
+  isPwChangeRequired: boolean;
   createdAt: string; // From Spring (OffsetDateTime)
 }
