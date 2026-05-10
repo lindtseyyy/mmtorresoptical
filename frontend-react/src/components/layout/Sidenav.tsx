@@ -49,7 +49,7 @@ const Sidenav: React.FC = () => {
         <div className="px-4 py-2">
           <nav className="flex-1 space-y-1">
             {menuItems.map((item) => {
-              const isActive = location.pathname === item.href;
+              const isActive = location.pathname === item.href || location.pathname.startsWith(item.href + "/");
               return (
                 <NavLink
                   key={item.title}

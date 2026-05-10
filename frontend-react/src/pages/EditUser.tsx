@@ -1,6 +1,8 @@
-import { useNavigate, useParams } from "react-router-dom";
+import { useNavigate, useParams, Link } from "react-router-dom";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { UserForm } from "@/components/forms/UserForm";
+import { ArrowLeft } from "lucide-react";
+import { Button } from "@/components/ui/button";
 import {
   createEditUserMutationOptions,
   createEditUserQueryOptions,
@@ -49,11 +51,19 @@ const EditUser: React.FC = () => {
 
   return (
     <div className="mx-auto max-w-3xl space-y-6">
-      <div>
-        <h2 className="text-3xl font-bold">Edit User</h2>
-        <p className="text-muted-foreground">
-          Update user details and permissions
-        </p>
+      <div className="flex items-start justify-between">
+        <div>
+          <h2 className="text-3xl font-bold">Edit User</h2>
+          <p className="text-muted-foreground">
+            Update user details and permissions
+          </p>
+        </div>
+        <Button variant="secondary" size="sm" className="text-sm" asChild>
+          <Link to="/users">
+            <ArrowLeft className="mr-1 h-4 w-4" />
+            Back to Users
+          </Link>
+        </Button>
       </div>
       <UserForm
         onFormSubmit={mutateAsync}
