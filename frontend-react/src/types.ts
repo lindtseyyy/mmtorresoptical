@@ -88,24 +88,20 @@ export interface ProductSearchFilters {
   stockLevel: string; // Can be '' for 'All'
 }
 
-// --- NEW USER SCHEMA ---
-// This schema matches your backend DTO and reference
+// --- USER SCHEMA ---
+// Matches backend CreateUserRequestDTO
 export const userSchema = z.object({
   firstName: z.string().min(1, "First name is required").max(50),
-  middleName: z.string().optional(), // Make middle name optional
+  middleName: z.string().optional(),
   lastName: z.string().min(1, "Last name is required").max(50),
   gender: z.enum(["Male", "Female", "Other"]),
-  birthDate: z.string().min(1, "Birth date is required"), // React Hook Form handles date string
-  email: z.email("Invalid email address"),
-  contactNumber: z.string().min(11, "Must be at least 11 digits"),
+  birthDate: z.string().min(1, "Birth date is required"),
+  email: z.string().email("Invalid email address"),
+  contactNumber: z.string().min(10, "Must be at least 10 digits"),
   username: z.string().min(3, "Username must be at least 3 characters"),
-  
-  // Special handling for edit vs. add
-  password: z
-    .string()
-    .min(8, "Password must be at least 8 characters")
-    .optional(),
-  
+  password: z.string().min(8, "Password must be at least 8 characters"),
+  securityQuestion: z.string().min(1, "Security question is required"),
+  securityAnswer: z.string().min(3, "Security answer must be at least 3 characters"),
   role: z.enum(["Admin", "Staff"]),
   isArchived: z.boolean().default(false),
 });
