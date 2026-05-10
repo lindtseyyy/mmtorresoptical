@@ -125,3 +125,11 @@ export interface User {
   isPwChangeRequired: boolean;
   createdAt: string; // From Spring (OffsetDateTime)
 }
+
+export interface PageResponse<T> {
+  content: T[];
+  totalPages: number;
+  totalElements: number;
+  size: number;
+  number: number;
+}

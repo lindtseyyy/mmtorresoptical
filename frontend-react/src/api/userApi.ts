@@ -1,4 +1,4 @@
-import type {User, UserFormData} from "@/types";
+import type {User, UserFormData, PageResponse} from "@/types";
 import api from "@/lib/axiosInstance";
 
 // Backend enums use uppercase; frontend uses title case
@@ -39,11 +39,16 @@ const mapUserFromBackend = (user: User): User => ({
   role: (ROLE_FROM_BACKEND[user.role] ?? user.role) as User["role"],
 });
 
-// API call to fetch all users (backend returns Page<UserDetailsDTO>)
-const fetchUsers = async (): Promise<User[]> => {
-  const { data } = await api.get("/admin/users", { params: { size: 100 } });
-  const users = data.content ?? data;
-  return users.map(mapUserFromBackend);
+// API call to fetch users (backend returns Page<UserDetailsDTO>)
+const fetchUsers = async (page = 0, size = 10): Promise<PageResponse<User>> => {
+  const { data } = await api.get("/admin/users", { params: { page, size } });
+  return {
+    content: data.content.map(mapUserFromBackend),
+    totalPages: data.page.totalPages,
+    totalElements: data.page.totalElements,
+    size: data.page.size,
+    number: data.page.number,
+  };
 };
 
 // API call to get one user

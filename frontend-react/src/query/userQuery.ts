@@ -4,11 +4,11 @@ import { toast } from "sonner";
 import type { NavigateFunction } from 'react-router-dom';   
 import type { UserFormData } from '@/types';  
 
-function createUsersListQueryOptions() {
-  return queryOptions(  {
-    queryKey: ["users"],
-    queryFn: fetchUsers,
-  })
+function createUsersListQueryOptions(page: number, size: number) {
+  return queryOptions({
+    queryKey: ["users", page, size],
+    queryFn: () => fetchUsers(page, size),
+  });
 }
 
 function createEditUserQueryOptions(id: string) {
