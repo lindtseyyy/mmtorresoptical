@@ -23,7 +23,8 @@ type FormData = z.infer<typeof schema>;
 
 const EnforcePasswordChange: React.FC = () => {
   const navigate = useNavigate();
-  const [showPassword, setShowPassword] = useState(false);
+  const [showNewPw, setShowNewPw] = useState(false);
+  const [showConfirmPw, setShowConfirmPw] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
   const {
@@ -76,18 +77,18 @@ const EnforcePasswordChange: React.FC = () => {
               <div className="relative">
                 <Input
                   id="newPassword"
-                  type={showPassword ? "text" : "password"}
+                  type={showNewPw ? "text" : "password"}
                   placeholder="Enter new password"
                   {...register("newPassword")}
                   className={errors.newPassword ? "border-destructive" : ""}
                 />
                 <button
                   type="button"
-                  onClick={() => setShowPassword(!showPassword)}
+                  onClick={() => setShowNewPw(!showNewPw)}
                   className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground"
                   tabIndex={-1}
                 >
-                  {showPassword ? (
+                  {showNewPw ? (
                     <EyeOff className="h-4 w-4" />
                   ) : (
                     <Eye className="h-4 w-4" />
@@ -105,13 +106,27 @@ const EnforcePasswordChange: React.FC = () => {
               <Label htmlFor="confirmPassword" className="font-semibold">
                 Confirm Password
               </Label>
-              <Input
-                id="confirmPassword"
-                type={showPassword ? "text" : "password"}
-                placeholder="Confirm new password"
-                {...register("confirmPassword")}
-                className={errors.confirmPassword ? "border-destructive" : ""}
-              />
+              <div className="relative">
+                <Input
+                  id="confirmPassword"
+                  type={showConfirmPw ? "text" : "password"}
+                  placeholder="Confirm new password"
+                  {...register("confirmPassword")}
+                  className={errors.confirmPassword ? "border-destructive" : ""}
+                />
+                <button
+                  type="button"
+                  onClick={() => setShowConfirmPw(!showConfirmPw)}
+                  className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground"
+                  tabIndex={-1}
+                >
+                  {showConfirmPw ? (
+                    <EyeOff className="h-4 w-4" />
+                  ) : (
+                    <Eye className="h-4 w-4" />
+                  )}
+                </button>
+              </div>
               {errors.confirmPassword && (
                 <p className="text-xs text-destructive" role="alert">
                   {errors.confirmPassword.message}
