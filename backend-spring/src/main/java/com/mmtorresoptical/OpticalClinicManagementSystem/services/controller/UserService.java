@@ -50,7 +50,7 @@ public class UserService {
         }
         if (userRepository.existsByContactNumber(userRequest.getContactNumber())) {
             // This String body is now allowed
-            throw new ConflictException("Email is already in use");
+            throw new ConflictException("Contact number is already in use");
         }
 
         User user = userMapper.requestDTOtoEntity(userRequest);
