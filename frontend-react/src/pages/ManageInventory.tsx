@@ -260,10 +260,10 @@ const ManageInventory: React.FC = () => {
                             <Badge
                               className={`text-white ${
                                 stockStatus.variant === "destructive"
-                                  ? "bg-red-500 hover:bg-red-600"
+                                  ? "bg-red-700 hover:bg-red-700"
                                   : stockStatus.variant === "secondary"
-                                    ? "bg-amber-500 hover:bg-amber-600"
-                                    : "bg-green-500 hover:bg-green-600"
+                                    ? "bg-yellow-700 hover:bg-yellow-700"
+                                    : "bg-green-700 hover:bg-green-700"
                               }`}
                             >
                               {product.quantity}
