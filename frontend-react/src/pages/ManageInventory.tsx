@@ -219,10 +219,6 @@ const ManageInventory: React.FC = () => {
             </div>
           ) : (
             <div className="space-y-4">
-              <p className="text-sm text-muted-foreground">
-                Product Inventory ({totalElements})
-              </p>
-
               <div className="overflow-x-auto">
                 <table className="w-full text-sm">
                   <thead>
