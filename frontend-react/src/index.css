@@ -53,11 +53,11 @@ but with the "blue" theme colors from your HSL reference.
   --primary is now blue, --background is light grey, etc.
   */
   --radius: 0.5rem;
-  --background: oklch(0.985 0 0);
+  --background: oklch(0.92 0 0);
   --foreground: oklch(0.203 0.01 262.8);
-  --card: oklch(1 0 0);
+  --card: oklch(0.94 0 0);
   --card-foreground: oklch(0.203 0.01 262.8);
-  --popover: oklch(1 0 0);
+  --popover: oklch(0.94 0 0);
   --popover-foreground: oklch(0.203 0.01 262.8);
 
   /* --- THIS IS THE FIX --- */
@@ -78,7 +78,7 @@ but with the "blue" theme colors from your HSL reference.
   --ring: oklch(0.51 0.22 263.6); /* Ring now matches the primary blue */
   
   /* Sidebar colors from HSL reference */
-  --sidebar: oklch(1 0 0);
+  --sidebar: oklch(0.94 0 0);
   --sidebar-foreground: oklch(0.203 0.01 262.8);
   --sidebar-primary: oklch(0.51 0.22 263.6);
   --sidebar-primary-foreground: oklch(1 0 0);
