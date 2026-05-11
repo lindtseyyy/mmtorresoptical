@@ -1,5 +1,6 @@
 package com.mmtorresoptical.OpticalClinicManagementSystem.services.controller;
 
+import com.mmtorresoptical.OpticalClinicManagementSystem.dto.metrics.UserSummaryDTO;
 import com.mmtorresoptical.OpticalClinicManagementSystem.dto.user.UpdateSecurityCredentialsRequestDTO;
 import com.mmtorresoptical.OpticalClinicManagementSystem.dto.user.ResetSecurityCredentialsRequestDTO;
 import com.mmtorresoptical.OpticalClinicManagementSystem.dto.user.SecurityCredentialsUpdateResponseDTO;
@@ -225,6 +226,21 @@ public class UserService {
         if (currentPassword == null || currentPassword.isBlank() || !passwordEncoder.matches(currentPassword, user.getPasswordHash())) {
             throw new BadRequestException("Invalid current password");
         }
+    }
+
+    public UserSummaryDTO getUserSummary() {
+        long activeUsers = userRepository.countByIsArchivedFalse();
+        long archivedUsers = userRepository.countByIsArchivedTrue();
+        long adminUsers = userRepository.countActiveAdmins();
+        long staffUsers = userRepository.countActiveStaff();
+
+        return new UserSummaryDTO(
+                activeUsers + archivedUsers,
+                activeUsers,
+                archivedUsers,
+                adminUsers,
+                staffUsers
+        );
     }
 
     public void archiveUser(UUID id) {

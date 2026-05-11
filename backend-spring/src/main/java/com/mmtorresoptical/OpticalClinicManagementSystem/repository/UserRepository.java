@@ -1,16 +1,15 @@
 package com.mmtorresoptical.OpticalClinicManagementSystem.repository;
 
-import com.mmtorresoptical.OpticalClinicManagementSystem.model.Prescription;
 import com.mmtorresoptical.OpticalClinicManagementSystem.model.User;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.JpaRepository;
-import java.util.List;
+import org.springframework.data.jpa.repository.Query;
+
 import java.util.Optional;
 import java.util.UUID;
 
 public interface UserRepository extends JpaRepository<User, UUID> {
-
 
     Page<User> findAllByIsArchivedFalse(Pageable pageable);
     Page<User> findAllByIsArchivedTrue(Pageable pageable);
@@ -26,4 +25,14 @@ public interface UserRepository extends JpaRepository<User, UUID> {
     Boolean existsByEmail(String email);
     Boolean existsByContactNumber(String contactNumber);
     Boolean existsByUsername(String userName);
+
+    // Summary counts
+    long countByIsArchivedFalse();
+    long countByIsArchivedTrue();
+
+    @Query("SELECT COUNT(u) FROM User u WHERE u.isArchived = false AND u.role = 'ADMIN'")
+    long countActiveAdmins();
+
+    @Query("SELECT COUNT(u) FROM User u WHERE u.isArchived = false AND u.role = 'STAFF'")
+    long countActiveStaff();
 }

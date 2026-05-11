@@ -1,5 +1,6 @@
 package com.mmtorresoptical.OpticalClinicManagementSystem.controller;
 
+import com.mmtorresoptical.OpticalClinicManagementSystem.dto.metrics.UserSummaryDTO;
 import com.mmtorresoptical.OpticalClinicManagementSystem.dto.user.CreateUserRequestDTO;
 import com.mmtorresoptical.OpticalClinicManagementSystem.dto.user.UpdateUserRequestDTO;
 import com.mmtorresoptical.OpticalClinicManagementSystem.dto.user.UserDetailsDTO;
@@ -20,6 +21,14 @@ import java.util.UUID;
 public class UserController {
 
     private final UserService userService;
+
+    /**
+     * READ user summary statistics
+     */
+    @GetMapping("/summary")
+    public ResponseEntity<UserSummaryDTO> getUserSummary() {
+        return ResponseEntity.ok(userService.getUserSummary());
+    }
 
     /**
      * CREATE a new user
