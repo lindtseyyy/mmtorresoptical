@@ -130,7 +130,7 @@ const ManageInventory: React.FC = () => {
             </div>
             <div>
               <p className="text-2xl font-bold">
-                {summary != null ? `₱${summary.inventoryValue.toLocaleString()}` : "—"}
+                {summary != null ? `₱ ${summary.inventoryValue.toLocaleString("en-US", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}` : "—"}
               </p>
               <p className="text-sm text-muted-foreground">Total Inventory Value</p>
             </div>
