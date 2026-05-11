@@ -1,16 +1,22 @@
-// src/pages/ManageUsers.tsx
 import { useState, useEffect } from "react";
 import { useQuery, useMutation, useQueryClient, keepPreviousData } from "@tanstack/react-query";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
-import { Plus, Search, Pencil, Archive, ChevronLeft, ChevronRight } from "lucide-react";
+import { Plus, Search, Archive, Pencil, ChevronLeft, ChevronRight, MoreHorizontal, Eye } from "lucide-react";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
 import { useNavigate } from "react-router-dom";
 import { Card, CardContent } from "@/components/ui/card";
+import type { User } from "@/types";
 import {
   createArchiveUserMutationOptions,
+  createUsersListQueryOptions,
 } from "@/query/userQuery";
-import { fetchUsers } from "@/api/userApi";
 
 const getCurrentUserId = (): string | null => {
   const token = localStorage.getItem("authToken");
@@ -33,8 +39,7 @@ const ManageUsers: React.FC = () => {
   const currentUserId = getCurrentUserId();
 
   const { data: pageData, isLoading, isFetching } = useQuery({
-    queryKey: ["users", page, PAGE_SIZE],
-    queryFn: () => fetchUsers(page, PAGE_SIZE),
+    ...createUsersListQueryOptions(page, PAGE_SIZE),
     placeholderData: keepPreviousData,
   });
 
@@ -46,24 +51,33 @@ const ManageUsers: React.FC = () => {
     createArchiveUserMutationOptions(queryClient)
   );
 
-  const filteredUsers = users.filter(
-    (user) =>
-      (
-        user.firstName.toLowerCase() +
-        " " +
-        user.lastName.toLowerCase()
-      ).includes(searchQuery.toLowerCase()) ||
-      user.username.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      user.email.toLowerCase().includes(searchQuery.toLowerCase())
-  );
+  const handleArchive = (id: string) => {
+    archiveMutation.mutate(id);
+  };
 
+  // Reset page when search changes
+  useEffect(() => {
+    setPage(0);
+  }, [searchQuery]);
+
+  // If current page is empty and not the first page, step back
   useEffect(() => {
     if (users.length === 0 && page > 0 && !isFetching) {
       setPage((p) => Math.max(0, p - 1));
     }
   }, [users.length, page, isFetching]);
 
-  const activeUsers = filteredUsers
+  // Client-side filtering + sort current user first
+  const filteredUsers = users
+    .filter((user) => {
+      const fullName = `${user.firstName} ${user.lastName}`.toLowerCase();
+      const q = searchQuery.toLowerCase();
+      return (
+        fullName.includes(q) ||
+        user.username.toLowerCase().includes(q) ||
+        user.email.toLowerCase().includes(q)
+      );
+    })
     .filter((u) => !u.isArchived)
     .sort((a, b) => {
       if (a.userId === currentUserId) return -1;
@@ -73,8 +87,8 @@ const ManageUsers: React.FC = () => {
 
   const stats = {
     total: totalElements,
-    admins: activeUsers.filter((u) => u.role === "Admin").length,
-    staff: activeUsers.filter((u) => u.role === "Staff").length,
+    admins: users.filter((u) => !u.isArchived && u.role === "Admin").length,
+    staff: users.filter((u) => !u.isArchived && u.role === "Staff").length,
   };
 
   return (
@@ -132,115 +146,132 @@ const ManageUsers: React.FC = () => {
               <div className="h-8 w-8 animate-spin rounded-full border-4 border-primary border-t-transparent"></div>
             </div>
           ) : (
-            <>
-              <div className="space-y-4">
-                <p className="text-sm text-muted-foreground">
-                  System Users ({totalElements})
-                </p>
-                {activeUsers.length === 0 && !isLoading && (
-                  <p className="text-center text-muted-foreground py-8">
-                    No users found.
-                  </p>
-                )}
-                {activeUsers.map((user) => (
-                  <div
-                    key={user.userId}
-                    className="flex items-center gap-4 rounded-lg border p-4 transition-colors hover:bg-muted/50"
-                  >
-                    <div className="flex h-12 w-12 items-center justify-center rounded-full bg-primary text-primary-foreground text-lg font-semibold">
-                      {user.firstName[0]}
-                      {user.lastName[0]}
-                    </div>
-                    <div className="flex-1">
-                      <div className="flex items-center gap-2">
-                        <h3 className="font-semibold">
-                          {user.firstName} {user.lastName}
-                        </h3>
-                        {user.userId === currentUserId && (
-                          <Badge className="bg-violet-600">You</Badge>
-                        )}
-                        <Badge
-                          variant={
-                            user.role === "Admin" ? "default" : "secondary"
-                          }
-                          className="capitalize"
-                        >
-                          {user.role}
-                        </Badge>
-                        <Badge
-                          variant="outline"
-                          className="border-green-600 text-green-600"
-                        >
-                          Active
-                        </Badge>
-                      </div>
-                      <p className="text-sm text-muted-foreground">
-                        @{user.username} | {user.email}
-                      </p>
-                      <p className="text-xs text-muted-foreground">
-                        Joined: {new Date(user.createdAt).toLocaleString("en-US", {
-                          year: "numeric",
-                          month: "long",
-                          day: "numeric",
-                          hour: "numeric",
-                          minute: "2-digit",
-                          hour12: true,
-                        })}
-                      </p>
-                    </div>
-                    {user.userId !== currentUserId && (
-                      <div className="flex gap-2">
-                        <Button
-                          variant="outline"
-                          size="sm"
-                          onClick={() => navigate(`/users/edit/${user.userId}`)}
-                        >
-                          <Pencil className="mr-1 h-4 w-4" />
-                          Edit
-                        </Button>
-                        <Button
-                          variant="outline"
-                          size="sm"
-                          onClick={() => archiveMutation.mutate(user.userId)}
-                          disabled={archiveMutation.isPending}
-                        >
-                          <Archive className="mr-1 h-4 w-4" />
-                          Archive
-                        </Button>
-                      </div>
-                    )}
-                  </div>
-                ))}
+            <div className="space-y-4">
+              <div className="overflow-x-auto">
+                <table className="w-full table-fixed text-sm">
+                  <thead>
+                    <tr className="border-b text-left text-muted-foreground">
+                      <th className="w-[22%] py-3 pr-4 font-medium">Full Name</th>
+                      <th className="w-[14%] py-3 pr-4 font-medium">Username</th>
+                      <th className="w-[24%] py-3 pr-4 font-medium">Email</th>
+                      <th className="w-[10%] py-3 pr-4 font-medium">Role</th>
+                      <th className="w-[14%] py-3 pr-4 font-medium">Contact Number</th>
+                      <th className="w-[8%] py-3 pr-4 font-medium">Gender</th>
+                      <th className="w-[8%] py-3 pl-4 font-medium"></th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {filteredUsers.map((user) => (
+                      <tr
+                        key={user.userId}
+                        className="border-b transition-colors hover:bg-muted"
+                      >
+                        <td className="py-3 pr-4">
+                          <span className="block truncate font-medium">
+                            {user.firstName} {user.lastName}
+                          </span>
+                        </td>
+                        <td className="py-3 pr-4 text-muted-foreground">
+                          <span className="block truncate">@{user.username}</span>
+                        </td>
+                        <td className="py-3 pr-4 text-muted-foreground">
+                          <span className="block truncate">{user.email}</span>
+                        </td>
+                        <td className="py-3 pr-4">
+                          <Badge
+                            className={
+                              user.role === "Admin"
+                                ? "bg-blue-700 hover:bg-blue-700 text-white"
+                                : "bg-gray-600 hover:bg-gray-600 text-white"
+                            }
+                          >
+                            {user.role}
+                          </Badge>
+                        </td>
+                        <td className="py-3 pr-4 text-muted-foreground">
+                          <span className="block truncate">{user.contactNumber}</span>
+                        </td>
+                        <td className="py-3 pr-4 capitalize">
+                          <span className="block truncate">{user.gender}</span>
+                        </td>
+                        <td className="py-3 pl-4">
+                          {user.userId !== currentUserId ? (
+                            <DropdownMenu>
+                              <DropdownMenuTrigger asChild>
+                                <Button variant="ghost" size="icon">
+                                  <MoreHorizontal className="h-4 w-4" />
+                                </Button>
+                              </DropdownMenuTrigger>
+                              <DropdownMenuContent align="end">
+                                <DropdownMenuItem
+                                  onClick={() =>
+                                    navigate(`/users/edit/${user.userId}`)
+                                  }
+                                >
+                                  <Eye className="mr-2 h-4 w-4" />
+                                  View
+                                </DropdownMenuItem>
+                                <DropdownMenuItem
+                                  onClick={() =>
+                                    navigate(`/users/edit/${user.userId}`)
+                                  }
+                                >
+                                  <Pencil className="mr-2 h-4 w-4" />
+                                  Edit
+                                </DropdownMenuItem>
+                                <DropdownMenuItem
+                                  onClick={() => handleArchive(user.userId)}
+                                  disabled={archiveMutation.isPending}
+                                >
+                                  <Archive className="mr-2 h-4 w-4" />
+                                  Archive
+                                </DropdownMenuItem>
+                              </DropdownMenuContent>
+                            </DropdownMenu>
+                          ) : (
+                            <Badge className="bg-violet-600 text-white hover:bg-violet-600">You</Badge>
+                          )}
+                        </td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
               </div>
 
-            {totalPages > 1 && (
-              <div className="flex items-center justify-between pt-4">
-                <p className="text-sm text-muted-foreground">
-                  Page {page + 1} of {totalPages}
+              {filteredUsers.length === 0 && (
+                <p className="py-8 text-center text-muted-foreground">
+                  No users found.
                 </p>
-                <div className="flex gap-2">
-                  <Button
-                    variant="outline"
-                    size="sm"
-                    onClick={() => setPage((p) => p - 1)}
-                    disabled={page === 0}
-                  >
-                    <ChevronLeft className="mr-1 h-4 w-4" />
-                    Previous
-                  </Button>
-                  <Button
-                    variant="outline"
-                    size="sm"
-                    onClick={() => setPage((p) => p + 1)}
-                    disabled={page >= totalPages - 1}
-                  >
-                    Next
-                    <ChevronRight className="ml-1 h-4 w-4" />
-                  </Button>
+              )}
+
+              {totalPages > 1 && (
+                <div className="flex items-center justify-between pt-4">
+                  <p className="text-sm text-muted-foreground">
+                    Page {page + 1} of {totalPages}
+                  </p>
+                  <div className="flex gap-2">
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      onClick={() => setPage((p) => p - 1)}
+                      disabled={page === 0}
+                    >
+                      <ChevronLeft className="mr-1 h-4 w-4" />
+                      Previous
+                    </Button>
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      onClick={() => setPage((p) => p + 1)}
+                      disabled={page >= totalPages - 1}
+                    >
+                      Next
+                      <ChevronRight className="ml-1 h-4 w-4" />
+                    </Button>
+                  </div>
                 </div>
-              </div>
-            )}
-            </>
+              )}
+            </div>
           )}
         </CardContent>
       </Card>

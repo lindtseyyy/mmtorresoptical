@@ -1,7 +1,7 @@
 import { NavLink, useLocation, useNavigate } from "react-router-dom";
 import { Users, Eye, LogOut } from "lucide-react";
 import { Button, buttonVariants } from "@/components/ui/button";
-import { toast } from "sonner"; // 👈 1. Import toast directly from sonner
+import { toast } from "sonner";
 
 const menuItems = [
   { title: "Manage Inventory", href: "/inventory", icon: Eye },
@@ -15,12 +15,25 @@ function getLinkClassName({ isActive }: { isActive: boolean }): string {
   });
 }
 
+function getUserFromToken() {
+  const token = localStorage.getItem("authToken");
+  if (!token) return { name: "User", role: "Administrator" };
+  try {
+    const payload = JSON.parse(atob(token.split(".")[1]));
+    return {
+      name: payload.sub ?? "User",
+      role: payload.role ?? "Administrator",
+    };
+  } catch {
+    return { name: "User", role: "Administrator" };
+  }
+}
+
 const Sidenav: React.FC = () => {
   const location = useLocation();
   const navigate = useNavigate();
-  // 👈 2. No more useToast() hook!
 
-  const user = { name: "admin", role: "Administrator" };
+  const user = getUserFromToken();
 
   const handleLogout = () => {
     localStorage.removeItem("authToken");
