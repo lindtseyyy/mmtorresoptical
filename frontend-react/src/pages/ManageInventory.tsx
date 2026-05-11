@@ -237,7 +237,7 @@ const ManageInventory: React.FC = () => {
                       return (
                         <tr
                           key={product.productId}
-                          className="border-b transition-colors hover:bg-muted/50"
+                          className="border-b transition-colors hover:bg-muted"
                         >
                           <td className="py-3 pr-4">
                             <span className="inline-flex items-center gap-2 font-medium">
