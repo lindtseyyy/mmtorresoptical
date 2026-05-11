@@ -126,6 +126,15 @@ export interface User {
   createdAt: string; // From Spring (OffsetDateTime)
 }
 
+export interface InventorySummary {
+  totalProducts: number;
+  totalStockQuantity: number;
+  inventoryValue: number;
+  countLowStockProducts: number;
+  countOverstockedProducts: number;
+  countArchivedProducts: number;
+}
+
 export interface PageResponse<T> {
   content: T[];
   totalPages: number;

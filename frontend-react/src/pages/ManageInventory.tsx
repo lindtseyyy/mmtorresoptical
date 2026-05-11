@@ -10,7 +10,7 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { Badge } from "@/components/ui/badge";
-import { Plus, Search, Archive, Pencil, ChevronLeft, ChevronRight, Glasses, MoreHorizontal, Eye } from "lucide-react";
+import { Plus, Search, Archive, Pencil, ChevronLeft, ChevronRight, Glasses, MoreHorizontal, Eye, Package, Layers, AlertTriangle, TrendingUp, Banknote } from "lucide-react";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -23,6 +23,7 @@ import type { Product } from "@/types"; // Import our new Product type
 import {
   createArchiveProductMutationOptions,
   createProductsListQueryOptions,
+  createInventorySummaryQueryOptions,
 } from "@/query/productQuery";
 
 const ManageInventory: React.FC = () => {
@@ -45,6 +46,8 @@ const ManageInventory: React.FC = () => {
   const products = pageData?.content ?? [];
   const totalElements = pageData?.totalElements ?? 0;
   const totalPages = pageData?.totalPages ?? 0;
+
+  const { data: summary } = useQuery(createInventorySummaryQueryOptions());
 
   // Mutation for archiving
   const archiveMutation = useMutation(
@@ -100,6 +103,83 @@ const ManageInventory: React.FC = () => {
           <Plus className="mr-2 h-4 w-4" />
           Add Product
         </Button>
+      </div>
+
+      {/* Summary Cards */}
+      <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
+        <Card>
+          <CardContent className="flex items-center gap-4 p-5">
+            <div className="flex h-11 w-11 items-center justify-center rounded-full bg-primary/10">
+              <Package className="h-5 w-5 text-primary" />
+            </div>
+            <div>
+              <p className="text-2xl font-bold">{summary?.totalProducts ?? "—"}</p>
+              <p className="text-sm text-muted-foreground">Total Products</p>
+            </div>
+          </CardContent>
+        </Card>
+
+        <Card>
+          <CardContent className="flex items-center gap-4 p-5">
+            <div className="flex h-11 w-11 items-center justify-center rounded-full bg-blue-500/10">
+              <Layers className="h-5 w-5 text-blue-500" />
+            </div>
+            <div>
+              <p className="text-2xl font-bold">{summary?.totalStockQuantity ?? "—"}</p>
+              <p className="text-sm text-muted-foreground">Total Stock Quantity</p>
+            </div>
+          </CardContent>
+        </Card>
+
+        <Card>
+          <CardContent className="flex items-center gap-4 p-5">
+            <div className="flex h-11 w-11 items-center justify-center rounded-full bg-emerald-500/10">
+              <Banknote className="h-5 w-5 text-emerald-500" />
+            </div>
+            <div>
+              <p className="text-2xl font-bold">
+                {summary != null ? `₱${summary.inventoryValue.toLocaleString()}` : "—"}
+              </p>
+              <p className="text-sm text-muted-foreground">Total Inventory Value</p>
+            </div>
+          </CardContent>
+        </Card>
+
+        <Card className="border-red-200">
+          <CardContent className="flex items-center gap-4 p-5">
+            <div className="flex h-11 w-11 items-center justify-center rounded-full bg-red-500/10">
+              <AlertTriangle className="h-5 w-5 text-red-500" />
+            </div>
+            <div>
+              <p className="text-2xl font-bold text-red-600">{summary?.countLowStockProducts ?? "—"}</p>
+              <p className="text-sm text-muted-foreground">Low Stock Items</p>
+            </div>
+          </CardContent>
+        </Card>
+
+        <Card className="border-amber-200">
+          <CardContent className="flex items-center gap-4 p-5">
+            <div className="flex h-11 w-11 items-center justify-center rounded-full bg-amber-500/10">
+              <TrendingUp className="h-5 w-5 text-amber-500" />
+            </div>
+            <div>
+              <p className="text-2xl font-bold text-amber-600">{summary?.countOverstockedProducts ?? "—"}</p>
+              <p className="text-sm text-muted-foreground">Overstocked Items</p>
+            </div>
+          </CardContent>
+        </Card>
+
+        <Card className="border-gray-300">
+          <CardContent className="flex items-center gap-4 p-5">
+            <div className="flex h-11 w-11 items-center justify-center rounded-full bg-muted">
+              <Archive className="h-5 w-5 text-muted-foreground" />
+            </div>
+            <div>
+              <p className="text-2xl font-bold">{summary?.countArchivedProducts ?? "—"}</p>
+              <p className="text-sm text-muted-foreground">Archived Products</p>
+            </div>
+          </CardContent>
+        </Card>
       </div>
 
       <Card>

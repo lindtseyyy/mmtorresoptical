@@ -1,5 +1,5 @@
 import { queryOptions } from "@tanstack/react-query";
-import { fetchProducts, fetchProduct, addProduct, updateProduct, archiveProduct } from "@/api/productApi";
+import { fetchProducts, fetchProduct, addProduct, updateProduct, archiveProduct, fetchInventorySummary } from "@/api/productApi";
 import { toast } from "sonner";
 import type { NavigateFunction } from "react-router";
 import type { ProductFormData } from "@/types"; 
@@ -73,4 +73,12 @@ function createArchiveProductMutationOptions(queryClient: any) {
   }
 }
 
-export {createProductsListQueryOptions, createEditProductQueryOptions, createAddProductMutationOptions, createEditProductMutationOptions, createArchiveProductMutationOptions}
+function createInventorySummaryQueryOptions() {
+    return queryOptions({
+    queryKey: ["inventory-summary"],
+    queryFn: fetchInventorySummary,
+    staleTime: 30_000,
+  })
+}
+
+export {createProductsListQueryOptions, createEditProductQueryOptions, createAddProductMutationOptions, createEditProductMutationOptions, createArchiveProductMutationOptions, createInventorySummaryQueryOptions}

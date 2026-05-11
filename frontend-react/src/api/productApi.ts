@@ -1,5 +1,5 @@
 import api from "@/lib/axiosInstance";
-import type { Product, ProductFormData, PageResponse } from "@/types";
+import type { Product, ProductFormData, PageResponse, InventorySummary } from "@/types";
 
 const fetchProducts = async (page = 0, size = 10): Promise<PageResponse<Product>> => {
   const { data } = await api.get("/products", { params: { page, size } });
@@ -42,4 +42,9 @@ const archiveProduct = async (id: string) => {
   return await api.delete(`/products/${id}`);
 };
 
-export { fetchProducts, fetchProduct, updateProduct, addProduct, archiveProduct };
+const fetchInventorySummary = async (): Promise<InventorySummary> => {
+  const { data } = await api.get("/reports/inventory/summary");
+  return data;
+};
+
+export { fetchProducts, fetchProduct, updateProduct, addProduct, archiveProduct, fetchInventorySummary };
