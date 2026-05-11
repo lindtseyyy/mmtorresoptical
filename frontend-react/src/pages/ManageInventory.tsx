@@ -10,7 +10,13 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { Badge } from "@/components/ui/badge";
-import { Plus, Search, Archive, Pencil, Glasses, ChevronLeft, ChevronRight } from "lucide-react";
+import { Plus, Search, Archive, Pencil, ChevronLeft, ChevronRight, Glasses, MoreHorizontal, Eye } from "lucide-react";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
 import { useNavigate } from "react-router-dom";
 import { Card, CardContent } from "@/components/ui/card";
 import type { Product } from "@/types"; // Import our new Product type
@@ -132,82 +138,111 @@ const ManageInventory: React.FC = () => {
               <div className="h-8 w-8 animate-spin rounded-full border-4 border-primary border-t-transparent"></div>
             </div>
           ) : (
-            // Product List
             <div className="space-y-4">
               <p className="text-sm text-muted-foreground">
                 Product Inventory ({totalElements})
               </p>
-              {filteredProducts?.map((product) => {
-                const stockStatus = getStockStatus(product);
-                return (
-                  <div
-                    key={product.productId}
-                    className="flex items-center gap-4 rounded-lg border p-4 transition-colors hover:bg-muted/50"
-                  >
-                    {product.imageDir ? (
-                      <img
-                        src={product.imageDir || ""}
-                        alt={product.productName}
-                        className="h-16 w-16 rounded-md object-cover"
-                      />
-                    ) : (
-                      <div className="flex h-16 w-16 items-center justify-center rounded-md bg-muted">
-                        <Glasses className="h-8 w-8 text-muted-foreground" />
-                      </div>
-                    )}
 
-                    <div className="flex-1 space-y-2">
-                      <div className="flex flex-wrap items-center gap-3">
-                        <h3 className="font-semibold">{product.productName}</h3>
-                        <Badge variant={stockStatus.variant}>
-                          {stockStatus.label}
-                        </Badge>
-                        <Badge variant="outline" className="capitalize">
-                          {product.category}
-                        </Badge>
-                      </div>
-                      <p className="text-sm text-muted-foreground">
-                        ID: {product.productId.slice(0, 8)} | Supplier:{" "}
-                        {product.supplier}
-                      </p>
-                      <div className="mt-1 flex flex-wrap gap-4 text-sm">
-                        <div className="flex-col">
-                          <div className="font-bold">Stock Level</div>
-                          <div className="font-semibold">
-                            {product.quantity} units
-                          </div>
-                        </div>
-                        <div className="flex-col">
-                          <div className="font-bold">Unit Price</div>
-                          <div className="font-semibold">
+              <div className="overflow-x-auto">
+                <table className="w-full text-sm">
+                  <thead>
+                    <tr className="border-b text-left text-muted-foreground">
+                      <th className="py-3 pr-4 font-medium">Product Name</th>
+                      <th className="py-3 pr-4 font-medium">Category</th>
+                      <th className="py-3 pr-4 text-center font-medium">Quantity</th>
+                      <th className="py-3 pr-4 text-center font-medium">Unit Price</th>
+                      <th className="py-3 pr-4 font-medium">Supplier</th>
+                      <th className="py-3 pl-4 font-medium"></th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {filteredProducts?.map((product) => {
+                      const stockStatus = getStockStatus(product);
+                      return (
+                        <tr
+                          key={product.productId}
+                          className="border-b transition-colors hover:bg-muted/50"
+                        >
+                          <td className="py-3 pr-4">
+                            <span className="inline-flex items-center gap-2 font-medium">
+                              {product.imageDir ? (
+                                <img
+                                  src={product.imageDir}
+                                  alt=""
+                                  className="h-6 w-6 rounded object-cover"
+                                />
+                              ) : (
+                                <Glasses className="h-4 w-4 text-muted-foreground" />
+                              )}
+                              {product.productName}
+                            </span>
+                          </td>
+                          <td className="py-3 pr-4 capitalize">
+                            {product.category}
+                          </td>
+                          <td className="py-3 pr-4 text-center">
+                            <Badge
+                              className={`text-white ${
+                                stockStatus.variant === "destructive"
+                                  ? "bg-red-500 hover:bg-red-600"
+                                  : stockStatus.variant === "secondary"
+                                    ? "bg-amber-500 hover:bg-amber-600"
+                                    : "bg-green-500 hover:bg-green-600"
+                              }`}
+                            >
+                              {product.quantity}
+                            </Badge>
+                          </td>
+                          <td className="py-3 pr-4 text-center">
                             ₱{product.unitPrice.toFixed(2)}
-                          </div>
-                        </div>
-                      </div>
-                    </div>
-                    <div className="flex gap-2">
-                      {/* Edit button navigates to edit page */}
-                      <Button
-                        variant="outline"
-                        size="sm"
-                        onClick={() =>
-                          navigate(`/inventory/edit/${product.productId}`)
-                        }
-                      >
-                        <Pencil className="h-4 w-4" />
-                      </Button>
-                      <Button
-                        variant="outline"
-                        size="sm"
-                        onClick={() => handleArchive(product.productId)}
-                        disabled={archiveMutation.isPending}
-                      >
-                        <Archive className="h-4 w-4" />
-                      </Button>
-                    </div>
-                  </div>
-                );
-              })}
+                          </td>
+                          <td className="py-3 pr-4">{product.supplier}</td>
+                          <td className="py-3 pl-4">
+                            <DropdownMenu>
+                              <DropdownMenuTrigger asChild>
+                                <Button variant="ghost" size="icon">
+                                  <MoreHorizontal className="h-4 w-4" />
+                                </Button>
+                              </DropdownMenuTrigger>
+                              <DropdownMenuContent align="end">
+                                <DropdownMenuItem
+                                  onClick={() =>
+                                    navigate(`/inventory/edit/${product.productId}`)
+                                  }
+                                >
+                                  <Eye className="mr-2 h-4 w-4" />
+                                  View
+                                </DropdownMenuItem>
+                                <DropdownMenuItem
+                                  onClick={() =>
+                                    navigate(`/inventory/edit/${product.productId}`)
+                                  }
+                                >
+                                  <Pencil className="mr-2 h-4 w-4" />
+                                  Edit
+                                </DropdownMenuItem>
+                                <DropdownMenuItem
+                                  onClick={() => handleArchive(product.productId)}
+                                  disabled={archiveMutation.isPending}
+                                >
+                                  <Archive className="mr-2 h-4 w-4" />
+                                  Archive
+                                </DropdownMenuItem>
+                              </DropdownMenuContent>
+                            </DropdownMenu>
+                          </td>
+                        </tr>
+                      );
+                    })}
+                  </tbody>
+                </table>
+              </div>
+
+              {filteredProducts?.length === 0 && (
+                <p className="py-8 text-center text-muted-foreground">
+                  No products found.
+                </p>
+              )}
 
               {totalPages > 1 && (
                 <div className="flex items-center justify-between pt-4">
