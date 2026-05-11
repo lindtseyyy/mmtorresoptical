@@ -47,7 +47,7 @@ public class ProductService {
                     Product product = productMapper.createRequestDTOToEntity(productRequest);
 
                     // Handle optional image, set default if not provided
-                    product.setImageDir(productRequest.getImageDir() != null ? productRequest.getImageDir() : "/default-product.png");
+                    product.setImageDir(productRequest.getImageDir() != null ? productRequest.getImageDir() : "/default_product_logo.png");
 
                     product.setUser(authenticatedUser);
 

@@ -8,9 +8,15 @@ import java.math.BigDecimal;
 @Data
 @Builder
 public class InventoryAnalyticsDTO {
+    long totalProducts;
+
+    long totalStockQuantity;
+
     BigDecimal inventoryValue;
 
     long countLowStockProducts;
 
     long countOverstockedProducts;
+
+    long countArchivedProducts;
 }

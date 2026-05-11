@@ -19,6 +19,36 @@ import java.util.UUID;
 public interface InventoryAnalyticsRepository extends JpaRepository<Product, UUID> {
 
     /*
+     * TOTAL ACTIVE PRODUCTS
+     */
+    @Query("""
+        SELECT COUNT(p)
+        FROM Product p
+        WHERE p.isArchived = false
+    """)
+    long countActiveProducts();
+
+    /*
+     * TOTAL STOCK QUANTITY (active only)
+     */
+    @Query("""
+        SELECT COALESCE(SUM(p.quantity), 0)
+        FROM Product p
+        WHERE p.isArchived = false
+    """)
+    long totalStockQuantity();
+
+    /*
+     * TOTAL ARCHIVED PRODUCTS
+     */
+    @Query("""
+        SELECT COUNT(p)
+        FROM Product p
+        WHERE p.isArchived = true
+    """)
+    long countArchivedProducts();
+
+    /*
      * TOTAL INVENTORY VALUE
      * (No date range needed – inventory is current state)
      */

@@ -26,14 +26,20 @@ public class InventoryAnalyticsService {
     private final ProductMapper productMapper;
 
     public InventoryAnalyticsDTO getInventoryAnalytics() {
+        long totalProducts = inventoryAnalyticsRepository.countActiveProducts();
+        long totalStockQuantity = inventoryAnalyticsRepository.totalStockQuantity();
         BigDecimal inventoryValue = inventoryAnalyticsRepository.inventoryValue();
         long countLowStockProducts = inventoryAnalyticsRepository.countLowStockProducts();
         long countOverStockedProducts = inventoryAnalyticsRepository.countOverstockedProducts();
+        long countArchivedProducts = inventoryAnalyticsRepository.countArchivedProducts();
 
         return InventoryAnalyticsDTO.builder()
+                .totalProducts(totalProducts)
+                .totalStockQuantity(totalStockQuantity)
                 .inventoryValue(inventoryValue)
                 .countLowStockProducts(countLowStockProducts)
                 .countOverstockedProducts(countOverStockedProducts)
+                .countArchivedProducts(countArchivedProducts)
                 .build();
     }
 

@@ -1,5 +1,6 @@
 package com.mmtorresoptical.OpticalClinicManagementSystem.controller.report;
 
+import com.mmtorresoptical.OpticalClinicManagementSystem.dto.metrics.InventoryAnalyticsDTO;
 import com.mmtorresoptical.OpticalClinicManagementSystem.dto.product.ProductDetailsDTO;
 import com.mmtorresoptical.OpticalClinicManagementSystem.objects.TopSellingProductDTO;
 import com.mmtorresoptical.OpticalClinicManagementSystem.services.analytics.InventoryAnalyticsService;
@@ -20,6 +21,11 @@ import java.util.List;
 public class InventoryReportController {
 
     private final InventoryAnalyticsService inventoryAnalyticsService;
+
+    @GetMapping("/summary")
+    public InventoryAnalyticsDTO getInventorySummary() {
+        return inventoryAnalyticsService.getInventoryAnalytics();
+    }
 
     @GetMapping("/lowstock-products")
     public Page<ProductDetailsDTO> getLowStockProducts(
