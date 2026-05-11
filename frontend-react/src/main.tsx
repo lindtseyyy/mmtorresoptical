@@ -42,8 +42,6 @@ const router = createBrowserRouter([
       { path: "inventory/add", element: <AddProduct /> },
       { path: "inventory/edit/:id", element: <EditProduct /> },
       { path: "users", element: <ManageUsers /> },
-      // User routes
-      { path: "users", element: <ManageUsers /> },
       { path: "users/add", element: <AddUser /> },
       { path: "users/edit/:id", element: <EditUser /> },
     ],

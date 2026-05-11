@@ -4,10 +4,10 @@ import { toast } from "sonner";
 import type { NavigateFunction } from "react-router";
 import type { ProductFormData } from "@/types"; 
 
-function createProductsListQueryOptions() {
+function createProductsListQueryOptions(page: number, size: number) {
     return queryOptions({
-    queryKey: ["products"],
-    queryFn: fetchProducts,
+    queryKey: ["products", page, size],
+    queryFn: () => fetchProducts(page, size),
   })
 }
 

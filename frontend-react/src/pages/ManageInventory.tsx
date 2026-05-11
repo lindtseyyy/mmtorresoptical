@@ -1,5 +1,5 @@
-import { useState } from "react";
-import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
+import { useState, useEffect } from "react";
+import { useQuery, useMutation, useQueryClient, keepPreviousData } from "@tanstack/react-query";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import {
@@ -10,7 +10,7 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { Badge } from "@/components/ui/badge";
-import { Plus, Search, Archive, Pencil, Glasses } from "lucide-react";
+import { Plus, Search, Archive, Pencil, Glasses, ChevronLeft, ChevronRight } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { Card, CardContent } from "@/components/ui/card";
 import type { Product } from "@/types"; // Import our new Product type
@@ -20,15 +20,25 @@ import {
 } from "@/query/productQuery";
 
 const ManageInventory: React.FC = () => {
+  const PAGE_SIZE = 10;
   const [searchQuery, setSearchQuery] = useState("");
   const [categoryFilter, setCategoryFilter] = useState<string>("all");
+  const [page, setPage] = useState(0);
   const navigate = useNavigate();
   const queryClient = useQueryClient();
 
-  // Fetch data using React Query
-  const { data: products, isLoading } = useQuery(
-    createProductsListQueryOptions()
-  );
+  const {
+    data: pageData,
+    isLoading,
+    isFetching,
+  } = useQuery({
+    ...createProductsListQueryOptions(page, PAGE_SIZE),
+    placeholderData: keepPreviousData,
+  });
+
+  const products = pageData?.content ?? [];
+  const totalElements = pageData?.totalElements ?? 0;
+  const totalPages = pageData?.totalPages ?? 0;
 
   // Mutation for archiving
   const archiveMutation = useMutation(
@@ -39,6 +49,13 @@ const ManageInventory: React.FC = () => {
     // You should add a confirmation dialog here
     archiveMutation.mutate(id);
   };
+
+  // If current page is empty and not the first page, step back
+  useEffect(() => {
+    if (products.length === 0 && page > 0 && !isFetching) {
+      setPage((p) => Math.max(0, p - 1));
+    }
+  }, [products.length, page, isFetching]);
 
   // Filter products based on state
   const filteredProducts = products?.filter((product) => {
@@ -118,7 +135,7 @@ const ManageInventory: React.FC = () => {
             // Product List
             <div className="space-y-4">
               <p className="text-sm text-muted-foreground">
-                Product Inventory ({filteredProducts?.length || 0})
+                Product Inventory ({totalElements})
               </p>
               {filteredProducts?.map((product) => {
                 const stockStatus = getStockStatus(product);
@@ -191,6 +208,34 @@ const ManageInventory: React.FC = () => {
                   </div>
                 );
               })}
+
+              {totalPages > 1 && (
+                <div className="flex items-center justify-between pt-4">
+                  <p className="text-sm text-muted-foreground">
+                    Page {page + 1} of {totalPages}
+                  </p>
+                  <div className="flex gap-2">
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      onClick={() => setPage((p) => p - 1)}
+                      disabled={page === 0}
+                    >
+                      <ChevronLeft className="mr-1 h-4 w-4" />
+                      Previous
+                    </Button>
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      onClick={() => setPage((p) => p + 1)}
+                      disabled={page >= totalPages - 1}
+                    >
+                      Next
+                      <ChevronRight className="ml-1 h-4 w-4" />
+                    </Button>
+                  </div>
+                </div>
+              )}
             </div>
           )}
         </CardContent>

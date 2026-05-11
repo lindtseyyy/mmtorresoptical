@@ -78,7 +78,7 @@ export interface Product {
   overstockedThreshold: number;
   isArchived: boolean;
   imageDir: string | null;
-  dateAdded: string; // From Spring (OffsetDateTime)
+  createdAt: string;
 }
 
 // Data structure for the product search filters
