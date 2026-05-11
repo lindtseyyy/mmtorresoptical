@@ -12,6 +12,16 @@ import {
 } from "@/components/ui/dropdown-menu";
 import { useNavigate } from "react-router-dom";
 import { Card, CardContent } from "@/components/ui/card";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from "@/components/ui/alert-dialog";
 import type { User } from "@/types";
 import {
   createArchiveUserMutationOptions,
@@ -48,12 +58,21 @@ const ManageUsers: React.FC = () => {
   const totalElements = pageData?.totalElements ?? 0;
   const totalPages = pageData?.totalPages ?? 0;
 
+  const [pendingArchiveId, setPendingArchiveId] = useState<string | null>(null);
+
   const archiveMutation = useMutation(
     createArchiveUserMutationOptions(queryClient)
   );
 
   const handleArchive = (id: string) => {
-    archiveMutation.mutate(id);
+    setPendingArchiveId(id);
+  };
+
+  const confirmArchive = () => {
+    if (pendingArchiveId) {
+      archiveMutation.mutate(pendingArchiveId);
+      setPendingArchiveId(null);
+    }
   };
 
   // Reset page when search changes
@@ -313,6 +332,31 @@ const ManageUsers: React.FC = () => {
           )}
         </CardContent>
       </Card>
+
+      <AlertDialog open={!!pendingArchiveId} onOpenChange={(open) => !open && setPendingArchiveId(null)}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Archive User</AlertDialogTitle>
+            <AlertDialogDescription>
+              Are you sure you want to archive{" "}
+              <span className="font-semibold text-foreground">
+                {users.find((u) => u.userId === pendingArchiveId)?.firstName}{" "}
+                {users.find((u) => u.userId === pendingArchiveId)?.lastName}
+              </span>
+              ? This action can be reversed later.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>Cancel</AlertDialogCancel>
+            <AlertDialogAction
+              onClick={confirmArchive}
+              className="bg-red-700 text-white hover:bg-red-800"
+            >
+              Archive
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </div>
   );
 };
