@@ -39,7 +39,7 @@ const ManageInventory: React.FC = () => {
     isLoading,
     isFetching,
   } = useQuery({
-    ...createProductsListQueryOptions(page, PAGE_SIZE),
+    ...createProductsListQueryOptions(page, PAGE_SIZE, searchQuery, categoryFilter),
     placeholderData: keepPreviousData,
   });
 
@@ -59,25 +59,17 @@ const ManageInventory: React.FC = () => {
     archiveMutation.mutate(id);
   };
 
+  // Reset page when search or category filter changes
+  useEffect(() => {
+    setPage(0);
+  }, [searchQuery, categoryFilter]);
+
   // If current page is empty and not the first page, step back
   useEffect(() => {
     if (products.length === 0 && page > 0 && !isFetching) {
       setPage((p) => Math.max(0, p - 1));
     }
   }, [products.length, page, isFetching]);
-
-  // Filter products based on state
-  const filteredProducts = products?.filter((product) => {
-    const matchesSearch =
-      product.productName.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      product.productId.toLowerCase().includes(searchQuery.toLowerCase());
-
-    const matchesCategory =
-      categoryFilter === "all" || product.category === categoryFilter;
-
-    // This matches your reference (shows non-archived by default)
-    return matchesSearch && matchesCategory && !product.isArchived;
-  });
 
   // Helper function from your reference
   const getStockStatus = (product: Product) => {
@@ -232,7 +224,7 @@ const ManageInventory: React.FC = () => {
                     </tr>
                   </thead>
                   <tbody>
-                    {filteredProducts?.map((product) => {
+                    {products?.map((product) => {
                       const stockStatus = getStockStatus(product);
                       return (
                         <tr
@@ -314,7 +306,7 @@ const ManageInventory: React.FC = () => {
                 </table>
               </div>
 
-              {filteredProducts?.length === 0 && (
+              {products?.length === 0 && (
                 <p className="py-8 text-center text-muted-foreground">
                   No products found.
                 </p>

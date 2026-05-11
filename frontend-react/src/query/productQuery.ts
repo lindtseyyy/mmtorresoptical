@@ -4,11 +4,16 @@ import { toast } from "sonner";
 import type { NavigateFunction } from "react-router";
 import type { ProductFormData } from "@/types"; 
 
-function createProductsListQueryOptions(page: number, size: number) {
-    return queryOptions({
-    queryKey: ["products", page, size],
-    queryFn: () => fetchProducts(page, size),
-  })
+function createProductsListQueryOptions(
+  page: number,
+  size: number,
+  keyword?: string,
+  category?: string,
+) {
+  return queryOptions({
+    queryKey: ["products", page, size, keyword ?? "", category ?? "all"],
+    queryFn: () => fetchProducts(page, size, keyword, category),
+  });
 }
 
 function createEditProductQueryOptions(id: string) {

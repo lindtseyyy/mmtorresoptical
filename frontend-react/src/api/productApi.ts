@@ -1,15 +1,27 @@
 import api from "@/lib/axiosInstance";
 import type { Product, ProductFormData, PageResponse, InventorySummary } from "@/types";
 
-const fetchProducts = async (page = 0, size = 10): Promise<PageResponse<Product>> => {
-  const { data } = await api.get("/products", { params: { page, size } });
-  console.log("Fetched products:", data);
+const fetchProducts = async (
+  page = 0,
+  size = 10,
+  keyword?: string,
+  category?: string,
+): Promise<PageResponse<Product>> => {
+  const { data } = await api.get("/products", {
+    params: {
+      page,
+      size,
+      ...(keyword && { keyword }),
+      ...(category && category !== "all" && { category }),
+    },
+  });
+  const pg = data.page;
   return {
     content: data.content,
-    totalPages: data.totalPages,
-    totalElements: data.totalElements,
-    size: data.size,
-    number: data.number,
+    totalPages: pg.totalPages,
+    totalElements: pg.totalElements,
+    size: pg.size,
+    number: pg.number,
   };
 };
 
