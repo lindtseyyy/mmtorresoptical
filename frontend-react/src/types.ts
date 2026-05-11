@@ -126,6 +126,14 @@ export interface User {
   createdAt: string; // From Spring (OffsetDateTime)
 }
 
+export interface UserSummary {
+  totalUsers: number;
+  activeUsers: number;
+  archivedUsers: number;
+  adminUsers: number;
+  staffUsers: number;
+}
+
 export interface InventorySummary {
   totalProducts: number;
   totalStockQuantity: number;

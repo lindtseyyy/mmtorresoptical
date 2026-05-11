@@ -3,7 +3,7 @@ import { useQuery, useMutation, useQueryClient, keepPreviousData } from "@tansta
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
-import { Plus, Search, Archive, Pencil, ChevronLeft, ChevronRight, MoreHorizontal, Eye } from "lucide-react";
+import { Plus, Search, Archive, Pencil, ChevronLeft, ChevronRight, MoreHorizontal, Eye, Users, UserCheck, ArchiveIcon, Shield, UserCog } from "lucide-react";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -16,6 +16,7 @@ import type { User } from "@/types";
 import {
   createArchiveUserMutationOptions,
   createUsersListQueryOptions,
+  createUserSummaryQueryOptions,
 } from "@/query/userQuery";
 
 const getCurrentUserId = (): string | null => {
@@ -85,11 +86,7 @@ const ManageUsers: React.FC = () => {
       return 0;
     });
 
-  const stats = {
-    total: totalElements,
-    admins: users.filter((u) => !u.isArchived && u.role === "Admin").length,
-    staff: users.filter((u) => !u.isArchived && u.role === "Staff").length,
-  };
+  const { data: summary } = useQuery(createUserSummaryQueryOptions());
 
   return (
     <div className="space-y-6">
@@ -106,23 +103,64 @@ const ManageUsers: React.FC = () => {
         </Button>
       </div>
 
-      <div className="grid gap-4 md:grid-cols-3">
+      <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
         <Card>
-          <CardContent className="p-6">
-            <p className="text-sm text-muted-foreground">Total Users</p>
-            <p className="text-3xl font-bold">{stats.total}</p>
+          <CardContent className="flex items-center gap-4 p-5">
+            <div className="flex h-11 w-11 items-center justify-center rounded-full bg-primary/10">
+              <Users className="h-5 w-5 text-primary" />
+            </div>
+            <div>
+              <p className="text-2xl font-bold">{summary?.totalUsers ?? "—"}</p>
+              <p className="text-sm text-muted-foreground">Total Users</p>
+            </div>
           </CardContent>
         </Card>
+
         <Card>
-          <CardContent className="p-6">
-            <p className="text-sm text-muted-foreground">Administrators</p>
-            <p className="text-3xl font-bold">{stats.admins}</p>
+          <CardContent className="flex items-center gap-4 p-5">
+            <div className="flex h-11 w-11 items-center justify-center rounded-full bg-emerald-500/10">
+              <UserCheck className="h-5 w-5 text-emerald-500" />
+            </div>
+            <div>
+              <p className="text-2xl font-bold">{summary?.activeUsers ?? "—"}</p>
+              <p className="text-sm text-muted-foreground">Active Users</p>
+            </div>
           </CardContent>
         </Card>
+
         <Card>
-          <CardContent className="p-6">
-            <p className="text-sm text-muted-foreground">Staff Members</p>
-            <p className="text-3xl font-bold">{stats.staff}</p>
+          <CardContent className="flex items-center gap-4 p-5">
+            <div className="flex h-11 w-11 items-center justify-center rounded-full bg-muted">
+              <ArchiveIcon className="h-5 w-5 text-muted-foreground" />
+            </div>
+            <div>
+              <p className="text-2xl font-bold">{summary?.archivedUsers ?? "—"}</p>
+              <p className="text-sm text-muted-foreground">Archived Users</p>
+            </div>
+          </CardContent>
+        </Card>
+
+        <Card className="border-blue-200">
+          <CardContent className="flex items-center gap-4 p-5">
+            <div className="flex h-11 w-11 items-center justify-center rounded-full bg-blue-500/10">
+              <Shield className="h-5 w-5 text-blue-500" />
+            </div>
+            <div>
+              <p className="text-2xl font-bold text-blue-600">{summary?.adminUsers ?? "—"}</p>
+              <p className="text-sm text-muted-foreground">Administrators</p>
+            </div>
+          </CardContent>
+        </Card>
+
+        <Card className="border-gray-300">
+          <CardContent className="flex items-center gap-4 p-5">
+            <div className="flex h-11 w-11 items-center justify-center rounded-full bg-gray-500/10">
+              <UserCog className="h-5 w-5 text-gray-500" />
+            </div>
+            <div>
+              <p className="text-2xl font-bold">{summary?.staffUsers ?? "—"}</p>
+              <p className="text-sm text-muted-foreground">Staff Members</p>
+            </div>
           </CardContent>
         </Card>
       </div>

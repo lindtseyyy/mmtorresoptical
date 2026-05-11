@@ -1,5 +1,5 @@
-import { QueryClient, queryOptions } from '@tanstack/react-query'; 
-import { fetchUsers, fetchUser, archiveUser, registerUser, updateUser } from '../api/userApi';
+import { QueryClient, queryOptions } from '@tanstack/react-query';
+import { fetchUsers, fetchUser, archiveUser, registerUser, updateUser, fetchUserSummary } from '../api/userApi';
 import { toast } from "sonner";  
 import type { NavigateFunction } from 'react-router-dom';   
 import type { UserFormData } from '@/types';  
@@ -72,4 +72,12 @@ function createArchiveUserMutationOptions(queryClient: QueryClient) {
   }
 }
 
-export { createUsersListQueryOptions, createEditUserQueryOptions, createArchiveUserMutationOptions, createAddUserMutationOptions, createEditUserMutationOptions };
+function createUserSummaryQueryOptions() {
+  return queryOptions({
+    queryKey: ["user-summary"],
+    queryFn: fetchUserSummary,
+    staleTime: 30_000,
+  });
+}
+
+export { createUsersListQueryOptions, createEditUserQueryOptions, createArchiveUserMutationOptions, createAddUserMutationOptions, createEditUserMutationOptions, createUserSummaryQueryOptions };

@@ -1,4 +1,4 @@
-import type {User, UserFormData, PageResponse} from "@/types";
+import type {User, UserFormData, PageResponse, UserSummary} from "@/types";
 import api from "@/lib/axiosInstance";
 
 // Backend enums use uppercase; frontend uses title case
@@ -87,4 +87,9 @@ const resetPassword = async (id: string) => {
   return await api.put(`/auth/admin/reset-password/${id}`);
 };
 
-export { fetchUsers, fetchUser, archiveUser, registerUser, updateUser, resetPassword }; 
+const fetchUserSummary = async (): Promise<UserSummary> => {
+  const { data } = await api.get("/admin/users/summary");
+  return data;
+};
+
+export { fetchUsers, fetchUser, archiveUser, registerUser, updateUser, resetPassword, fetchUserSummary };
