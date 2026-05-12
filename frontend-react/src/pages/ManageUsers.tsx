@@ -273,8 +273,8 @@ const ManageUsers: React.FC = () => {
                       <th className="w-[22%] py-3 pr-4 font-medium">Full Name</th>
                       <th className="w-[14%] py-3 pr-4 font-medium">Username</th>
                       <th className="w-[24%] py-3 pr-4 font-medium">Email</th>
-                      <th className="w-[10%] py-3 pr-4 font-medium">Role</th>
-                      <th className="w-[14%] py-3 pr-4 font-medium">Contact Number</th>
+                      <th className="w-[8%] py-3 pr-4 text-center font-medium">Role</th>
+                      <th className="w-[16%] py-3 pr-4 font-medium">Contact Number</th>
                       <th className="w-[8%] py-3 pr-4 font-medium">Gender</th>
                       <th className="w-[8%] py-3 pl-4 font-medium"></th>
                     </tr>
@@ -296,7 +296,7 @@ const ManageUsers: React.FC = () => {
                         <td className="py-3 pr-4 text-muted-foreground">
                           <span className="block truncate">{user.email}</span>
                         </td>
-                        <td className="py-3 pr-4">
+                        <td className="py-3 pr-4 text-center">
                           <Badge
                             className={
                               user.role === "Admin"
