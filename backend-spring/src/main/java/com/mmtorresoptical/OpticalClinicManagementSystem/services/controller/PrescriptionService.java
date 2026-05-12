@@ -139,7 +139,10 @@ public class PrescriptionService {
         }
 
         // Create pageable configuration with sorting
-        Pageable pageable = PageRequest.of(page, size, Sort.by(direction, sortBy));
+        // Always sort active before archived, then by the requested field
+        Sort sort = Sort.by(Sort.Direction.ASC, "isArchived")
+                .and(Sort.by(direction, sortBy));
+        Pageable pageable = PageRequest.of(page, size, sort);
 
         // Fetches prescriptions associated with the given patient ID
         Page<Prescription> prescriptions = prescriptionRepository.findAll(spec, pageable);
