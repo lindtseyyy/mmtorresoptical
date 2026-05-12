@@ -17,15 +17,19 @@ import com.mmtorresoptical.OpticalClinicManagementSystem.repository.UserReposito
 import com.mmtorresoptical.OpticalClinicManagementSystem.services.AuthenticatedUserService;
 import com.mmtorresoptical.OpticalClinicManagementSystem.services.auditlog.resources.UserAuditHelper;
 import com.mmtorresoptical.OpticalClinicManagementSystem.utils.NameUtils;
+import jakarta.persistence.criteria.Predicate;
 import lombok.RequiredArgsConstructor;
 import org.springframework.beans.BeanUtils;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
+import org.springframework.data.jpa.domain.Specification;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 
+import java.util.ArrayList;
+import java.util.List;
 import java.util.Objects;
 import java.util.Optional;
 import java.util.UUID;
@@ -80,38 +84,55 @@ public class UserService {
                                             String sortBy,
                                             String sortOrder,
                                             String archivedStatus,
-                                            String keyword) {
+                                            String keyword,
+                                            String role,
+                                            String gender) {
 
-        // Determine sorting direction from request parameter
         Sort.Direction direction;
-
         try {
             direction = Sort.Direction.fromString(sortOrder);
         } catch (IllegalArgumentException ex) {
-            // Default to descending if invalid input
             direction = Sort.Direction.DESC;
         }
 
-        // Create pageable configuration with sorting
         Pageable pageable = PageRequest.of(page, size, Sort.by(direction, sortBy));
 
-        boolean hasKeyword = keyword != null && !keyword.isBlank();
+        Specification<User> spec = (root, query, cb) -> {
+            List<Predicate> predicates = new ArrayList<>();
 
-        Page<User> users;
-        if (hasKeyword) {
-            users = switch (archivedStatus.toUpperCase()) {
-                case "ARCHIVED" -> userRepository.findAllByIsArchivedTrueWithKeyword(keyword, pageable);
-                case "ALL" -> userRepository.findAllWithKeyword(keyword, pageable);
-                default -> userRepository.findAllByIsArchivedFalseWithKeyword(keyword, pageable);
-            };
-        } else {
-            users = switch (archivedStatus.toUpperCase()) {
-                case "ARCHIVED" -> userRepository.findAllByIsArchivedTrue(pageable);
-                case "ALL" -> userRepository.findAll(pageable);
-                default -> userRepository.findAllByIsArchivedFalse(pageable);
-            };
-        }
+            // Archived status filter
+            switch (archivedStatus.toUpperCase()) {
+                case "ARCHIVED" -> predicates.add(cb.isTrue(root.get("isArchived")));
+                case "ALL" -> { /* no filter */ }
+                default -> predicates.add(cb.isFalse(root.get("isArchived")));
+            }
 
+            // Keyword search across name, username, and email
+            if (keyword != null && !keyword.isBlank()) {
+                String pattern = "%" + keyword.toLowerCase() + "%";
+                predicates.add(cb.or(
+                    cb.like(cb.lower(root.get("firstName")), pattern),
+                    cb.like(cb.lower(root.get("middleName")), pattern),
+                    cb.like(cb.lower(root.get("lastName")), pattern),
+                    cb.like(cb.lower(root.get("username")), pattern),
+                    cb.like(cb.lower(root.get("email")), pattern)
+                ));
+            }
+
+            // Role filter
+            if (role != null && !role.isBlank()) {
+                predicates.add(cb.equal(root.get("role").as(String.class), role.toUpperCase()));
+            }
+
+            // Gender filter
+            if (gender != null && !gender.isBlank()) {
+                predicates.add(cb.equal(root.get("gender").as(String.class), gender.toUpperCase()));
+            }
+
+            return cb.and(predicates.toArray(new Predicate[0]));
+        };
+
+        Page<User> users = userRepository.findAll(spec, pageable);
         return users.map(userMapper::entityToDetailsDTO);
     }
 

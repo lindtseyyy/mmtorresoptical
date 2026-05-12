@@ -50,9 +50,11 @@ public class UserController {
                                                   @RequestParam(defaultValue = "fullNameSortable") String sortBy,
                                                   @RequestParam(defaultValue = "asc") String sortOrder,
                                                   @RequestParam(defaultValue = "ACTIVE") String archivedStatus,
-                                                  @RequestParam(defaultValue = "") String keyword) {
+                                                  @RequestParam(defaultValue = "") String keyword,
+                                                  @RequestParam(defaultValue = "") String role,
+                                                  @RequestParam(defaultValue = "") String gender) {
 
-        Page<UserDetailsDTO> userDetailsDTOPage = userService.getAllUsers(page, size, sortBy, sortOrder, archivedStatus, keyword);
+        Page<UserDetailsDTO> userDetailsDTOPage = userService.getAllUsers(page, size, sortBy, sortOrder, archivedStatus, keyword, role, gender);
 
         return ResponseEntity.ok(userDetailsDTOPage);
     }
