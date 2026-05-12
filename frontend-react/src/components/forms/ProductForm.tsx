@@ -25,7 +25,7 @@ import {
   CardHeader,
   CardTitle,
 } from "@/components/ui/card";
-import { Checkbox } from "@/components/ui/checkbox";
+import { Switch } from "@/components/ui/switch";
 import { productSchema, productFormSchema } from "@/types";
 import type { ProductFormData, ProductFormValues } from "@/types";
 
@@ -290,13 +290,13 @@ export const ProductForm: React.FC<ProductFormProps> = ({
               render={({ field }) => (
                 <FormItem className="flex flex-row items-center space-x-2 space-y-0">
                   <FormControl>
-                    <Checkbox
+                    <Switch
                       checked={field.value}
                       onCheckedChange={field.onChange}
                     />
                   </FormControl>
-                  <FormLabel className="font-semibold">
-                    Archive this product
+                  <FormLabel className="text-sm font-normal">
+                    {field.value ? "Unarchive Product" : "Archive Product"}
                   </FormLabel>
                 </FormItem>
               )}
