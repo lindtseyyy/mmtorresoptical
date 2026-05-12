@@ -1,7 +1,7 @@
 import { useState } from "react";
 import { useParams, Link, useNavigate } from "react-router-dom";
 import { useQuery, useMutation, useQueryClient, keepPreviousData } from "@tanstack/react-query";
-import { ArrowLeft, ShoppingCart, Calendar, FileText, Activity, ClipboardList, Stethoscope, ChevronLeft, ChevronRight, MoreHorizontal, Pencil, Archive, Clock, Eye } from "lucide-react";
+import { ArrowLeft, ShoppingCart, Calendar, FileText, Activity, ClipboardList, Stethoscope, ChevronLeft, ChevronRight, MoreHorizontal, Pencil, Archive, Clock, Eye, Plus } from "lucide-react";
 import { Button } from "@/shared/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/shared/components/ui/card";
 import { Badge } from "@/shared/components/ui/badge";
@@ -301,6 +301,12 @@ const ViewPatient: React.FC = () => {
                 {rxData?.totalElements ?? 0} total prescription(s)
               </CardDescription>
             </div>
+            <Button size="sm" asChild>
+              <Link to={`/patients/add/prescription?patientId=${patientId}&patientName=${encodeURIComponent(fullName)}`}>
+                <Plus className="mr-1 h-4 w-4" />
+                Add Prescription
+              </Link>
+            </Button>
           </div>
         </CardHeader>
         <CardContent>
@@ -406,6 +412,12 @@ const ViewPatient: React.FC = () => {
                 {hhData?.totalElements ?? 0} total record(s)
               </CardDescription>
             </div>
+            <Button size="sm" asChild>
+              <Link to={`/patients/add/health-history?patientId=${patientId}&patientName=${encodeURIComponent(fullName)}`}>
+                <Plus className="mr-1 h-4 w-4" />
+                Add Medical History
+              </Link>
+            </Button>
           </div>
         </CardHeader>
         <CardContent>

@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useLayoutEffect } from "react";
 import { useNavigate, useSearchParams, Link } from "react-router-dom";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { useForm, useFieldArray, type SubmitHandler } from "react-hook-form";
@@ -94,6 +94,16 @@ const AddPrescription: React.FC = () => {
   const [searchParams] = useSearchParams();
   const patientId = searchParams.get("patientId") ?? "";
   const patientName = searchParams.get("patientName") ?? "";
+
+  useLayoutEffect(() => {
+    const scrollToTop = () => {
+      const main = document.querySelector("main");
+      if (main) main.scrollTop = 0;
+      window.scrollTo({ top: 0, behavior: "instant" });
+    };
+    scrollToTop();
+    requestAnimationFrame(scrollToTop);
+  }, []);
 
   const form = useForm<PrescriptionFormValues>({
     resolver: zodResolver(prescriptionFormSchema),
