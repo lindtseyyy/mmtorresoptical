@@ -17,15 +17,16 @@ function getLinkClassName({ isActive }: { isActive: boolean }): string {
 
 function getUserFromToken() {
   const token = localStorage.getItem("authToken");
-  if (!token) return { name: "User", role: "Administrator" };
+  if (!token) return { name: "User", role: "Staff" };
   try {
     const payload = JSON.parse(atob(token.split(".")[1]));
+    const roleMap: Record<string, string> = { ADMIN: "Admin", STAFF: "Staff" };
     return {
       name: payload.sub ?? "User",
-      role: payload.role ?? "Administrator",
+      role: roleMap[payload.role] ?? "Staff",
     };
   } catch {
-    return { name: "User", role: "Administrator" };
+    return { name: "User", role: "Staff" };
   }
 }
 
