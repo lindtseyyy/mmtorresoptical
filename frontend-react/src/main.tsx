@@ -26,6 +26,11 @@ import ManageUsers from "@/features/users/components/ManageUsers";
 import AddUser from "@/features/users/components/AddUser";
 import EditUser from "@/features/users/components/EditUser";
 
+// --- Patients ---
+import ManagePatients from "@/features/patients/components/ManagePatients";
+import AddPatient from "@/features/patients/components/AddPatient";
+import EditPatient from "@/features/patients/components/EditPatient";
+
 // --- Shared ---
 import MainLayout from "@/shared/components/layout/MainLayout";
 import AdminGuard from "@/shared/components/layout/AdminGuard";
@@ -55,6 +60,15 @@ const router = createBrowserRouter([
       { path: "inventory", element: <ManageInventory /> },
       { path: "inventory/add", element: <AddProduct /> },
       { path: "inventory/edit/:id", element: <EditProduct /> },
+      {
+        path: "patients",
+        element: <AdminGuard><Outlet /></AdminGuard>,
+        children: [
+          { index: true, element: <ManagePatients /> },
+          { path: "add", element: <AddPatient /> },
+          { path: "edit/:id", element: <EditPatient /> },
+        ],
+      },
       {
         path: "users",
         element: <AdminGuard><Outlet /></AdminGuard>,
