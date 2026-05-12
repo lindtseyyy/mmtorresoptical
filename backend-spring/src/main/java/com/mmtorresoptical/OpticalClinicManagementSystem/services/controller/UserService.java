@@ -79,7 +79,8 @@ public class UserService {
                                             int size,
                                             String sortBy,
                                             String sortOrder,
-                                            String archivedStatus) {
+                                            String archivedStatus,
+                                            String keyword) {
 
         // Determine sorting direction from request parameter
         Sort.Direction direction;
@@ -94,13 +95,22 @@ public class UserService {
         // Create pageable configuration with sorting
         Pageable pageable = PageRequest.of(page, size, Sort.by(direction, sortBy));
 
-        // Retrieve non-archived patients
-        Page<User> users = switch (archivedStatus.toUpperCase()) {
-            case "ARCHIVED" -> userRepository.findAllByIsArchivedTrue(pageable);
-            case "ALL" -> userRepository.findAll(pageable);
-            default -> // ACTIVE
-                    userRepository.findAllByIsArchivedFalse(pageable);
-        };
+        boolean hasKeyword = keyword != null && !keyword.isBlank();
+
+        Page<User> users;
+        if (hasKeyword) {
+            users = switch (archivedStatus.toUpperCase()) {
+                case "ARCHIVED" -> userRepository.findAllByIsArchivedTrueWithKeyword(keyword, pageable);
+                case "ALL" -> userRepository.findAllWithKeyword(keyword, pageable);
+                default -> userRepository.findAllByIsArchivedFalseWithKeyword(keyword, pageable);
+            };
+        } else {
+            users = switch (archivedStatus.toUpperCase()) {
+                case "ARCHIVED" -> userRepository.findAllByIsArchivedTrue(pageable);
+                case "ALL" -> userRepository.findAll(pageable);
+                default -> userRepository.findAllByIsArchivedFalse(pageable);
+            };
+        }
 
         return users.map(userMapper::entityToDetailsDTO);
     }

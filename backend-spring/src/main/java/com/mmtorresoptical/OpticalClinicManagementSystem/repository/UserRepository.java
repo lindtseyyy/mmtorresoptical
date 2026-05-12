@@ -6,6 +6,8 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
 
+import org.springframework.data.repository.query.Param;
+
 import java.util.Optional;
 import java.util.UUID;
 
@@ -35,4 +37,28 @@ public interface UserRepository extends JpaRepository<User, UUID> {
 
     @Query("SELECT COUNT(u) FROM User u WHERE u.isArchived = false AND u.role = 'STAFF'")
     long countActiveStaff();
+
+    @Query("SELECT u FROM User u WHERE u.isArchived = false AND " +
+           "(LOWER(u.firstName) LIKE LOWER(CONCAT('%', :keyword, '%')) OR " +
+           "LOWER(u.middleName) LIKE LOWER(CONCAT('%', :keyword, '%')) OR " +
+           "LOWER(u.lastName) LIKE LOWER(CONCAT('%', :keyword, '%')) OR " +
+           "LOWER(u.username) LIKE LOWER(CONCAT('%', :keyword, '%')) OR " +
+           "LOWER(u.email) LIKE LOWER(CONCAT('%', :keyword, '%')))")
+    Page<User> findAllByIsArchivedFalseWithKeyword(@Param("keyword") String keyword, Pageable pageable);
+
+    @Query("SELECT u FROM User u WHERE u.isArchived = true AND " +
+           "(LOWER(u.firstName) LIKE LOWER(CONCAT('%', :keyword, '%')) OR " +
+           "LOWER(u.middleName) LIKE LOWER(CONCAT('%', :keyword, '%')) OR " +
+           "LOWER(u.lastName) LIKE LOWER(CONCAT('%', :keyword, '%')) OR " +
+           "LOWER(u.username) LIKE LOWER(CONCAT('%', :keyword, '%')) OR " +
+           "LOWER(u.email) LIKE LOWER(CONCAT('%', :keyword, '%')))")
+    Page<User> findAllByIsArchivedTrueWithKeyword(@Param("keyword") String keyword, Pageable pageable);
+
+    @Query("SELECT u FROM User u WHERE " +
+           "(LOWER(u.firstName) LIKE LOWER(CONCAT('%', :keyword, '%')) OR " +
+           "LOWER(u.middleName) LIKE LOWER(CONCAT('%', :keyword, '%')) OR " +
+           "LOWER(u.lastName) LIKE LOWER(CONCAT('%', :keyword, '%')) OR " +
+           "LOWER(u.username) LIKE LOWER(CONCAT('%', :keyword, '%')) OR " +
+           "LOWER(u.email) LIKE LOWER(CONCAT('%', :keyword, '%')))")
+    Page<User> findAllWithKeyword(@Param("keyword") String keyword, Pageable pageable);
 }
