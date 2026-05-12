@@ -1,5 +1,6 @@
 package com.mmtorresoptical.OpticalClinicManagementSystem.controller;
 
+import com.mmtorresoptical.OpticalClinicManagementSystem.dto.auth.AdminResetPasswordRequestDTO;
 import com.mmtorresoptical.OpticalClinicManagementSystem.dto.auth.ChangePasswordRequestDTO;
 import com.mmtorresoptical.OpticalClinicManagementSystem.dto.auth.EnforcePasswordChangeRequestDTO;
 import com.mmtorresoptical.OpticalClinicManagementSystem.dto.auth.ForgotPasswordQuestionRequestDTO;
@@ -99,10 +100,13 @@ public class AuthController {
     }
 
     @PutMapping("/admin/reset-password/{id}")
-    public ResponseEntity<MessageResponseDTO> adminResetPassword(@PathVariable UUID id) {
+    public ResponseEntity<MessageResponseDTO> adminResetPassword(
+            @PathVariable UUID id,
+            @Valid @RequestBody AdminResetPasswordRequestDTO request) {
         User user = userRepository.findById(id)
                 .orElseThrow(() -> new BadRequestException("User not found"));
 
+        user.setPasswordHash(passwordEncoder.encode(request.getTemporaryPassword()));
         user.setPwChangeRequired(true);
         userRepository.save(user);
 

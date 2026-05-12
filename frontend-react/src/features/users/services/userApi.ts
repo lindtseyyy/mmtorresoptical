@@ -101,9 +101,9 @@ const updateUser = async ({
   return await api.put(`/admin/users/${id}`, cleanData);
 };
 
-// API call to reset a user's password (flag for forced change)
-const resetPassword = async (id: string) => {
-  return await api.put(`/auth/admin/reset-password/${id}`);
+// API call to reset a user's password (set temporary password and force change)
+const resetPassword = async (id: string, temporaryPassword: string) => {
+  return await api.put(`/auth/admin/reset-password/${id}`, { temporaryPassword });
 };
 
 const fetchUserSummary = async (): Promise<UserSummary> => {

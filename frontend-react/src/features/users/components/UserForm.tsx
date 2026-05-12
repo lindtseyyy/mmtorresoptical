@@ -34,6 +34,16 @@ import { z } from "zod";
 import { resetPassword } from "@/features/users/services/userApi";
 import { toast } from "sonner";
 import { useQueryClient } from "@tanstack/react-query";
+import {
+  AlertDialog,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from "@/shared/components/ui/alert-dialog";
+import { Label } from "@/shared/components/ui/label";
 
 interface UserFormProps {
   defaultValues?: Partial<UserFormData>; // Partial for edit
@@ -57,8 +67,10 @@ export const UserForm: React.FC<UserFormProps> = ({
   const [showPassword, setShowPassword] = useState(false);
   const [resettingPw, setResettingPw] = useState(false);
   const [pwRequired, setPwRequired] = useState(isPwChangeRequired);
+  const [resetDialogOpen, setResetDialogOpen] = useState(false);
+  const [temporaryPassword, setTemporaryPassword] = useState("");
 
-  const handleResetPassword = async () => {
+  const handleResetPassword = () => {
     if (!userId) return;
     if (pwRequired) {
       toast.info("Already required", {
@@ -66,10 +78,17 @@ export const UserForm: React.FC<UserFormProps> = ({
       });
       return;
     }
+    setTemporaryPassword("");
+    setResetDialogOpen(true);
+  };
+
+  const handleConfirmReset = async () => {
+    if (!userId || temporaryPassword.length < 8) return;
     setResettingPw(true);
     try {
-      await resetPassword(userId);
+      await resetPassword(userId, temporaryPassword);
       setPwRequired(true);
+      setResetDialogOpen(false);
       queryClient.invalidateQueries({ queryKey: ["user", userId] });
       toast.success("Password reset", {
         description: "User will be required to change their password on next login.",
@@ -128,7 +147,8 @@ export const UserForm: React.FC<UserFormProps> = ({
   };
 
   return (
-    <Form {...form}>
+    <>
+      <Form {...form}>
       <form
         onSubmit={form.handleSubmit(handleFormSubmit)}
         className="space-y-6"
@@ -472,5 +492,37 @@ export const UserForm: React.FC<UserFormProps> = ({
         </div>
       </form>
     </Form>
+
+      <AlertDialog open={resetDialogOpen} onOpenChange={setResetDialogOpen}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Reset Password</AlertDialogTitle>
+            <AlertDialogDescription>
+              Enter a temporary password for the user. They will be required to
+              change it upon next login.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <div className="space-y-2">
+            <Label htmlFor="temporaryPassword">Temporary Password</Label>
+            <Input
+              id="temporaryPassword"
+              type="text"
+              placeholder="Enter temporary password (min. 8 characters)"
+              value={temporaryPassword}
+              onChange={(e) => setTemporaryPassword(e.target.value)}
+            />
+          </div>
+          <AlertDialogFooter>
+            <AlertDialogCancel disabled={resettingPw}>Cancel</AlertDialogCancel>
+            <Button
+              onClick={handleConfirmReset}
+              disabled={resettingPw || temporaryPassword.length < 8}
+            >
+              {resettingPw ? "Resetting..." : "Reset Password"}
+            </Button>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
+    </>
   );
 };
