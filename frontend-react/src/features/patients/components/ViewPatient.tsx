@@ -68,7 +68,7 @@ const ViewPatient: React.FC = () => {
   });
 
   const [rxPage, setRxPage] = useState(0);
-  const [rxFilter, setRxFilter] = useState("ALL");
+  const [rxFilter, setRxFilter] = useState("ACTIVE");
   const { data: rxData } = useQuery({
     queryKey: ["patient-prescriptions", patientId, rxPage, rxFilter],
     queryFn: () => fetchPatientPrescriptions(patientId, rxPage, 5, rxFilter),
@@ -77,9 +77,10 @@ const ViewPatient: React.FC = () => {
   });
 
   const [hhPage, setHhPage] = useState(0);
+  const [hhFilter, setHhFilter] = useState("ACTIVE");
   const { data: hhData } = useQuery({
-    queryKey: ["patient-health-histories", patientId, hhPage],
-    queryFn: () => fetchPatientHealthHistories(patientId, hhPage, 5),
+    queryKey: ["patient-health-histories", patientId, hhPage, hhFilter],
+    queryFn: () => fetchPatientHealthHistories(patientId, hhPage, 5, hhFilter),
     placeholderData: keepPreviousData,
     enabled: !!patientId,
   });
@@ -437,12 +438,27 @@ const ViewPatient: React.FC = () => {
                 {hhData?.totalElements ?? 0} total record(s)
               </CardDescription>
             </div>
-            <Button size="sm" asChild>
-              <Link to={`/patients/add/health-history?patientId=${patientId}&patientName=${encodeURIComponent(fullName)}`}>
-                <Plus className="mr-1 h-4 w-4" />
-                Add Medical History
-              </Link>
-            </Button>
+            <div className="flex items-center gap-3">
+              <div className="flex items-center gap-2">
+                <span className="text-sm text-muted-foreground">Status:</span>
+                <Select value={hhFilter} onValueChange={(v) => { setHhFilter(v); setHhPage(0); }}>
+                  <SelectTrigger className="w-[130px]">
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="ALL">All</SelectItem>
+                    <SelectItem value="ACTIVE">Active</SelectItem>
+                    <SelectItem value="ARCHIVED">Archived</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+              <Button size="sm" asChild>
+                <Link to={`/patients/add/health-history?patientId=${patientId}&patientName=${encodeURIComponent(fullName)}`}>
+                  <Plus className="mr-1 h-4 w-4" />
+                  Add Medical History
+                </Link>
+              </Button>
+            </div>
           </div>
         </CardHeader>
         <CardContent>

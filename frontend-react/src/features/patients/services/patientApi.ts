@@ -146,9 +146,10 @@ const fetchPatientHealthHistories = async (
   patientId: string,
   page = 0,
   size = 5,
+  archivedStatus = "ALL",
 ): Promise<{ content: HealthHistoryItem[]; totalPages: number; totalElements: number }> => {
   const { data } = await api.get(`/admin/patients/${patientId}/health-histories`, {
-    params: { page, size, sortBy: "examDate", sortOrder: "desc", archivedStatus: "ALL" },
+    params: { page, size, sortBy: "examDate", sortOrder: "desc", archivedStatus },
   });
   return {
     content: data.content,

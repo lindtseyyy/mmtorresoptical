@@ -75,11 +75,11 @@ const AddHealthHistory: React.FC = () => {
       return createHealthHistory(patientId, payload);
     },
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["patients"] });
+      queryClient.invalidateQueries({ queryKey: ["patient-health-histories", patientId] });
       toast.success("Health History Added", {
         description: "The health history has been successfully recorded.",
       });
-      navigate("/patients");
+      navigate(`/patients/view/${patientId}`);
     },
     onError: (error: any) => {
       toast.error("Error", {
@@ -277,7 +277,7 @@ const AddHealthHistory: React.FC = () => {
             <Button
               type="button"
               variant="outline"
-              onClick={() => navigate("/patients")}
+              onClick={() => navigate(`/patients/view/${patientId}`)}
             >
               Cancel
             </Button>

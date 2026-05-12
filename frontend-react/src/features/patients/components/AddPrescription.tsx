@@ -658,7 +658,7 @@ const AddPrescription: React.FC = () => {
             <Button
               type="button"
               variant="outline"
-              onClick={() => navigate("/patients")}
+              onClick={() => navigate(`/patients/view/${patientId}`)}
             >
               Cancel
             </Button>
