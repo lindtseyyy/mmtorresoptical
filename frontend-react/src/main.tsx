@@ -36,6 +36,9 @@ import AddHealthHistory from "@/features/patients/components/AddHealthHistory";
 import EditHealthHistory from "@/features/patients/components/EditHealthHistory";
 import ViewPatient from "@/features/patients/components/ViewPatient";
 
+// --- Profile ---
+import EditProfile from "@/features/profile/components/EditProfile";
+
 // --- Shared ---
 import MainLayout from "@/shared/components/layout/MainLayout";
 import AdminGuard from "@/shared/components/layout/AdminGuard";
@@ -62,6 +65,7 @@ const router = createBrowserRouter([
     element: <MainLayout />,
     children: [
       { index: true, element: <Navigate to="/inventory" replace /> },
+      { path: "profile", element: <EditProfile /> },
       { path: "inventory", element: <ManageInventory /> },
       { path: "inventory/add", element: <AddProduct /> },
       { path: "inventory/edit/:id", element: <EditProduct /> },

@@ -1,5 +1,5 @@
 import { NavLink, useLocation, useNavigate } from "react-router-dom";
-import { Users, Eye, LogOut, UserRound } from "lucide-react";
+import { Users, Eye, LogOut, UserRound, UserRoundCog } from "lucide-react";
 import { Button, buttonVariants } from "@/shared/components/ui/button";
 import { toast } from "sonner";
 import { isAdmin, type Role } from "@/shared/lib/auth";
@@ -87,14 +87,23 @@ const Sidenav: React.FC = () => {
           <div className="font-semibold text-foreground">{user.name}</div>
           <div className="text-xs text-muted-foreground">{user.role}</div>
         </div>
-        <Button
-          variant="ghost"
-          onClick={handleLogout}
-          className="w-full justify-start gap-2"
-        >
-          <LogOut className="h-4 w-4" />
-          <span>Logout</span>
-        </Button>
+        <div className="space-y-1">
+          <NavLink
+            to="/profile"
+            className={getLinkClassName({ isActive: location.pathname === "/profile" })}
+          >
+            <UserRoundCog className="h-4 w-4" />
+            <span>My Profile</span>
+          </NavLink>
+          <Button
+            variant="ghost"
+            onClick={handleLogout}
+            className="w-full justify-start gap-2"
+          >
+            <LogOut className="h-4 w-4" />
+            <span>Logout</span>
+          </Button>
+        </div>
       </div>
     </div>
   );
