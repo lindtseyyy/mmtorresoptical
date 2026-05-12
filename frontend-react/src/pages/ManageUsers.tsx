@@ -54,6 +54,8 @@ const ManageUsers: React.FC = () => {
   const [debouncedSearchQuery, setDebouncedSearchQuery] = useState(searchQuery);
   const [sortBy, setSortBy] = useState("fullNameSortable");
   const [sortOrder, setSortOrder] = useState<"asc" | "desc">("asc");
+  const [roleFilter, setRoleFilter] = useState("all");
+  const [genderFilter, setGenderFilter] = useState("all");
   const [page, setPage] = useState(0);
 
   useEffect(() => {
@@ -65,7 +67,7 @@ const ManageUsers: React.FC = () => {
   const currentUserId = getCurrentUserId();
 
   const { data: pageData, isLoading, isFetching } = useQuery({
-    ...createUsersListQueryOptions(page, PAGE_SIZE, debouncedSearchQuery, sortBy, sortOrder),
+    ...createUsersListQueryOptions(page, PAGE_SIZE, debouncedSearchQuery, sortBy, sortOrder, roleFilter, genderFilter),
     placeholderData: keepPreviousData,
   });
 
@@ -93,7 +95,7 @@ const ManageUsers: React.FC = () => {
   // Reset page when search or sort changes
   useEffect(() => {
     setPage(0);
-  }, [debouncedSearchQuery, sortBy, sortOrder]);
+  }, [debouncedSearchQuery, sortBy, sortOrder, roleFilter, genderFilter]);
 
   // If current page is empty and not the first page, step back
   useEffect(() => {
@@ -185,38 +187,72 @@ const ManageUsers: React.FC = () => {
 
       <Card>
         <CardContent className="p-6">
-          <div className="mb-6 flex flex-col gap-4 md:flex-row">
-            <div className="relative flex-1">
-              <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
-              <Input
-                placeholder="Search by name, username, or email..."
-                value={searchQuery}
-                onChange={(e) => setSearchQuery(e.target.value)}
-                className="pl-10"
-              />
+          <div className="mb-6 space-y-4">
+            <div className="flex flex-col gap-4 md:flex-row">
+              <div className="relative flex-1">
+                <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
+                <Input
+                  placeholder="Search by name, username, or email..."
+                  value={searchQuery}
+                  onChange={(e) => setSearchQuery(e.target.value)}
+                  className="pl-10"
+                />
+              </div>
+              <div className="flex items-center gap-2">
+                <span className="text-sm text-muted-foreground whitespace-nowrap">Sort By:</span>
+                <Select value={sortBy} onValueChange={setSortBy}>
+                  <SelectTrigger className="w-[140px]">
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="fullNameSortable">Name</SelectItem>
+                    <SelectItem value="createdAt">Created At</SelectItem>
+                  </SelectContent>
+                </Select>
+                <Button
+                  variant="outline"
+                  size="icon"
+                  className="h-10 w-10 shrink-0"
+                  onClick={() => setSortOrder((o) => (o === "asc" ? "desc" : "asc"))}
+                  title={sortOrder === "asc" ? "Ascending" : "Descending"}
+                >
+                  {sortOrder === "asc" ? (
+                    <ArrowUp className="h-4 w-4" />
+                  ) : (
+                    <ArrowDown className="h-4 w-4" />
+                  )}
+                </Button>
+              </div>
             </div>
-            <Select value={sortBy} onValueChange={setSortBy}>
-              <SelectTrigger className="w-full md:w-[160px]">
-                <SelectValue />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="fullNameSortable">Name</SelectItem>
-                <SelectItem value="createdAt">Creation Date</SelectItem>
-              </SelectContent>
-            </Select>
-            <Button
-              variant="outline"
-              size="icon"
-              className="h-10 w-10 shrink-0 self-end md:self-auto"
-              onClick={() => setSortOrder((o) => (o === "asc" ? "desc" : "asc"))}
-              title={sortOrder === "asc" ? "Ascending" : "Descending"}
-            >
-              {sortOrder === "asc" ? (
-                <ArrowUp className="h-4 w-4" />
-              ) : (
-                <ArrowDown className="h-4 w-4" />
-              )}
-            </Button>
+            <div className="flex flex-wrap items-center justify-end gap-4">
+              <div className="flex items-center gap-2">
+                <span className="text-sm text-muted-foreground whitespace-nowrap">Role:</span>
+                <Select value={roleFilter} onValueChange={setRoleFilter}>
+                  <SelectTrigger className="w-[130px]">
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="all">All Roles</SelectItem>
+                    <SelectItem value="ADMIN">Admin</SelectItem>
+                    <SelectItem value="STAFF">Staff</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+              <div className="flex items-center gap-2">
+                <span className="text-sm text-muted-foreground whitespace-nowrap">Gender:</span>
+                <Select value={genderFilter} onValueChange={setGenderFilter}>
+                  <SelectTrigger className="w-[130px]">
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="all">All Genders</SelectItem>
+                    <SelectItem value="MALE">Male</SelectItem>
+                    <SelectItem value="FEMALE">Female</SelectItem>
+                    <SelectItem value="OTHERS">Other</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+            </div>
           </div>
 
           {isLoading ? (

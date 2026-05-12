@@ -46,6 +46,8 @@ const fetchUsers = async (
   keyword?: string,
   sortBy = "fullNameSortable",
   sortOrder = "asc",
+  role?: string,
+  gender?: string,
 ): Promise<PageResponse<User>> => {
   const { data } = await api.get("/admin/users", {
     params: {
@@ -54,6 +56,8 @@ const fetchUsers = async (
       sortBy,
       sortOrder,
       ...(keyword && { keyword }),
+      ...(role && role !== "all" && { role }),
+      ...(gender && gender !== "all" && { gender }),
     },
   });
   return {
