@@ -20,7 +20,7 @@ function getUserFromToken() {
   if (!token) return { name: "User", role: "Staff" };
   try {
     const payload = JSON.parse(atob(token.split(".")[1]));
-    const roleMap: Record<string, string> = { ADMIN: "Admin", STAFF: "Staff" };
+    const roleMap: Record<string, string> = { ADMIN: "Administrator", STAFF: "Staff" };
     return {
       name: payload.sub ?? "User",
       role: roleMap[payload.role] ?? "Staff",
