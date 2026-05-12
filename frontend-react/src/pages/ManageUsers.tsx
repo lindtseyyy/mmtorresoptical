@@ -3,13 +3,20 @@ import { useQuery, useMutation, useQueryClient, keepPreviousData } from "@tansta
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
-import { Plus, Search, Archive, Pencil, ChevronLeft, ChevronRight, MoreHorizontal, Eye, Users, UserCheck, ArchiveIcon, Shield, UserCog } from "lucide-react";
+import { Plus, Search, Archive, Pencil, ChevronLeft, ChevronRight, MoreHorizontal, Eye, Users, UserCheck, ArchiveIcon, Shield, UserCog, ArrowUp, ArrowDown } from "lucide-react";
 import {
   DropdownMenu,
   DropdownMenuContent,
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 import { useNavigate } from "react-router-dom";
 import { Card, CardContent } from "@/components/ui/card";
 import {
@@ -45,6 +52,8 @@ const PAGE_SIZE = 10;
 const ManageUsers: React.FC = () => {
   const [searchQuery, setSearchQuery] = useState("");
   const [debouncedSearchQuery, setDebouncedSearchQuery] = useState(searchQuery);
+  const [sortBy, setSortBy] = useState("fullNameSortable");
+  const [sortOrder, setSortOrder] = useState<"asc" | "desc">("asc");
   const [page, setPage] = useState(0);
 
   useEffect(() => {
@@ -56,7 +65,7 @@ const ManageUsers: React.FC = () => {
   const currentUserId = getCurrentUserId();
 
   const { data: pageData, isLoading, isFetching } = useQuery({
-    ...createUsersListQueryOptions(page, PAGE_SIZE, debouncedSearchQuery),
+    ...createUsersListQueryOptions(page, PAGE_SIZE, debouncedSearchQuery, sortBy, sortOrder),
     placeholderData: keepPreviousData,
   });
 
@@ -81,10 +90,10 @@ const ManageUsers: React.FC = () => {
     }
   };
 
-  // Reset page when search changes
+  // Reset page when search or sort changes
   useEffect(() => {
     setPage(0);
-  }, [debouncedSearchQuery]);
+  }, [debouncedSearchQuery, sortBy, sortOrder]);
 
   // If current page is empty and not the first page, step back
   useEffect(() => {
@@ -93,12 +102,7 @@ const ManageUsers: React.FC = () => {
     }
   }, [users.length, page, isFetching]);
 
-  // Sort current user first (search + archived filtering now done server-side)
-  const sortedUsers = [...users].sort((a, b) => {
-    if (a.userId === currentUserId) return -1;
-    if (b.userId === currentUserId) return 1;
-    return 0;
-  });
+  const sortedUsers = users;
 
   const { data: summary } = useQuery(createUserSummaryQueryOptions());
 
@@ -181,8 +185,8 @@ const ManageUsers: React.FC = () => {
 
       <Card>
         <CardContent className="p-6">
-          <div className="mb-6">
-            <div className="relative">
+          <div className="mb-6 flex flex-col gap-4 md:flex-row">
+            <div className="relative flex-1">
               <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
               <Input
                 placeholder="Search by name, username, or email..."
@@ -191,6 +195,28 @@ const ManageUsers: React.FC = () => {
                 className="pl-10"
               />
             </div>
+            <Select value={sortBy} onValueChange={setSortBy}>
+              <SelectTrigger className="w-full md:w-[160px]">
+                <SelectValue />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="fullNameSortable">Name</SelectItem>
+                <SelectItem value="createdAt">Creation Date</SelectItem>
+              </SelectContent>
+            </Select>
+            <Button
+              variant="outline"
+              size="icon"
+              className="h-10 w-10 shrink-0 self-end md:self-auto"
+              onClick={() => setSortOrder((o) => (o === "asc" ? "desc" : "asc"))}
+              title={sortOrder === "asc" ? "Ascending" : "Descending"}
+            >
+              {sortOrder === "asc" ? (
+                <ArrowUp className="h-4 w-4" />
+              ) : (
+                <ArrowDown className="h-4 w-4" />
+              )}
+            </Button>
           </div>
 
           {isLoading ? (

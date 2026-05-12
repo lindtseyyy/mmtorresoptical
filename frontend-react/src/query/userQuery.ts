@@ -4,10 +4,10 @@ import { toast } from "sonner";
 import type { NavigateFunction } from 'react-router-dom';   
 import type { UserFormData } from '@/types';  
 
-function createUsersListQueryOptions(page: number, size: number, keyword?: string) {
+function createUsersListQueryOptions(page: number, size: number, keyword?: string, sortBy?: string, sortOrder?: string) {
   return queryOptions({
-    queryKey: ["users", page, size, keyword ?? ""],
-    queryFn: () => fetchUsers(page, size, keyword),
+    queryKey: ["users", page, size, keyword ?? "", sortBy ?? "fullNameSortable", sortOrder ?? "asc"],
+    queryFn: () => fetchUsers(page, size, keyword, sortBy, sortOrder),
   });
 }
 
