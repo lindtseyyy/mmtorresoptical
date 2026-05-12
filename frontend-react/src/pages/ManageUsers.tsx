@@ -3,7 +3,7 @@ import { useQuery, useMutation, useQueryClient, keepPreviousData } from "@tansta
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
-import { Plus, Search, Archive, Pencil, ChevronLeft, ChevronRight, MoreHorizontal, Eye, Users, UserCheck, ArchiveIcon, Shield, UserCog, ArrowUp, ArrowDown } from "lucide-react";
+import { Plus, Search, Archive, Pencil, ChevronLeft, ChevronRight, MoreHorizontal, Users, UserCheck, ArchiveIcon, Shield, UserCog, ArrowUp, ArrowDown } from "lucide-react";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -321,15 +321,7 @@ const ManageUsers: React.FC = () => {
                                   <MoreHorizontal className="h-4 w-4" />
                                 </Button>
                               </DropdownMenuTrigger>
-                              <DropdownMenuContent align="end">
-                                <DropdownMenuItem
-                                  onClick={() =>
-                                    navigate(`/users/edit/${user.userId}`)
-                                  }
-                                >
-                                  <Eye className="mr-2 h-4 w-4" />
-                                  View
-                                </DropdownMenuItem>
+                              <DropdownMenuContent align="end" className="bg-gray-100 dark:bg-gray-800 border-gray-300 dark:border-gray-700">
                                 <DropdownMenuItem
                                   onClick={() =>
                                     navigate(`/users/edit/${user.userId}`)
