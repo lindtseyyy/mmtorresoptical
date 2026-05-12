@@ -64,6 +64,7 @@ function createArchiveUserMutationOptions(queryClient: QueryClient) {
     mutationFn: archiveUser,
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["users"] });
+      queryClient.invalidateQueries({ queryKey: ["user-summary"] });
       toast.success("User Archived");
     },
     onError: () => {
@@ -77,6 +78,7 @@ function createRestoreUserMutationOptions(queryClient: QueryClient) {
     mutationFn: restoreUser,
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["users"] });
+      queryClient.invalidateQueries({ queryKey: ["user-summary"] });
       toast.success("User Restored");
     },
     onError: () => {
