@@ -35,4 +35,7 @@ public interface PatientRepository extends JpaRepository<Patient, UUID>, JpaSpec
 
     @Query("SELECT p FROM Patient p WHERE p.isArchived = false")
     List<Patient> findAllActive();
+
+    @Query("SELECT COUNT(DISTINCT p) FROM Patient p JOIN p.prescriptions pr WHERE p.isArchived = false AND pr.isArchived = false")
+    long countActivePatientsWithPrescriptions();
 }

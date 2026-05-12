@@ -1,5 +1,6 @@
 package com.mmtorresoptical.OpticalClinicManagementSystem.services.controller;
 
+import com.mmtorresoptical.OpticalClinicManagementSystem.dto.metrics.PatientMetricsDTO;
 import com.mmtorresoptical.OpticalClinicManagementSystem.dto.patient.PatientDetailsDTO;
 import com.mmtorresoptical.OpticalClinicManagementSystem.dto.patient.PatientRequestDTO;
 import com.mmtorresoptical.OpticalClinicManagementSystem.dto.patient.PatientResponseDTO;
@@ -20,6 +21,8 @@ import org.springframework.data.domain.*;
 import org.springframework.data.jpa.domain.Specification;
 import org.springframework.stereotype.Service;
 
+import java.time.LocalDateTime;
+import java.time.YearMonth;
 import java.util.Objects;
 import java.util.Optional;
 import java.util.UUID;
@@ -309,5 +312,17 @@ public class PatientService {
         return patientRepository.existsByEmailHash(
                 emailHash
         );
+    }
+
+    public PatientMetricsDTO getPatientMetrics() {
+        LocalDateTime startOfMonth = YearMonth.now().atDay(1).atStartOfDay();
+        LocalDateTime startOfNextMonth = YearMonth.now().plusMonths(1).atDay(1).atStartOfDay();
+
+        long totalPatients = patientRepository.count();
+        long newThisMonth = patientRepository.countByCreatedAtBetween(startOfMonth, startOfNextMonth);
+        long pendingFollowUps = patientRepository.countActivePatientsWithPrescriptions();
+        long archivedPatients = patientRepository.countByIsArchived(true);
+
+        return new PatientMetricsDTO(totalPatients, newThisMonth, pendingFollowUps, archivedPatients);
     }
 }

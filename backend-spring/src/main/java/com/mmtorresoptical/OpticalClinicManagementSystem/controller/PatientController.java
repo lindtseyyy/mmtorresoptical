@@ -1,5 +1,6 @@
 package com.mmtorresoptical.OpticalClinicManagementSystem.controller;
 
+import com.mmtorresoptical.OpticalClinicManagementSystem.dto.metrics.PatientMetricsDTO;
 import com.mmtorresoptical.OpticalClinicManagementSystem.dto.patient.PatientDetailsDTO;
 import com.mmtorresoptical.OpticalClinicManagementSystem.dto.patient.PatientRequestDTO;
 import com.mmtorresoptical.OpticalClinicManagementSystem.dto.patient.PatientResponseDTO;
@@ -20,6 +21,18 @@ import java.util.UUID;
 public class PatientController {
 
     private final PatientService patientService;
+
+    /**
+     * Returns summary metrics for the patient dashboard.
+     *
+     * @return PatientMetricsDTO containing total, new this month,
+     *         pending follow-ups, and archived counts
+     */
+    @PreAuthorize("hasRole('ADMIN')")
+    @GetMapping("/summary")
+    public ResponseEntity<PatientMetricsDTO> getPatientMetrics() {
+        return ResponseEntity.ok(patientService.getPatientMetrics());
+    }
 
     /**
      * Creates a new patient record.
