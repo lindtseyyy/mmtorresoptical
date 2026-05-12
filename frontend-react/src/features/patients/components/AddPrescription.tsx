@@ -177,7 +177,7 @@ const AddPrescription: React.FC = () => {
       toast.success("Prescription Added", {
         description: "The prescription has been successfully created.",
       });
-      navigate("/patients");
+      navigate(`/patients/view/${patientId}`);
     },
     onError: (error: any) => {
       toast.error("Error", {
