@@ -267,15 +267,15 @@ const ManageInventory: React.FC = () => {
           ) : (
             <div className="space-y-4">
               <div className="overflow-x-auto">
-                <table className="w-full text-sm">
+                <table className="w-full table-fixed text-sm">
                   <thead>
                     <tr className="border-b text-left text-muted-foreground">
-                      <th className="py-3 pr-4 font-medium">Product Name</th>
-                      <th className="py-3 pr-4 font-medium">Category</th>
-                      <th className="py-3 pr-4 text-center font-medium">Quantity</th>
-                      <th className="py-3 pr-4 text-center font-medium">Unit Price</th>
-                      <th className="py-3 pr-4 font-medium">Supplier</th>
-                      <th className="py-3 pl-4 font-medium"></th>
+                      <th className="w-[30%] py-3 pr-4 font-medium">Product Name</th>
+                      <th className="w-[18%] py-3 pr-4 font-medium">Category</th>
+                      <th className="w-[12%] py-3 pr-4 text-center font-medium">Quantity</th>
+                      <th className="w-[12%] py-3 pr-4 text-center font-medium">Unit Price</th>
+                      <th className="w-[20%] py-3 pr-4 font-medium">Supplier</th>
+                      <th className="w-[8%] py-3 pl-4 font-medium"></th>
                     </tr>
                   </thead>
                   <tbody>
