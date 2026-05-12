@@ -5,22 +5,28 @@ import {
   createBrowserRouter,
   RouterProvider,
   Navigate,
-} from "react-router-dom"; // Make sure to import Navigate
+} from "react-router-dom";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 
 import "./index.css";
 
-// --- Import all your pages and layouts ---
-import Login from "./pages/Login.tsx";
-import MainLayout from "./components/layout/MainLayout.tsx";
-import ManageInventory from "./pages/ManageInventory.tsx";
-import ManageUsers from "./pages/ManageUsers.tsx";
-import AddProduct from "./pages/AddProduct.tsx"; // 👈 ADD THIS
-import EditProduct from "./pages/EditProduct.tsx"; // 👈 ADD THIS
-import AddUser from "./pages/AddUser.tsx";
-import EditUser from "./pages/EditUser.tsx";
-import EnforcePasswordChange from "./pages/EnforcePasswordChange.tsx";
-// We don't need App.tsx for routing anymore
+// --- Auth ---
+import Login from "@/features/auth/components/Login";
+import EnforcePasswordChange from "@/features/auth/components/EnforcePasswordChange";
+
+// --- Inventory ---
+import ManageInventory from "@/features/inventory/components/ManageInventory";
+import AddProduct from "@/features/inventory/components/AddProduct";
+import EditProduct from "@/features/inventory/components/EditProduct";
+
+// --- Users ---
+import ManageUsers from "@/features/users/components/ManageUsers";
+import AddUser from "@/features/users/components/AddUser";
+import EditUser from "@/features/users/components/EditUser";
+
+// --- Shared ---
+import MainLayout from "@/shared/components/layout/MainLayout";
+
 const queryClient = new QueryClient();
 
 const router = createBrowserRouter([
@@ -35,7 +41,7 @@ const router = createBrowserRouter([
   {
     // This is your protected route group
     path: "/",
-    element: <MainLayout />, // MainLayout renders the Sidenav and an <Outlet>
+    element: <MainLayout />,
     children: [
       { index: true, element: <Navigate to="/inventory" replace /> },
       { path: "inventory", element: <ManageInventory /> },
@@ -46,11 +52,6 @@ const router = createBrowserRouter([
       { path: "users/edit/:id", element: <EditUser /> },
     ],
   },
-  // You could also add a 404 route
-  // {
-  //   path: "*",
-  //   element: <NotFoundPage />
-  // }
 ]);
 
 createRoot(document.getElementById("root")!).render(
