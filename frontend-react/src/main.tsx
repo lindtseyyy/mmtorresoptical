@@ -13,6 +13,7 @@ import "./index.css";
 // --- Auth ---
 import Login from "@/features/auth/components/Login";
 import EnforcePasswordChange from "@/features/auth/components/EnforcePasswordChange";
+import ForgotPassword from "@/features/auth/components/ForgotPassword";
 
 // --- Inventory ---
 import ManageInventory from "@/features/inventory/components/ManageInventory";
@@ -33,6 +34,10 @@ const router = createBrowserRouter([
   {
     path: "/enforce-password-change",
     element: <EnforcePasswordChange />,
+  },
+  {
+    path: "/forgot-password",
+    element: <ForgotPassword />,
   },
   {
     path: "/login",

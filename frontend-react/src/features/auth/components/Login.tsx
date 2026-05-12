@@ -3,20 +3,22 @@ import type { SubmitHandler } from "react-hook-form";
 import { useForm } from "react-hook-form";
 import type { LoginFormData } from "@/features/auth/types";
 import axios from "axios";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, useLocation, Link } from "react-router-dom";
 
 import { Button } from "@/shared/components/ui/button";
 import { Input } from "@/shared/components/ui/input";
 import { Label } from "@/shared/components/ui/label";
 
-import { Glasses, Eye, EyeOff, AlertCircle } from "lucide-react";
+import { Glasses, Eye, EyeOff, AlertCircle, CheckCircle } from "lucide-react";
 import api from "@/shared/lib/axiosInstance";
 
 const Login: React.FC = () => {
   const [showPassword, setShowPassword] = useState<boolean>(false);
 
   const [loginError, setLoginError] = useState<string | null>(null);
-  const navigate = useNavigate(); // 👈 4. Initialize navigate for redirect
+  const navigate = useNavigate();
+  const location = useLocation();
+  const resetSuccess = (location.state as { passwordReset?: boolean })?.passwordReset;
 
   const {
     register,
@@ -142,7 +144,13 @@ const Login: React.FC = () => {
             </div>
           </div>
 
-          {/* 👇 6. Display the backend error message here */}
+          {resetSuccess && (
+            <div className="flex items-center justify-center rounded-md border border-green-500/50 bg-green-500/10 p-3 text-sm text-green-600 dark:text-green-400">
+              <CheckCircle className="mr-2 h-4 w-4" />
+              Your password has been reset successfully. Please sign in.
+            </div>
+          )}
+
           {loginError && (
             <div
               className="flex items-center justify-center rounded-md border border-destructive/50 bg-destructive/10 p-3 text-sm text-destructive"
@@ -156,6 +164,15 @@ const Login: React.FC = () => {
           <Button type="submit" className="w-full" disabled={isSubmitting}>
             {isSubmitting ? "Signing In..." : "Sign In"}
           </Button>
+
+          <div className="text-center">
+            <Link
+              to="/forgot-password"
+              className="text-sm text-muted-foreground hover:text-primary"
+            >
+              Forgot Password?
+            </Link>
+          </div>
         </form>
       </div>
     </div>
