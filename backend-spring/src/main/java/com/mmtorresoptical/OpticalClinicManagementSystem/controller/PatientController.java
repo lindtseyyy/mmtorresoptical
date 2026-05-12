@@ -1,6 +1,7 @@
 package com.mmtorresoptical.OpticalClinicManagementSystem.controller;
 
 import com.mmtorresoptical.OpticalClinicManagementSystem.dto.metrics.PatientMetricsDTO;
+import com.mmtorresoptical.OpticalClinicManagementSystem.dto.metrics.PatientProfileMetricsDTO;
 import com.mmtorresoptical.OpticalClinicManagementSystem.dto.patient.PatientDetailsDTO;
 import com.mmtorresoptical.OpticalClinicManagementSystem.dto.patient.PatientRequestDTO;
 import com.mmtorresoptical.OpticalClinicManagementSystem.dto.patient.PatientResponseDTO;
@@ -32,6 +33,12 @@ public class PatientController {
     @GetMapping("/summary")
     public ResponseEntity<PatientMetricsDTO> getPatientMetrics() {
         return ResponseEntity.ok(patientService.getPatientMetrics());
+    }
+
+    @PreAuthorize("hasRole('ADMIN')")
+    @GetMapping("/{id}/profile-metrics")
+    public ResponseEntity<PatientProfileMetricsDTO> getPatientProfileMetrics(@PathVariable UUID id) {
+        return ResponseEntity.ok(patientService.getPatientProfileMetrics(id));
     }
 
     /**

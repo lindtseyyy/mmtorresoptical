@@ -10,6 +10,7 @@ import org.springframework.data.jpa.domain.Specification;
 import org.springframework.lang.Nullable;
 import org.springframework.data.domain.Sort;
 
+import java.math.BigDecimal;
 import java.time.LocalDateTime;
 import java.util.List;
 import java.util.UUID;
@@ -36,4 +37,16 @@ public interface TransactionRepository extends JpaRepository<Transaction, UUID>,
     long countByTransactionStatusAndTransactionDateBetween(TransactionStatus status, LocalDateTime start, LocalDateTime end);
 
     long countByTransactionStatus(TransactionStatus status);
+
+    @Query("SELECT COUNT(t) FROM Transaction t WHERE t.patient.patientId = :patientId")
+    long countByPatientId(UUID patientId);
+
+    @Query("SELECT MAX(t.transactionDate) FROM Transaction t WHERE t.patient.patientId = :patientId")
+    LocalDateTime findMaxTransactionDateByPatientId(UUID patientId);
+
+    @Query("SELECT COALESCE(SUM(t.totalAmount), 0) FROM Transaction t WHERE t.patient.patientId = :patientId")
+    BigDecimal sumTotalAmountByPatientId(UUID patientId);
+
+    @Query("SELECT COALESCE(SUM(ti.quantity), 0) FROM TransactionItem ti WHERE ti.transaction.patient.patientId = :patientId")
+    long sumQuantityByPatientId(UUID patientId);
 }

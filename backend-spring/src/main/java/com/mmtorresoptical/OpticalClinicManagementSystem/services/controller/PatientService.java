@@ -1,6 +1,7 @@
 package com.mmtorresoptical.OpticalClinicManagementSystem.services.controller;
 
 import com.mmtorresoptical.OpticalClinicManagementSystem.dto.metrics.PatientMetricsDTO;
+import com.mmtorresoptical.OpticalClinicManagementSystem.dto.metrics.PatientProfileMetricsDTO;
 import com.mmtorresoptical.OpticalClinicManagementSystem.dto.patient.PatientDetailsDTO;
 import com.mmtorresoptical.OpticalClinicManagementSystem.dto.patient.PatientRequestDTO;
 import com.mmtorresoptical.OpticalClinicManagementSystem.dto.patient.PatientResponseDTO;
@@ -10,6 +11,8 @@ import com.mmtorresoptical.OpticalClinicManagementSystem.exception.custom.Resour
 import com.mmtorresoptical.OpticalClinicManagementSystem.mapper.PatientMapper;
 import com.mmtorresoptical.OpticalClinicManagementSystem.model.Patient;
 import com.mmtorresoptical.OpticalClinicManagementSystem.repository.PatientRepository;
+import com.mmtorresoptical.OpticalClinicManagementSystem.repository.PrescriptionRepository;
+import com.mmtorresoptical.OpticalClinicManagementSystem.repository.TransactionRepository;
 import com.mmtorresoptical.OpticalClinicManagementSystem.security.HmacHashService;
 import com.mmtorresoptical.OpticalClinicManagementSystem.services.auditlog.resources.PatientAuditHelper;
 import com.mmtorresoptical.OpticalClinicManagementSystem.specification.PatientSpecification;
@@ -34,6 +37,8 @@ public class PatientService {
     private final PatientMapper patientMapper;
     private final HmacHashService hmacHashService;
     private final PatientAuditHelper patientAuditHelper;
+    private final TransactionRepository transactionRepository;
+    private final PrescriptionRepository prescriptionRepository;
 
     public PatientResponseDTO createPatient(PatientRequestDTO patientRequest) {
         if(patientExistsByFirstMiddleLastName(patientRequest.getFirstName(), patientRequest.getMiddleName(), patientRequest.getLastName())) {
@@ -324,5 +329,26 @@ public class PatientService {
         long archivedPatients = patientRepository.countByIsArchived(true);
 
         return new PatientMetricsDTO(totalPatients, newThisMonth, pendingFollowUps, archivedPatients);
+    }
+
+    public PatientProfileMetricsDTO getPatientProfileMetrics(UUID patientId) {
+        // Verify patient exists
+        patientRepository.findById(patientId)
+                .orElseThrow(() -> new ResourceNotFoundException("Patient not found with id: " + patientId));
+
+        long totalVisits = transactionRepository.countByPatientId(patientId);
+        LocalDateTime lastVisitDate = transactionRepository.findMaxTransactionDateByPatientId(patientId);
+        java.time.LocalDate lastRxDate = prescriptionRepository.findMaxExamDateByPatientId(patientId);
+        LocalDateTime lastPrescriptionDate = lastRxDate != null ? lastRxDate.atStartOfDay() : null;
+        long purchasedProducts = transactionRepository.sumQuantityByPatientId(patientId);
+        java.math.BigDecimal totalAmount = transactionRepository.sumTotalAmountByPatientId(patientId);
+
+        return new PatientProfileMetricsDTO(
+                totalVisits,
+                lastVisitDate,
+                lastPrescriptionDate,
+                purchasedProducts,
+                totalAmount != null ? totalAmount : java.math.BigDecimal.ZERO
+        );
     }
 }
