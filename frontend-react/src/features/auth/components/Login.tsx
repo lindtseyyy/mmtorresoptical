@@ -9,7 +9,7 @@ import { Button } from "@/shared/components/ui/button";
 import { Input } from "@/shared/components/ui/input";
 import { Label } from "@/shared/components/ui/label";
 
-import { User, Eye, EyeOff, AlertCircle } from "lucide-react";
+import { Glasses, Eye, EyeOff, AlertCircle } from "lucide-react";
 import api from "@/shared/lib/axiosInstance";
 
 const Login: React.FC = () => {
@@ -74,7 +74,7 @@ const Login: React.FC = () => {
         >
           <div className="flex flex-col items-center space-y-2">
             <div className="flex h-16 w-16 items-center justify-center rounded-full bg-primary">
-              <User className="h-8 w-8 text-primary-foreground" />
+              <Glasses className="h-8 w-8 text-primary-foreground" />
             </div>
             <h1 className="text-2xl font-bold text-foreground">
               MM Torres Optical
