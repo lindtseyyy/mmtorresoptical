@@ -40,8 +40,14 @@ const mapUserFromBackend = (user: User): User => ({
 });
 
 // API call to fetch users (backend returns Page<UserDetailsDTO>)
-const fetchUsers = async (page = 0, size = 10): Promise<PageResponse<User>> => {
-  const { data } = await api.get("/admin/users", { params: { page, size } });
+const fetchUsers = async (page = 0, size = 10, keyword?: string): Promise<PageResponse<User>> => {
+  const { data } = await api.get("/admin/users", {
+    params: {
+      page,
+      size,
+      ...(keyword && { keyword }),
+    },
+  });
   return {
     content: data.content.map(mapUserFromBackend),
     totalPages: data.page.totalPages,

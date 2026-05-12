@@ -56,7 +56,7 @@ const ManageUsers: React.FC = () => {
   const currentUserId = getCurrentUserId();
 
   const { data: pageData, isLoading, isFetching } = useQuery({
-    ...createUsersListQueryOptions(page, PAGE_SIZE),
+    ...createUsersListQueryOptions(page, PAGE_SIZE, debouncedSearchQuery),
     placeholderData: keepPreviousData,
   });
 
@@ -93,23 +93,12 @@ const ManageUsers: React.FC = () => {
     }
   }, [users.length, page, isFetching]);
 
-  // Client-side filtering + sort current user first
-  const filteredUsers = users
-    .filter((user) => {
-      const fullName = `${user.firstName} ${user.lastName}`.toLowerCase();
-      const q = debouncedSearchQuery.toLowerCase();
-      return (
-        fullName.includes(q) ||
-        user.username.toLowerCase().includes(q) ||
-        user.email.toLowerCase().includes(q)
-      );
-    })
-    .filter((u) => !u.isArchived)
-    .sort((a, b) => {
-      if (a.userId === currentUserId) return -1;
-      if (b.userId === currentUserId) return 1;
-      return 0;
-    });
+  // Sort current user first (search + archived filtering now done server-side)
+  const sortedUsers = [...users].sort((a, b) => {
+    if (a.userId === currentUserId) return -1;
+    if (b.userId === currentUserId) return 1;
+    return 0;
+  });
 
   const { data: summary } = useQuery(createUserSummaryQueryOptions());
 
@@ -224,7 +213,7 @@ const ManageUsers: React.FC = () => {
                     </tr>
                   </thead>
                   <tbody>
-                    {filteredUsers.map((user) => (
+                    {sortedUsers.map((user) => (
                       <tr
                         key={user.userId}
                         className="border-b transition-colors hover:bg-muted"
@@ -301,7 +290,7 @@ const ManageUsers: React.FC = () => {
                 </table>
               </div>
 
-              {filteredUsers.length === 0 && (
+              {sortedUsers.length === 0 && (
                 <p className="py-8 text-center text-muted-foreground">
                   No users found.
                 </p>
