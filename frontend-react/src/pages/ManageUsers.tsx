@@ -104,7 +104,12 @@ const ManageUsers: React.FC = () => {
     }
   }, [users.length, page, isFetching]);
 
-  const sortedUsers = users;
+  // Keep current user pinned to top; otherwise preserve server sort order
+  const sortedUsers = [...users].sort((a, b) => {
+    if (a.userId === currentUserId) return -1;
+    if (b.userId === currentUserId) return 1;
+    return 0;
+  });
 
   const { data: summary } = useQuery(createUserSummaryQueryOptions());
 
