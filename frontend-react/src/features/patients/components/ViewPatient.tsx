@@ -11,6 +11,13 @@ import {
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from "@/shared/components/ui/dropdown-menu";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/shared/components/ui/select";
 import { toast } from "sonner";
 import {
   fetchPatient,
@@ -61,9 +68,10 @@ const ViewPatient: React.FC = () => {
   });
 
   const [rxPage, setRxPage] = useState(0);
+  const [rxFilter, setRxFilter] = useState("ALL");
   const { data: rxData } = useQuery({
-    queryKey: ["patient-prescriptions", patientId, rxPage],
-    queryFn: () => fetchPatientPrescriptions(patientId, rxPage, 5),
+    queryKey: ["patient-prescriptions", patientId, rxPage, rxFilter],
+    queryFn: () => fetchPatientPrescriptions(patientId, rxPage, 5, rxFilter),
     placeholderData: keepPreviousData,
     enabled: !!patientId,
   });
@@ -301,12 +309,27 @@ const ViewPatient: React.FC = () => {
                 {rxData?.totalElements ?? 0} total prescription(s)
               </CardDescription>
             </div>
-            <Button size="sm" asChild>
-              <Link to={`/patients/add/prescription?patientId=${patientId}&patientName=${encodeURIComponent(fullName)}`}>
-                <Plus className="mr-1 h-4 w-4" />
-                Add Prescription
-              </Link>
-            </Button>
+            <div className="flex items-center gap-3">
+              <div className="flex items-center gap-2">
+                <span className="text-sm text-muted-foreground">Status:</span>
+                <Select value={rxFilter} onValueChange={(v) => { setRxFilter(v); setRxPage(0); }}>
+                  <SelectTrigger className="w-[130px]">
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="ALL">All</SelectItem>
+                    <SelectItem value="ACTIVE">Active</SelectItem>
+                    <SelectItem value="ARCHIVED">Archived</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+              <Button asChild>
+                <Link to={`/patients/add/prescription?patientId=${patientId}&patientName=${encodeURIComponent(fullName)}`}>
+                  <Plus className="mr-1 h-4 w-4" />
+                  Add Prescription
+                </Link>
+              </Button>
+            </div>
           </div>
         </CardHeader>
         <CardContent>
@@ -382,6 +405,7 @@ const ViewPatient: React.FC = () => {
                       disabled={rxPage === 0}
                     >
                       <ChevronLeft className="h-4 w-4" />
+                      Previous
                     </Button>
                     <Button
                       variant="outline"
@@ -389,6 +413,7 @@ const ViewPatient: React.FC = () => {
                       onClick={() => setRxPage((p) => p + 1)}
                       disabled={rxPage >= rxData.totalPages - 1}
                     >
+                      Next
                       <ChevronRight className="h-4 w-4" />
                     </Button>
                   </div>
@@ -537,6 +562,7 @@ const ViewPatient: React.FC = () => {
                       disabled={hhPage === 0}
                     >
                       <ChevronLeft className="h-4 w-4" />
+                      Previous
                     </Button>
                     <Button
                       variant="outline"
@@ -544,6 +570,7 @@ const ViewPatient: React.FC = () => {
                       onClick={() => setHhPage((p) => p + 1)}
                       disabled={hhPage >= hhData.totalPages - 1}
                     >
+                      Next
                       <ChevronRight className="h-4 w-4" />
                     </Button>
                   </div>
