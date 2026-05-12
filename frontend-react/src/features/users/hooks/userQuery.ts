@@ -4,10 +4,10 @@ import { toast } from "sonner";
 import type { NavigateFunction } from 'react-router-dom';   
 import type { UserFormData } from '@/features/users/types';  
 
-function createUsersListQueryOptions(page: number, size: number, keyword?: string, sortBy?: string, sortOrder?: string, role?: string, gender?: string) {
+function createUsersListQueryOptions(page: number, size: number, keyword?: string, sortBy?: string, sortOrder?: string, role?: string, gender?: string, archivedStatus?: string) {
   return queryOptions({
-    queryKey: ["users", page, size, keyword ?? "", sortBy ?? "fullNameSortable", sortOrder ?? "asc", role ?? "", gender ?? ""],
-    queryFn: () => fetchUsers(page, size, keyword, sortBy, sortOrder, role, gender),
+    queryKey: ["users", page, size, keyword ?? "", sortBy ?? "fullNameSortable", sortOrder ?? "asc", role ?? "", gender ?? "", archivedStatus ?? "ACTIVE"],
+    queryFn: () => fetchUsers(page, size, keyword, sortBy, sortOrder, role, gender, archivedStatus),
   });
 }
 

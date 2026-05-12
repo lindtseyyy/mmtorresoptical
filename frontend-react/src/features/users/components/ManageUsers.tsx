@@ -56,6 +56,7 @@ const ManageUsers: React.FC = () => {
   const [sortOrder, setSortOrder] = useState<"asc" | "desc">("asc");
   const [roleFilter, setRoleFilter] = useState("all");
   const [genderFilter, setGenderFilter] = useState("all");
+  const [archivedFilter, setArchivedFilter] = useState("ACTIVE");
   const [page, setPage] = useState(0);
 
   useEffect(() => {
@@ -67,7 +68,7 @@ const ManageUsers: React.FC = () => {
   const currentUserId = getCurrentUserId();
 
   const { data: pageData, isLoading, isFetching } = useQuery({
-    ...createUsersListQueryOptions(page, PAGE_SIZE, debouncedSearchQuery, sortBy, sortOrder, roleFilter, genderFilter),
+    ...createUsersListQueryOptions(page, PAGE_SIZE, debouncedSearchQuery, sortBy, sortOrder, roleFilter, genderFilter, archivedFilter),
     placeholderData: keepPreviousData,
   });
 
@@ -95,7 +96,7 @@ const ManageUsers: React.FC = () => {
   // Reset page when search or sort changes
   useEffect(() => {
     setPage(0);
-  }, [debouncedSearchQuery, sortBy, sortOrder, roleFilter, genderFilter]);
+  }, [debouncedSearchQuery, sortBy, sortOrder, roleFilter, genderFilter, archivedFilter]);
 
   // If current page is empty and not the first page, step back
   useEffect(() => {
@@ -230,6 +231,19 @@ const ManageUsers: React.FC = () => {
               </div>
             </div>
             <div className="flex flex-wrap items-center justify-end gap-4">
+              <div className="flex items-center gap-2">
+                <span className="text-sm text-muted-foreground whitespace-nowrap">Status:</span>
+                <Select value={archivedFilter} onValueChange={setArchivedFilter}>
+                  <SelectTrigger className="w-[130px]">
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="ACTIVE">Active</SelectItem>
+                    <SelectItem value="ARCHIVED">Archived</SelectItem>
+                    <SelectItem value="ALL">All</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
               <div className="flex items-center gap-2">
                 <span className="text-sm text-muted-foreground whitespace-nowrap">Role:</span>
                 <Select value={roleFilter} onValueChange={setRoleFilter}>
