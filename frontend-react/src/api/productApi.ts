@@ -6,11 +6,15 @@ const fetchProducts = async (
   size = 10,
   keyword?: string,
   category?: string,
+  sortBy = "productName",
+  sortOrder = "asc",
 ): Promise<PageResponse<Product>> => {
   const { data } = await api.get("/products", {
     params: {
       page,
       size,
+      sortBy,
+      sortOrder,
       ...(keyword && { keyword }),
       ...(category && category !== "all" && { category }),
     },

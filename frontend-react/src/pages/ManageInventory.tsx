@@ -10,7 +10,7 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { Badge } from "@/components/ui/badge";
-import { Plus, Search, Archive, Pencil, ChevronLeft, ChevronRight, Glasses, MoreHorizontal, Eye, Package, Layers, AlertTriangle, TrendingUp, Banknote } from "lucide-react";
+import { Plus, Search, Archive, Pencil, ChevronLeft, ChevronRight, Glasses, MoreHorizontal, Eye, Package, Layers, AlertTriangle, TrendingUp, Banknote, ArrowUp, ArrowDown } from "lucide-react";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -31,6 +31,8 @@ const ManageInventory: React.FC = () => {
   const [searchQuery, setSearchQuery] = useState("");
   const [debouncedSearchQuery, setDebouncedSearchQuery] = useState(searchQuery);
   const [categoryFilter, setCategoryFilter] = useState<string>("all");
+  const [sortBy, setSortBy] = useState("productName");
+  const [sortOrder, setSortOrder] = useState<"asc" | "desc">("asc");
   const [page, setPage] = useState(0);
 
   useEffect(() => {
@@ -45,7 +47,7 @@ const ManageInventory: React.FC = () => {
     isLoading,
     isFetching,
   } = useQuery({
-    ...createProductsListQueryOptions(page, PAGE_SIZE, debouncedSearchQuery, categoryFilter),
+    ...createProductsListQueryOptions(page, PAGE_SIZE, debouncedSearchQuery, categoryFilter, sortBy, sortOrder),
     placeholderData: keepPreviousData,
   });
 
@@ -68,7 +70,7 @@ const ManageInventory: React.FC = () => {
   // Reset page when search or category filter changes
   useEffect(() => {
     setPage(0);
-  }, [debouncedSearchQuery, categoryFilter]);
+  }, [debouncedSearchQuery, categoryFilter, sortBy, sortOrder]);
 
   // If current page is empty and not the first page, step back
   useEffect(() => {
@@ -208,6 +210,32 @@ const ManageInventory: React.FC = () => {
                 <SelectItem value="sunglasses">Sunglasses</SelectItem>
               </SelectContent>
             </Select>
+            <div className="flex items-center gap-2">
+              <span className="text-sm text-muted-foreground whitespace-nowrap">Sort By:</span>
+              <Select value={sortBy} onValueChange={setSortBy}>
+                <SelectTrigger className="w-[150px]">
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="productName">Product Name</SelectItem>
+                  <SelectItem value="quantity">Quantity</SelectItem>
+                  <SelectItem value="unitPrice">Price</SelectItem>
+                </SelectContent>
+              </Select>
+              <Button
+                variant="outline"
+                size="icon"
+                className="h-10 w-10 shrink-0"
+                onClick={() => setSortOrder((o) => (o === "asc" ? "desc" : "asc"))}
+                title={sortOrder === "asc" ? "Ascending" : "Descending"}
+              >
+                {sortOrder === "asc" ? (
+                  <ArrowUp className="h-4 w-4" />
+                ) : (
+                  <ArrowDown className="h-4 w-4" />
+                )}
+              </Button>
+            </div>
           </div>
 
           {/* Loading Spinner */}

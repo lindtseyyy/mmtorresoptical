@@ -9,10 +9,12 @@ function createProductsListQueryOptions(
   size: number,
   keyword?: string,
   category?: string,
+  sortBy?: string,
+  sortOrder?: string,
 ) {
   return queryOptions({
-    queryKey: ["products", page, size, keyword ?? "", category ?? "all"],
-    queryFn: () => fetchProducts(page, size, keyword, category),
+    queryKey: ["products", page, size, keyword ?? "", category ?? "all", sortBy ?? "productName", sortOrder ?? "asc"],
+    queryFn: () => fetchProducts(page, size, keyword, category, sortBy, sortOrder),
   });
 }
 
