@@ -70,6 +70,7 @@ function createArchiveProductMutationOptions(queryClient: any) {
     mutationFn: archiveProduct,
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["products"] });
+      queryClient.invalidateQueries({ queryKey: ["inventory-summary"] });
       toast.success("Product Archived", {
         description: "The product has been successfully archived.",
       });
@@ -87,6 +88,7 @@ function createRestoreProductMutationOptions(queryClient: any) {
     mutationFn: restoreProduct,
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["products"] });
+      queryClient.invalidateQueries({ queryKey: ["inventory-summary"] });
       toast.success("Product Restored", {
         description: "The product has been successfully restored.",
       });
