@@ -2,7 +2,6 @@ import { useState, useEffect } from "react";
 import { useQuery, useMutation, useQueryClient, keepPreviousData } from "@tanstack/react-query";
 import { Button } from "@/shared/components/ui/button";
 import { Input } from "@/shared/components/ui/input";
-import { Badge } from "@/shared/components/ui/badge";
 import { Plus, Search, Archive, Pencil, ChevronLeft, ChevronRight, MoreHorizontal, Users, UserCheck, ArchiveIcon, ArrowUp, ArrowDown } from "lucide-react";
 import {
   DropdownMenu,
@@ -231,8 +230,6 @@ const ManagePatients: React.FC = () => {
                       <th className="w-[8%] py-3 pr-4 text-center font-medium">Gender</th>
                       <th className="w-[14%] py-3 pr-4 font-medium">Contact Number</th>
                       <th className="w-[10%] py-3 pr-4 text-center font-medium">Birth Date</th>
-                      <th className="w-[10%] py-3 pr-4 font-medium">Created At</th>
-                      <th className="w-[8%] py-3 pr-4 font-medium">Status</th>
                       <th className="w-[8%] py-3 pl-4 font-medium"></th>
                     </tr>
                   </thead>
@@ -258,20 +255,6 @@ const ManagePatients: React.FC = () => {
                         </td>
                         <td className="py-3 pr-4 text-center text-muted-foreground">
                           {formatDate(patient.birthDate)}
-                        </td>
-                        <td className="py-3 pr-4 text-muted-foreground">
-                          {formatDate(patient.createdAt)}
-                        </td>
-                        <td className="py-3 pr-4">
-                          <Badge
-                            className={
-                              patient.isArchived
-                                ? "bg-gray-600 hover:bg-gray-600 text-white"
-                                : "bg-green-700 hover:bg-green-700 text-white"
-                            }
-                          >
-                            {patient.isArchived ? "Archived" : "Active"}
-                          </Badge>
                         </td>
                         <td className="py-3 pl-4">
                           <DropdownMenu>
