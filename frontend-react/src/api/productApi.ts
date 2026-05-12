@@ -1,5 +1,6 @@
 import api from "@/lib/axiosInstance";
-import type { Product, ProductFormData, PageResponse, InventorySummary } from "@/types";
+import type { PageResponse } from "@/types";
+import type { Product, ProductFormData, InventorySummary } from "@/features/products/types";
 
 const fetchProducts = async (
   page = 0,

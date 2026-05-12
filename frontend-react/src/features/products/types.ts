@@ -1,11 +1,4 @@
-// src/types.ts
-import {z} from "zod"
-
-// Form data for the Login page
-export interface LoginFormData {
-  loginIdentifier: string;
-  password: string;
-}
+import { z } from "zod";
 
 const decimalString = (label: string) =>
   z
@@ -66,9 +59,8 @@ export const productSchema = productFormSchema.transform((data) => ({
 export type ProductFormValues = z.infer<typeof productFormSchema>;
 export type ProductFormData = z.infer<typeof productSchema>;
 
-// This is the type for data coming from your Spring Boot API
 export interface Product {
-  productId: string; // From Spring (UUID)
+  productId: string;
   productName: string;
   category: string;
   supplier: string;
@@ -81,57 +73,10 @@ export interface Product {
   createdAt: string;
 }
 
-// Data structure for the product search filters
 export interface ProductSearchFilters {
   query: string;
-  category: string; // Can be '' for 'All'
-  stockLevel: string; // Can be '' for 'All'
-}
-
-// --- USER SCHEMA ---
-// Matches backend CreateUserRequestDTO
-export const userSchema = z.object({
-  firstName: z.string().min(1, "First name is required").max(50),
-  middleName: z.string().optional(),
-  lastName: z.string().min(1, "Last name is required").max(50),
-  gender: z.enum(["Male", "Female", "Other"]),
-  birthDate: z.string().min(1, "Birth date is required"),
-  email: z.string().email("Invalid email address"),
-  contactNumber: z.string().min(10, "Must be at least 10 digits"),
-  username: z.string().min(3, "Username must be at least 3 characters"),
-  password: z.string().min(8, "Password must be at least 8 characters"),
-  securityQuestion: z.string().min(1, "Security question is required"),
-  securityAnswer: z.string().min(3, "Security answer must be at least 3 characters"),
-  role: z.enum(["Admin", "Staff"]),
-  isArchived: z.boolean().default(false),
-});
-
-// This is the type for your form
-export type UserFormData = z.infer<typeof userSchema>;
-
-// This is the type for data from your Spring Boot API
-export interface User {
-  userId: string; // From Spring (UUID)
-  username: string;
-  firstName: string;
-  middleName: string | null;
-  lastName: string;
-  gender: string;
-  birthDate: string; // ISO date string
-  email: string;
-  contactNumber: string;
-  role: "Admin" | "Staff";
-  isArchived: boolean;
-  isPwChangeRequired: boolean;
-  createdAt: string; // From Spring (OffsetDateTime)
-}
-
-export interface UserSummary {
-  totalUsers: number;
-  activeUsers: number;
-  archivedUsers: number;
-  adminUsers: number;
-  staffUsers: number;
+  category: string;
+  stockLevel: string;
 }
 
 export interface InventorySummary {
@@ -141,12 +86,4 @@ export interface InventorySummary {
   countLowStockProducts: number;
   countOverstockedProducts: number;
   countArchivedProducts: number;
-}
-
-export interface PageResponse<T> {
-  content: T[];
-  totalPages: number;
-  totalElements: number;
-  size: number;
-  number: number;
 }

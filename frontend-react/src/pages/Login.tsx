@@ -1,7 +1,7 @@
 import { useState } from "react";
 import type { SubmitHandler } from "react-hook-form";
 import { useForm } from "react-hook-form";
-import type { LoginFormData } from "../types";
+import type { LoginFormData } from "@/types";
 import axios from "axios";
 import { useNavigate } from "react-router-dom";
 

@@ -26,8 +26,7 @@ import {
   CardTitle,
 } from "@/components/ui/card";
 import { Switch } from "@/components/ui/switch";
-import { productSchema, productFormSchema } from "@/types";
-import type { ProductFormData, ProductFormValues } from "@/types";
+import { productSchema, productFormSchema, type ProductFormData, type ProductFormValues } from "@/features/products/types";
 
 interface ProductFormProps {
   defaultValues?: ProductFormData;

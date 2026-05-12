@@ -1,7 +1,7 @@
 import { useNavigate, Link } from "react-router-dom";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { UserForm } from "@/components/forms/UserForm";
-import type { UserFormData } from "@/types";
+import type { UserFormData } from "@/features/users/types";
 import { createAddUserMutationOptions } from "@/query/userQuery";
 import { ArrowLeft } from "lucide-react";
 import { Button } from "@/components/ui/button";

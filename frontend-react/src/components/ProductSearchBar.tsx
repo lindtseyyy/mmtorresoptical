@@ -2,7 +2,7 @@
 import { useForm } from "react-hook-form";
 import type { SubmitHandler } from "react-hook-form";
 import { MagnifyingGlassIcon } from "@heroicons/react/24/outline";
-import type { ProductSearchFilters } from "../types"; // Import our type
+import type { ProductSearchFilters } from "@/features/products/types";
 
 // --- TYPESCRIPT: Define props interface ---
 interface ProductSearchBarProps {

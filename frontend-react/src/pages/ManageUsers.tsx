@@ -29,7 +29,7 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
-import type { User } from "@/types";
+import type { User } from "@/features/users/types";
 import {
   createArchiveUserMutationOptions,
   createUsersListQueryOptions,

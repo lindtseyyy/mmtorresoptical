@@ -2,7 +2,7 @@ import { QueryClient, queryOptions } from '@tanstack/react-query';
 import { fetchUsers, fetchUser, archiveUser, registerUser, updateUser, fetchUserSummary } from '../api/userApi';
 import { toast } from "sonner";  
 import type { NavigateFunction } from 'react-router-dom';   
-import type { UserFormData } from '@/types';  
+import type { UserFormData } from '@/features/users/types';  
 
 function createUsersListQueryOptions(page: number, size: number, keyword?: string, sortBy?: string, sortOrder?: string, role?: string, gender?: string) {
   return queryOptions({

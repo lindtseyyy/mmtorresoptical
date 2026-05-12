@@ -2,7 +2,7 @@ import { queryOptions } from "@tanstack/react-query";
 import { fetchProducts, fetchProduct, addProduct, updateProduct, archiveProduct, fetchInventorySummary } from "@/api/productApi";
 import { toast } from "sonner";
 import type { NavigateFunction } from "react-router";
-import type { ProductFormData } from "@/types"; 
+import type { ProductFormData } from "@/features/products/types";
 
 function createProductsListQueryOptions(
   page: number,

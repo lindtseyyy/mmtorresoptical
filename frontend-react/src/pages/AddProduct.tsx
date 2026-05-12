@@ -1,7 +1,7 @@
 import { useNavigate } from "react-router-dom";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { ProductForm } from "@/components/forms/ProductForm";
-import type { ProductFormData } from "@/types";
+import type { ProductFormData } from "@/features/products/types";
 import { createAddProductMutationOptions } from "@/query/productQuery";
 
 const AddProduct: React.FC = () => {

@@ -1,4 +1,5 @@
-import type {User, UserFormData, PageResponse, UserSummary} from "@/types";
+import type { PageResponse } from "@/types";
+import type { User, UserFormData, UserSummary } from "@/features/users/types";
 import api from "@/lib/axiosInstance";
 
 // Backend enums use uppercase; frontend uses title case

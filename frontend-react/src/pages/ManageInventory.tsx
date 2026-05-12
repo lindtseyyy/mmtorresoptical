@@ -19,7 +19,7 @@ import {
 } from "@/components/ui/dropdown-menu";
 import { useNavigate } from "react-router-dom";
 import { Card, CardContent } from "@/components/ui/card";
-import type { Product } from "@/types"; // Import our new Product type
+import type { Product } from "@/features/products/types";
 import {
   createArchiveProductMutationOptions,
   createProductsListQueryOptions,
