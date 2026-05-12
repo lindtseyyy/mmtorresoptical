@@ -329,7 +329,7 @@ const ViewPatient: React.FC = () => {
                         </span>
                         <Badge
                           variant="secondary"
-                          className={rx.isArchived ? "bg-gray-200 text-gray-600" : "bg-green-100 text-green-700"}
+                          className={rx.isArchived ? "bg-gray-500 text-white" : "bg-green-100 text-green-700"}
                         >
                           {rx.isArchived ? "Archived" : "Active"}
                         </Badge>
@@ -440,7 +440,7 @@ const ViewPatient: React.FC = () => {
                         </span>
                         <Badge
                           variant="secondary"
-                          className={hh.isArchived ? "bg-gray-200 text-gray-600" : "bg-green-100 text-green-700"}
+                          className={hh.isArchived ? "bg-gray-500 text-white" : "bg-green-100 text-green-700"}
                         >
                           {hh.isArchived ? "Archived" : "Active"}
                         </Badge>
