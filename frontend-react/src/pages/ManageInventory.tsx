@@ -31,6 +31,7 @@ const ManageInventory: React.FC = () => {
   const [searchQuery, setSearchQuery] = useState("");
   const [debouncedSearchQuery, setDebouncedSearchQuery] = useState(searchQuery);
   const [categoryFilter, setCategoryFilter] = useState<string>("all");
+  const [stockFilter, setStockFilter] = useState("all");
   const [sortBy, setSortBy] = useState("productName");
   const [sortOrder, setSortOrder] = useState<"asc" | "desc">("asc");
   const [page, setPage] = useState(0);
@@ -47,7 +48,7 @@ const ManageInventory: React.FC = () => {
     isLoading,
     isFetching,
   } = useQuery({
-    ...createProductsListQueryOptions(page, PAGE_SIZE, debouncedSearchQuery, categoryFilter, sortBy, sortOrder),
+    ...createProductsListQueryOptions(page, PAGE_SIZE, debouncedSearchQuery, categoryFilter, sortBy, sortOrder, stockFilter),
     placeholderData: keepPreviousData,
   });
 
@@ -70,7 +71,7 @@ const ManageInventory: React.FC = () => {
   // Reset page when search or category filter changes
   useEffect(() => {
     setPage(0);
-  }, [debouncedSearchQuery, categoryFilter, sortBy, sortOrder]);
+  }, [debouncedSearchQuery, categoryFilter, sortBy, sortOrder, stockFilter]);
 
   // If current page is empty and not the first page, step back
   useEffect(() => {
@@ -184,57 +185,77 @@ const ManageInventory: React.FC = () => {
 
       <Card>
         <CardContent className="p-6">
-          {/* Search bar and filters (no longer a separate component) */}
-          <div className="mb-6 flex flex-col gap-4 md:flex-row">
-            <div className="relative flex-1">
-              <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
-              <Input
-                placeholder="Search by name or ID..."
-                value={searchQuery}
-                onChange={(e) => setSearchQuery(e.target.value)}
-                className="pl-10"
-              />
+          <div className="mb-6 space-y-4">
+            <div className="flex flex-col gap-4 md:flex-row">
+              <div className="relative flex-1">
+                <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
+                <Input
+                  placeholder="Search by name or ID..."
+                  value={searchQuery}
+                  onChange={(e) => setSearchQuery(e.target.value)}
+                  className="pl-10"
+                />
+              </div>
+              <div className="flex items-center gap-2">
+                <span className="text-sm text-muted-foreground whitespace-nowrap">Sort By:</span>
+                <Select value={sortBy} onValueChange={setSortBy}>
+                  <SelectTrigger className="w-[150px]">
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="productName">Product Name</SelectItem>
+                    <SelectItem value="quantity">Quantity</SelectItem>
+                    <SelectItem value="unitPrice">Price</SelectItem>
+                  </SelectContent>
+                </Select>
+                <Button
+                  variant="outline"
+                  size="icon"
+                  className="h-10 w-10 shrink-0"
+                  onClick={() => setSortOrder((o) => (o === "asc" ? "desc" : "asc"))}
+                  title={sortOrder === "asc" ? "Ascending" : "Descending"}
+                >
+                  {sortOrder === "asc" ? (
+                    <ArrowUp className="h-4 w-4" />
+                  ) : (
+                    <ArrowDown className="h-4 w-4" />
+                  )}
+                </Button>
+              </div>
             </div>
-            <Select value={categoryFilter} onValueChange={setCategoryFilter}>
-              <SelectTrigger className="w-full md:w-[200px]">
-                <SelectValue placeholder="All Categories" />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="all">All Categories</SelectItem>
-                <SelectItem value="eyeglasses">Eyeglasses</SelectItem>
-                <SelectItem value="frames">Frames</SelectItem>
-                <SelectItem value="lens">Lens</SelectItem>
-                <SelectItem value="goggles">Goggles</SelectItem>
-                <SelectItem value="prisms">Prisms</SelectItem>
-                <SelectItem value="eyedrop">Eyedrop</SelectItem>
-                <SelectItem value="sunglasses">Sunglasses</SelectItem>
-              </SelectContent>
-            </Select>
-            <div className="flex items-center gap-2">
-              <span className="text-sm text-muted-foreground whitespace-nowrap">Sort By:</span>
-              <Select value={sortBy} onValueChange={setSortBy}>
-                <SelectTrigger className="w-[150px]">
-                  <SelectValue />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="productName">Product Name</SelectItem>
-                  <SelectItem value="quantity">Quantity</SelectItem>
-                  <SelectItem value="unitPrice">Price</SelectItem>
-                </SelectContent>
-              </Select>
-              <Button
-                variant="outline"
-                size="icon"
-                className="h-10 w-10 shrink-0"
-                onClick={() => setSortOrder((o) => (o === "asc" ? "desc" : "asc"))}
-                title={sortOrder === "asc" ? "Ascending" : "Descending"}
-              >
-                {sortOrder === "asc" ? (
-                  <ArrowUp className="h-4 w-4" />
-                ) : (
-                  <ArrowDown className="h-4 w-4" />
-                )}
-              </Button>
+            <div className="flex flex-wrap items-center justify-end gap-4">
+              <div className="flex items-center gap-2">
+                <span className="text-sm text-muted-foreground whitespace-nowrap">Category:</span>
+                <Select value={categoryFilter} onValueChange={setCategoryFilter}>
+                  <SelectTrigger className="w-[150px]">
+                    <SelectValue placeholder="All Categories" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="all">All Categories</SelectItem>
+                    <SelectItem value="eyeglasses">Eyeglasses</SelectItem>
+                    <SelectItem value="frames">Frames</SelectItem>
+                    <SelectItem value="lens">Lens</SelectItem>
+                    <SelectItem value="goggles">Goggles</SelectItem>
+                    <SelectItem value="prisms">Prisms</SelectItem>
+                    <SelectItem value="eyedrop">Eyedrop</SelectItem>
+                    <SelectItem value="sunglasses">Sunglasses</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+              <div className="flex items-center gap-2">
+                <span className="text-sm text-muted-foreground whitespace-nowrap">Stock:</span>
+                <Select value={stockFilter} onValueChange={setStockFilter}>
+                  <SelectTrigger className="w-[150px]">
+                    <SelectValue placeholder="All Stock" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="all">All Stock</SelectItem>
+                    <SelectItem value="NORMAL">Normal</SelectItem>
+                    <SelectItem value="LOW_STOCK">Low Stock</SelectItem>
+                    <SelectItem value="OVERSTOCKED">Overstocked</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
             </div>
           </div>
 

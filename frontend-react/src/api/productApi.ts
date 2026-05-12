@@ -8,6 +8,7 @@ const fetchProducts = async (
   category?: string,
   sortBy = "productName",
   sortOrder = "asc",
+  stockStatus?: string,
 ): Promise<PageResponse<Product>> => {
   const { data } = await api.get("/products", {
     params: {
@@ -17,6 +18,7 @@ const fetchProducts = async (
       sortOrder,
       ...(keyword && { keyword }),
       ...(category && category !== "all" && { category }),
+      ...(stockStatus && stockStatus !== "all" && { stockStatus }),
     },
   });
   const pg = data.page;
