@@ -77,6 +77,10 @@ const archivePatient = async (id: string) => {
   return await api.delete(`/admin/patients/${id}`);
 };
 
+const restorePatient = async (id: string) => {
+  return await api.put(`/admin/patients/${id}/restore`);
+};
+
 export interface PatientMetrics {
   totalPatients: number;
   newThisMonth: number;
@@ -158,4 +162,4 @@ const fetchPatientHealthHistories = async (
   };
 };
 
-export { fetchPatients, fetchPatient, addPatient, updatePatient, archivePatient, fetchPatientMetrics, fetchPatientProfileMetrics, fetchPatientPrescriptions, fetchPatientHealthHistories };
+export { fetchPatients, fetchPatient, addPatient, updatePatient, archivePatient, restorePatient, fetchPatientMetrics, fetchPatientProfileMetrics, fetchPatientPrescriptions, fetchPatientHealthHistories };

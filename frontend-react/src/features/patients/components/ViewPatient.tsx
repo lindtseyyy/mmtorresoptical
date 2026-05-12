@@ -1,7 +1,7 @@
 import { useState } from "react";
 import { useParams, Link, useNavigate } from "react-router-dom";
 import { useQuery, useMutation, useQueryClient, keepPreviousData } from "@tanstack/react-query";
-import { ArrowLeft, ShoppingCart, Calendar, FileText, Activity, ClipboardList, Stethoscope, ChevronLeft, ChevronRight, MoreHorizontal, Pencil, Archive, Clock, Eye, Plus } from "lucide-react";
+import { ArrowLeft, ShoppingCart, Calendar, FileText, Activity, ClipboardList, Stethoscope, ChevronLeft, ChevronRight, MoreHorizontal, Pencil, Archive, Clock, Plus, Undo2 } from "lucide-react";
 import { Button } from "@/shared/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/shared/components/ui/card";
 import { Badge } from "@/shared/components/ui/badge";
@@ -19,6 +19,7 @@ import {
   SelectValue,
 } from "@/shared/components/ui/select";
 import { toast } from "sonner";
+import { restorePatient } from "@/features/patients/services/patientApi";
 import {
   fetchPatient,
   fetchPatientProfileMetrics,
@@ -106,6 +107,21 @@ const ViewPatient: React.FC = () => {
   const archivePatientMutation = useMutation(
     createArchivePatientMutationOptions(queryClient)
   );
+
+  const restorePatientMutation = useMutation({
+    mutationFn: restorePatient,
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["patients"] });
+      queryClient.invalidateQueries({ queryKey: ["patient", patientId] });
+      queryClient.invalidateQueries({ queryKey: ["patient-metrics"] });
+      toast.success("Patient Restored", {
+        description: "The patient has been successfully restored.",
+      });
+    },
+    onError: () => {
+      toast.error("Error", { description: "Failed to restore patient." });
+    },
+  });
 
   if (patientLoading) {
     return (
@@ -242,18 +258,31 @@ const ViewPatient: React.FC = () => {
               <DropdownMenuContent align="end" className="bg-gray-100 dark:bg-gray-800 border-gray-300 dark:border-gray-700">
                 <DropdownMenuItem
                   onClick={() =>
-                    navigate(`/patients/view/${patientId}`)
+                    navigate(`/patients/edit/${patientId}`)
                   }
                 >
-                  <Eye className="mr-2 h-4 w-4" />
-                  View
+                  <Pencil className="mr-2 h-4 w-4" />
+                  Edit
                 </DropdownMenuItem>
                 <DropdownMenuItem
-                  onClick={() => archivePatientMutation.mutate(patientId)}
-                  disabled={archivePatientMutation.isPending || patient?.isArchived}
+                  onClick={() =>
+                    patient?.isArchived
+                      ? restorePatientMutation.mutate(patientId)
+                      : archivePatientMutation.mutate(patientId)
+                  }
+                  disabled={archivePatientMutation.isPending || restorePatientMutation.isPending}
                 >
-                  <Archive className="mr-2 h-4 w-4" />
-                  Archive
+                  {patient?.isArchived ? (
+                    <>
+                      <Undo2 className="mr-2 h-4 w-4" />
+                      Unarchive
+                    </>
+                  ) : (
+                    <>
+                      <Archive className="mr-2 h-4 w-4" />
+                      Archive
+                    </>
+                  )}
                 </DropdownMenuItem>
               </DropdownMenuContent>
             </DropdownMenu>

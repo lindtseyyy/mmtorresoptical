@@ -2,7 +2,7 @@ import { useState, useEffect } from "react";
 import { useQuery, useMutation, useQueryClient, keepPreviousData } from "@tanstack/react-query";
 import { Button } from "@/shared/components/ui/button";
 import { Input } from "@/shared/components/ui/input";
-import { Plus, Search, Archive, Eye, ChevronLeft, ChevronRight, MoreHorizontal, Users, UserCheck, ArchiveIcon, ArrowUp, ArrowDown } from "lucide-react";
+import { Plus, Search, Archive, Eye, ChevronLeft, ChevronRight, MoreHorizontal, Users, UserCheck, ArchiveIcon, ArrowUp, ArrowDown, Undo2 } from "lucide-react";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -17,6 +17,7 @@ import {
   SelectValue,
 } from "@/shared/components/ui/select";
 import { useNavigate } from "react-router-dom";
+import { toast } from "sonner";
 import { Card, CardContent } from "@/shared/components/ui/card";
 import {
   AlertDialog,
@@ -29,6 +30,7 @@ import {
   AlertDialogTitle,
 } from "@/shared/components/ui/alert-dialog";
 import type { Patient } from "@/features/patients/types";
+import { restorePatient } from "@/features/patients/services/patientApi";
 import {
   createArchivePatientMutationOptions,
   createPatientsListQueryOptions,
@@ -67,20 +69,38 @@ const ManagePatients: React.FC = () => {
   const activePatients = (metrics?.totalPatients ?? 0) - (metrics?.archivedPatients ?? 0);
   const archivedPatients = metrics?.archivedPatients ?? 0;
 
-  const [pendingArchiveId, setPendingArchiveId] = useState<string | null>(null);
+  const [pendingArchive, setPendingArchive] = useState<{ id: string; unarchive: boolean } | null>(null);
 
   const archiveMutation = useMutation(
     createArchivePatientMutationOptions(queryClient)
   );
 
-  const handleArchive = (id: string) => {
-    setPendingArchiveId(id);
+  const restoreMutation = useMutation({
+    mutationFn: restorePatient,
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["patients"] });
+      queryClient.invalidateQueries({ queryKey: ["patient-metrics"] });
+      toast.success("Patient Restored", {
+        description: "The patient has been successfully restored.",
+      });
+    },
+    onError: () => {
+      toast.error("Error", { description: "Failed to restore patient." });
+    },
+  });
+
+  const handleArchive = (id: string, unarchive: boolean) => {
+    setPendingArchive({ id, unarchive });
   };
 
   const confirmArchive = () => {
-    if (pendingArchiveId) {
-      archiveMutation.mutate(pendingArchiveId);
-      setPendingArchiveId(null);
+    if (pendingArchive) {
+      if (pendingArchive.unarchive) {
+        restoreMutation.mutate(pendingArchive.id);
+      } else {
+        archiveMutation.mutate(pendingArchive.id);
+      }
+      setPendingArchive(null);
     }
   };
 
@@ -273,11 +293,20 @@ const ManagePatients: React.FC = () => {
                                 View
                               </DropdownMenuItem>
                               <DropdownMenuItem
-                                onClick={() => handleArchive(patient.patientId)}
-                                disabled={archiveMutation.isPending || patient.isArchived}
+                                onClick={() => handleArchive(patient.patientId, patient.isArchived)}
+                                disabled={archiveMutation.isPending || restoreMutation.isPending}
                               >
-                                <Archive className="mr-2 h-4 w-4" />
-                                Archive
+                                {patient.isArchived ? (
+                                  <>
+                                    <Undo2 className="mr-2 h-4 w-4" />
+                                    Unarchive
+                                  </>
+                                ) : (
+                                  <>
+                                    <Archive className="mr-2 h-4 w-4" />
+                                    Archive
+                                  </>
+                                )}
                               </DropdownMenuItem>
                             </DropdownMenuContent>
                           </DropdownMenu>
@@ -326,28 +355,37 @@ const ManagePatients: React.FC = () => {
         </CardContent>
       </Card>
 
-      <AlertDialog open={!!pendingArchiveId} onOpenChange={(open) => !open && setPendingArchiveId(null)}>
+      <AlertDialog open={!!pendingArchive} onOpenChange={(open) => !open && setPendingArchive(null)}>
         <AlertDialogContent>
           <AlertDialogHeader>
-            <AlertDialogTitle>Archive Patient</AlertDialogTitle>
+            <AlertDialogTitle>
+              {pendingArchive?.unarchive ? "Restore Patient" : "Archive Patient"}
+            </AlertDialogTitle>
             <AlertDialogDescription>
-              Are you sure you want to archive{" "}
+              {pendingArchive?.unarchive
+                ? "Are you sure you want to restore "
+                : "Are you sure you want to archive "}
               <span className="font-semibold text-foreground">
                 {(() => {
-                  const found = patients.find((p) => p.patientId === pendingArchiveId);
+                  const found = patients.find((p) => p.patientId === pendingArchive?.id);
                   return found ? fullName(found) : "";
                 })()}
               </span>
-              ? This action can be reversed later.
+              {pendingArchive?.unarchive
+                ? "? This will make the patient active again."
+                : "? This action can be reversed later."}
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>
             <AlertDialogCancel>Cancel</AlertDialogCancel>
             <AlertDialogAction
               onClick={confirmArchive}
-              className="bg-red-700 text-white hover:bg-red-800"
+              className={pendingArchive?.unarchive
+                ? "bg-green-700 text-white hover:bg-green-800"
+                : "bg-red-700 text-white hover:bg-red-800"
+              }
             >
-              Archive
+              {pendingArchive?.unarchive ? "Restore" : "Archive"}
             </AlertDialogAction>
           </AlertDialogFooter>
         </AlertDialogContent>

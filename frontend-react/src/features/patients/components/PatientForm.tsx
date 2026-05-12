@@ -235,34 +235,6 @@ export const PatientForm: React.FC<PatientFormProps> = ({
           </CardContent>
         </Card>
 
-        {isEditMode && (
-          <Card>
-            <CardHeader>
-              <CardTitle>Record Status</CardTitle>
-              <CardDescription>Manage archival status</CardDescription>
-            </CardHeader>
-            <CardContent>
-              <FormField
-                control={form.control}
-                name="isArchived"
-                render={({ field }) => (
-                  <FormItem className="flex flex-row items-center space-x-2 space-y-0">
-                    <FormControl>
-                      <Switch
-                        checked={field.value}
-                        onCheckedChange={field.onChange}
-                      />
-                    </FormControl>
-                    <FormLabel className="text-sm font-normal">
-                      {field.value ? "Unarchive Patient" : "Archive Patient"}
-                    </FormLabel>
-                  </FormItem>
-                )}
-              />
-            </CardContent>
-          </Card>
-        )}
-
         <div className="flex justify-end gap-2 pt-4">
           <Button type="submit" disabled={isLoading}>
             {isLoading
