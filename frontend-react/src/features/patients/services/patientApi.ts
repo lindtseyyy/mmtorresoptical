@@ -26,6 +26,7 @@ const fetchPatients = async (
   sortBy = "fullNameSortable",
   sortOrder = "asc",
   archivedStatus = "ACTIVE",
+  gender?: string,
 ): Promise<PageResponse<Patient>> => {
   const { data } = await api.get("/admin/patients", {
     params: {
@@ -35,6 +36,7 @@ const fetchPatients = async (
       sortOrder,
       archivedStatus,
       ...(keyword && { keyword }),
+      ...(gender && gender !== "all" && { gender }),
     },
   });
   return {

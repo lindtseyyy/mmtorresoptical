@@ -283,7 +283,7 @@ const ManageUsers: React.FC = () => {
                     {sortedUsers.map((user) => (
                       <tr
                         key={user.userId}
-                        className="border-b transition-colors hover:bg-muted"
+                        className={`border-b transition-colors hover:bg-muted ${user.userId === currentUserId ? "bg-muted" : ""}`}
                       >
                         <td className="py-3 pr-4">
                           <span className="block truncate font-medium">

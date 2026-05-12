@@ -45,6 +45,7 @@ const ManagePatients: React.FC = () => {
   const [sortBy, setSortBy] = useState("fullNameSortable");
   const [sortOrder, setSortOrder] = useState<"asc" | "desc">("asc");
   const [archivedFilter, setArchivedFilter] = useState("ACTIVE");
+  const [genderFilter, setGenderFilter] = useState("all");
   const [page, setPage] = useState(0);
 
   useEffect(() => {
@@ -55,7 +56,7 @@ const ManagePatients: React.FC = () => {
   const queryClient = useQueryClient();
 
   const { data: pageData, isLoading, isFetching } = useQuery({
-    ...createPatientsListQueryOptions(page, PAGE_SIZE, debouncedSearchQuery, sortBy, sortOrder, archivedFilter),
+    ...createPatientsListQueryOptions(page, PAGE_SIZE, debouncedSearchQuery, sortBy, sortOrder, archivedFilter, genderFilter),
     placeholderData: keepPreviousData,
   });
 
@@ -106,7 +107,7 @@ const ManagePatients: React.FC = () => {
 
   useEffect(() => {
     setPage(0);
-  }, [debouncedSearchQuery, sortBy, sortOrder, archivedFilter]);
+  }, [debouncedSearchQuery, sortBy, sortOrder, archivedFilter, genderFilter]);
 
   useEffect(() => {
     if (patients.length === 0 && page > 0 && !isFetching) {
@@ -229,6 +230,20 @@ const ManagePatients: React.FC = () => {
                     <SelectItem value="ACTIVE">Active</SelectItem>
                     <SelectItem value="ARCHIVED">Archived</SelectItem>
                     <SelectItem value="ALL">All</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+              <div className="flex items-center gap-2">
+                <span className="text-sm text-muted-foreground whitespace-nowrap">Gender:</span>
+                <Select value={genderFilter} onValueChange={setGenderFilter}>
+                  <SelectTrigger className="w-[130px]">
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="all">All Genders</SelectItem>
+                    <SelectItem value="MALE">Male</SelectItem>
+                    <SelectItem value="FEMALE">Female</SelectItem>
+                    <SelectItem value="OTHERS">Other</SelectItem>
                   </SelectContent>
                 </Select>
               </div>
