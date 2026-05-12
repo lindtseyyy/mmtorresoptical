@@ -30,6 +30,8 @@ import EditUser from "@/features/users/components/EditUser";
 import ManagePatients from "@/features/patients/components/ManagePatients";
 import AddPatient from "@/features/patients/components/AddPatient";
 import EditPatient from "@/features/patients/components/EditPatient";
+import AddPrescription from "@/features/patients/components/AddPrescription";
+import AddHealthHistory from "@/features/patients/components/AddHealthHistory";
 
 // --- Shared ---
 import MainLayout from "@/shared/components/layout/MainLayout";
@@ -66,6 +68,8 @@ const router = createBrowserRouter([
         children: [
           { index: true, element: <ManagePatients /> },
           { path: "add", element: <AddPatient /> },
+          { path: "add/prescription", element: <AddPrescription /> },
+          { path: "add/health-history", element: <AddHealthHistory /> },
           { path: "edit/:id", element: <EditPatient /> },
         ],
       },
