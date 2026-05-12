@@ -12,10 +12,11 @@ function createProductsListQueryOptions(
   sortBy?: string,
   sortOrder?: string,
   stockStatus?: string,
+  archivedStatus?: string,
 ) {
   return queryOptions({
-    queryKey: ["products", page, size, keyword ?? "", category ?? "all", sortBy ?? "productName", sortOrder ?? "asc", stockStatus ?? "all"],
-    queryFn: () => fetchProducts(page, size, keyword, category, sortBy, sortOrder, stockStatus),
+    queryKey: ["products", page, size, keyword ?? "", category ?? "all", sortBy ?? "productName", sortOrder ?? "asc", stockStatus ?? "all", archivedStatus ?? "ACTIVE"],
+    queryFn: () => fetchProducts(page, size, keyword, category, sortBy, sortOrder, stockStatus, archivedStatus),
   });
 }
 

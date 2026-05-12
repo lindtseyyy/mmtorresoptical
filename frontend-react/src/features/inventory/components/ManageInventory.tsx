@@ -32,6 +32,7 @@ const ManageInventory: React.FC = () => {
   const [debouncedSearchQuery, setDebouncedSearchQuery] = useState(searchQuery);
   const [categoryFilter, setCategoryFilter] = useState<string>("all");
   const [stockFilter, setStockFilter] = useState("all");
+  const [archivedFilter, setArchivedFilter] = useState("ACTIVE");
   const [sortBy, setSortBy] = useState("productName");
   const [sortOrder, setSortOrder] = useState<"asc" | "desc">("asc");
   const [page, setPage] = useState(0);
@@ -48,7 +49,7 @@ const ManageInventory: React.FC = () => {
     isLoading,
     isFetching,
   } = useQuery({
-    ...createProductsListQueryOptions(page, PAGE_SIZE, debouncedSearchQuery, categoryFilter, sortBy, sortOrder, stockFilter),
+    ...createProductsListQueryOptions(page, PAGE_SIZE, debouncedSearchQuery, categoryFilter, sortBy, sortOrder, stockFilter, archivedFilter),
     placeholderData: keepPreviousData,
   });
 
@@ -71,7 +72,7 @@ const ManageInventory: React.FC = () => {
   // Reset page when search or category filter changes
   useEffect(() => {
     setPage(0);
-  }, [debouncedSearchQuery, categoryFilter, sortBy, sortOrder, stockFilter]);
+  }, [debouncedSearchQuery, categoryFilter, sortBy, sortOrder, stockFilter, archivedFilter]);
 
   // If current page is empty and not the first page, step back
   useEffect(() => {
@@ -224,6 +225,19 @@ const ManageInventory: React.FC = () => {
               </div>
             </div>
             <div className="flex flex-wrap items-center justify-end gap-4">
+              <div className="flex items-center gap-2">
+                <span className="text-sm text-muted-foreground whitespace-nowrap">Status:</span>
+                <Select value={archivedFilter} onValueChange={setArchivedFilter}>
+                  <SelectTrigger className="w-[130px]">
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="ACTIVE">Active</SelectItem>
+                    <SelectItem value="ARCHIVED">Archived</SelectItem>
+                    <SelectItem value="ALL">All</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
               <div className="flex items-center gap-2">
                 <span className="text-sm text-muted-foreground whitespace-nowrap">Category:</span>
                 <Select value={categoryFilter} onValueChange={setCategoryFilter}>
