@@ -481,7 +481,7 @@ const ViewPatient: React.FC = () => {
                   </SelectContent>
                 </Select>
               </div>
-              <Button size="sm" asChild>
+              <Button asChild>
                 <Link to={`/patients/add/health-history?patientId=${patientId}&patientName=${encodeURIComponent(fullName)}`}>
                   <Plus className="mr-1 h-4 w-4" />
                   Add Medical History
