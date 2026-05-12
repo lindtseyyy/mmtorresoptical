@@ -5,6 +5,7 @@ import com.mmtorresoptical.OpticalClinicManagementSystem.dto.user.UpdateSecurity
 import com.mmtorresoptical.OpticalClinicManagementSystem.dto.user.ResetSecurityCredentialsRequestDTO;
 import com.mmtorresoptical.OpticalClinicManagementSystem.dto.user.SecurityCredentialsUpdateResponseDTO;
 import com.mmtorresoptical.OpticalClinicManagementSystem.dto.user.UpdateUserRequestDTO;
+import com.mmtorresoptical.OpticalClinicManagementSystem.dto.user.UpdateOwnProfileRequestDTO;
 import com.mmtorresoptical.OpticalClinicManagementSystem.dto.user.UserDetailsDTO;
 import com.mmtorresoptical.OpticalClinicManagementSystem.dto.user.CreateUserRequestDTO;
 import com.mmtorresoptical.OpticalClinicManagementSystem.dto.user.UserResponseDTO;
@@ -296,6 +297,53 @@ public class UserService {
 
         // Audit Logging
         userAuditHelper.logRestore(retrievedUser);
+    }
+
+    public UserResponseDTO getOwnProfile() {
+        User user = authenticatedUserService.getCurrentUser();
+        return userMapper.entityToResponseDTO(user);
+    }
+
+    public UserResponseDTO updateOwnProfile(UpdateOwnProfileRequestDTO request) {
+        User user = authenticatedUserService.getCurrentUser();
+
+        User beforeUpdate = new User();
+        BeanUtils.copyProperties(user, beforeUpdate);
+
+        String first = request.getFirstName();
+        String middle = Optional.ofNullable(request.getMiddleName()).orElse("");
+        String last = request.getLastName();
+
+        boolean nameChanged =
+                !user.getFirstName().equals(first) ||
+                        !Objects.equals(user.getMiddleName(), middle) ||
+                        !user.getLastName().equals(last);
+
+        if (nameChanged) {
+            if (userRepository.existsByFirstNameAndMiddleNameAndLastName(first, middle, last)) {
+                throw new ConflictException("Name is already taken");
+            }
+            user.setFullNameSortable(NameUtils.generateFullNameSortable(first, middle, last));
+        }
+
+        if (!user.getEmail().equals(request.getEmail())) {
+            if (userRepository.existsByEmail(request.getEmail())) {
+                throw new ConflictException("Email is already in use");
+            }
+        }
+
+        if (!user.getContactNumber().equals(request.getContactNumber())) {
+            if (userRepository.existsByContactNumber(request.getContactNumber())) {
+                throw new ConflictException("Contact number is already in use");
+            }
+        }
+
+        userMapper.updateEntityFromOwnProfileRequestDTO(request, user);
+
+        User updatedUser = userRepository.save(user);
+        userAuditHelper.logUpdate(beforeUpdate, updatedUser);
+
+        return userMapper.entityToResponseDTO(updatedUser);
     }
 
     private User getUserById(UUID id) {

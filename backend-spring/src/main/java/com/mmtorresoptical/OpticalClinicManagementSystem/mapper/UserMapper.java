@@ -49,6 +49,8 @@ public interface UserMapper {
 
     void updateEntityFromRequestDTO(UpdateUserRequestDTO userRequestDTO, @MappingTarget User user);
 
+    void updateEntityFromOwnProfileRequestDTO(UpdateOwnProfileRequestDTO requestDTO, @MappingTarget User user);
+
     default String buildFullName(String first, String middle, String last) {
         StringBuilder name = new StringBuilder();
 

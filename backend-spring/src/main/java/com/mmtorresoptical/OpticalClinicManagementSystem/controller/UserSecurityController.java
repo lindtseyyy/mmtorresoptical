@@ -2,7 +2,9 @@ package com.mmtorresoptical.OpticalClinicManagementSystem.controller;
 
 import com.mmtorresoptical.OpticalClinicManagementSystem.dto.user.ResetSecurityCredentialsRequestDTO;
 import com.mmtorresoptical.OpticalClinicManagementSystem.dto.user.SecurityCredentialsUpdateResponseDTO;
+import com.mmtorresoptical.OpticalClinicManagementSystem.dto.user.UpdateOwnProfileRequestDTO;
 import com.mmtorresoptical.OpticalClinicManagementSystem.dto.user.UpdateSecurityCredentialsRequestDTO;
+import com.mmtorresoptical.OpticalClinicManagementSystem.dto.user.UserResponseDTO;
 import com.mmtorresoptical.OpticalClinicManagementSystem.services.controller.UserService;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
@@ -17,6 +19,19 @@ import java.util.UUID;
 public class UserSecurityController {
 
     private final UserService userService;
+
+    @GetMapping("/users/me")
+    public ResponseEntity<UserResponseDTO> getOwnProfile() {
+        UserResponseDTO profile = userService.getOwnProfile();
+        return ResponseEntity.ok(profile);
+    }
+
+    @PutMapping("/users/me")
+    public ResponseEntity<UserResponseDTO> updateOwnProfile(
+            @Valid @RequestBody UpdateOwnProfileRequestDTO request) {
+        UserResponseDTO updated = userService.updateOwnProfile(request);
+        return ResponseEntity.ok(updated);
+    }
 
     @PatchMapping("/users/me/security-question")
     public ResponseEntity<SecurityCredentialsUpdateResponseDTO> updateOwnSecurityCredentials(
