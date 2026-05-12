@@ -64,7 +64,8 @@ public class ProductController {
                                                                   @RequestParam(defaultValue = "productName") String sortBy,
                                                                   @RequestParam(defaultValue = "asc") String sortOrder,
 
-                                                                  @RequestParam(defaultValue = "ACTIVE") String archivedStatus) {
+                                                                  @RequestParam(defaultValue = "ACTIVE") String archivedStatus,
+                                                                  @RequestParam(required = false) String stockStatus) {
 
         // Validation for sortBy column
         List<String> allowedSortByValues = List.of("productName", "quantity", "unitPrice");
@@ -85,7 +86,8 @@ public class ProductController {
                 size,
                 sortBy,
                 sortOrder,
-                archivedStatus);
+                archivedStatus,
+                stockStatus);
 
         return ResponseEntity.ok(productDetailsDTOPage);
     }

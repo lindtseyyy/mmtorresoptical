@@ -88,6 +88,30 @@ public class ProductSpecification {
         };
     }
 
+    public static Specification<Product> hasStockStatus(String stockStatus) {
+        return (root, query, cb) -> {
+            if (stockStatus == null || stockStatus.isBlank()) {
+                return null;
+            }
+            String upper = stockStatus.toUpperCase();
+            if ("LOW_STOCK".equals(upper)) {
+                return cb.lessThanOrEqualTo(
+                    cb.diff(root.get("quantity"), root.get("lowLevelThreshold")), 0);
+            }
+            if ("OVERSTOCKED".equals(upper)) {
+                return cb.greaterThanOrEqualTo(
+                    cb.diff(root.get("quantity"), root.get("overstockedThreshold")), 0);
+            }
+            if ("NORMAL".equals(upper)) {
+                return cb.and(
+                    cb.greaterThan(cb.diff(root.get("quantity"), root.get("lowLevelThreshold")), 0),
+                    cb.lessThan(cb.diff(root.get("quantity"), root.get("overstockedThreshold")), 0)
+                );
+            }
+            return null;
+        };
+    }
+
     public static Specification<Product> hasArchivedStatus(String status) {
         return (root, query, cb) -> {
 
