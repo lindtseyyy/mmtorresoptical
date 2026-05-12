@@ -63,9 +63,14 @@ const archiveProduct = async (id: string) => {
   return await api.delete(`/products/${id}`);
 };
 
+// API call to restore a product
+const restoreProduct = async (id: string) => {
+  return await api.put(`/products/${id}/restore`);
+};
+
 const fetchInventorySummary = async (): Promise<InventorySummary> => {
   const { data } = await api.get("/reports/inventory/summary");
   return data;
 };
 
-export { fetchProducts, fetchProduct, updateProduct, addProduct, archiveProduct, fetchInventorySummary };
+export { fetchProducts, fetchProduct, updateProduct, addProduct, archiveProduct, restoreProduct, fetchInventorySummary };

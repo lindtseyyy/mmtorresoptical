@@ -10,7 +10,7 @@ import {
   SelectValue,
 } from "@/shared/components/ui/select";
 import { Badge } from "@/shared/components/ui/badge";
-import { Plus, Search, Archive, Pencil, ChevronLeft, ChevronRight, Glasses, MoreHorizontal, Package, Layers, AlertTriangle, TrendingUp, Banknote, ArrowUp, ArrowDown } from "lucide-react";
+import { Plus, Search, Archive, Undo2, Pencil, ChevronLeft, ChevronRight, Glasses, MoreHorizontal, Package, Layers, AlertTriangle, TrendingUp, Banknote, ArrowUp, ArrowDown } from "lucide-react";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -18,10 +18,22 @@ import {
   DropdownMenuTrigger,
 } from "@/shared/components/ui/dropdown-menu";
 import { useNavigate } from "react-router-dom";
+import { toast } from "sonner";
 import { Card, CardContent } from "@/shared/components/ui/card";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from "@/shared/components/ui/alert-dialog";
 import type { Product } from "@/features/inventory/types";
 import {
   createArchiveProductMutationOptions,
+  createRestoreProductMutationOptions,
   createProductsListQueryOptions,
   createInventorySummaryQueryOptions,
 } from "@/features/inventory/hooks/productQuery";
@@ -59,14 +71,29 @@ const ManageInventory: React.FC = () => {
 
   const { data: summary } = useQuery(createInventorySummaryQueryOptions());
 
-  // Mutation for archiving
+  const [pendingArchive, setPendingArchive] = useState<{ id: string; unarchive: boolean } | null>(null);
+
   const archiveMutation = useMutation(
     createArchiveProductMutationOptions(queryClient)
   );
 
-  const handleArchive = (id: string) => {
-    // You should add a confirmation dialog here
-    archiveMutation.mutate(id);
+  const restoreMutation = useMutation(
+    createRestoreProductMutationOptions(queryClient)
+  );
+
+  const handleArchive = (id: string, unarchive: boolean) => {
+    setPendingArchive({ id, unarchive });
+  };
+
+  const confirmArchive = () => {
+    if (pendingArchive) {
+      if (pendingArchive.unarchive) {
+        restoreMutation.mutate(pendingArchive.id);
+      } else {
+        archiveMutation.mutate(pendingArchive.id);
+      }
+      setPendingArchive(null);
+    }
   };
 
   // Reset page when search or category filter changes
@@ -351,11 +378,20 @@ const ManageInventory: React.FC = () => {
                                   Edit
                                 </DropdownMenuItem>
                                 <DropdownMenuItem
-                                  onClick={() => handleArchive(product.productId)}
-                                  disabled={archiveMutation.isPending}
+                                  onClick={() => handleArchive(product.productId, product.isArchived)}
+                                  disabled={archiveMutation.isPending || restoreMutation.isPending}
                                 >
-                                  <Archive className="mr-2 h-4 w-4" />
-                                  Archive
+                                  {product.isArchived ? (
+                                    <>
+                                      <Undo2 className="mr-2 h-4 w-4" />
+                                      Unarchive
+                                    </>
+                                  ) : (
+                                    <>
+                                      <Archive className="mr-2 h-4 w-4" />
+                                      Archive
+                                    </>
+                                  )}
                                 </DropdownMenuItem>
                               </DropdownMenuContent>
                             </DropdownMenu>
@@ -404,6 +440,39 @@ const ManageInventory: React.FC = () => {
           )}
         </CardContent>
       </Card>
+
+      <AlertDialog open={!!pendingArchive} onOpenChange={(open) => !open && setPendingArchive(null)}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>
+              {pendingArchive?.unarchive ? "Restore Product" : "Archive Product"}
+            </AlertDialogTitle>
+            <AlertDialogDescription>
+              {pendingArchive?.unarchive
+                ? "Are you sure you want to restore "
+                : "Are you sure you want to archive "}
+              <span className="font-semibold text-foreground">
+                {products.find((p) => p.productId === pendingArchive?.id)?.productName}
+              </span>
+              {pendingArchive?.unarchive
+                ? "? This will make the product active again."
+                : "? This action can be reversed later."}
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>Cancel</AlertDialogCancel>
+            <AlertDialogAction
+              onClick={confirmArchive}
+              className={pendingArchive?.unarchive
+                ? "bg-green-700 text-white hover:bg-green-800"
+                : "bg-red-700 text-white hover:bg-red-800"
+              }
+            >
+              {pendingArchive?.unarchive ? "Restore" : "Archive"}
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </div>
   );
 };

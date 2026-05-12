@@ -25,7 +25,6 @@ import {
   CardHeader,
   CardTitle,
 } from "@/shared/components/ui/card";
-import { Switch } from "@/shared/components/ui/switch";
 import { productSchema, productFormSchema, type ProductFormData, type ProductFormValues } from "@/features/inventory/types";
 
 interface ProductFormProps {
@@ -54,7 +53,6 @@ const mapToFormValues = (values?: ProductFormData): ProductFormValues => ({
     values && values.overstockedThreshold !== undefined
       ? String(values.overstockedThreshold)
       : "",
-  isArchived: values?.isArchived ?? false,
   imageDir: values?.imageDir ?? "",
 });
 
@@ -282,24 +280,6 @@ export const ProductForm: React.FC<ProductFormProps> = ({
                 )}
               />
             </div>
-
-            <FormField
-              control={form.control}
-              name="isArchived"
-              render={({ field }) => (
-                <FormItem className="flex flex-row items-center space-x-2 space-y-0">
-                  <FormControl>
-                    <Switch
-                      checked={field.value}
-                      onCheckedChange={field.onChange}
-                    />
-                  </FormControl>
-                  <FormLabel className="text-sm font-normal">
-                    {field.value ? "Unarchive Product" : "Archive Product"}
-                  </FormLabel>
-                </FormItem>
-              )}
-            />
 
             <div className="flex gap-2 pt-4">
               <Button type="submit" disabled={isLoading}>

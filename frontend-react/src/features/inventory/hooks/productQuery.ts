@@ -1,5 +1,5 @@
 import { queryOptions } from "@tanstack/react-query";
-import { fetchProducts, fetchProduct, addProduct, updateProduct, archiveProduct, fetchInventorySummary } from "@/features/inventory/services/productApi";
+import { fetchProducts, fetchProduct, addProduct, updateProduct, archiveProduct, restoreProduct, fetchInventorySummary } from "@/features/inventory/services/productApi";
 import { toast } from "sonner";
 import type { NavigateFunction } from "react-router";
 import type { ProductFormData } from "@/features/inventory/types";
@@ -82,6 +82,23 @@ function createArchiveProductMutationOptions(queryClient: any) {
   }
 }
 
+function createRestoreProductMutationOptions(queryClient: any) {
+    return {
+    mutationFn: restoreProduct,
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["products"] });
+      toast.success("Product Restored", {
+        description: "The product has been successfully restored.",
+      });
+    },
+    onError: () => {
+      toast.error("Error", {
+        description: "Failed to restore product.",
+      });
+    },
+  }
+}
+
 function createInventorySummaryQueryOptions() {
     return queryOptions({
     queryKey: ["inventory-summary"],
@@ -90,4 +107,4 @@ function createInventorySummaryQueryOptions() {
   })
 }
 
-export {createProductsListQueryOptions, createEditProductQueryOptions, createAddProductMutationOptions, createEditProductMutationOptions, createArchiveProductMutationOptions, createInventorySummaryQueryOptions}
+export {createProductsListQueryOptions, createEditProductQueryOptions, createAddProductMutationOptions, createEditProductMutationOptions, createArchiveProductMutationOptions, createRestoreProductMutationOptions, createInventorySummaryQueryOptions}
