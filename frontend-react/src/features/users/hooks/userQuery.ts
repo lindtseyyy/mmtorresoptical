@@ -1,5 +1,5 @@
 import { QueryClient, queryOptions } from '@tanstack/react-query';
-import { fetchUsers, fetchUser, archiveUser, registerUser, updateUser, fetchUserSummary } from '@/features/users/services/userApi';
+import { fetchUsers, fetchUser, archiveUser, restoreUser, registerUser, updateUser, fetchUserSummary } from '@/features/users/services/userApi';
 import { toast } from "sonner";  
 import type { NavigateFunction } from 'react-router-dom';   
 import type { UserFormData } from '@/features/users/types';  
@@ -72,6 +72,19 @@ function createArchiveUserMutationOptions(queryClient: QueryClient) {
   }
 }
 
+function createRestoreUserMutationOptions(queryClient: QueryClient) {
+    return {
+    mutationFn: restoreUser,
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["users"] });
+      toast.success("User Restored");
+    },
+    onError: () => {
+      toast.error("Failed to restore user.");
+    },
+  }
+}
+
 function createUserSummaryQueryOptions() {
   return queryOptions({
     queryKey: ["user-summary"],
@@ -80,4 +93,4 @@ function createUserSummaryQueryOptions() {
   });
 }
 
-export { createUsersListQueryOptions, createEditUserQueryOptions, createArchiveUserMutationOptions, createAddUserMutationOptions, createEditUserMutationOptions, createUserSummaryQueryOptions };
+export { createUsersListQueryOptions, createEditUserQueryOptions, createArchiveUserMutationOptions, createRestoreUserMutationOptions, createAddUserMutationOptions, createEditUserMutationOptions, createUserSummaryQueryOptions };

@@ -83,6 +83,11 @@ const archiveUser = async (id: string) => {
   return await api.delete(`/admin/users/${id}`);
 };
 
+// API call to restore a user
+const restoreUser = async (id: string) => {
+  return await api.put(`/admin/users/${id}/restore`);
+};
+
 // API call to register a new user
 const registerUser = async (data: UserFormData) => {
   mapEnumsToBackend(data);
@@ -113,4 +118,4 @@ const fetchUserSummary = async (): Promise<UserSummary> => {
   return data;
 };
 
-export { fetchUsers, fetchUser, archiveUser, registerUser, updateUser, resetPassword, fetchUserSummary };
+export { fetchUsers, fetchUser, archiveUser, restoreUser, registerUser, updateUser, resetPassword, fetchUserSummary };

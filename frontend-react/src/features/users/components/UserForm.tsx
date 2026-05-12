@@ -5,7 +5,6 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import { userSchema, type UserFormData } from "@/features/users/types";
 import { Button } from "@/shared/components/ui/button";
 import { Input } from "@/shared/components/ui/input";
-import { Switch } from "@/shared/components/ui/switch";
 import {
   Select,
   SelectContent,
@@ -122,7 +121,6 @@ export const UserForm: React.FC<UserFormProps> = ({
       securityQuestion: "",
       securityAnswer: "",
       role: "Staff",
-      isArchived: false,
     },
   });
   // 👇 Add handleFormSubmit here
@@ -140,7 +138,6 @@ export const UserForm: React.FC<UserFormProps> = ({
       securityQuestion: data.securityQuestion ?? "",
       securityAnswer: data.securityAnswer ?? "",
       role: data.role ?? "Staff",
-      isArchived: data.isArchived ?? false,
     };
 
     await onFormSubmit(payload);
@@ -360,23 +357,6 @@ export const UserForm: React.FC<UserFormProps> = ({
                 />
               </div>
             )}
-            <FormField
-              control={form.control}
-              name="isArchived"
-              render={({ field }) => (
-                <FormItem className="flex flex-row items-center space-x-2 space-y-0">
-                  <FormControl>
-                    <Switch
-                      checked={field.value}
-                      onCheckedChange={field.onChange}
-                    />
-                  </FormControl>
-                  <FormLabel className="text-sm font-normal">
-                    {field.value ? "Unarchive User" : "Archive User"}
-                  </FormLabel>
-                </FormItem>
-              )}
-            />
           </CardContent>
         </Card>
 

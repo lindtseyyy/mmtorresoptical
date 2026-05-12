@@ -3,7 +3,7 @@ import { useQuery, useMutation, useQueryClient, keepPreviousData } from "@tansta
 import { Button } from "@/shared/components/ui/button";
 import { Input } from "@/shared/components/ui/input";
 import { Badge } from "@/shared/components/ui/badge";
-import { Plus, Search, Archive, Pencil, ChevronLeft, ChevronRight, MoreHorizontal, Users, UserCheck, ArchiveIcon, Shield, UserCog, ArrowUp, ArrowDown } from "lucide-react";
+import { Plus, Search, Archive, Undo2, Pencil, ChevronLeft, ChevronRight, MoreHorizontal, Users, UserCheck, ArchiveIcon, Shield, UserCog, ArrowUp, ArrowDown } from "lucide-react";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -32,6 +32,7 @@ import {
 import type { User } from "@/features/users/types";
 import {
   createArchiveUserMutationOptions,
+  createRestoreUserMutationOptions,
   createUsersListQueryOptions,
   createUserSummaryQueryOptions,
 } from "@/features/users/hooks/userQuery";
@@ -76,20 +77,28 @@ const ManageUsers: React.FC = () => {
   const totalElements = pageData?.totalElements ?? 0;
   const totalPages = pageData?.totalPages ?? 0;
 
-  const [pendingArchiveId, setPendingArchiveId] = useState<string | null>(null);
+  const [pendingArchive, setPendingArchive] = useState<{ id: string; unarchive: boolean } | null>(null);
 
   const archiveMutation = useMutation(
     createArchiveUserMutationOptions(queryClient)
   );
 
-  const handleArchive = (id: string) => {
-    setPendingArchiveId(id);
+  const restoreMutation = useMutation(
+    createRestoreUserMutationOptions(queryClient)
+  );
+
+  const handleArchive = (id: string, unarchive: boolean) => {
+    setPendingArchive({ id, unarchive });
   };
 
   const confirmArchive = () => {
-    if (pendingArchiveId) {
-      archiveMutation.mutate(pendingArchiveId);
-      setPendingArchiveId(null);
+    if (pendingArchive) {
+      if (pendingArchive.unarchive) {
+        restoreMutation.mutate(pendingArchive.id);
+      } else {
+        archiveMutation.mutate(pendingArchive.id);
+      }
+      setPendingArchive(null);
     }
   };
 
@@ -345,11 +354,20 @@ const ManageUsers: React.FC = () => {
                                   Edit
                                 </DropdownMenuItem>
                                 <DropdownMenuItem
-                                  onClick={() => handleArchive(user.userId)}
-                                  disabled={archiveMutation.isPending}
+                                  onClick={() => handleArchive(user.userId, user.isArchived)}
+                                  disabled={archiveMutation.isPending || restoreMutation.isPending}
                                 >
-                                  <Archive className="mr-2 h-4 w-4" />
-                                  Archive
+                                  {user.isArchived ? (
+                                    <>
+                                      <Undo2 className="mr-2 h-4 w-4" />
+                                      Unarchive
+                                    </>
+                                  ) : (
+                                    <>
+                                      <Archive className="mr-2 h-4 w-4" />
+                                      Archive
+                                    </>
+                                  )}
                                 </DropdownMenuItem>
                               </DropdownMenuContent>
                             </DropdownMenu>
@@ -401,26 +419,35 @@ const ManageUsers: React.FC = () => {
         </CardContent>
       </Card>
 
-      <AlertDialog open={!!pendingArchiveId} onOpenChange={(open) => !open && setPendingArchiveId(null)}>
+      <AlertDialog open={!!pendingArchive} onOpenChange={(open) => !open && setPendingArchive(null)}>
         <AlertDialogContent>
           <AlertDialogHeader>
-            <AlertDialogTitle>Archive User</AlertDialogTitle>
+            <AlertDialogTitle>
+              {pendingArchive?.unarchive ? "Restore User" : "Archive User"}
+            </AlertDialogTitle>
             <AlertDialogDescription>
-              Are you sure you want to archive{" "}
+              {pendingArchive?.unarchive
+                ? "Are you sure you want to restore "
+                : "Are you sure you want to archive "}
               <span className="font-semibold text-foreground">
-                {users.find((u) => u.userId === pendingArchiveId)?.firstName}{" "}
-                {users.find((u) => u.userId === pendingArchiveId)?.lastName}
+                {users.find((u) => u.userId === pendingArchive?.id)?.firstName}{" "}
+                {users.find((u) => u.userId === pendingArchive?.id)?.lastName}
               </span>
-              ? This action can be reversed later.
+              {pendingArchive?.unarchive
+                ? "? This will make the user active again."
+                : "? This action can be reversed later."}
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>
             <AlertDialogCancel>Cancel</AlertDialogCancel>
             <AlertDialogAction
               onClick={confirmArchive}
-              className="bg-red-700 text-white hover:bg-red-800"
+              className={pendingArchive?.unarchive
+                ? "bg-green-700 text-white hover:bg-green-800"
+                : "bg-red-700 text-white hover:bg-red-800"
+              }
             >
-              Archive
+              {pendingArchive?.unarchive ? "Restore" : "Archive"}
             </AlertDialogAction>
           </AlertDialogFooter>
         </AlertDialogContent>
