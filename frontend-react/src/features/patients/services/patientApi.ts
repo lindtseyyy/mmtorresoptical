@@ -84,9 +84,76 @@ export interface PatientMetrics {
   archivedPatients: number;
 }
 
+export interface PatientProfileMetrics {
+  totalVisits: number;
+  lastVisitDate: string | null;
+  lastPrescriptionDate: string | null;
+  purchasedProducts: number;
+  totalAmountPurchased: number;
+}
+
+export interface PrescriptionListItem {
+  prescriptionId: string;
+  examDate: string;
+  notes: string | null;
+  createdAt: string;
+  isArchived: boolean;
+  createdBy: { userId: string; fullName: string } | null;
+}
+
+export interface HealthHistoryItem {
+  historyId: string;
+  examDate: string;
+  eyeConditions: string | null;
+  systemicConditions: string | null;
+  medications: string | null;
+  allergies: string | null;
+  visualAcuityRight: string | null;
+  visualAcuityLeft: string | null;
+  notes: string | null;
+  createdAt: string;
+  isArchived: boolean;
+  createdBy: { userId: string; fullName: string } | null;
+}
+
 const fetchPatientMetrics = async (): Promise<PatientMetrics> => {
   const { data } = await api.get("/admin/patients/summary");
   return data;
 };
 
-export { fetchPatients, fetchPatient, addPatient, updatePatient, archivePatient, fetchPatientMetrics };
+const fetchPatientProfileMetrics = async (patientId: string): Promise<PatientProfileMetrics> => {
+  const { data } = await api.get(`/admin/patients/${patientId}/profile-metrics`);
+  return data;
+};
+
+const fetchPatientPrescriptions = async (
+  patientId: string,
+  page = 0,
+  size = 5,
+): Promise<{ content: PrescriptionListItem[]; totalPages: number; totalElements: number }> => {
+  const { data } = await api.get(`/admin/patient/${patientId}/prescriptions`, {
+    params: { page, size, sortBy: "examDate", sortOrder: "desc", archivedStatus: "ALL" },
+  });
+  return {
+    content: data.content,
+    totalPages: data.page.totalPages,
+    totalElements: data.page.totalElements,
+  };
+};
+
+const fetchPatientHealthHistories = async (
+  patientId: string,
+  page = 0,
+  size = 5,
+): Promise<{ content: HealthHistoryItem[]; totalPages: number; totalElements: number }> => {
+  const { data } = await api.get(`/admin/patients/${patientId}/health-histories`, {
+    params: { page, size, sortBy: "examDate", sortOrder: "desc", archivedStatus: "ALL" },
+  });
+  return {
+    content: data.content,
+    totalPages: data.page.totalPages,
+    totalElements: data.page.totalElements,
+  };
+};
+
+export { fetchPatients, fetchPatient, addPatient, updatePatient, archivePatient, fetchPatientMetrics, fetchPatientProfileMetrics, fetchPatientPrescriptions, fetchPatientHealthHistories };

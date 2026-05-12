@@ -2,7 +2,7 @@ import { useState, useEffect } from "react";
 import { useQuery, useMutation, useQueryClient, keepPreviousData } from "@tanstack/react-query";
 import { Button } from "@/shared/components/ui/button";
 import { Input } from "@/shared/components/ui/input";
-import { Plus, Search, Archive, Pencil, ChevronLeft, ChevronRight, MoreHorizontal, Users, UserCheck, ArchiveIcon, ArrowUp, ArrowDown } from "lucide-react";
+import { Plus, Search, Archive, Eye, ChevronLeft, ChevronRight, MoreHorizontal, Users, UserCheck, ArchiveIcon, ArrowUp, ArrowDown } from "lucide-react";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -259,18 +259,18 @@ const ManagePatients: React.FC = () => {
                         <td className="py-3 pl-4">
                           <DropdownMenu>
                             <DropdownMenuTrigger asChild>
-                              <Button variant="ghost" size="icon">
-                                <MoreHorizontal className="h-4 w-4" />
+                              <Button variant="ghost" className="h-10 w-10 shrink-0 p-0 [&_svg]:size-auto focus-visible:ring-0">
+                                <MoreHorizontal className="h-8 w-8" />
                               </Button>
                             </DropdownMenuTrigger>
                             <DropdownMenuContent align="end" className="bg-gray-100 dark:bg-gray-800 border-gray-300 dark:border-gray-700">
                               <DropdownMenuItem
                                 onClick={() =>
-                                  navigate(`/patients/edit/${patient.patientId}`)
+                                  navigate(`/patients/view/${patient.patientId}`)
                                 }
                               >
-                                <Pencil className="mr-2 h-4 w-4" />
-                                Edit
+                                <Eye className="mr-2 h-4 w-4" />
+                                View
                               </DropdownMenuItem>
                               <DropdownMenuItem
                                 onClick={() => handleArchive(patient.patientId)}
