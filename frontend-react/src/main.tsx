@@ -29,6 +29,7 @@ import EditUser from "@/features/users/components/EditUser";
 // --- Shared ---
 import MainLayout from "@/shared/components/layout/MainLayout";
 import AdminGuard from "@/shared/components/layout/AdminGuard";
+import NotFound from "@/shared/components/layout/NotFound";
 
 const queryClient = new QueryClient();
 
@@ -65,6 +66,7 @@ const router = createBrowserRouter([
       },
     ],
   },
+  { path: "*", element: <NotFound /> },
 ]);
 
 createRoot(document.getElementById("root")!).render(
