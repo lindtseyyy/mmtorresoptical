@@ -2,10 +2,11 @@ import { NavLink, useLocation, useNavigate } from "react-router-dom";
 import { Users, Eye, LogOut } from "lucide-react";
 import { Button, buttonVariants } from "@/shared/components/ui/button";
 import { toast } from "sonner";
+import { isAdmin, type Role } from "@/shared/lib/auth";
 
 const menuItems = [
-  { title: "Manage Inventory", href: "/inventory", icon: Eye },
-  { title: "Manage Users", href: "/users", icon: Users },
+  { title: "Manage Inventory", href: "/inventory", icon: Eye, roles: ["ADMIN", "STAFF"] as Role[] },
+  { title: "Manage Users", href: "/users", icon: Users, roles: ["ADMIN"] as Role[] },
 ];
 
 function getLinkClassName({ isActive }: { isActive: boolean }): string {
@@ -35,6 +36,7 @@ const Sidenav: React.FC = () => {
   const navigate = useNavigate();
 
   const user = getUserFromToken();
+  const visibleItems = menuItems.filter((item) => isAdmin() || item.roles.includes("STAFF"));
 
   const handleLogout = () => {
     localStorage.removeItem("authToken");
@@ -62,7 +64,7 @@ const Sidenav: React.FC = () => {
       <div className="flex-1 overflow-y-auto">
         <div className="px-4 py-2">
           <nav className="flex-1 space-y-1">
-            {menuItems.map((item) => {
+            {visibleItems.map((item) => {
               const isActive = location.pathname === item.href || location.pathname.startsWith(item.href + "/");
               return (
                 <NavLink

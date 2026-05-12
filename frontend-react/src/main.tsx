@@ -5,6 +5,7 @@ import {
   createBrowserRouter,
   RouterProvider,
   Navigate,
+  Outlet,
 } from "react-router-dom";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 
@@ -27,6 +28,7 @@ import EditUser from "@/features/users/components/EditUser";
 
 // --- Shared ---
 import MainLayout from "@/shared/components/layout/MainLayout";
+import AdminGuard from "@/shared/components/layout/AdminGuard";
 
 const queryClient = new QueryClient();
 
@@ -52,9 +54,15 @@ const router = createBrowserRouter([
       { path: "inventory", element: <ManageInventory /> },
       { path: "inventory/add", element: <AddProduct /> },
       { path: "inventory/edit/:id", element: <EditProduct /> },
-      { path: "users", element: <ManageUsers /> },
-      { path: "users/add", element: <AddUser /> },
-      { path: "users/edit/:id", element: <EditUser /> },
+      {
+        path: "users",
+        element: <AdminGuard><Outlet /></AdminGuard>,
+        children: [
+          { index: true, element: <ManageUsers /> },
+          { path: "add", element: <AddUser /> },
+          { path: "edit/:id", element: <EditUser /> },
+        ],
+      },
     ],
   },
 ]);
