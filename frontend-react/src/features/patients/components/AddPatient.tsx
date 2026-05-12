@@ -111,7 +111,8 @@ const AddPatient: React.FC = () => {
         <div className="flex flex-col gap-3">
           <Button
             onClick={handleAddPrescription}
-            className="w-full justify-start gap-3 py-4 h-auto"
+            variant="secondary"
+            className="w-full justify-start gap-3 py-4 h-auto bg-gray-200 hover:bg-gray-300"
           >
             <Stethoscope className="h-5 w-5 shrink-0" />
             <div className="text-left">
@@ -124,7 +125,7 @@ const AddPatient: React.FC = () => {
           <Button
             onClick={handleAddHealthHistory}
             variant="secondary"
-            className="w-full justify-start gap-3 py-4 h-auto"
+            className="w-full justify-start gap-3 py-4 h-auto bg-gray-200 hover:bg-gray-300"
           >
             <ClipboardList className="h-5 w-5 shrink-0" />
             <div className="text-left">
@@ -136,8 +137,8 @@ const AddPatient: React.FC = () => {
           </Button>
           <Button
             onClick={handleCancel}
-            variant="outline"
-            className="w-full justify-start gap-3 py-4 h-auto"
+            variant="secondary"
+            className="w-full justify-start gap-3 py-4 h-auto bg-gray-200 hover:bg-gray-300"
           >
             <X className="h-5 w-5 shrink-0" />
             <div className="text-left">
