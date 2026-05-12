@@ -8,6 +8,10 @@ import org.mapstruct.*;
 @Mapper(componentModel = "spring")
 public interface UserMapper {
 
+    @Mapping(
+            target = "fullName",
+            expression = "java(buildFullName(user.getFirstName(), user.getMiddleName(), user.getLastName()))"
+    )
     UserSummaryDTO entityToDTO(User user);
 
     @Mapping(target = "securityAnswerHash", ignore = true)
@@ -44,4 +48,22 @@ public interface UserMapper {
     UserAuditDTO entityToAuditDTO(User user);
 
     void updateEntityFromRequestDTO(UpdateUserRequestDTO userRequestDTO, @MappingTarget User user);
+
+    default String buildFullName(String first, String middle, String last) {
+        StringBuilder name = new StringBuilder();
+
+        if (first != null && !first.isBlank()) {
+            name.append(first).append(" ");
+        }
+
+        if (middle != null && !middle.isBlank()) {
+            name.append(middle).append(" ");
+        }
+
+        if (last != null && !last.isBlank()) {
+            name.append(last);
+        }
+
+        return name.toString().trim();
+    }
 }

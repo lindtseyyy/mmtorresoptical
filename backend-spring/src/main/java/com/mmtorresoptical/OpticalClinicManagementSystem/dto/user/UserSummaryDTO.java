@@ -7,4 +7,5 @@ public class UserSummaryDTO {
     private String userId;
     private String username;
     private String role;
+    private String fullName;
 }
