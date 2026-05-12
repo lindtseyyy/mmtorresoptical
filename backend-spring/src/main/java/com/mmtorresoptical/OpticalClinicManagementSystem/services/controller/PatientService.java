@@ -111,7 +111,8 @@ public class PatientService {
                                                   int size,
                                                   String sortBy,
                                                   String sortOrder,
-                                                  String archivedStatus) {
+                                                  String archivedStatus,
+                                                  String gender) {
 
         Specification<Patient> spec = Specification.allOf();
 
@@ -128,6 +129,10 @@ public class PatientService {
 
         spec = spec.and(
                 PatientSpecification.hasArchivedStatus(archivedStatus)
+        );
+
+        spec = spec.and(
+                PatientSpecification.hasGender(gender)
         );
 
         // Determine sorting direction from request parameter

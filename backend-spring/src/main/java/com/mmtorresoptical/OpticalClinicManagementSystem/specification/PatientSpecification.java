@@ -1,9 +1,9 @@
 package com.mmtorresoptical.OpticalClinicManagementSystem.specification;
 
+import com.mmtorresoptical.OpticalClinicManagementSystem.enums.Gender;
 import com.mmtorresoptical.OpticalClinicManagementSystem.model.Patient;
 import org.springframework.data.jpa.domain.Specification;
 
-import java.math.BigDecimal;
 import java.util.UUID;
 
 public class PatientSpecification {
@@ -18,6 +18,15 @@ public class PatientSpecification {
     public static Specification<Patient> hasId(UUID patientId) {
         return (root, query, cb) ->
                 cb.equal(root.get("patientId"), patientId);
+    }
+
+    public static Specification<Patient> hasGender(String gender) {
+        return (root, query, cb) -> {
+            if (gender == null || gender.equalsIgnoreCase("ALL")) {
+                return cb.conjunction();
+            }
+            return cb.equal(root.get("gender"), Gender.valueOf(gender.toUpperCase()));
+        };
     }
 
     public static Specification<Patient> hasArchivedStatus(String status) {

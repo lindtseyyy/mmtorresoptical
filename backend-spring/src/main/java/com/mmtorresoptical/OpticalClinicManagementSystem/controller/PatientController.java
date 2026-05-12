@@ -86,9 +86,10 @@ public class PatientController {
             @RequestParam(defaultValue = "ACTIVE") String archivedStatus,
                                                                   @RequestParam(defaultValue = "10") int size,
                                                                   @RequestParam(defaultValue = "fullNameSortable") String sortBy,
-            @RequestParam(defaultValue = "asc") String sortOrder) {
+            @RequestParam(defaultValue = "asc") String sortOrder,
+            @RequestParam(required = false) String gender) {
 
-        Page<PatientDetailsDTO> patientDetailsDTOS = patientService.getAllPatients(keyword, page, size, sortBy, sortOrder, archivedStatus);
+        Page<PatientDetailsDTO> patientDetailsDTOS = patientService.getAllPatients(keyword, page, size, sortBy, sortOrder, archivedStatus, gender);
 
         return ResponseEntity.ok(patientDetailsDTOS);
     }
