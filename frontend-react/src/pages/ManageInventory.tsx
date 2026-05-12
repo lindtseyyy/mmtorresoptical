@@ -29,8 +29,14 @@ import {
 const ManageInventory: React.FC = () => {
   const PAGE_SIZE = 10;
   const [searchQuery, setSearchQuery] = useState("");
+  const [debouncedSearchQuery, setDebouncedSearchQuery] = useState(searchQuery);
   const [categoryFilter, setCategoryFilter] = useState<string>("all");
   const [page, setPage] = useState(0);
+
+  useEffect(() => {
+    const timer = setTimeout(() => setDebouncedSearchQuery(searchQuery), 300);
+    return () => clearTimeout(timer);
+  }, [searchQuery]);
   const navigate = useNavigate();
   const queryClient = useQueryClient();
 
@@ -39,7 +45,7 @@ const ManageInventory: React.FC = () => {
     isLoading,
     isFetching,
   } = useQuery({
-    ...createProductsListQueryOptions(page, PAGE_SIZE, searchQuery, categoryFilter),
+    ...createProductsListQueryOptions(page, PAGE_SIZE, debouncedSearchQuery, categoryFilter),
     placeholderData: keepPreviousData,
   });
 
@@ -62,7 +68,7 @@ const ManageInventory: React.FC = () => {
   // Reset page when search or category filter changes
   useEffect(() => {
     setPage(0);
-  }, [searchQuery, categoryFilter]);
+  }, [debouncedSearchQuery, categoryFilter]);
 
   // If current page is empty and not the first page, step back
   useEffect(() => {

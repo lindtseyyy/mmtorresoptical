@@ -44,7 +44,13 @@ const PAGE_SIZE = 10;
 
 const ManageUsers: React.FC = () => {
   const [searchQuery, setSearchQuery] = useState("");
+  const [debouncedSearchQuery, setDebouncedSearchQuery] = useState(searchQuery);
   const [page, setPage] = useState(0);
+
+  useEffect(() => {
+    const timer = setTimeout(() => setDebouncedSearchQuery(searchQuery), 300);
+    return () => clearTimeout(timer);
+  }, [searchQuery]);
   const navigate = useNavigate();
   const queryClient = useQueryClient();
   const currentUserId = getCurrentUserId();
@@ -78,7 +84,7 @@ const ManageUsers: React.FC = () => {
   // Reset page when search changes
   useEffect(() => {
     setPage(0);
-  }, [searchQuery]);
+  }, [debouncedSearchQuery]);
 
   // If current page is empty and not the first page, step back
   useEffect(() => {
@@ -91,7 +97,7 @@ const ManageUsers: React.FC = () => {
   const filteredUsers = users
     .filter((user) => {
       const fullName = `${user.firstName} ${user.lastName}`.toLowerCase();
-      const q = searchQuery.toLowerCase();
+      const q = debouncedSearchQuery.toLowerCase();
       return (
         fullName.includes(q) ||
         user.username.toLowerCase().includes(q) ||
