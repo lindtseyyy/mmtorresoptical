@@ -33,6 +33,7 @@ import EditPatient from "@/features/patients/components/EditPatient";
 import AddPrescription from "@/features/patients/components/AddPrescription";
 import EditPrescription from "@/features/patients/components/EditPrescription";
 import AddHealthHistory from "@/features/patients/components/AddHealthHistory";
+import EditHealthHistory from "@/features/patients/components/EditHealthHistory";
 import ViewPatient from "@/features/patients/components/ViewPatient";
 
 // --- Shared ---
@@ -73,6 +74,7 @@ const router = createBrowserRouter([
           { path: "add/prescription", element: <AddPrescription /> },
           { path: "edit/prescription", element: <EditPrescription /> },
           { path: "add/health-history", element: <AddHealthHistory /> },
+          { path: "edit/health-history", element: <EditHealthHistory /> },
           { path: "view/:id", element: <ViewPatient /> },
           { path: "edit/:id", element: <EditPatient /> },
         ],

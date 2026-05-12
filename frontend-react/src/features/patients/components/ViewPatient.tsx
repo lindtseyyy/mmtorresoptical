@@ -576,7 +576,7 @@ const ViewPatient: React.FC = () => {
                       <DropdownMenuContent align="end" className="bg-gray-100 dark:bg-gray-800 border-gray-300 dark:border-gray-700">
                         <DropdownMenuItem
                           onClick={() =>
-                            toast.info("Edit health history", { description: "Feature coming soon." })
+                            navigate(`/patients/edit/health-history?historyId=${hh.historyId}&patientId=${patientId}&patientName=${encodeURIComponent(fullName)}`)
                           }
                         >
                           <Pencil className="mr-2 h-4 w-4" />
