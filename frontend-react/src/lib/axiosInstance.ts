@@ -29,4 +29,18 @@ api.interceptors.request.use(
   }
 );
 
+// 3. Response interceptor — redirect to login on expired/invalid JWT
+api.interceptors.response.use(
+  (response) => response,
+  (error) => {
+    if (error.response?.status === 401) {
+      localStorage.removeItem("authToken");
+      if (window.location.pathname !== "/login") {
+        window.location.href = "/login";
+      }
+    }
+    return Promise.reject(error);
+  }
+);
+
 export default api;
