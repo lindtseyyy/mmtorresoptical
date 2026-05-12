@@ -404,7 +404,7 @@ const ViewPatient: React.FC = () => {
                       <DropdownMenuContent align="end" className="bg-gray-100 dark:bg-gray-800 border-gray-300 dark:border-gray-700">
                         <DropdownMenuItem
                           onClick={() =>
-                            toast.info("Edit prescription", { description: "Feature coming soon." })
+                            navigate(`/patients/edit/prescription?prescriptionId=${rx.prescriptionId}&patientId=${patientId}&patientName=${encodeURIComponent(fullName)}`)
                           }
                         >
                           <Pencil className="mr-2 h-4 w-4" />
