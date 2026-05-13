@@ -30,6 +30,7 @@ import {
   TrendingUp,
   ArrowUp,
   ArrowDown,
+  Undo2,
 } from "lucide-react";
 import {
   createTransactionsListQueryOptions,
@@ -196,6 +197,48 @@ const ManageTransactions: React.FC = () => {
                 {metrics != null ? formatCurrency(metrics.todayRevenue) : "—"}
               </p>
               <p className="text-sm text-muted-foreground">Today's Revenue</p>
+            </div>
+          </CardContent>
+        </Card>
+
+        <Card>
+          <CardContent className="flex items-center gap-4 p-5">
+            <div className="flex h-11 w-11 items-center justify-center rounded-full bg-red-500/10">
+              <Undo2 className="h-5 w-5 text-red-500" />
+            </div>
+            <div>
+              <p className="text-2xl font-bold">
+                {metrics?.totalRefundedAmount != null ? formatCurrency(metrics.totalRefundedAmount) : "—"}
+              </p>
+              <p className="text-sm text-muted-foreground">Total Refunded Amount</p>
+            </div>
+          </CardContent>
+        </Card>
+
+        <Card>
+          <CardContent className="flex items-center gap-4 p-5">
+            <div className="flex h-11 w-11 items-center justify-center rounded-full bg-orange-500/10">
+              <Undo2 className="h-5 w-5 text-orange-500" />
+            </div>
+            <div>
+              <p className="text-2xl font-bold">
+                {metrics?.todayTotalRefundedAmount != null ? formatCurrency(metrics.todayTotalRefundedAmount) : "—"}
+              </p>
+              <p className="text-sm text-muted-foreground">Today's Total Refunded Amount</p>
+            </div>
+          </CardContent>
+        </Card>
+
+        <Card>
+          <CardContent className="flex items-center gap-4 p-5">
+            <div className="flex h-11 w-11 items-center justify-center rounded-full bg-yellow-500/10">
+              <Undo2 className="h-5 w-5 text-yellow-500" />
+            </div>
+            <div>
+              <p className="text-2xl font-bold">
+                {metrics?.totalRefundedAmountThisMonth != null ? formatCurrency(metrics.totalRefundedAmountThisMonth) : "—"}
+              </p>
+              <p className="text-sm text-muted-foreground">Total Refunded Amount This Month</p>
             </div>
           </CardContent>
         </Card>

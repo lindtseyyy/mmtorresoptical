@@ -9,6 +9,9 @@ export interface TransactionMetrics {
   todayTransactions: number;
   averageTransactionValue: number;
   totalTransactionsThisMonth: number;
+  totalRefundedAmount: number;
+  todayTotalRefundedAmount: number;
+  totalRefundedAmountThisMonth: number;
 }
 
 export interface TransactionFilters {
