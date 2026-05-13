@@ -1,5 +1,5 @@
 import { useState, useMemo } from "react";
-import { Search, ShoppingCart, Package, ImageOff } from "lucide-react";
+import { Search, Plus, Package, ImageOff } from "lucide-react";
 import { Input } from "@/shared/components/ui/input";
 import { Button } from "@/shared/components/ui/button";
 import { Badge } from "@/shared/components/ui/badge";
@@ -32,7 +32,6 @@ const ProductCard: React.FC<{
 
   return (
     <div className="flex flex-col rounded-lg border border-border bg-card shadow-sm transition-shadow hover:shadow-md overflow-hidden">
-      {/* Image area */}
       <div className="aspect-[4/3] bg-muted/50 flex items-center justify-center overflow-hidden">
         {product.imageDir && !imgFailed ? (
           <img
@@ -76,9 +75,9 @@ const ProductCard: React.FC<{
             variant={outOfStock ? "outline" : "default"}
             disabled={outOfStock || disabled}
             onClick={onAdd}
-            className="h-7 w-7 rounded-full"
+            className="h-7 w-7 rounded-md"
           >
-            <ShoppingCart className="h-3.5 w-3.5" />
+            <Plus className="h-3.5 w-3.5" />
           </Button>
         </div>
       </div>
@@ -159,7 +158,7 @@ const ProductDisplay: React.FC<ProductDisplayProps> = ({
         </div>
       ) : (
         <div className="flex-1 min-h-0 overflow-y-auto pr-1">
-          <div className="grid grid-cols-2 gap-2 pb-2">
+          <div className="grid grid-cols-2 xl:grid-cols-3 gap-2 pb-2">
             {filtered.map((product) => (
               <ProductCard
                 key={product.productId}

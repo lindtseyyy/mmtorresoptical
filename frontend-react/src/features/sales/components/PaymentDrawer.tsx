@@ -89,7 +89,7 @@ const PaymentDrawer: React.FC<PaymentDrawerProps> = ({
             <h3 className="text-xs font-semibold text-muted-foreground mb-2 uppercase tracking-wide shrink-0 px-1">
               Order Summary
             </h3>
-            <div className="max-h-48 overflow-y-auto rounded-md border border-border bg-muted/60 px-2">
+            <div className="max-h-[20vh] min-h-[6rem] overflow-y-auto rounded-md border border-border bg-muted/60 px-2">
               <table className="w-full text-xs">
                 <tbody>
                   {items.map((item) => {
@@ -136,8 +136,7 @@ const PaymentDrawer: React.FC<PaymentDrawerProps> = ({
             <div className="flex justify-between text-muted-foreground">
               <span>Subtotal</span>
               <span className="tabular-nums">
-                ₱
-                {items
+                ₱ {items
                   .reduce((sum, i) => sum + i.product.unitPrice * i.quantity, 0)
                   .toFixed(2)}
               </span>
@@ -146,8 +145,7 @@ const PaymentDrawer: React.FC<PaymentDrawerProps> = ({
               <div className="flex justify-between text-green-600">
                 <span>Discount</span>
                 <span className="tabular-nums">
-                  -₱
-                  {items
+                  -₱ {items
                     .reduce((sum, i) => {
                       const itemSub = i.product.unitPrice * i.quantity;
                       if (!i.isDiscounted) return sum;
@@ -171,7 +169,7 @@ const PaymentDrawer: React.FC<PaymentDrawerProps> = ({
           </div>
 
           {/* Payment method */}
-          <div>
+          <div className="border-t border-muted-foreground/30 pt-4">
             <h3 className="text-xs font-semibold text-muted-foreground mb-2 uppercase tracking-wide">
               Payment Method
             </h3>

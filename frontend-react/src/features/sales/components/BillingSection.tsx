@@ -1,5 +1,6 @@
 import { useState, useRef, useEffect } from "react";
 import { Minus, Plus, Trash2, Tag, Receipt, X, CreditCard } from "lucide-react";
+import { toast } from "sonner";
 import { Button } from "@/shared/components/ui/button";
 import { Input } from "@/shared/components/ui/input";
 import type { CartItem } from "@/features/sales/types";
@@ -141,14 +142,27 @@ const BillingEntry: React.FC<{
 
   const handleApplyDiscount = () => {
     const value = parseFloat(inputRef.current?.value ?? "0");
-    if (!value || value <= 0) return;
+    if (!value || value <= 0) {
+      if (value < 0) toast.error("Discount value cannot be negative");
+      return;
+    }
+
+    if (discountType === "PERCENT" && value > 100) {
+      toast.error("Discount percentage cannot exceed 100%");
+      return;
+    }
+    if (discountType === "FIXED" && value > itemSubtotal) {
+      toast.error("Discount cannot exceed the item subtotal");
+      return;
+    }
+
     onApplyDiscount(item.product.productId, discountType, value);
     if (inputRef.current) inputRef.current.value = "";
     setShowDiscount(false);
   };
 
   return (
-    <div className="rounded-lg border border-border/60 bg-background/40 p-2.5">
+    <div className="rounded-lg border border-border/60 bg-muted/50 p-2.5">
       {/* Row 1: Product name (left) | Delete (right) */}
       <div className="flex items-start justify-between gap-2">
         <p className="text-sm font-medium text-card-foreground leading-snug">
@@ -203,7 +217,7 @@ const BillingEntry: React.FC<{
               <Plus className="h-3 w-3" />
             </Button>
           </div>
-          <span className="text-[11px] text-muted-foreground">
+          <span className="text-xs text-foreground font-medium">
             × ₱{item.product.unitPrice.toFixed(2)}
           </span>
         </div>
@@ -243,7 +257,7 @@ const BillingEntry: React.FC<{
             className="inline-flex items-center gap-0.5 text-[10px] text-muted-foreground hover:text-primary cursor-pointer"
           >
             <Tag className="h-3 w-3" />
-            Discount
+            Add Discount
           </button>
         )}
       </div>
@@ -256,7 +270,7 @@ const BillingEntry: React.FC<{
             onChange={(e) =>
               setDiscountType(e.target.value as "FIXED" | "PERCENT")
             }
-            className="h-7 w-14 rounded border border-border bg-background text-[11px] px-1 text-muted-foreground cursor-pointer"
+            className="h-7 w-14 rounded border border-input bg-card text-[11px] px-1 text-foreground cursor-pointer"
           >
             <option value="FIXED">₱</option>
             <option value="PERCENT">%</option>
@@ -282,7 +296,7 @@ const BillingEntry: React.FC<{
             Apply
           </Button>
           <Button
-            variant="ghost"
+            variant="outline"
             size="sm"
             className="h-7 text-[10px] px-2 cursor-pointer"
             onClick={() => setShowDiscount(false)}
