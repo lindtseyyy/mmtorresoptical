@@ -1,8 +1,9 @@
 import { useState, useMemo } from "react";
-import { Search, Plus, Package, ImageOff } from "lucide-react";
+import { Search, Plus, Package, ImageOff, ArrowUpDown } from "lucide-react";
 import { Input } from "@/shared/components/ui/input";
 import { Button } from "@/shared/components/ui/button";
 import { Badge } from "@/shared/components/ui/badge";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/shared/components/ui/select";
 import type { Product } from "@/features/inventory/types";
 
 interface ProductDisplayProps {
@@ -98,6 +99,8 @@ const ProductDisplay: React.FC<ProductDisplayProps> = ({
 }) => {
   const [search, setSearch] = useState("");
   const [categoryFilter, setCategoryFilter] = useState<string>("all");
+  const [sortBy, setSortBy] = useState<"name" | "price" | "quantity">("name");
+  const [sortAsc, setSortAsc] = useState(true);
 
   const categories = useMemo(() => {
     const cats = new Set(products.map((p) => p.category));
@@ -124,7 +127,7 @@ const ProductDisplay: React.FC<ProductDisplayProps> = ({
   }, [products]);
 
   const filtered = useMemo(() => {
-    return products.filter((p) => {
+    const result = products.filter((p) => {
       const matchSearch =
         !search ||
         p.productName.toLowerCase().includes(search.toLowerCase());
@@ -135,19 +138,58 @@ const ProductDisplay: React.FC<ProductDisplayProps> = ({
         (categoryFilter === "overstocked" && p.quantity >= p.overstockedThreshold && p.quantity > 0);
       return matchSearch && matchCategory;
     });
-  }, [products, search, categoryFilter]);
+
+    result.sort((a, b) => {
+      let cmp: number;
+      switch (sortBy) {
+        case "price":
+          cmp = a.unitPrice - b.unitPrice;
+          break;
+        case "quantity":
+          cmp = a.quantity - b.quantity;
+          break;
+        default:
+          cmp = a.productName.localeCompare(b.productName);
+      }
+      return sortAsc ? cmp : -cmp;
+    });
+
+    return result;
+  }, [products, search, categoryFilter, sortBy, sortAsc]);
 
   return (
     <div className="flex flex-col flex-1 min-h-0">
       <div className="mb-3 space-y-2">
-        <div className="relative">
-          <Search className="absolute left-2.5 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
-          <Input
-            placeholder="Search products..."
-            value={search}
-            onChange={(e) => setSearch(e.target.value)}
-            className="pl-8"
-          />
+        <div className="flex items-center gap-2">
+          <div className="relative flex-1">
+            <Search className="absolute left-2.5 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
+            <Input
+              placeholder="Search products..."
+              value={search}
+              onChange={(e) => setSearch(e.target.value)}
+              className="pl-8"
+            />
+          </div>
+          <span className="text-xs text-muted-foreground whitespace-nowrap">Sort by:</span>
+          <Select value={sortBy} onValueChange={(v) => setSortBy(v as typeof sortBy)}>
+            <SelectTrigger className="h-9 text-xs w-28 shrink-0">
+              <SelectValue />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="name" className="text-sm">Name</SelectItem>
+              <SelectItem value="price" className="text-sm">Price</SelectItem>
+              <SelectItem value="quantity" className="text-sm">Quantity</SelectItem>
+            </SelectContent>
+          </Select>
+          <Button
+            variant="outline"
+            size="icon"
+            onClick={() => setSortAsc(!sortAsc)}
+            className="h-9 w-9 shrink-0"
+            title={sortAsc ? "Ascending" : "Descending"}
+          >
+            <ArrowUpDown className={`h-3.5 w-3.5 transition-transform ${sortAsc ? "" : "rotate-180"}`} />
+          </Button>
         </div>
 
         <div className="flex flex-wrap gap-1">

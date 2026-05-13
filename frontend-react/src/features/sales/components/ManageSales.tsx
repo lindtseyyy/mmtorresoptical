@@ -38,6 +38,22 @@ const ManageSales: React.FC = () => {
     sessionStorage.setItem(STORAGE_KEY, JSON.stringify(cart));
   }, [cart]);
 
+  // Remove cart items whose product is no longer active (e.g. was archived)
+  useEffect(() => {
+    if (products.length === 0) return;
+    const activeIds = new Set(products.map((p) => p.productId));
+    const stale = cart.filter((item) => !activeIds.has(item.product.productId));
+    if (stale.length > 0) {
+      const names = stale.map((item) => item.product.productName).join(", ");
+      setCart((prev) => prev.filter((item) => activeIds.has(item.product.productId)));
+      toast.warning("Item(s) removed from cart", {
+        description: `${names} ${stale.length === 1 ? "is" : "are"} no longer available.`,
+      });
+    }
+    // Only run when products identity changes — not on every cart change
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [products]);
+
   const transactionMutation = useMutation({
     mutationFn: createTransaction,
     onSuccess: (data) => {
