@@ -19,5 +19,8 @@ public class TransactionMetricsDTO {
     private long todayTransactions;
     private BigDecimal averageTransactionValue;
     private long totalTransactionsThisMonth;
+    private BigDecimal totalRefundedAmount;
+    private BigDecimal todayTotalRefundedAmount;
+    private BigDecimal totalRefundedAmountThisMonth;
 
 }

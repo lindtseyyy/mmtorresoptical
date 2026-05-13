@@ -269,6 +269,10 @@ public class TransactionService {
 
         long totalTransactionsThisMonth = transactionRepository.countByTransactionDateBetween(startOfMonth, startOfNextMonth);
 
+        BigDecimal totalRefundedAmount = refundRepository.sumTotalRefundAmount();
+        BigDecimal todayTotalRefundedAmount = refundRepository.sumRefundAmountByRefundedAtBetween(startOfToday, startOfTomorrow);
+        BigDecimal totalRefundedAmountThisMonth = refundRepository.sumRefundAmountByRefundedAtBetween(startOfMonth, startOfNextMonth);
+
         return TransactionMetricsDTO.builder()
                 .totalTransactions(totalTransactions)
                 .totalRevenue(totalRevenue)
@@ -276,6 +280,9 @@ public class TransactionService {
                 .todayTransactions(todayTransactions)
                 .averageTransactionValue(averageTransactionValue)
                 .totalTransactionsThisMonth(totalTransactionsThisMonth)
+                .totalRefundedAmount(totalRefundedAmount)
+                .todayTotalRefundedAmount(todayTotalRefundedAmount)
+                .totalRefundedAmountThisMonth(totalRefundedAmountThisMonth)
                 .build();
     }
 
