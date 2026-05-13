@@ -3,7 +3,7 @@ import { useQuery, useMutation, useQueryClient, keepPreviousData } from "@tansta
 import { Button } from "@/shared/components/ui/button";
 import { Input } from "@/shared/components/ui/input";
 import { Badge } from "@/shared/components/ui/badge";
-import { Plus, Search, Archive, Undo2, Pencil, ChevronLeft, ChevronRight, MoreHorizontal, Users, UserCheck, ArchiveIcon, Shield, UserCog, ArrowUp, ArrowDown } from "lucide-react";
+import { Plus, Search, Archive, Undo2, Eye, ChevronLeft, ChevronRight, MoreHorizontal, Users, UserCheck, ArchiveIcon, Shield, UserCog, ArrowUp, ArrowDown } from "lucide-react";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -347,11 +347,11 @@ const ManageUsers: React.FC = () => {
                               <DropdownMenuContent align="end" className="bg-gray-100 dark:bg-gray-800 border-gray-300 dark:border-gray-700">
                                 <DropdownMenuItem
                                   onClick={() =>
-                                    navigate(`/users/edit/${user.userId}`)
+                                    navigate(`/users/view/${user.userId}`)
                                   }
                                 >
-                                  <Pencil className="mr-2 h-4 w-4" />
-                                  Edit
+                                  <Eye className="mr-2 h-4 w-4" />
+                                  View
                                 </DropdownMenuItem>
                                 <DropdownMenuItem
                                   onClick={() => handleArchive(user.userId, user.isArchived)}

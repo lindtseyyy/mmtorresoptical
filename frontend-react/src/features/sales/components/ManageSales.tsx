@@ -1,5 +1,5 @@
 import { useState, useCallback, useEffect } from "react";
-import { useMutation } from "@tanstack/react-query";
+import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
 import { Loader2, Trash2 } from "lucide-react";
 
@@ -30,6 +30,7 @@ const loadCart = (): CartItem[] => {
 
 const ManageSales: React.FC = () => {
   const { data: products = [], isLoading, isError } = useProductsForSale();
+  const queryClient = useQueryClient();
   const [cart, setCart] = useState<CartItem[]>(loadCart);
   const [resetKey, setResetKey] = useState(0);
   const [lastReceipt, setLastReceipt] = useState<TransactionResponse | null>(null);
@@ -58,6 +59,8 @@ const ManageSales: React.FC = () => {
   const transactionMutation = useMutation({
     mutationFn: createTransaction,
     onSuccess: (data) => {
+      queryClient.invalidateQueries({ queryKey: ["products"] });
+      queryClient.invalidateQueries({ queryKey: ["inventory-summary"] });
       setLastReceipt(data);
       sessionStorage.removeItem(STORAGE_KEY);
       setCart([]);

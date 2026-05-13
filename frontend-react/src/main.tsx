@@ -26,6 +26,7 @@ import ViewProduct from "@/features/inventory/components/ViewProduct";
 import ManageUsers from "@/features/users/components/ManageUsers";
 import AddUser from "@/features/users/components/AddUser";
 import EditUser from "@/features/users/components/EditUser";
+import ViewUser from "@/features/users/components/ViewUser";
 
 // --- Patients ---
 import ManagePatients from "@/features/patients/components/ManagePatients";
@@ -95,6 +96,7 @@ const router = createBrowserRouter([
         children: [
           { index: true, element: <ManageUsers /> },
           { path: "add", element: <AddUser /> },
+          { path: "view/:id", element: <ViewUser /> },
           { path: "edit/:id", element: <EditUser /> },
         ],
       },
