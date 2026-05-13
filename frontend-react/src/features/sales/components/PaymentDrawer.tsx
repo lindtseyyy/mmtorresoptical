@@ -89,7 +89,7 @@ const PaymentDrawer: React.FC<PaymentDrawerProps> = ({
             <h3 className="text-xs font-semibold text-muted-foreground mb-2 uppercase tracking-wide shrink-0 px-1">
               Order Summary
             </h3>
-            <div className="max-h-[20vh] min-h-[6rem] overflow-y-auto rounded-md border border-border bg-muted/60 px-2">
+            <div className="max-h-[24vh] min-h-[12vh] overflow-y-auto rounded-md border border-border bg-muted/60 px-2">
               <table className="w-full text-xs">
                 <thead>
                   <tr className="border-b border-muted-foreground/30 text-[10px] text-foreground uppercase tracking-wide font-bold">
