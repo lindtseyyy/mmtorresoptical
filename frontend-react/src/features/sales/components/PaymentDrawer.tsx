@@ -61,7 +61,7 @@ const PaymentDrawer: React.FC<PaymentDrawerProps> = ({
     <>
       {/* Backdrop */}
       <div
-        className="fixed inset-0 z-40 bg-black/40 transition-opacity"
+        className="fixed inset-0 z-40 bg-black/70 transition-opacity"
         onClick={onClose}
       />
 
