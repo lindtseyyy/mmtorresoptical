@@ -1,5 +1,5 @@
 import { useState, useMemo } from "react";
-import { Search, Plus, Package, ImageOff, ArrowUpDown } from "lucide-react";
+import { Search, Plus, Package, ImageOff, ArrowUp, ArrowDown } from "lucide-react";
 import { Input } from "@/shared/components/ui/input";
 import { Button } from "@/shared/components/ui/button";
 import { Badge } from "@/shared/components/ui/badge";
@@ -69,8 +69,12 @@ const ProductCard: React.FC<{
           </span>
         </div>
 
-        <span className="mb-1.5 text-[11px] text-muted-foreground">
+        <span className="mb-1 text-[11px] text-muted-foreground/70">
           {CATEGORY_LABELS[product.category] ?? product.category}
+        </span>
+
+        <span className="mb-1.5 text-[11px] font-medium text-muted-foreground">
+          {product.quantity} item{product.quantity !== 1 ? "s" : ""} remaining
         </span>
 
         <div className="mt-auto flex items-center justify-between">
@@ -188,7 +192,7 @@ const ProductDisplay: React.FC<ProductDisplayProps> = ({
             className="h-9 w-9 shrink-0"
             title={sortAsc ? "Ascending" : "Descending"}
           >
-            <ArrowUpDown className={`h-3.5 w-3.5 transition-transform ${sortAsc ? "" : "rotate-180"}`} />
+            {sortAsc ? <ArrowUp className="h-3.5 w-3.5" /> : <ArrowDown className="h-3.5 w-3.5" />}
           </Button>
         </div>
 
