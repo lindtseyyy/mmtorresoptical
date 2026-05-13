@@ -35,6 +35,9 @@ public class Product {
     private Integer quantity;
 
     @Column(nullable = false)
+    private Integer damagedQuantity = 0;
+
+    @Column(nullable = false)
     private Integer lowLevelThreshold;
 
     @Column(nullable = false)

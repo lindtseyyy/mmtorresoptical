@@ -10,6 +10,10 @@ import org.mapstruct.Mapping;
 uses = {UserMapper.class})
 public interface RefundMapper {
 
+    @Mapping(
+            target = "refundedBy",
+            source = "user"
+    )
     RefundDetailsDTO entityToDetailsDTO(Refund refund);
 
     @Mapping(

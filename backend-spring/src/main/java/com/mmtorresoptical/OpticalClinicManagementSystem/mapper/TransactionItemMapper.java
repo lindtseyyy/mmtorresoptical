@@ -40,6 +40,10 @@ public interface TransactionItemMapper {
             target = "isDiscounted",
             expression = "java(transactionItem.getDiscountType() != null)"
     )
+    @Mapping(
+            target = "refundDetailsDTOList",
+            source = "refunds"
+    )
     TransactionItemDetailsDTO entityToDetailsDTO(TransactionItem transactionItem);
 
 

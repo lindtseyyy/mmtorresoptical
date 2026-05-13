@@ -363,11 +363,17 @@ public class TransactionService {
                 );
             }
 
-            // Restore stock
+            // Restore stock — route damaged items to non-sellable bucket
             Product product = item.getProduct();
-            product.setQuantity(
-                    product.getQuantity() + newRefundQty
-            );
+            if ("Damaged".equalsIgnoreCase(dto.getRefundReason())) {
+                product.setDamagedQuantity(
+                        product.getDamagedQuantity() + newRefundQty
+                );
+            } else {
+                product.setQuantity(
+                        product.getQuantity() + newRefundQty
+                );
+            }
 
             // 🆕 Create Refund record
             BigDecimal unitPrice = item.getUnitPrice();
@@ -421,6 +427,7 @@ public class TransactionService {
             refund.setRefundQuantity(newRefundQty);
             refund.setRefundReason(dto.getRefundReason());
             refund.setRefundedAt(LocalDateTime.now());
+            refund.setRefundMethod(request.getRefundMethod());
             refund.setUser(authenticatedUserService.getCurrentUser());
 
             refundRepository.save(refund);

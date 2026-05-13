@@ -26,6 +26,9 @@ public class Refund {
 
     private BigDecimal refundAmount;
 
+    @Column(name = "refund_method", length = 20)
+    private String refundMethod;
+
     @ManyToOne@JoinColumn(name = "user_id", nullable = false)
     private User user;
 

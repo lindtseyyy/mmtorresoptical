@@ -9,4 +9,6 @@ public class RefundTransactionRequestDTO {
 
     private List<RefundItemDTO> items;
 
+    private String refundMethod; // CASH, GCASH, STORE_VOUCHER
+
 }
