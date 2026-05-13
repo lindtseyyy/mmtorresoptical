@@ -7,7 +7,7 @@ import { isAdmin, type Role } from "@/shared/lib/auth";
 const menuItems = [
   { title: "Point of Sale", href: "/sales", icon: ShoppingCart, roles: ["ADMIN", "STAFF"] as Role[] },
   { title: "Inventory Management", href: "/inventory", icon: Eye, roles: ["ADMIN", "STAFF"] as Role[] },
-  { title: "Transaction", href: "/transactions", icon: Receipt, roles: ["ADMIN", "STAFF"] as Role[] },
+  { title: "Transactions", href: "/transactions", icon: Receipt, roles: ["ADMIN", "STAFF"] as Role[] },
   { title: "Patient Management", href: "/patients", icon: UserRound, roles: ["ADMIN"] as Role[] },
   { title: "User Management", href: "/users", icon: Users, roles: ["ADMIN"] as Role[] },
 ];
