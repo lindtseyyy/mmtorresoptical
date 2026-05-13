@@ -77,6 +77,9 @@ public class TransactionSpecification {
                 return cb.conjunction();
             }
 
+            if (query != null) {
+                query.distinct(true);
+            }
             Join<Object, Object> items = root.join("transactionItems", JoinType.INNER);
             return cb.equal(items.get("product").get("productId"), productId);
         };

@@ -234,8 +234,8 @@ public interface InventoryAnalyticsRepository extends JpaRepository<Product, UUI
 
     @Query("""
     SELECT new com.mmtorresoptical.OpticalClinicManagementSystem.dto.metrics.ProductMetricsDTO(
-        COALESCE(SUM(ti.quantity - COALESCE(ti.refundedQuantity, 0)), 0),
-        COALESCE(SUM(
+        SUM(ti.quantity - COALESCE(ti.refundedQuantity, 0)),
+        SUM(
             ti.subtotal
             -
             COALESCE(
@@ -244,7 +244,7 @@ public interface InventoryAnalyticsRepository extends JpaRepository<Product, UUI
                  WHERE r.transactionItem = ti),
                 0
             )
-        ), 0),
+        ),
         COUNT(DISTINCT t.transactionId),
         MAX(t.transactionDate)
     )

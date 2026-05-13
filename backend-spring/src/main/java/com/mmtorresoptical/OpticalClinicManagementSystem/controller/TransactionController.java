@@ -40,8 +40,6 @@ public class TransactionController {
             @RequestParam(required = false) PaymentType paymentType,
             @RequestParam(required = false) TransactionStatus status,
 
-            @RequestParam(required = false) UUID productId,
-
             @RequestParam(defaultValue = "0") int page,
             @RequestParam(defaultValue = "10") int size,
 
@@ -67,7 +65,7 @@ public class TransactionController {
                 maxDate,
                 paymentType,
                 status,
-                productId,
+                null,
                 page,
                 size,
                 sortBy,

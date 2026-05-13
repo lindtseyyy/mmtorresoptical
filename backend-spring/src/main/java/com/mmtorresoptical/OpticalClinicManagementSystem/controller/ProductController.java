@@ -4,8 +4,10 @@ import com.mmtorresoptical.OpticalClinicManagementSystem.dto.product.CreateProdu
 import com.mmtorresoptical.OpticalClinicManagementSystem.dto.product.ProductDetailsDTO;
 import com.mmtorresoptical.OpticalClinicManagementSystem.dto.product.ProductResponseDTO;
 import com.mmtorresoptical.OpticalClinicManagementSystem.dto.product.UpdateProductRequestDTO;
+import com.mmtorresoptical.OpticalClinicManagementSystem.dto.transaction.TransactionListDTO;
 import com.mmtorresoptical.OpticalClinicManagementSystem.repository.ProductRepository;
 import com.mmtorresoptical.OpticalClinicManagementSystem.services.controller.ProductService;
+import com.mmtorresoptical.OpticalClinicManagementSystem.services.controller.TransactionService;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
@@ -25,6 +27,7 @@ public class ProductController {
 
     private final ProductService productService;
     private final ProductRepository productRepository;
+    private final TransactionService transactionService;
 
     /**
      * CREATE a new product
@@ -128,7 +131,7 @@ public class ProductController {
     }
 
     /**
-     * ARCHIVE a product (Soft Delete)
+     * RESTORE a product
      * (Called from ManageInventory.tsx)
      */
     @PutMapping("/{id}/restore")
@@ -138,5 +141,24 @@ public class ProductController {
 
         // 4. Return No Content (204)
         return ResponseEntity.noContent().build();
+    }
+
+    /**
+     * Get transactions for a specific product
+     */
+    @GetMapping("/{productId}/transactions")
+    public ResponseEntity<Page<TransactionListDTO>> getProductTransactions(
+            @PathVariable UUID productId,
+            @RequestParam(defaultValue = "0") int page,
+            @RequestParam(defaultValue = "10") int size,
+            @RequestParam(defaultValue = "transactionDate") String sortBy,
+            @RequestParam(defaultValue = "desc") String sortOrder
+    ) {
+        Page<TransactionListDTO> transactions = transactionService.getAllTransactions(
+                null, null, null, null, null,
+                productId,
+                page, size, sortBy, sortOrder
+        );
+        return ResponseEntity.ok(transactions);
     }
 }

@@ -17,5 +17,4 @@ public class ProductMetricsDTO {
     private BigDecimal totalRevenue;
     private Long numberOfTransactions;
     private LocalDateTime lastSoldDate;
-    private BigDecimal inventoryValue;
 }

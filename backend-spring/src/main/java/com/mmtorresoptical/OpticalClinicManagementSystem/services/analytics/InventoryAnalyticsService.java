@@ -18,6 +18,7 @@ import java.math.BigDecimal;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.util.List;
+import java.util.Optional;
 import java.util.UUID;
 
 @Service
@@ -192,7 +193,19 @@ public class InventoryAnalyticsService {
     }
 
     public ProductMetricsDTO getProductMetrics(UUID productId) {
-        return inventoryAnalyticsRepository.findProductMetrics(productId);
+        return Optional.ofNullable(inventoryAnalyticsRepository.findProductMetrics(productId))
+                .map(m -> ProductMetricsDTO.builder()
+                        .totalUnitsSold(m.getTotalUnitsSold() != null ? m.getTotalUnitsSold() : 0L)
+                        .totalRevenue(m.getTotalRevenue() != null ? m.getTotalRevenue() : BigDecimal.ZERO)
+                        .numberOfTransactions(m.getNumberOfTransactions() != null ? m.getNumberOfTransactions() : 0L)
+                        .lastSoldDate(m.getLastSoldDate())
+                        .build())
+                .orElse(ProductMetricsDTO.builder()
+                        .totalUnitsSold(0L)
+                        .totalRevenue(BigDecimal.ZERO)
+                        .numberOfTransactions(0L)
+                        .lastSoldDate(null)
+                        .build());
     }
 
 }
