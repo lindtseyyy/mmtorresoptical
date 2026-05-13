@@ -1,6 +1,6 @@
 import api from "@/shared/lib/axiosInstance";
 import type { PageResponse } from "@/shared/types";
-import type { Product, ProductFormData, InventorySummary } from "@/features/inventory/types";
+import type { Product, ProductFormData, InventorySummary, ProductMetrics } from "@/features/inventory/types";
 
 const fetchProducts = async (
   page = 0,
@@ -73,4 +73,9 @@ const fetchInventorySummary = async (): Promise<InventorySummary> => {
   return data;
 };
 
-export { fetchProducts, fetchProduct, updateProduct, addProduct, archiveProduct, restoreProduct, fetchInventorySummary };
+const fetchProductMetrics = async (productId: string): Promise<ProductMetrics> => {
+  const { data } = await api.get(`/reports/inventory/product/${productId}/metrics`);
+  return data;
+};
+
+export { fetchProducts, fetchProduct, updateProduct, addProduct, archiveProduct, restoreProduct, fetchInventorySummary, fetchProductMetrics };

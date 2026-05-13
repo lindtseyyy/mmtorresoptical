@@ -87,3 +87,11 @@ export interface InventorySummary {
   countOverstockedProducts: number;
   countArchivedProducts: number;
 }
+
+export interface ProductMetrics {
+  totalUnitsSold: number;
+  totalRevenue: number;
+  numberOfTransactions: number;
+  lastSoldDate: string | null;
+  inventoryValue: number;
+}

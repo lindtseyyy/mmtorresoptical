@@ -54,6 +54,7 @@ const mapToFormValues = (values?: ProductFormData): ProductFormValues => ({
       ? String(values.overstockedThreshold)
       : "",
   imageDir: values?.imageDir ?? "",
+  isArchived: values?.isArchived ?? false,
 });
 
 export const ProductForm: React.FC<ProductFormProps> = ({

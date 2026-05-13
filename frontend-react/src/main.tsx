@@ -20,6 +20,7 @@ import ForgotPassword from "@/features/auth/components/ForgotPassword";
 import ManageInventory from "@/features/inventory/components/ManageInventory";
 import AddProduct from "@/features/inventory/components/AddProduct";
 import EditProduct from "@/features/inventory/components/EditProduct";
+import ViewProduct from "@/features/inventory/components/ViewProduct";
 
 // --- Users ---
 import ManageUsers from "@/features/users/components/ManageUsers";
@@ -73,6 +74,7 @@ const router = createBrowserRouter([
       { path: "inventory", element: <ManageInventory /> },
       { path: "inventory/add", element: <AddProduct /> },
       { path: "inventory/edit/:id", element: <EditProduct /> },
+      { path: "inventory/view/:id", element: <ViewProduct /> },
       {
         path: "patients",
         element: <AdminGuard><Outlet /></AdminGuard>,

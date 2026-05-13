@@ -49,3 +49,17 @@ export interface TransactionResponse {
   patient: { id: string; fullName: string } | null;
   transactionItems: TransactionItemResponse[];
 }
+
+export interface TransactionListItem {
+  transactionId: string;
+  transactionDate: string;
+  totalAmount: number;
+  paymentType: string;
+  referenceNumber: string;
+  gcashPaymentImgDir: string | null;
+  cashTender: number;
+  change: number;
+  transactionStatus: string;
+  createdBy: { userId: string; username: string; role: string; fullName: string };
+  patient: { patientId: string; fullName: string } | null;
+}

@@ -10,7 +10,7 @@ import {
   SelectValue,
 } from "@/shared/components/ui/select";
 import { Badge } from "@/shared/components/ui/badge";
-import { Plus, Search, Archive, Undo2, Pencil, ChevronLeft, ChevronRight, Glasses, MoreHorizontal, Package, Layers, AlertTriangle, TrendingUp, Banknote, ArrowUp, ArrowDown } from "lucide-react";
+import { Plus, Search, Archive, Undo2, Eye, ChevronLeft, ChevronRight, Glasses, MoreHorizontal, Package, Layers, AlertTriangle, TrendingUp, Banknote, ArrowUp, ArrowDown } from "lucide-react";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -371,11 +371,11 @@ const ManageInventory: React.FC = () => {
                               <DropdownMenuContent align="end" className="bg-gray-100 dark:bg-gray-800 border-gray-300 dark:border-gray-700">
                                 <DropdownMenuItem
                                   onClick={() =>
-                                    navigate(`/inventory/edit/${product.productId}`)
+                                    navigate(`/inventory/view/${product.productId}`)
                                   }
                                 >
-                                  <Pencil className="mr-2 h-4 w-4" />
-                                  Edit
+                                  <Eye className="mr-2 h-4 w-4" />
+                                  View
                                 </DropdownMenuItem>
                                 <DropdownMenuItem
                                   onClick={() => handleArchive(product.productId, product.isArchived)}
