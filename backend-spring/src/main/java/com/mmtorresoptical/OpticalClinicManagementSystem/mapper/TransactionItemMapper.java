@@ -1,6 +1,7 @@
 package com.mmtorresoptical.OpticalClinicManagementSystem.mapper;
 
 import com.mmtorresoptical.OpticalClinicManagementSystem.dto.audit.transactionitem.TransactionItemAuditDTO;
+import com.mmtorresoptical.OpticalClinicManagementSystem.dto.transactionitem.TransactionItemDetailsDTO;
 import com.mmtorresoptical.OpticalClinicManagementSystem.dto.transactionitem.TransactionItemResponseDTO;
 import com.mmtorresoptical.OpticalClinicManagementSystem.dto.transactionitem.TransactionItemsRequestDTO;
 import com.mmtorresoptical.OpticalClinicManagementSystem.model.Transaction;
@@ -22,10 +23,24 @@ public interface TransactionItemMapper {
             expression = "java(transactionItem.getDiscountType() != null ? transactionItem.getDiscountType().name() : null)"
     )
     @Mapping(
+            target = "isDiscounted",
+            expression = "java(transactionItem.getDiscountType() != null)"
+    )
+    @Mapping(
             target = "subtotal",
             source = "subtotal"
     )
     TransactionItemResponseDTO entityToResponseDTO(TransactionItem transactionItem);
+
+    @Mapping(
+            target = "discountType",
+            expression = "java(transactionItem.getDiscountType() != null ? transactionItem.getDiscountType().name() : null)"
+    )
+    @Mapping(
+            target = "isDiscounted",
+            expression = "java(transactionItem.getDiscountType() != null)"
+    )
+    TransactionItemDetailsDTO entityToDetailsDTO(TransactionItem transactionItem);
 
 
     @Mapping(
