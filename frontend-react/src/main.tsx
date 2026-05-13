@@ -40,6 +40,8 @@ import ViewPatient from "@/features/patients/components/ViewPatient";
 
 // --- Sales ---
 import ManageSales from "@/features/sales/components/ManageSales";
+import ManageTransactions from "@/features/sales/components/ManageTransactions";
+import ViewTransaction from "@/features/sales/components/ViewTransaction";
 
 // --- Profile ---
 import EditProfile from "@/features/profile/components/EditProfile";
@@ -72,6 +74,8 @@ const router = createBrowserRouter([
       { index: true, element: <Navigate to="/inventory" replace /> },
       { path: "profile", element: <EditProfile /> },
       { path: "sales", element: <ManageSales /> },
+      { path: "transactions", element: <ManageTransactions /> },
+      { path: "transactions/:id", element: <ViewTransaction /> },
       { path: "inventory", element: <ManageInventory /> },
       { path: "inventory/add", element: <AddProduct /> },
       { path: "inventory/edit/:id", element: <EditProduct /> },
