@@ -50,21 +50,38 @@ const ViewTransaction: React.FC = () => {
     },
   });
 
-  const handleRefund = (item: TransactionItemResponse) => {
+  const handleRefundItem = (item: TransactionItemResponse) => {
     const refundableQty = item.quantity - (item.refundedQuantity ?? 0);
     const reason = window.prompt(
       `Refund "${item.product?.productName ?? "item"}" (max ${refundableQty}). Enter reason:`
     );
-    if (!reason) return;
+    if (!reason) return null;
     const qtyStr = window.prompt(`Enter quantity to refund (max ${refundableQty}):`, String(refundableQty));
     const qty = Number(qtyStr);
     if (!qty || qty < 1 || qty > refundableQty) {
       toast.error("Invalid refund quantity.");
+      return null;
+    }
+    return { transactionItemId: item.transactionItemId, refundQuantity: qty, refundReason: reason };
+  };
+
+  const handleRefundAll = () => {
+    if (!tx) return;
+    const refundableItems = tx.transactionItems.filter(
+      (i) => (i.refundedQuantity ?? 0) < i.quantity
+    );
+    if (refundableItems.length === 0) {
+      toast.error("No items available for refund.");
       return;
     }
-    refundMutation.mutate({
-      items: [{ transactionItemId: item.transactionItemId, refundQuantity: qty, refundReason: reason }],
-    });
+    const results: { transactionItemId: string; refundQuantity: number; refundReason: string }[] = [];
+    for (const item of refundableItems) {
+      const result = handleRefundItem(item);
+      if (!result) return; // user cancelled
+      results.push(result);
+    }
+    if (results.length === 0) return;
+    refundMutation.mutate({ items: results });
   };
 
   if (isLoading) {
@@ -187,11 +204,28 @@ const ViewTransaction: React.FC = () => {
       {/* Transaction Items */}
       <Card>
         <CardHeader>
-          <CardTitle className="flex items-center gap-2">
-            <ShoppingCart className="h-5 w-5" />
-            Items
-          </CardTitle>
-          <CardDescription>{tx.transactionItems.length} item(s)</CardDescription>
+          <div className="flex items-center justify-between">
+            <div>
+              <CardTitle className="flex items-center gap-2">
+                <ShoppingCart className="h-5 w-5" />
+                Items
+              </CardTitle>
+              <CardDescription>{tx.transactionItems.length} item(s)</CardDescription>
+            </div>
+            {tx.transactionStatus !== "VOIDED" &&
+              tx.transactionStatus !== "FULLY_REFUNDED" &&
+              tx.transactionItems.some((i) => (i.refundedQuantity ?? 0) < i.quantity) && (
+                <Button
+                  size="sm"
+                  className="h-8 bg-amber-600 text-white hover:bg-amber-700"
+                  onClick={handleRefundAll}
+                  disabled={refundMutation.isPending}
+                >
+                  <Undo2 className="mr-1 h-3.5 w-3.5" />
+                  Refund Item(s)
+                </Button>
+            )}
+          </div>
         </CardHeader>
         <CardContent>
           <div className="overflow-x-auto">
