@@ -27,6 +27,7 @@ export interface RefundDetails {
   refundId: string;
   refundQuantity: number;
   refundReason: string;
+  refundMethod: string;
   refundedAt: string;
   refundAmount: number;
   refundedBy: { userId: string; username: string; role: string; fullName: string } | null;

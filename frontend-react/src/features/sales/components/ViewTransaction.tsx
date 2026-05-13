@@ -446,6 +446,7 @@ const ViewTransaction: React.FC = () => {
                       <th className="py-3 pr-4 text-center font-medium">Qty</th>
                       <th className="py-3 pr-4 text-right font-medium">Amount</th>
                       <th className="py-3 pr-4 font-medium">Reason</th>
+                      <th className="py-3 pr-4 text-center font-medium">Refund Method</th>
                       <th className="py-3 font-medium">Refund Date</th>
                       <th className="py-3 font-medium">Refunded By</th>
                     </tr>
@@ -472,6 +473,7 @@ const ViewTransaction: React.FC = () => {
                             {formatCurrency(refund.refundAmount)}
                           </td>
                           <td className="py-3 pr-4">{refund.refundReason}</td>
+                          <td className="py-3 pr-4 text-center capitalize">{refund.refundMethod}</td>
                           <td className="py-3 whitespace-nowrap">
                             {formatDateTime(refund.refundedAt)}
                           </td>
