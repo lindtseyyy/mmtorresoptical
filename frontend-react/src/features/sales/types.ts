@@ -1,6 +1,7 @@
 import type { Product, Product as ProductSummary } from "@/features/inventory/types";
 
 export interface CartItem {
+  uid: string;
   product: Product;
   quantity: number;
   discountType: "PERCENT" | "FIXED" | null;

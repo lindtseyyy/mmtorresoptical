@@ -15,6 +15,9 @@ import type { Product } from "@/features/inventory/types";
 
 const STORAGE_KEY = "pos-cart";
 
+let uidCounter = 0;
+const nextUid = () => `ci-${Date.now()}-${++uidCounter}`;
+
 const loadCart = (): CartItem[] => {
   try {
     const raw = sessionStorage.getItem(STORAGE_KEY);
@@ -55,11 +58,13 @@ const ManageSales: React.FC = () => {
 
   const addToCart = useCallback((product: Product) => {
     setCart((prev) => {
-      const existing = prev.find((i) => i.product.productId === product.productId);
-      if (existing) {
-        if (existing.quantity >= product.quantity) return prev;
+      const undiscounted = prev.find(
+        (i) => i.product.productId === product.productId && !i.isDiscounted
+      );
+      if (undiscounted) {
+        if (undiscounted.quantity >= product.quantity) return prev;
         return prev.map((i) =>
-          i.product.productId === product.productId
+          i.product.productId === product.productId && !i.isDiscounted
             ? { ...i, quantity: i.quantity + 1 }
             : i
         );
@@ -67,6 +72,7 @@ const ManageSales: React.FC = () => {
       return [
         ...prev,
         {
+          uid: nextUid(),
           product,
           quantity: 1,
           discountType: null,
@@ -77,37 +83,30 @@ const ManageSales: React.FC = () => {
     });
   }, []);
 
-  const updateQuantity = useCallback((productId: string, quantity: number) => {
+  const updateQuantity = useCallback((uid: string, quantity: number) => {
     if (quantity <= 0) {
-      setCart((prev) => prev.filter((i) => i.product.productId !== productId));
+      setCart((prev) => prev.filter((i) => i.uid !== uid));
       return;
     }
     setCart((prev) =>
-      prev.map((i) =>
-        i.product.productId === productId ? { ...i, quantity } : i
-      )
+      prev.map((i) => (i.uid === uid ? { ...i, quantity } : i))
     );
   }, []);
 
-  const removeItem = useCallback((productId: string) => {
-    setCart((prev) => prev.filter((i) => i.product.productId !== productId));
+  const removeItem = useCallback((uid: string) => {
+    setCart((prev) => prev.filter((i) => i.uid !== uid));
   }, []);
 
   const applyDiscount = useCallback(
     (
-      productId: string,
+      uid: string,
       discountType: "PERCENT" | "FIXED",
       discountValue: number
     ) => {
       setCart((prev) =>
         prev.map((i) =>
-          i.product.productId === productId
-            ? {
-                ...i,
-                isDiscounted: true,
-                discountType,
-                discountValue,
-              }
+          i.uid === uid
+            ? { ...i, isDiscounted: true, discountType, discountValue }
             : i
         )
       );
@@ -115,16 +114,11 @@ const ManageSales: React.FC = () => {
     []
   );
 
-  const removeDiscount = useCallback((productId: string) => {
+  const removeDiscount = useCallback((uid: string) => {
     setCart((prev) =>
       prev.map((i) =>
-        i.product.productId === productId
-          ? {
-              ...i,
-              isDiscounted: false,
-              discountType: null,
-              discountValue: 0,
-            }
+        i.uid === uid
+          ? { ...i, isDiscounted: false, discountType: null, discountValue: 0 }
           : i
       )
     );

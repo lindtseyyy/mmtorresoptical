@@ -61,7 +61,7 @@ const PaymentDrawer: React.FC<PaymentDrawerProps> = ({
     <>
       {/* Backdrop */}
       <div
-        className="fixed inset-0 z-40 bg-black/70 transition-opacity"
+        className="fixed inset-0 z-40 bg-black/80 transition-opacity"
         onClick={onClose}
       />
 
@@ -91,6 +91,13 @@ const PaymentDrawer: React.FC<PaymentDrawerProps> = ({
             </h3>
             <div className="max-h-[20vh] min-h-[6rem] overflow-y-auto rounded-md border border-border bg-muted/60 px-2">
               <table className="w-full text-xs">
+                <thead>
+                  <tr className="border-b border-muted-foreground/30 text-[10px] text-foreground uppercase tracking-wide font-bold">
+                    <th className="py-1 pl-2.5 text-left font-medium">Name</th>
+                    <th className="py-1 text-center font-medium w-8">Qty</th>
+                    <th className="py-1 pr-2.5 text-right font-medium">Subtotal</th>
+                  </tr>
+                </thead>
                 <tbody>
                   {items.map((item) => {
                     const itemSubtotal = item.product.unitPrice * item.quantity;
@@ -104,7 +111,7 @@ const PaymentDrawer: React.FC<PaymentDrawerProps> = ({
                       discountedSubtotal = Math.max(0, discountedSubtotal);
                     }
                     return (
-                      <tr key={item.product.productId} className="border-b border-muted-foreground/20 last:border-b-0">
+                      <tr key={item.uid} className="border-b border-muted-foreground/20 last:border-b-0">
                         <td className="py-1.5 pl-2.5">
                           <p className="font-medium text-card-foreground leading-tight">
                             {item.product.productName}

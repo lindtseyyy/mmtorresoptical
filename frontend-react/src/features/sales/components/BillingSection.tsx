@@ -7,14 +7,14 @@ import type { CartItem } from "@/features/sales/types";
 
 interface BillingSectionProps {
   items: CartItem[];
-  onUpdateQuantity: (productId: string, quantity: number) => void;
+  onUpdateQuantity: (uid: string, quantity: number) => void;
   onRemoveItem: (productId: string) => void;
   onApplyDiscount: (
-    productId: string,
+    uid: string,
     discountType: "PERCENT" | "FIXED",
     discountValue: number
   ) => void;
-  onRemoveDiscount: (productId: string) => void;
+  onRemoveDiscount: (uid: string) => void;
   onPay: () => void;
 }
 
@@ -59,7 +59,7 @@ const BillingSection: React.FC<BillingSectionProps> = ({
       <div className="flex-1 min-h-0 overflow-y-auto space-y-2 pr-0.5">
         {items.map((item) => (
           <BillingEntry
-            key={item.product.productId}
+            key={item.uid}
             item={item}
             onUpdateQuantity={onUpdateQuantity}
             onRemoveItem={onRemoveItem}
@@ -99,14 +99,14 @@ const BillingSection: React.FC<BillingSectionProps> = ({
 
 const BillingEntry: React.FC<{
   item: CartItem;
-  onUpdateQuantity: (productId: string, quantity: number) => void;
+  onUpdateQuantity: (uid: string, quantity: number) => void;
   onRemoveItem: (productId: string) => void;
   onApplyDiscount: (
-    productId: string,
+    uid: string,
     discountType: "PERCENT" | "FIXED",
     discountValue: number
   ) => void;
-  onRemoveDiscount: (productId: string) => void;
+  onRemoveDiscount: (uid: string) => void;
 }> = ({ item, onUpdateQuantity, onRemoveItem, onApplyDiscount, onRemoveDiscount }) => {
   const [showDiscount, setShowDiscount] = useState(false);
   const [discountType, setDiscountType] = useState<"FIXED" | "PERCENT">("FIXED");
@@ -123,7 +123,7 @@ const BillingEntry: React.FC<{
     const parsed = parseInt(qtyInput, 10);
     if (!isNaN(parsed) && parsed >= 1) {
       const clamped = Math.min(parsed, item.product.quantity);
-      onUpdateQuantity(item.product.productId, clamped);
+      onUpdateQuantity(item.uid, clamped);
       setQtyInput(String(clamped));
     } else {
       setQtyInput(String(item.quantity));
@@ -156,7 +156,7 @@ const BillingEntry: React.FC<{
       return;
     }
 
-    onApplyDiscount(item.product.productId, discountType, value);
+    onApplyDiscount(item.uid, discountType, value);
     if (inputRef.current) inputRef.current.value = "";
     setShowDiscount(false);
   };
@@ -172,7 +172,7 @@ const BillingEntry: React.FC<{
           variant="ghost"
           size="icon"
           className="h-6 w-6 text-muted-foreground hover:text-destructive shrink-0 -mr-1 -mt-0.5"
-          onClick={() => onRemoveItem(item.product.productId)}
+          onClick={() => onRemoveItem(item.uid)}
         >
           <Trash2 className="h-3.5 w-3.5" />
         </Button>
@@ -187,7 +187,7 @@ const BillingEntry: React.FC<{
               size="icon"
               className="h-6 w-6"
               onClick={() =>
-                onUpdateQuantity(item.product.productId, item.quantity - 1)
+                onUpdateQuantity(item.uid, item.quantity - 1)
               }
             >
               <Minus className="h-3 w-3" />
@@ -211,7 +211,7 @@ const BillingEntry: React.FC<{
               className="h-6 w-6"
               disabled={item.quantity >= item.product.quantity}
               onClick={() =>
-                onUpdateQuantity(item.product.productId, item.quantity + 1)
+                onUpdateQuantity(item.uid, item.quantity + 1)
               }
             >
               <Plus className="h-3 w-3" />
@@ -241,7 +241,7 @@ const BillingEntry: React.FC<{
         {item.isDiscounted ? (
           <button
             type="button"
-            onClick={() => onRemoveDiscount(item.product.productId)}
+            onClick={() => onRemoveDiscount(item.uid)}
             className="inline-flex items-center gap-0.5 rounded bg-green-100 px-1.5 py-0.5 text-[10px] font-medium text-green-700 hover:bg-green-200 cursor-pointer dark:bg-green-950 dark:text-green-400 dark:hover:bg-green-900"
             title="Remove discount"
           >
