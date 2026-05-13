@@ -38,6 +38,7 @@ export interface TransactionItemResponse {
 
 export interface TransactionResponse {
   transactionId: string;
+  transactionNumber: string;
   transactionDate: string;
   totalAmount: number;
   paymentType: string;
@@ -52,6 +53,7 @@ export interface TransactionResponse {
 
 export interface TransactionListItem {
   transactionId: string;
+  transactionNumber: string;
   transactionDate: string;
   totalAmount: number;
   paymentType: string;

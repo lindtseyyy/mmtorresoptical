@@ -300,7 +300,7 @@ const ManageTransactions: React.FC = () => {
                       >
                         <td className="py-3 pr-4">
                           <span className="block truncate font-medium">
-                                                        {tx.transactionId.substring(0, 8)}
+                            {tx.transactionNumber}
                           </span>
                         </td>
                         <td className="py-3 pr-4 text-center">

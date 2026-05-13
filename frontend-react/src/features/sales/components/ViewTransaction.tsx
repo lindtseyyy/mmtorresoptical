@@ -66,7 +66,7 @@ const ViewTransaction: React.FC = () => {
             <div>
               <div className="flex items-center gap-2">
                 <h2 className="text-3xl font-bold">
-                  {tx.referenceNumber || tx.transactionId.substring(0, 8)}
+                  {tx.transactionNumber}
                 </h2>
                 <Badge
                   className={
@@ -104,6 +104,10 @@ const ViewTransaction: React.FC = () => {
         </CardHeader>
         <CardContent>
           <div className="grid grid-cols-2 gap-x-8 gap-y-3 sm:grid-cols-3">
+            <div>
+              <p className="text-xs text-muted-foreground">Transaction Number</p>
+              <p className="font-medium text-sm">{tx.transactionNumber}</p>
+            </div>
             <div>
               <p className="text-xs text-muted-foreground">Transaction ID</p>
               <p className="font-medium text-sm">{tx.transactionId}</p>

@@ -38,7 +38,7 @@ const ReceiptDialog: React.FC<ReceiptDialogProps> = ({ receipt, onClose }) => {
             {dateStr} &middot; {timeStr}
           </p>
           <p className="text-[10px] text-muted-foreground/70 mt-0.5 font-mono">
-            #{receipt.transactionId.slice(0, 8).toUpperCase()}
+            #{receipt.transactionNumber}
           </p>
         </div>
       </DialogHeader>
