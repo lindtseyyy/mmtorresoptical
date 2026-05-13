@@ -36,6 +36,9 @@ import AddHealthHistory from "@/features/patients/components/AddHealthHistory";
 import EditHealthHistory from "@/features/patients/components/EditHealthHistory";
 import ViewPatient from "@/features/patients/components/ViewPatient";
 
+// --- Sales ---
+import ManageSales from "@/features/sales/components/ManageSales";
+
 // --- Profile ---
 import EditProfile from "@/features/profile/components/EditProfile";
 
@@ -66,6 +69,7 @@ const router = createBrowserRouter([
     children: [
       { index: true, element: <Navigate to="/inventory" replace /> },
       { path: "profile", element: <EditProfile /> },
+      { path: "sales", element: <ManageSales /> },
       { path: "inventory", element: <ManageInventory /> },
       { path: "inventory/add", element: <AddProduct /> },
       { path: "inventory/edit/:id", element: <EditProduct /> },

@@ -1,10 +1,11 @@
 import { NavLink, useLocation, useNavigate } from "react-router-dom";
-import { Users, Eye, LogOut, UserRound, UserRoundCog } from "lucide-react";
+import { Users, Eye, LogOut, UserRound, UserRoundCog, ShoppingCart } from "lucide-react";
 import { Button, buttonVariants } from "@/shared/components/ui/button";
 import { toast } from "sonner";
 import { isAdmin, type Role } from "@/shared/lib/auth";
 
 const menuItems = [
+  { title: "Sales & Transactions", href: "/sales", icon: ShoppingCart, roles: ["ADMIN", "STAFF"] as Role[] },
   { title: "Manage Inventory", href: "/inventory", icon: Eye, roles: ["ADMIN", "STAFF"] as Role[] },
   { title: "Manage Patients", href: "/patients", icon: UserRound, roles: ["ADMIN"] as Role[] },
   { title: "Manage Users", href: "/users", icon: Users, roles: ["ADMIN"] as Role[] },
