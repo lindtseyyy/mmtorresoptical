@@ -109,10 +109,6 @@ const ViewTransaction: React.FC = () => {
               <p className="font-medium text-sm">{tx.transactionNumber}</p>
             </div>
             <div>
-              <p className="text-xs text-muted-foreground">Transaction ID</p>
-              <p className="font-medium text-sm">{tx.transactionId}</p>
-            </div>
-            <div>
               <p className="text-xs text-muted-foreground">Date</p>
               <p className="font-medium">{formatDateTime(tx.transactionDate)}</p>
             </div>
