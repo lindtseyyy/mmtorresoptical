@@ -144,6 +144,16 @@ const ViewProduct: React.FC = () => {
                   >
                     {product.isArchived ? "Archived" : "Active"}
                   </Badge>
+                  {!product.isArchived && product.quantity <= product.lowLevelThreshold && (
+                    <Badge className="bg-red-700 text-white hover:bg-red-700 cursor-default">
+                      Low Stock
+                    </Badge>
+                  )}
+                  {!product.isArchived && product.quantity >= product.overstockedThreshold && (
+                    <Badge className="bg-yellow-700 text-white hover:bg-yellow-700 cursor-default">
+                      Overstocked
+                    </Badge>
+                  )}
                 </div>
                 <p className="text-muted-foreground">Product details and transaction history</p>
               </div>
