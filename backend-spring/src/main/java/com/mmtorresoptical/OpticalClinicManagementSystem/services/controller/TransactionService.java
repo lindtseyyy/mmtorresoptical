@@ -152,6 +152,7 @@ public class TransactionService {
             LocalDate maxDate,
             PaymentType paymentType,
             TransactionStatus status,
+            UUID productId,
             int page,
             int size,
             String sortBy,
@@ -198,6 +199,10 @@ public class TransactionService {
 
         if (status != null) {
             spec = spec.and(TransactionSpecification.hasTransactionStatus(status));
+        }
+
+        if (productId != null) {
+            spec = spec.and(TransactionSpecification.hasProductId(productId));
         }
 
         // Create pageable configuration with sorting

@@ -1,6 +1,7 @@
 package com.mmtorresoptical.OpticalClinicManagementSystem.controller.report;
 
 import com.mmtorresoptical.OpticalClinicManagementSystem.dto.metrics.InventoryAnalyticsDTO;
+import com.mmtorresoptical.OpticalClinicManagementSystem.dto.metrics.ProductMetricsDTO;
 import com.mmtorresoptical.OpticalClinicManagementSystem.dto.product.ProductDetailsDTO;
 import com.mmtorresoptical.OpticalClinicManagementSystem.objects.TopSellingProductDTO;
 import com.mmtorresoptical.OpticalClinicManagementSystem.services.analytics.InventoryAnalyticsService;
@@ -8,12 +9,14 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Sort;
 import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
 import java.time.LocalDate;
 import java.util.List;
+import java.util.UUID;
 
 @RestController
 @RequiredArgsConstructor
@@ -57,6 +60,11 @@ public class InventoryReportController {
         }
 
         return inventoryAnalyticsService.getOverStockedProducts(page, size, sortBy, sortOrder);
+    }
+
+    @GetMapping("/product/{productId}/metrics")
+    public ProductMetricsDTO getProductMetrics(@PathVariable UUID productId) {
+        return inventoryAnalyticsService.getProductMetrics(productId);
     }
 
     @GetMapping("/topselling-products")

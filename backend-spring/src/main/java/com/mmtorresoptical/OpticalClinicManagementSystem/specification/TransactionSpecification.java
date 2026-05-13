@@ -4,12 +4,15 @@ import com.mmtorresoptical.OpticalClinicManagementSystem.enums.PaymentType;
 import com.mmtorresoptical.OpticalClinicManagementSystem.enums.TransactionStatus;
 import com.mmtorresoptical.OpticalClinicManagementSystem.model.Product;
 import com.mmtorresoptical.OpticalClinicManagementSystem.model.Transaction;
+import jakarta.persistence.criteria.Join;
+import jakarta.persistence.criteria.JoinType;
 import org.springframework.data.jpa.domain.Specification;
 import org.springframework.transaction.annotation.TransactionAnnotationParser;
 
 import java.math.BigDecimal;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
+import java.util.UUID;
 
 public class TransactionSpecification {
     public static Specification<Transaction> dateBetween(LocalDate minDate, LocalDate maxDate) {
@@ -65,6 +68,17 @@ public class TransactionSpecification {
             }
 
             return cb.equal(root.get("transactionStatus"), transactionStatus);
+        };
+    }
+
+    public static Specification<Transaction> hasProductId(UUID productId) {
+        return (root, query, cb) -> {
+            if (productId == null) {
+                return cb.conjunction();
+            }
+
+            Join<Object, Object> items = root.join("transactionItems", JoinType.INNER);
+            return cb.equal(items.get("product").get("productId"), productId);
         };
     }
 

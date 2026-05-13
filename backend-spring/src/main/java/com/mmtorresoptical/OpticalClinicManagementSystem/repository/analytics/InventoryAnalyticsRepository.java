@@ -1,5 +1,6 @@
 package com.mmtorresoptical.OpticalClinicManagementSystem.repository.analytics;
 
+import com.mmtorresoptical.OpticalClinicManagementSystem.dto.metrics.ProductMetricsDTO;
 import com.mmtorresoptical.OpticalClinicManagementSystem.model.Product;
 import com.mmtorresoptical.OpticalClinicManagementSystem.objects.TopSellingProductDTO;
 import org.springframework.data.domain.Page;
@@ -230,4 +231,30 @@ public interface InventoryAnalyticsRepository extends JpaRepository<Product, UUI
             @Param("startDate") LocalDateTime startDate,
             @Param("endDate") LocalDateTime endDate
     );
+
+    @Query("""
+    SELECT new com.mmtorresoptical.OpticalClinicManagementSystem.dto.metrics.ProductMetricsDTO(
+        COALESCE(SUM(ti.quantity - COALESCE(ti.refundedQuantity, 0)), 0),
+        COALESCE(SUM(
+            ti.subtotal
+            -
+            COALESCE(
+                (SELECT SUM(r.refundAmount)
+                 FROM Refund r
+                 WHERE r.transactionItem = ti),
+                0
+            )
+        ), 0),
+        COUNT(DISTINCT t.transactionId),
+        MAX(t.transactionDate)
+    )
+    FROM TransactionItem ti
+    JOIN ti.transaction t
+    WHERE ti.product.productId = :productId
+      AND t.transactionStatus IN (
+        com.mmtorresoptical.OpticalClinicManagementSystem.enums.TransactionStatus.COMPLETED,
+        com.mmtorresoptical.OpticalClinicManagementSystem.enums.TransactionStatus.PARTIALLY_REFUNDED
+      )
+""")
+    ProductMetricsDTO findProductMetrics(@Param("productId") UUID productId);
 }

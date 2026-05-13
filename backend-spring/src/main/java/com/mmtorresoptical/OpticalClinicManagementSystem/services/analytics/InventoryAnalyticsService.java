@@ -1,6 +1,7 @@
 package com.mmtorresoptical.OpticalClinicManagementSystem.services.analytics;
 
 import com.mmtorresoptical.OpticalClinicManagementSystem.dto.metrics.InventoryAnalyticsDTO;
+import com.mmtorresoptical.OpticalClinicManagementSystem.dto.metrics.ProductMetricsDTO;
 import com.mmtorresoptical.OpticalClinicManagementSystem.dto.product.ProductDetailsDTO;
 import com.mmtorresoptical.OpticalClinicManagementSystem.mapper.ProductMapper;
 import com.mmtorresoptical.OpticalClinicManagementSystem.model.Product;
@@ -17,6 +18,7 @@ import java.math.BigDecimal;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.util.List;
+import java.util.UUID;
 
 @Service
 @RequiredArgsConstructor
@@ -187,6 +189,10 @@ public class InventoryAnalyticsService {
                 LocalDate.now().plusDays(1).atStartOfDay(),
                 pageable
         );
+    }
+
+    public ProductMetricsDTO getProductMetrics(UUID productId) {
+        return inventoryAnalyticsRepository.findProductMetrics(productId);
     }
 
 }
