@@ -19,6 +19,9 @@ public interface TransactionRepository extends JpaRepository<Transaction, UUID>,
 
     Boolean existsByReferenceNumber(String referenceNumber);
 
+    @Query("SELECT MAX(t.transactionNumber) FROM Transaction t WHERE t.transactionNumber LIKE CONCAT(:prefix, '%')")
+    String findMaxTransactionNumberByPrefix(String prefix);
+
     @Override
     @EntityGraph(attributePaths = {
             "transactionItems",

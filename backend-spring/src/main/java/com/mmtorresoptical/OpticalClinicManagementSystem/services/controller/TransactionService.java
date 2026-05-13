@@ -28,6 +28,7 @@ import java.math.BigDecimal;
 import java.math.RoundingMode;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
+import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
@@ -137,6 +138,8 @@ public class TransactionService {
 
         transaction.setTransactionItems(transactionItems);
 
+        transaction.setTransactionNumber(generateTransactionNumber());
+
         transaction.setTransactionStatus(TransactionStatus.COMPLETED);
 
         Transaction savedTransaction = transactionRepository.saveAndFlush(transaction);
@@ -187,6 +190,10 @@ public class TransactionService {
         }
 
         Specification<Transaction> spec = Specification.allOf();
+
+        if (keyword != null && !keyword.isBlank()) {
+            spec = spec.and(TransactionSpecification.hasKeyword(keyword));
+        }
 
         if (minDate != null || maxDate != null) {
             spec = spec.and(
@@ -438,6 +445,16 @@ public class TransactionService {
         } else {
             transactionAuditHelper.logRefundBatch(refundItems);
         }
+    }
+
+    private String generateTransactionNumber() {
+        String prefix = "TXN-" + LocalDate.now().format(DateTimeFormatter.ofPattern("yyyyMMdd")) + "-";
+        String maxNumber = transactionRepository.findMaxTransactionNumberByPrefix(prefix);
+        if (maxNumber == null) {
+            return prefix + "0001";
+        }
+        int seq = Integer.parseInt(maxNumber.substring(maxNumber.lastIndexOf('-') + 1));
+        return prefix + String.format("%04d", seq + 1);
     }
 
     private void updateTransactionRefundStatus(

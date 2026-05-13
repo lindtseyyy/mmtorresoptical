@@ -71,6 +71,15 @@ public class TransactionSpecification {
         };
     }
 
+    public static Specification<Transaction> hasKeyword(String keyword) {
+        return (root, query, cb) -> {
+            if (keyword == null || keyword.isBlank()) {
+                return cb.conjunction();
+            }
+            return cb.like(cb.lower(root.get("transactionNumber")), "%" + keyword.toLowerCase() + "%");
+        };
+    }
+
     public static Specification<Transaction> hasProductId(UUID productId) {
         return (root, query, cb) -> {
             if (productId == null) {

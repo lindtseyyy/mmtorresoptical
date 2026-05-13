@@ -15,6 +15,7 @@ import java.util.UUID;
 public class TransactionDetailsDTO {
 
     private UUID transactionId;
+    private String transactionNumber;
     private LocalDateTime transactionDate;
     private BigDecimal totalAmount;
     private String paymentType;

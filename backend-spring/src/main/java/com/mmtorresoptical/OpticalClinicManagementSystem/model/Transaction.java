@@ -25,6 +25,9 @@ public class Transaction {
     @Column(name = "transaction_id", updatable = false, nullable = false)
     private UUID transactionId;
 
+    @Column(name = "transaction_number", length = 20, unique = true)
+    private String transactionNumber;
+
     @CreationTimestamp
     @Column(name = "transaction_date", nullable = false)
     private LocalDateTime transactionDate;
