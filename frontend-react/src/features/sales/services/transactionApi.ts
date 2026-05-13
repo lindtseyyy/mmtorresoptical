@@ -85,4 +85,10 @@ const voidTransaction = async (id: string, reason: string): Promise<void> => {
   await api.post(`/transactions/${id}/void`, { reason });
 };
 
-export { createTransaction, fetchTransactions, fetchProductTransactions, fetchTransactionMetrics, fetchTransaction, voidTransaction };
+const refundTransaction = async (data: {
+  items: { transactionItemId: string; refundQuantity: number; refundReason: string }[];
+}): Promise<void> => {
+  await api.post("/transactions/refund", data);
+};
+
+export { createTransaction, fetchTransactions, fetchProductTransactions, fetchTransactionMetrics, fetchTransaction, voidTransaction, refundTransaction };

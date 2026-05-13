@@ -1,10 +1,11 @@
 import { useParams, Link, useNavigate } from "react-router-dom";
-import { useQuery } from "@tanstack/react-query";
-import { ArrowLeft, Receipt, Banknote, Calendar, User, ShoppingCart } from "lucide-react";
+import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
+import { ArrowLeft, Receipt, Banknote, Calendar, User, ShoppingCart, Undo2 } from "lucide-react";
 import { Button } from "@/shared/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/shared/components/ui/card";
 import { Badge } from "@/shared/components/ui/badge";
-import { fetchTransaction } from "@/features/sales/services/transactionApi";
+import { fetchTransaction, refundTransaction } from "@/features/sales/services/transactionApi";
+import { toast } from "sonner";
 import type { TransactionItemResponse } from "@/features/sales/types";
 
 const formatDateTime = (dateStr: string | null) => {
@@ -29,11 +30,42 @@ const ViewTransaction: React.FC = () => {
   const transactionId = id!;
   const navigate = useNavigate();
 
+  const queryClient = useQueryClient();
+
   const { data: tx, isLoading } = useQuery({
     queryKey: ["transaction", transactionId],
     queryFn: () => fetchTransaction(transactionId),
     enabled: !!transactionId,
   });
+
+  const refundMutation = useMutation({
+    mutationFn: refundTransaction,
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["transaction", transactionId] });
+      queryClient.invalidateQueries({ queryKey: ["transactions"] });
+      toast.success("Item refunded successfully.");
+    },
+    onError: (error: Error) => {
+      toast.error(error.message || "Refund failed.");
+    },
+  });
+
+  const handleRefund = (item: TransactionItemResponse) => {
+    const refundableQty = item.quantity - (item.refundedQuantity ?? 0);
+    const reason = window.prompt(
+      `Refund "${item.product?.productName ?? "item"}" (max ${refundableQty}). Enter reason:`
+    );
+    if (!reason) return;
+    const qtyStr = window.prompt(`Enter quantity to refund (max ${refundableQty}):`, String(refundableQty));
+    const qty = Number(qtyStr);
+    if (!qty || qty < 1 || qty > refundableQty) {
+      toast.error("Invalid refund quantity.");
+      return;
+    }
+    refundMutation.mutate({
+      items: [{ transactionItemId: item.transactionItemId, refundQuantity: qty, refundReason: reason }],
+    });
+  };
 
   if (isLoading) {
     return (
