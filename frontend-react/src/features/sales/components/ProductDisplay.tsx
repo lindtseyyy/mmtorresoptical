@@ -27,12 +27,13 @@ const ProductCard: React.FC<{
   disabled: boolean;
 }> = ({ product, onAdd, disabled }) => {
   const lowStock = product.quantity <= product.lowLevelThreshold;
+  const overstocked = product.quantity >= product.overstockedThreshold;
   const outOfStock = product.quantity === 0;
   const [imgFailed, setImgFailed] = useState(false);
 
   return (
     <div className="flex flex-col rounded-lg border border-border bg-card shadow-sm transition-shadow hover:shadow-md overflow-hidden">
-      <div className="aspect-[4/3] bg-muted/50 flex items-center justify-center overflow-hidden">
+      <div className="aspect-[4/3] bg-muted/50 flex items-center justify-center overflow-hidden relative">
         {product.imageDir && !imgFailed ? (
           <img
             src={product.imageDir}
@@ -43,23 +44,28 @@ const ProductCard: React.FC<{
         ) : (
           <ImageOff className="h-8 w-8 text-muted-foreground/50" />
         )}
+        {lowStock && !outOfStock && (
+          <Badge className="absolute top-1.5 right-1.5 bg-red-700 hover:bg-red-700 text-white text-[11px] px-1.5 py-0.5">
+            Low Stock
+          </Badge>
+        )}
+        {overstocked && !outOfStock && (
+          <Badge className="absolute top-1.5 right-1.5 bg-yellow-700 hover:bg-yellow-700 text-white text-[11px] px-1.5 py-0.5">
+            Overstock
+          </Badge>
+        )}
+        {outOfStock && (
+          <Badge className="absolute top-1.5 right-1.5 bg-neutral-800 hover:bg-neutral-800 text-white text-[11px] px-1.5 py-0.5">
+            Out of Stock
+          </Badge>
+        )}
       </div>
 
       <div className="flex flex-col flex-1 p-2.5">
-        <div className="mb-1 flex items-start justify-between gap-1">
+        <div className="mb-1">
           <span className="text-xs font-semibold text-card-foreground leading-tight line-clamp-1">
             {product.productName}
           </span>
-          {lowStock && !outOfStock && (
-            <Badge variant="secondary" className="shrink-0 text-[9px] px-1 py-0">
-              Low
-            </Badge>
-          )}
-          {outOfStock && (
-            <Badge variant="destructive" className="shrink-0 text-[9px] px-1 py-0">
-              OOS
-            </Badge>
-          )}
         </div>
 
         <span className="mb-1.5 text-[11px] text-muted-foreground">
@@ -106,13 +112,27 @@ const ProductDisplay: React.FC<ProductDisplayProps> = ({
     return counts;
   }, [products]);
 
+  const { lowStockCount, overstockCount } = useMemo(() => {
+    let low = 0;
+    let over = 0;
+    products.forEach((p) => {
+      if (p.quantity === 0) return;
+      if (p.quantity <= p.lowLevelThreshold) low++;
+      else if (p.quantity >= p.overstockedThreshold) over++;
+    });
+    return { lowStockCount: low, overstockCount: over };
+  }, [products]);
+
   const filtered = useMemo(() => {
     return products.filter((p) => {
       const matchSearch =
         !search ||
         p.productName.toLowerCase().includes(search.toLowerCase());
       const matchCategory =
-        categoryFilter === "all" || p.category === categoryFilter;
+        categoryFilter === "all" ||
+        categoryFilter === p.category ||
+        (categoryFilter === "low_stock" && p.quantity <= p.lowLevelThreshold && p.quantity > 0) ||
+        (categoryFilter === "overstocked" && p.quantity >= p.overstockedThreshold && p.quantity > 0);
       return matchSearch && matchCategory;
     });
   }, [products, search, categoryFilter]);
@@ -148,6 +168,20 @@ const ProductDisplay: React.FC<ProductDisplayProps> = ({
               {CATEGORY_LABELS[cat] ?? cat} ({categoryCounts[cat] ?? 0})
             </Badge>
           ))}
+          <Badge
+            variant={categoryFilter === "low_stock" ? "default" : "outline"}
+            className="cursor-pointer text-[11px]"
+            onClick={() => setCategoryFilter("low_stock")}
+          >
+            Low Stock ({lowStockCount})
+          </Badge>
+          <Badge
+            variant={categoryFilter === "overstocked" ? "default" : "outline"}
+            className="cursor-pointer text-[11px]"
+            onClick={() => setCategoryFilter("overstocked")}
+          >
+            Overstock ({overstockCount})
+          </Badge>
         </div>
       </div>
 
