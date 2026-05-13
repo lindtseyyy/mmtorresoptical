@@ -1,8 +1,9 @@
 import { useState, useCallback, useEffect } from "react";
 import { useMutation } from "@tanstack/react-query";
 import { toast } from "sonner";
-import { Loader2 } from "lucide-react";
+import { Loader2, Trash2 } from "lucide-react";
 
+import { Button } from "@/shared/components/ui/button";
 import { useProductsForSale } from "@/features/sales/hooks/salesQuery";
 import { createTransaction } from "@/features/sales/services/transactionApi";
 import ProductDisplay from "@/features/sales/components/ProductDisplay";
@@ -113,6 +114,10 @@ const ManageSales: React.FC = () => {
     setCart((prev) => prev.filter((i) => i.uid !== uid));
   }, []);
 
+  const clearAll = useCallback(() => {
+    setCart([]);
+  }, []);
+
   const applyDiscount = useCallback(
     (
       uid: string,
@@ -213,9 +218,22 @@ const ManageSales: React.FC = () => {
       {/* Right column — Billing */}
       <div className="flex w-2/5 flex-col min-h-0">
         <div className="flex flex-1 flex-col rounded-lg border border-border bg-card p-4 min-h-0">
-          <h2 className="mb-2 text-sm font-semibold text-card-foreground">
-            Billing
-          </h2>
+          <div className="mb-2 flex items-center justify-between">
+            <h2 className="text-sm font-semibold text-card-foreground">
+              Billing
+            </h2>
+            {cart.length > 0 && (
+              <Button
+                variant="outline"
+                size="sm"
+                className="gap-1.5 text-destructive hover:text-destructive border-destructive/30 hover:border-destructive/60"
+                onClick={clearAll}
+              >
+                <Trash2 className="h-3.5 w-3.5" />
+                Remove all items
+              </Button>
+            )}
+          </div>
           <BillingSection
             items={cart}
             onUpdateQuantity={updateQuantity}
