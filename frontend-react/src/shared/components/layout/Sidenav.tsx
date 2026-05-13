@@ -5,10 +5,10 @@ import { toast } from "sonner";
 import { isAdmin, type Role } from "@/shared/lib/auth";
 
 const menuItems = [
-  { title: "Sales & Transactions", href: "/sales", icon: ShoppingCart, roles: ["ADMIN", "STAFF"] as Role[] },
-  { title: "Manage Inventory", href: "/inventory", icon: Eye, roles: ["ADMIN", "STAFF"] as Role[] },
-  { title: "Manage Patients", href: "/patients", icon: UserRound, roles: ["ADMIN"] as Role[] },
-  { title: "Manage Users", href: "/users", icon: Users, roles: ["ADMIN"] as Role[] },
+  { title: "Point of Sale", href: "/sales", icon: ShoppingCart, roles: ["ADMIN", "STAFF"] as Role[] },
+  { title: "Inventory Management", href: "/inventory", icon: Eye, roles: ["ADMIN", "STAFF"] as Role[] },
+  { title: "Patient Management", href: "/patients", icon: UserRound, roles: ["ADMIN"] as Role[] },
+  { title: "User Management", href: "/users", icon: Users, roles: ["ADMIN"] as Role[] },
 ];
 
 function getLinkClassName({ isActive }: { isActive: boolean }): string {
@@ -52,7 +52,7 @@ const Sidenav: React.FC = () => {
   };
 
   return (
-    <div className="flex h-screen w-52 shrink-0 flex-col border-r border-border bg-card">
+    <div className="flex h-screen w-64 shrink-0 flex-col border-r border-border bg-card">
       <div className="flex h-16 items-center gap-2 border-b border-border p-4">
         <div className="flex h-10 w-10 items-center justify-center rounded-full bg-primary">
           <Eye className="h-5 w-5 text-primary-foreground" />
