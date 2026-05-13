@@ -248,16 +248,20 @@ public class TransactionService {
 
     public TransactionMetricsDTO getTransactionMetrics() {
 
-        long totalTransactions = transactionRepository.count();
+        long totalTransactions = transactionRepository.countByTransactionStatusNot(TransactionStatus.VOIDED);
 
-        BigDecimal totalRevenue = transactionRepository.sumTotalAmount();
+        BigDecimal grossRevenue = transactionRepository.sumTotalAmountExcludingStatus(TransactionStatus.VOIDED);
+        BigDecimal totalRefundedAmount = refundRepository.sumTotalRefundAmount();
+        BigDecimal totalRevenue = grossRevenue.subtract(totalRefundedAmount);
 
         LocalDateTime startOfToday = LocalDate.now().atStartOfDay();
         LocalDateTime startOfTomorrow = startOfToday.plusDays(1);
 
-        long todayTransactions = transactionRepository.countByTransactionDateBetween(startOfToday, startOfTomorrow);
+        long todayTransactions = transactionRepository.countByTransactionStatusNotAndTransactionDateBetween(TransactionStatus.VOIDED, startOfToday, startOfTomorrow);
 
-        BigDecimal todayRevenue = transactionRepository.sumTotalAmountByTransactionDateBetween(startOfToday, startOfTomorrow);
+        BigDecimal todayGrossRevenue = transactionRepository.sumTotalAmountByTransactionDateBetweenExcludingStatus(startOfToday, startOfTomorrow, TransactionStatus.VOIDED);
+        BigDecimal todayTotalRefundedAmount = refundRepository.sumRefundAmountByRefundedAtBetween(startOfToday, startOfTomorrow);
+        BigDecimal todayRevenue = todayGrossRevenue.subtract(todayTotalRefundedAmount);
 
         BigDecimal averageTransactionValue = totalTransactions > 0
                 ? totalRevenue.divide(BigDecimal.valueOf(totalTransactions), 2, RoundingMode.HALF_UP)
@@ -267,10 +271,8 @@ public class TransactionService {
         LocalDateTime startOfMonth = today.withDayOfMonth(1).atStartOfDay();
         LocalDateTime startOfNextMonth = startOfMonth.plusMonths(1);
 
-        long totalTransactionsThisMonth = transactionRepository.countByTransactionDateBetween(startOfMonth, startOfNextMonth);
+        long totalTransactionsThisMonth = transactionRepository.countByTransactionStatusNotAndTransactionDateBetween(TransactionStatus.VOIDED, startOfMonth, startOfNextMonth);
 
-        BigDecimal totalRefundedAmount = refundRepository.sumTotalRefundAmount();
-        BigDecimal todayTotalRefundedAmount = refundRepository.sumRefundAmountByRefundedAtBetween(startOfToday, startOfTomorrow);
         BigDecimal totalRefundedAmountThisMonth = refundRepository.sumRefundAmountByRefundedAtBetween(startOfMonth, startOfNextMonth);
 
         return TransactionMetricsDTO.builder()

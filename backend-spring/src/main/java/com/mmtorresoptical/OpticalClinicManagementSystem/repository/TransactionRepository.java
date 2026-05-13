@@ -58,4 +58,16 @@ public interface TransactionRepository extends JpaRepository<Transaction, UUID>,
 
     @Query("SELECT COALESCE(SUM(t.totalAmount), 0) FROM Transaction t WHERE t.transactionDate >= :start AND t.transactionDate < :end")
     BigDecimal sumTotalAmountByTransactionDateBetween(LocalDateTime start, LocalDateTime end);
+
+    @Query("SELECT COALESCE(SUM(t.totalAmount), 0) FROM Transaction t WHERE t.transactionStatus <> :excludedStatus")
+    BigDecimal sumTotalAmountExcludingStatus(TransactionStatus excludedStatus);
+
+    @Query("SELECT COALESCE(SUM(t.totalAmount), 0) FROM Transaction t WHERE t.transactionStatus <> :excludedStatus AND t.transactionDate >= :start AND t.transactionDate < :end")
+    BigDecimal sumTotalAmountByTransactionDateBetweenExcludingStatus(LocalDateTime start, LocalDateTime end, TransactionStatus excludedStatus);
+
+    @Query("SELECT COUNT(t) FROM Transaction t WHERE t.transactionStatus <> :status")
+    long countByTransactionStatusNot(TransactionStatus status);
+
+    @Query("SELECT COUNT(t) FROM Transaction t WHERE t.transactionStatus <> :status AND t.transactionDate >= :start AND t.transactionDate < :end")
+    long countByTransactionStatusNotAndTransactionDateBetween(TransactionStatus status, LocalDateTime start, LocalDateTime end);
 }
