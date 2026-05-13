@@ -87,6 +87,7 @@ const voidTransaction = async (id: string, reason: string): Promise<void> => {
 
 const refundTransaction = async (data: {
   items: { transactionItemId: string; refundQuantity: number; refundReason: string }[];
+  refundMethod: string;
 }): Promise<void> => {
   await api.post("/transactions/refund", data);
 };

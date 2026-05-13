@@ -1,12 +1,23 @@
-import { useParams, Link, useNavigate } from "react-router-dom";
+import { useState } from "react";
+import { useParams, Link } from "react-router-dom";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
-import { ArrowLeft, Receipt, Banknote, Calendar, User, ShoppingCart, Undo2 } from "lucide-react";
+import {
+  ArrowLeft,
+  Receipt,
+  Banknote,
+  ShoppingCart,
+  RotateCcw,
+  Undo2,
+  X,
+} from "lucide-react";
 import { Button } from "@/shared/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/shared/components/ui/card";
 import { Badge } from "@/shared/components/ui/badge";
+import { Checkbox } from "@/shared/components/ui/checkbox";
 import { fetchTransaction, refundTransaction } from "@/features/sales/services/transactionApi";
 import { toast } from "sonner";
-import type { TransactionItemResponse } from "@/features/sales/types";
+import type { TransactionItemResponse, RefundStateItem, RefundMethod } from "@/features/sales/types";
+import RefundDrawer from "./RefundDrawer";
 
 const formatDateTime = (dateStr: string | null) => {
   if (!dateStr) return "—";
@@ -28,7 +39,6 @@ const paymentTypeLabel = (pt: string) =>
 const ViewTransaction: React.FC = () => {
   const { id } = useParams<{ id: string }>();
   const transactionId = id!;
-  const navigate = useNavigate();
 
   const queryClient = useQueryClient();
 
@@ -43,46 +53,107 @@ const ViewTransaction: React.FC = () => {
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["transaction", transactionId] });
       queryClient.invalidateQueries({ queryKey: ["transactions"] });
-      toast.success("Item refunded successfully.");
+      toast.success("Refund processed successfully.");
     },
     onError: (error: Error) => {
       toast.error(error.message || "Refund failed.");
     },
   });
 
-  const handleRefundItem = (item: TransactionItemResponse) => {
-    const refundableQty = item.quantity - (item.refundedQuantity ?? 0);
-    const reason = window.prompt(
-      `Refund "${item.product?.productName ?? "item"}" (max ${refundableQty}). Enter reason:`
-    );
-    if (!reason) return null;
-    const qtyStr = window.prompt(`Enter quantity to refund (max ${refundableQty}):`, String(refundableQty));
-    const qty = Number(qtyStr);
-    if (!qty || qty < 1 || qty > refundableQty) {
-      toast.error("Invalid refund quantity.");
-      return null;
-    }
-    return { transactionItemId: item.transactionItemId, refundQuantity: qty, refundReason: reason };
+  // ── Refund workflow state ──
+  const [selectionMode, setSelectionMode] = useState(false);
+  const [selectedItems, setSelectedItems] = useState<Set<string>>(new Set());
+  const [drawerOpen, setDrawerOpen] = useState(false);
+  const [refundItems, setRefundItems] = useState<RefundStateItem[]>([]);
+
+  const cancelSelection = () => {
+    setSelectionMode(false);
+    setSelectedItems(new Set());
   };
 
-  const handleRefundAll = () => {
+  const toggleItem = (item: TransactionItemResponse) => {
+    const refundableQty = item.quantity - (item.refundedQuantity ?? 0);
+    if (refundableQty <= 0) return;
+
+    setSelectedItems((prev) => {
+      const next = new Set(prev);
+      if (next.has(item.transactionItemId)) {
+        next.delete(item.transactionItemId);
+      } else {
+        next.add(item.transactionItemId);
+      }
+      return next;
+    });
+  };
+
+  const toggleSelectAll = () => {
     if (!tx) return;
-    const refundableItems = tx.transactionItems.filter(
+    const refundable = tx.transactionItems.filter(
       (i) => (i.refundedQuantity ?? 0) < i.quantity
     );
-    if (refundableItems.length === 0) {
-      toast.error("No items available for refund.");
+
+    if (selectedItems.size === refundable.length) {
+      setSelectedItems(new Set());
+    } else {
+      setSelectedItems(new Set(refundable.map((i) => i.transactionItemId)));
+    }
+  };
+
+  const handlePrepareRefund = () => {
+    if (!tx) return;
+    const items: RefundStateItem[] = [];
+    for (const item of tx.transactionItems) {
+      if (selectedItems.has(item.transactionItemId)) {
+        const maxQty = item.quantity - (item.refundedQuantity ?? 0);
+        items.push({
+          transactionItemId: item.transactionItemId,
+          productName: item.product?.productName ?? "Unknown",
+          unitPrice: item.unitPrice,
+          maxQuantity: maxQty,
+          refundQuantity: 1,
+          refundReason: "",
+          discountType: item.discountType,
+          discountValue: item.discountValue,
+          isDiscounted: item.isDiscounted,
+          originalQuantity: item.quantity,
+        });
+      }
+    }
+    if (items.length === 0) {
+      toast.error("No items selected for refund.");
       return;
     }
-    const results: { transactionItemId: string; refundQuantity: number; refundReason: string }[] = [];
-    for (const item of refundableItems) {
-      const result = handleRefundItem(item);
-      if (!result) return; // user cancelled
-      results.push(result);
-    }
-    if (results.length === 0) return;
-    refundMutation.mutate({ items: results });
+    setRefundItems(items);
+    setDrawerOpen(true);
   };
+
+  const handleCompleteRefund = (
+    finalItems: RefundStateItem[],
+    refundMethod: RefundMethod
+  ) => {
+    refundMutation.mutate(
+      {
+        items: finalItems.map((i) => ({
+          transactionItemId: i.transactionItemId,
+          refundQuantity: i.refundQuantity,
+          refundReason: i.refundReason,
+        })),
+        refundMethod,
+      },
+      {
+        onSuccess: () => {
+          setDrawerOpen(false);
+          cancelSelection();
+        },
+      }
+    );
+  };
+
+  const canRefund =
+    tx &&
+    tx.transactionStatus !== "VOIDED" &&
+    tx.transactionStatus !== "FULLY_REFUNDED" &&
+    tx.transactionItems.some((i) => (i.refundedQuantity ?? 0) < i.quantity);
 
   if (isLoading) {
     return (
@@ -103,6 +174,10 @@ const ViewTransaction: React.FC = () => {
     );
   }
 
+  const refundableCount = tx.transactionItems.filter(
+    (i) => (i.refundedQuantity ?? 0) < i.quantity
+  ).length;
+
   return (
     <div className="mx-auto max-w-5xl space-y-6">
       {/* Header */}
@@ -114,9 +189,7 @@ const ViewTransaction: React.FC = () => {
             </div>
             <div>
               <div className="flex items-center gap-2">
-                <h2 className="text-3xl font-bold">
-                  {tx.transactionNumber}
-                </h2>
+                <h2 className="text-3xl font-bold">{tx.transactionNumber}</h2>
                 <Badge
                   className={
                     tx.transactionStatus === "COMPLETED"
@@ -198,6 +271,37 @@ const ViewTransaction: React.FC = () => {
               </div>
             )}
           </div>
+
+          {tx.transactionItems.some(
+            (item) => (item.refundDetailsDTOList?.length ?? 0) > 0
+          ) && (
+            <div className="mt-4 grid grid-cols-2 gap-x-8 gap-y-3 border-t pt-4 sm:grid-cols-3">
+              <div>
+                <p className="text-xs text-muted-foreground">Refunded Items</p>
+                <p className="font-medium">
+                  {tx.transactionItems.reduce(
+                    (count, item) =>
+                      count + (item.refundDetailsDTOList?.length ?? 0),
+                    0
+                  )}
+                </p>
+              </div>
+              <div>
+                <p className="text-xs text-muted-foreground">Refunded Amount</p>
+                <p className="font-medium text-red-600">
+                  {formatCurrency(
+                    tx.transactionItems.reduce((total, item) => {
+                      const itemTotal = (item.refundDetailsDTOList ?? []).reduce(
+                        (sum, r) => sum + r.refundAmount,
+                        0
+                      );
+                      return total + itemTotal;
+                    }, 0)
+                  )}
+                </p>
+              </div>
+            </div>
+          )}
         </CardContent>
       </Card>
 
@@ -210,20 +314,44 @@ const ViewTransaction: React.FC = () => {
                 <ShoppingCart className="h-5 w-5" />
                 Items
               </CardTitle>
-              <CardDescription>{tx.transactionItems.length} item(s)</CardDescription>
+              <CardDescription>
+                {tx.transactionItems.length} item(s)
+                {selectionMode && ` — ${selectedItems.size} selected`}
+              </CardDescription>
             </div>
-            {tx.transactionStatus !== "VOIDED" &&
-              tx.transactionStatus !== "FULLY_REFUNDED" &&
-              tx.transactionItems.some((i) => (i.refundedQuantity ?? 0) < i.quantity) && (
+
+            {!selectionMode && canRefund && (
+              <Button
+                size="sm"
+                className="h-8 bg-amber-600 text-white hover:bg-amber-700"
+                onClick={() => setSelectionMode(true)}
+                disabled={refundMutation.isPending}
+              >
+                <Undo2 className="mr-1 h-3.5 w-3.5" />
+                Refund Item(s)
+              </Button>
+            )}
+
+            {selectionMode && (
+              <div className="flex items-center gap-2">
+                <Button
+                  size="sm"
+                  variant="outline"
+                  className="h-8"
+                  onClick={cancelSelection}
+                >
+                  <X className="mr-1 h-3.5 w-3.5" />
+                  Cancel
+                </Button>
                 <Button
                   size="sm"
                   className="h-8 bg-amber-600 text-white hover:bg-amber-700"
-                  onClick={handleRefundAll}
-                  disabled={refundMutation.isPending}
+                  onClick={handlePrepareRefund}
+                  disabled={selectedItems.size === 0}
                 >
-                  <Undo2 className="mr-1 h-3.5 w-3.5" />
-                  Refund Item(s)
+                  Prepare Refund ({selectedItems.size})
                 </Button>
+              </div>
             )}
           </div>
         </CardHeader>
@@ -232,6 +360,17 @@ const ViewTransaction: React.FC = () => {
             <table className="w-full text-sm">
               <thead>
                 <tr className="border-b text-left text-muted-foreground">
+                  {selectionMode && (
+                    <th className="py-3 pr-2 w-8">
+                      <Checkbox
+                        checked={
+                          refundableCount > 0 &&
+                          selectedItems.size === refundableCount
+                        }
+                        onCheckedChange={toggleSelectAll}
+                      />
+                    </th>
+                  )}
                   <th className="py-3 pr-4 font-medium">Product</th>
                   <th className="py-3 pr-4 text-center font-medium">Unit Price</th>
                   <th className="py-3 pr-4 text-center font-medium">Qty</th>
@@ -240,37 +379,124 @@ const ViewTransaction: React.FC = () => {
                 </tr>
               </thead>
               <tbody>
-                {tx.transactionItems.map((item: TransactionItemResponse) => (
-                  <tr key={item.transactionItemId} className="border-b">
-                    <td className="py-3 pr-4">
-                      <p className="font-medium">{item.product?.productName ?? "—"}</p>
-                      {(item.refundedQuantity ?? 0) > 0 && (
-                        <span className="text-xs text-red-600">
-                          Refunded: {item.refundedQuantity}
-                        </span>
+                {tx.transactionItems.map((item: TransactionItemResponse) => {
+                  const refundableQty =
+                    item.quantity - (item.refundedQuantity ?? 0);
+                  const isSelected = selectedItems.has(item.transactionItemId);
+
+                  return (
+                    <tr key={item.transactionItemId} className="border-b">
+                      {selectionMode && (
+                        <td className="py-3 pr-2">
+                          <Checkbox
+                            checked={isSelected}
+                            disabled={refundableQty <= 0}
+                            onCheckedChange={() => toggleItem(item)}
+                          />
+                        </td>
                       )}
-                    </td>
-                    <td className="py-3 pr-4 text-center">
-                      {formatCurrency(item.unitPrice)}
-                    </td>
-                    <td className="py-3 pr-4 text-center">{item.quantity}</td>
-                    <td className="py-3 pr-4 text-center">
-                      {item.isDiscounted
-                        ? item.discountType === "PERCENT"
-                          ? `${item.discountValue}%`
-                          : formatCurrency(item.discountValue)
-                        : "—"}
-                    </td>
-                    <td className="py-3 text-right font-medium">
-                      {formatCurrency(item.subtotal)}
-                    </td>
-                  </tr>
-                ))}
+                      <td className="py-3 pr-4">
+                        <p className="font-medium">
+                          {item.product?.productName ?? "—"}
+                        </p>
+                        {(item.refundedQuantity ?? 0) > 0 && (
+                          <span className="text-xs text-red-600">
+                            Refunded: {item.refundedQuantity}
+                          </span>
+                        )}
+                      </td>
+                      <td className="py-3 pr-4 text-center">
+                        {formatCurrency(item.unitPrice)}
+                      </td>
+                      <td className="py-3 pr-4 text-center">
+                        {item.quantity}
+                      </td>
+                      <td className="py-3 pr-4 text-center">
+                        {item.isDiscounted
+                          ? item.discountType === "PERCENT"
+                            ? `${item.discountValue}%`
+                            : formatCurrency(item.discountValue)
+                          : "—"}
+                      </td>
+                      <td className="py-3 text-right font-medium">
+                        {formatCurrency(item.subtotal)}
+                      </td>
+                    </tr>
+                  );
+                })}
               </tbody>
             </table>
           </div>
+
+          {/* Refunded Items */}
+          {tx.transactionItems.some(
+            (item) => (item.refundDetailsDTOList?.length ?? 0) > 0
+          ) && (
+            <>
+              <div className="mt-6 flex items-center gap-2 border-t pt-4">
+                <RotateCcw className="h-5 w-5 text-muted-foreground" />
+                <h3 className="text-sm font-semibold">Refunded Items</h3>
+              </div>
+              <div className="mt-2 overflow-x-auto rounded-md bg-muted/50 p-3">
+                <table className="w-full text-sm">
+                  <thead>
+                    <tr className="border-b text-left text-muted-foreground">
+                      <th className="py-3 pr-4 font-medium">Product</th>
+                      <th className="py-3 pr-4 text-center font-medium">Unit Price</th>
+                      <th className="py-3 pr-4 text-center font-medium">Qty</th>
+                      <th className="py-3 pr-4 text-right font-medium">Amount</th>
+                      <th className="py-3 pr-4 font-medium">Reason</th>
+                      <th className="py-3 font-medium">Refund Date</th>
+                      <th className="py-3 font-medium">Refunded By</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {tx.transactionItems.flatMap((item) =>
+                      (item.refundDetailsDTOList ?? []).map((refund) => (
+                        <tr
+                          key={refund.refundId}
+                          className="border-b text-muted-foreground"
+                        >
+                          <td className="py-3 pr-4">
+                            <p className="font-medium text-foreground">
+                              {item.product?.productName ?? "—"}
+                            </p>
+                          </td>
+                          <td className="py-3 pr-4 text-center">
+                            {formatCurrency(item.unitPrice)}
+                          </td>
+                          <td className="py-3 pr-4 text-center">
+                            {refund.refundQuantity}
+                          </td>
+                          <td className="py-3 pr-4 text-right text-red-600">
+                            {formatCurrency(refund.refundAmount)}
+                          </td>
+                          <td className="py-3 pr-4">{refund.refundReason}</td>
+                          <td className="py-3 whitespace-nowrap">
+                            {formatDateTime(refund.refundedAt)}
+                          </td>
+                          <td className="py-3 whitespace-nowrap">
+                            {refund.refundedBy?.fullName ?? "—"}
+                          </td>
+                        </tr>
+                      ))
+                    )}
+                  </tbody>
+                </table>
+              </div>
+            </>
+          )}
         </CardContent>
       </Card>
+
+      {/* Refund Drawer */}
+      <RefundDrawer
+        open={drawerOpen}
+        onOpenChange={setDrawerOpen}
+        items={refundItems}
+        onComplete={handleCompleteRefund}
+        isPending={refundMutation.isPending}
+      />
     </div>
   );
 };

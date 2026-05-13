@@ -23,6 +23,15 @@ export interface TransactionRequest {
   }[];
 }
 
+export interface RefundDetails {
+  refundId: string;
+  refundQuantity: number;
+  refundReason: string;
+  refundedAt: string;
+  refundAmount: number;
+  refundedBy: { userId: string; username: string; role: string; fullName: string } | null;
+}
+
 export interface TransactionItemResponse {
   transactionItemId: string;
   product: ProductSummary;
@@ -34,6 +43,8 @@ export interface TransactionItemResponse {
   discountValue: number;
   refundedQuantity: number;
   refundNotes: string;
+  refundReason?: string;
+  refundDetailsDTOList?: RefundDetails[];
 }
 
 export interface TransactionResponse {
@@ -48,7 +59,25 @@ export interface TransactionResponse {
   transactionStatus: string;
   createdBy: { id: string; fullName: string };
   patient: { id: string; fullName: string } | null;
+  voidedBy?: { userId: string; username: string; role: string; fullName: string } | null;
+  voidedAt?: string;
+  voidReason?: string;
   transactionItems: TransactionItemResponse[];
+}
+
+export type RefundMethod = "CASH" | "GCASH" | "STORE_VOUCHER";
+
+export interface RefundStateItem {
+  transactionItemId: string;
+  productName: string;
+  unitPrice: number;
+  maxQuantity: number;
+  refundQuantity: number;
+  refundReason: string;
+  discountType: string | null;
+  discountValue: number;
+  isDiscounted: boolean;
+  originalQuantity: number;
 }
 
 export interface TransactionListItem {
