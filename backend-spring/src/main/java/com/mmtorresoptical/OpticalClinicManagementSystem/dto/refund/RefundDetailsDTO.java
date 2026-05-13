@@ -18,6 +18,7 @@ public class RefundDetailsDTO {
     private String refundReason;
     private LocalDateTime refundedAt;
     private BigDecimal refundAmount;
+    private String refundMethod;
 
     private UserSummaryDTO refundedBy;
 }
