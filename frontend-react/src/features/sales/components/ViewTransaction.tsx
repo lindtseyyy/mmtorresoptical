@@ -435,7 +435,9 @@ const ViewTransaction: React.FC = () => {
             <>
               <div className="mt-6 flex items-center gap-2 border-t pt-4">
                 <RotateCcw className="h-5 w-5 text-muted-foreground" />
-                <h3 className="text-sm font-semibold">Refunded Items</h3>
+                <h3 className="text-sm font-semibold">
+                  Refunded Items ({tx.transactionItems.reduce((sum, item) => sum + (item.refundDetailsDTOList?.length ?? 0), 0)})
+                </h3>
               </div>
               <div className="mt-2 overflow-x-auto rounded-md bg-muted/50 p-3">
                 <table className="w-full text-sm">
