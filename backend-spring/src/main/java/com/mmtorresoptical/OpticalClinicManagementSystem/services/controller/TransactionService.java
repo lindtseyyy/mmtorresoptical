@@ -1,5 +1,6 @@
 package com.mmtorresoptical.OpticalClinicManagementSystem.services.controller;
 
+import com.mmtorresoptical.OpticalClinicManagementSystem.dto.metrics.TransactionMetricsDTO;
 import com.mmtorresoptical.OpticalClinicManagementSystem.dto.refund.RefundTransactionRequestDTO;
 import com.mmtorresoptical.OpticalClinicManagementSystem.dto.transaction.*;
 import com.mmtorresoptical.OpticalClinicManagementSystem.dto.refund.RefundItemDTO;
@@ -236,6 +237,39 @@ public class TransactionService {
         Sort sort = Sort.by(Sort.Direction.DESC, "transactionDate");
 
                 return transactionRepository.findAll(spec, sort);
+    }
+
+    public TransactionMetricsDTO getTransactionMetrics() {
+
+        long totalTransactions = transactionRepository.count();
+
+        BigDecimal totalRevenue = transactionRepository.sumTotalAmount();
+
+        LocalDateTime startOfToday = LocalDate.now().atStartOfDay();
+        LocalDateTime startOfTomorrow = startOfToday.plusDays(1);
+
+        long todayTransactions = transactionRepository.countByTransactionDateBetween(startOfToday, startOfTomorrow);
+
+        BigDecimal todayRevenue = transactionRepository.sumTotalAmountByTransactionDateBetween(startOfToday, startOfTomorrow);
+
+        BigDecimal averageTransactionValue = totalTransactions > 0
+                ? totalRevenue.divide(BigDecimal.valueOf(totalTransactions), 2, RoundingMode.HALF_UP)
+                : BigDecimal.ZERO;
+
+        LocalDate today = LocalDate.now();
+        LocalDateTime startOfMonth = today.withDayOfMonth(1).atStartOfDay();
+        LocalDateTime startOfNextMonth = startOfMonth.plusMonths(1);
+
+        long totalTransactionsThisMonth = transactionRepository.countByTransactionDateBetween(startOfMonth, startOfNextMonth);
+
+        return TransactionMetricsDTO.builder()
+                .totalTransactions(totalTransactions)
+                .totalRevenue(totalRevenue)
+                .todayRevenue(todayRevenue)
+                .todayTransactions(todayTransactions)
+                .averageTransactionValue(averageTransactionValue)
+                .totalTransactionsThisMonth(totalTransactionsThisMonth)
+                .build();
     }
 
     @Transactional

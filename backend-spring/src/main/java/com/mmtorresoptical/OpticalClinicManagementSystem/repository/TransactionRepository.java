@@ -49,4 +49,10 @@ public interface TransactionRepository extends JpaRepository<Transaction, UUID>,
 
     @Query("SELECT COALESCE(SUM(ti.quantity), 0) FROM TransactionItem ti WHERE ti.transaction.patient.patientId = :patientId")
     long sumQuantityByPatientId(UUID patientId);
+
+    @Query("SELECT COALESCE(SUM(t.totalAmount), 0) FROM Transaction t")
+    BigDecimal sumTotalAmount();
+
+    @Query("SELECT COALESCE(SUM(t.totalAmount), 0) FROM Transaction t WHERE t.transactionDate >= :start AND t.transactionDate < :end")
+    BigDecimal sumTotalAmountByTransactionDateBetween(LocalDateTime start, LocalDateTime end);
 }

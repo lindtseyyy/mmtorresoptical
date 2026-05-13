@@ -1,5 +1,6 @@
 package com.mmtorresoptical.OpticalClinicManagementSystem.controller;
 
+import com.mmtorresoptical.OpticalClinicManagementSystem.dto.metrics.TransactionMetricsDTO;
 import com.mmtorresoptical.OpticalClinicManagementSystem.dto.refund.RefundTransactionRequestDTO;
 import com.mmtorresoptical.OpticalClinicManagementSystem.dto.transaction.*;
 import com.mmtorresoptical.OpticalClinicManagementSystem.enums.PaymentType;
@@ -90,6 +91,11 @@ public class TransactionController {
     ) {
         transactionService.voidTransaction(id, voidTransactionRequestDTO);
         return ResponseEntity.ok().build();
+    }
+
+    @GetMapping("/metrics")
+    public ResponseEntity<TransactionMetricsDTO> getTransactionMetrics() {
+        return ResponseEntity.ok(transactionService.getTransactionMetrics());
     }
 
     @PostMapping("/refund")
