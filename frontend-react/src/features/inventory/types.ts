@@ -93,5 +93,4 @@ export interface ProductMetrics {
   totalRevenue: number;
   numberOfTransactions: number;
   lastSoldDate: string | null;
-  inventoryValue: number;
 }

@@ -7,18 +7,17 @@ const createTransaction = async (data: TransactionRequest): Promise<TransactionR
   return response;
 };
 
-const fetchTransactions = async (
+const fetchProductTransactions = async (
+  productId: string,
   page = 0,
   size = 10,
-  productId?: string,
 ): Promise<PageResponse<TransactionListItem>> => {
-  const { data } = await api.get("/transactions", {
+  const { data } = await api.get(`/products/${productId}/transactions`, {
     params: {
       page,
       size,
       sortBy: "transactionDate",
       sortOrder: "desc",
-      ...(productId && { productId }),
     },
   });
   const pg = data.page;
@@ -31,4 +30,26 @@ const fetchTransactions = async (
   };
 };
 
-export { createTransaction, fetchTransactions };
+const fetchTransactions = async (
+  page = 0,
+  size = 10,
+): Promise<PageResponse<TransactionListItem>> => {
+  const { data } = await api.get("/transactions", {
+    params: {
+      page,
+      size,
+      sortBy: "transactionDate",
+      sortOrder: "desc",
+    },
+  });
+  const pg = data.page;
+  return {
+    content: data.content,
+    totalPages: pg.totalPages,
+    totalElements: pg.totalElements,
+    size: pg.size,
+    number: pg.number,
+  };
+};
+
+export { createTransaction, fetchTransactions, fetchProductTransactions };

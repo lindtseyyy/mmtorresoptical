@@ -16,7 +16,7 @@ import {
   fetchProduct,
   fetchProductMetrics,
 } from "@/features/inventory/services/productApi";
-import { fetchTransactions } from "@/features/sales/services/transactionApi";
+import { fetchProductTransactions } from "@/features/sales/services/transactionApi";
 import type { TransactionListItem } from "@/features/sales/types";
 import {
   createArchiveProductMutationOptions,
@@ -64,7 +64,7 @@ const ViewProduct: React.FC = () => {
   const [txPage, setTxPage] = useState(0);
   const { data: txData, isFetching: txFetching } = useQuery({
     queryKey: ["product-transactions", productId, txPage],
-    queryFn: () => fetchTransactions(txPage, 10, productId),
+    queryFn: () => fetchProductTransactions(productId, txPage, 10),
     placeholderData: keepPreviousData,
     enabled: !!productId,
   });
