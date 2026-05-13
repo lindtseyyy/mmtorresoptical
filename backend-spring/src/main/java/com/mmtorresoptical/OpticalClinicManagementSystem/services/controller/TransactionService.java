@@ -75,9 +75,15 @@ public class TransactionService {
         List<TransactionItem> transactionItems = transactionRequestDTO.getItems()
                 .stream().map(dto -> {
 
-                    // Retrieve prescription or throw exception if not found
+                    // Retrieve product or throw exception if not found
                     Product retrievedProduct = productRepository.findById(dto.getProductId())
                             .orElseThrow(() -> new ResourceNotFoundException("Product not found with id: " + dto.getProductId()));
+
+                    if (Boolean.TRUE.equals(retrievedProduct.getIsArchived())) {
+                        throw new BadRequestException(
+                            "Cannot sell archived product: " + retrievedProduct.getProductName()
+                        );
+                    }
 
                     // Check stock first
                     if (retrievedProduct.getQuantity() < dto.getQuantity()) {
