@@ -1,12 +1,16 @@
 package com.mmtorresoptical.OpticalClinicManagementSystem.controller;
 
 import com.mmtorresoptical.OpticalClinicManagementSystem.dto.backup.BackupRequestDTO;
+import com.mmtorresoptical.OpticalClinicManagementSystem.enums.ActionType;
+import com.mmtorresoptical.OpticalClinicManagementSystem.enums.ResourceType;
+import com.mmtorresoptical.OpticalClinicManagementSystem.repository.AuditLogRepository;
 import com.mmtorresoptical.OpticalClinicManagementSystem.services.controller.DatabaseBackupService;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
+import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
@@ -28,6 +32,47 @@ import java.util.Map;
 public class DatabaseBackupController {
 
     private final DatabaseBackupService databaseBackupService;
+    private final AuditLogRepository auditLogRepository;
+
+    @GetMapping("/last-backup")
+    public ResponseEntity<Map<String, String>> getLastBackup() {
+        return auditLogRepository
+                .findTopByActionTypeAndResourceTypeOrderByLoggedAtDesc(ActionType.BACKUP, ResourceType.DATABASE)
+                .map(auditLog -> {
+                    var user = auditLog.getUser();
+                    String performedBy = user.getFirstName() + " " + user.getLastName();
+                    return ResponseEntity.ok(Map.of(
+                            "timestamp", auditLog.getLoggedAt().toString(),
+                            "details", auditLog.getDetails(),
+                            "performedBy", performedBy
+                    ));
+                })
+                .orElseGet(() -> ResponseEntity.ok(Map.of(
+                        "timestamp", "",
+                        "details", "",
+                        "performedBy", ""
+                )));
+    }
+
+    @GetMapping("/last-restore")
+    public ResponseEntity<Map<String, String>> getLastRestore() {
+        return auditLogRepository
+                .findTopByActionTypeAndResourceTypeOrderByLoggedAtDesc(ActionType.RESTORE, ResourceType.DATABASE)
+                .map(auditLog -> {
+                    var user = auditLog.getUser();
+                    String performedBy = user.getFirstName() + " " + user.getLastName();
+                    return ResponseEntity.ok(Map.of(
+                            "timestamp", auditLog.getLoggedAt().toString(),
+                            "details", auditLog.getDetails(),
+                            "performedBy", performedBy
+                    ));
+                })
+                .orElseGet(() -> ResponseEntity.ok(Map.of(
+                        "timestamp", "",
+                        "details", "",
+                        "performedBy", ""
+                )));
+    }
 
     @PostMapping("/backup")
     public ResponseEntity<StreamingResponseBody> downloadBackup(

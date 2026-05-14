@@ -11,10 +11,12 @@ import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
 
+import java.io.BufferedReader;
 import java.io.File;
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
+import java.io.InputStreamReader;
 import java.io.OutputStream;
 import java.nio.file.Files;
 import java.nio.file.Path;
@@ -88,7 +90,7 @@ public class DatabaseBackupService {
         User user = authenticatedUserService.getCurrentUser();
         if (currentPassword == null || currentPassword.isBlank()
                 || !passwordEncoder.matches(currentPassword, user.getPasswordHash())) {
-            throw new BadRequestException("Invalid current password");
+            throw new BadRequestException("Incorrect password. Please verify your password and try again.");
         }
     }
 
@@ -114,14 +116,33 @@ public class DatabaseBackupService {
                 pb = buildDockerPgDumpCommand();
             } else {
                 pb = buildLocalPgDumpCommand(dbHost, dbPort, tempFile);
+                pb.redirectErrorStream(true);
             }
-            pb.redirectErrorStream(true);
 
             process = pb.start();
+            final Process runningProcess = process;
+
+            // Docker mode: capture stderr in background thread for error reporting
+            StringBuilder stderrCapture = new StringBuilder();
+            Thread stderrThread = null;
+            if (useDocker) {
+                stderrThread = new Thread(() -> {
+                    try (BufferedReader reader = new BufferedReader(
+                            new InputStreamReader(runningProcess.getErrorStream()))) {
+                        String line;
+                        while ((line = reader.readLine()) != null) {
+                            stderrCapture.append(line).append("\n");
+                        }
+                    } catch (IOException ignored) {
+                    }
+                });
+                stderrThread.setDaemon(true);
+                stderrThread.start();
+            }
 
             if (useDocker) {
                 // Docker mode: pg_dump writes to stdout, we capture to file
-                try (InputStream stdout = process.getInputStream();
+                try (InputStream stdout = runningProcess.getInputStream();
                      FileOutputStream fos = new FileOutputStream(tempFile)) {
                     byte[] buffer = new byte[8192];
                     int bytesRead;
@@ -133,6 +154,11 @@ public class DatabaseBackupService {
 
             boolean finished = process.waitFor(PROCESS_TIMEOUT_MINUTES, TimeUnit.MINUTES);
 
+            // Wait for stderr reader to finish
+            if (stderrThread != null) {
+                stderrThread.join(5000);
+            }
+
             if (!finished) {
                 process.destroyForcibly();
                 tempFile.delete();
@@ -143,13 +169,15 @@ public class DatabaseBackupService {
             if (exitCode != 0) {
                 String errorOutput;
                 if (useDocker) {
-                    errorOutput = "(check container logs for details)";
+                    errorOutput = !stderrCapture.isEmpty()
+                            ? stderrCapture.toString().trim()
+                            : "(no error output captured from pg_dump)";
                 } else {
                     errorOutput = new String(process.getInputStream().readAllBytes());
                 }
                 tempFile.delete();
                 log.error("pg_dump failed with exit code {}: {}", exitCode, errorOutput);
-                throw new RuntimeException("Database backup failed: exit code " + exitCode + " - " + errorOutput);
+                throw new RuntimeException("Database backup failed: " + errorOutput);
             }
 
             long fileSize = tempFile.length();
@@ -240,10 +268,29 @@ public class DatabaseBackupService {
                 pb = buildDockerPgDumpCommand();
             } else {
                 pb = buildLocalPgDumpCommand(dbHost, dbPort, tempFile);
+                pb.redirectErrorStream(true);
             }
-            pb.redirectErrorStream(true);
 
             process = pb.start();
+
+            // Docker mode: capture stderr in background thread for error reporting
+            StringBuilder stderrCapture = new StringBuilder();
+            Thread stderrThread = null;
+            if (useDocker) {
+                final Process runningProcess = process;
+                stderrThread = new Thread(() -> {
+                    try (BufferedReader reader = new BufferedReader(
+                            new InputStreamReader(runningProcess.getErrorStream()))) {
+                        String line;
+                        while ((line = reader.readLine()) != null) {
+                            stderrCapture.append(line).append("\n");
+                        }
+                    } catch (IOException ignored) {
+                    }
+                });
+                stderrThread.setDaemon(true);
+                stderrThread.start();
+            }
 
             if (useDocker) {
                 try (InputStream stdout = process.getInputStream();
@@ -258,6 +305,11 @@ public class DatabaseBackupService {
 
             boolean finished = process.waitFor(PROCESS_TIMEOUT_MINUTES, TimeUnit.MINUTES);
 
+            // Wait for stderr reader to finish
+            if (stderrThread != null) {
+                stderrThread.join(5000);
+            }
+
             if (!finished) {
                 process.destroyForcibly();
                 tempFile.delete();
@@ -268,7 +320,9 @@ public class DatabaseBackupService {
             if (exitCode != 0) {
                 tempFile.delete();
                 String errorOutput = useDocker
-                        ? "exit code " + exitCode + " (check container logs)"
+                        ? (!stderrCapture.isEmpty()
+                            ? stderrCapture.toString().trim()
+                            : "(no error output captured from pg_dump)")
                         : new String(process.getInputStream().readAllBytes());
                 log.error("Safety backup pg_dump failed: {}", errorOutput);
                 throw new RuntimeException("Failed to create safety backup before restore: " + errorOutput);
@@ -309,10 +363,29 @@ public class DatabaseBackupService {
                 pb = buildDockerPgRestoreCommand();
             } else {
                 pb = buildLocalPgRestoreCommand(backupFile);
+                pb.redirectErrorStream(true);
             }
-            pb.redirectErrorStream(true);
 
             process = pb.start();
+
+            // Docker mode: capture stderr in background thread for error reporting
+            StringBuilder stderrCapture = new StringBuilder();
+            Thread stderrThread = null;
+            if (useDocker) {
+                final Process runningProcess = process;
+                stderrThread = new Thread(() -> {
+                    try (BufferedReader reader = new BufferedReader(
+                            new InputStreamReader(runningProcess.getErrorStream()))) {
+                        String line;
+                        while ((line = reader.readLine()) != null) {
+                            stderrCapture.append(line).append("\n");
+                        }
+                    } catch (IOException ignored) {
+                    }
+                });
+                stderrThread.setDaemon(true);
+                stderrThread.start();
+            }
 
             if (useDocker) {
                 // Pipe the backup file to pg_restore stdin via docker exec -i
@@ -329,6 +402,11 @@ public class DatabaseBackupService {
 
             boolean finished = process.waitFor(PROCESS_TIMEOUT_MINUTES, TimeUnit.MINUTES);
 
+            // Wait for stderr reader to finish
+            if (stderrThread != null) {
+                stderrThread.join(5000);
+            }
+
             if (!finished) {
                 process.destroyForcibly();
                 throw new RuntimeException("Restore process timed out after " + PROCESS_TIMEOUT_MINUTES + " minutes. A safety backup was created before the restore attempt.");
@@ -337,15 +415,21 @@ public class DatabaseBackupService {
             int exitCode = process.exitValue();
             if (exitCode != 0 && exitCode != 1) {
                 String errorOutput = useDocker
-                        ? "exit code " + exitCode + " (check container logs)"
+                        ? (!stderrCapture.isEmpty()
+                            ? stderrCapture.toString().trim()
+                            : "exit code " + exitCode + " (no error output captured from pg_restore)")
                         : new String(process.getInputStream().readAllBytes());
                 log.error("pg_restore failed with exit code {}: {}", exitCode, errorOutput);
                 throw new RuntimeException("Database restore failed: " + errorOutput);
             }
 
-            if (exitCode == 1 && !useDocker) {
-                String output = new String(process.getInputStream().readAllBytes());
-                log.warn("pg_restore completed with warnings: {}", output);
+            if (exitCode == 1) {
+                String output = useDocker
+                        ? (!stderrCapture.isEmpty() ? stderrCapture.toString().trim() : "")
+                        : new String(process.getInputStream().readAllBytes());
+                if (!output.isEmpty()) {
+                    log.warn("pg_restore completed with warnings: {}", output);
+                }
             }
 
             log.info("Database restore completed successfully from: {}", backupFile.getAbsolutePath());
@@ -364,8 +448,11 @@ public class DatabaseBackupService {
         List<String> cmd = new ArrayList<>();
         cmd.add("docker");
         cmd.add("exec");
+        cmd.add("-e");
+        cmd.add("PGPASSWORD=" + datasourcePassword);
         cmd.add(dockerContainer);
         cmd.add("pg_dump");
+        cmd.add("--no-password");
         cmd.add("-Fc");
         cmd.add("-U");
         cmd.add(datasourceUsername);
@@ -395,8 +482,11 @@ public class DatabaseBackupService {
         cmd.add("docker");
         cmd.add("exec");
         cmd.add("-i"); // stream stdin into the container
+        cmd.add("-e");
+        cmd.add("PGPASSWORD=" + datasourcePassword);
         cmd.add(dockerContainer);
         cmd.add("pg_restore");
+        cmd.add("--no-password");
         cmd.add("--clean");
         cmd.add("--if-exists");
         cmd.add("--no-owner");
