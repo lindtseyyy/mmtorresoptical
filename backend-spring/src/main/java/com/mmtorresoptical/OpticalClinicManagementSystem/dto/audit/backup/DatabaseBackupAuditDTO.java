@@ -6,5 +6,7 @@ public record DatabaseBackupAuditDTO(
         String operation,
         String filename,
         Long fileSizeBytes,
-        Instant timestamp
+        Instant timestamp,
+        String backupTimestamp,
+        String backupPerformedBy
 ) {}

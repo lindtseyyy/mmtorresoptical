@@ -13,13 +13,16 @@ import org.springframework.web.multipart.MultipartFile;
 
 import java.io.BufferedReader;
 import java.io.File;
+import java.io.FileInputStream;
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.io.OutputStream;
+import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.nio.file.StandardCopyOption;
 import java.time.Instant;
 import java.time.ZoneId;
 import java.time.format.DateTimeFormatter;
@@ -181,6 +184,7 @@ public class DatabaseBackupService {
             }
 
             long fileSize = tempFile.length();
+            tempFile = prependMetadata(tempFile);
             databaseBackupAuditHelper.logBackup(filename, fileSize);
 
             return tempFile;
@@ -209,10 +213,40 @@ public class DatabaseBackupService {
         try {
             safetyBackupFile = createSafetyBackup();
             uploadedFile = writeUploadedFile(file);
+
+            // Read embedded metadata from the uploaded file before stripping it
+            String backupTimestamp = "";
+            String backupPerformedBy = "";
+            try {
+                byte[] content = Files.readAllBytes(uploadedFile.toPath());
+                int newlinePos = -1;
+                for (int i = 0; i < Math.min(content.length, 2048); i++) {
+                    if (content[i] == '\n') {
+                        newlinePos = i;
+                        break;
+                    }
+                }
+                if (newlinePos > 0 && content[0] == '{') {
+                    String jsonLine = new String(content, 0, newlinePos, StandardCharsets.UTF_8);
+                    log.info("Restore file metadata header: {}", jsonLine);
+                    backupTimestamp = extractJsonString(jsonLine, "backupTimestamp");
+                    backupPerformedBy = extractJsonString(jsonLine, "performedBy");
+                    log.info("Extracted metadata — backupTimestamp: '{}', backupPerformedBy: '{}'",
+                            backupTimestamp, backupPerformedBy);
+                } else {
+                    log.warn("No metadata header found in restore file. firstByte={}, newlinePos={}",
+                            content.length > 0 ? (char) content[0] : "empty", newlinePos);
+                }
+            } catch (IOException e) {
+                log.warn("Failed to read metadata from restore file", e);
+            }
+
+            uploadedFile = stripMetadataLine(uploadedFile);
             executePgRestore(uploadedFile);
 
             long fileSize = file.getSize();
-            databaseBackupAuditHelper.logRestore(file.getOriginalFilename(), fileSize);
+            databaseBackupAuditHelper.logRestore(
+                    file.getOriginalFilename(), fileSize, backupTimestamp, backupPerformedBy);
 
         } catch (IOException e) {
             throw new RuntimeException("Failed to process backup file for restore", e);
@@ -234,8 +268,26 @@ public class DatabaseBackupService {
 
         byte[] magic = new byte[5];
         try (InputStream is = file.getInputStream()) {
-            int bytesRead = is.read(magic);
-            if (bytesRead < 5) {
+            int firstByte = is.read();
+            if (firstByte < 0) {
+                throw new BadRequestException("Invalid backup file: file is too small to be a valid PostgreSQL backup");
+            }
+
+            // Skip metadata header line if present (new format: {json}\nPGDMP...)
+            if (firstByte == '{') {
+                int b;
+                while ((b = is.read()) != -1 && b != '\n') {
+                    // skip metadata line
+                }
+                if (b != '\n') {
+                    throw new BadRequestException("Invalid backup file: metadata header is malformed");
+                }
+                firstByte = is.read(); // should now be 'P' from PGDMP
+            }
+
+            magic[0] = (byte) firstByte;
+            int bytesRead = is.read(magic, 1, 4);
+            if (bytesRead < 4) {
                 throw new BadRequestException("Invalid backup file: file is too small to be a valid PostgreSQL backup");
             }
             for (int i = 0; i < 5; i++) {
@@ -329,7 +381,7 @@ public class DatabaseBackupService {
             }
 
             log.info("Safety backup created: {} ({} bytes)", filename, tempFile.length());
-            return tempFile;
+            return prependMetadata(tempFile);
 
         } catch (IOException e) {
             tempFile.delete();
@@ -515,6 +567,69 @@ public class DatabaseBackupService {
         );
         pb.environment().put("PGPASSWORD", datasourcePassword);
         return pb;
+    }
+
+    // ---- Metadata ----
+
+    private String extractJsonString(String json, String key) {
+        String search = "\"" + key + "\":\"";
+        int start = json.indexOf(search);
+        if (start < 0) return "";
+        start += search.length();
+        int end = json.indexOf("\"", start);
+        if (end < 0) return "";
+        return json.substring(start, end);
+    }
+
+    private String buildMetadataJson() {
+        User user = authenticatedUserService.getCurrentUser();
+        return String.format(
+                "{\"backupTimestamp\":\"%s\",\"performedBy\":\"%s %s\",\"databaseName\":\"%s\"}",
+                Instant.now().toString(),
+                user.getFirstName(),
+                user.getLastName(),
+                dbName
+        );
+    }
+
+    private File prependMetadata(File dumpFile) throws IOException {
+        String metadata = buildMetadataJson();
+        byte[] metadataBytes = (metadata + "\n").getBytes(StandardCharsets.UTF_8);
+
+        File finalFile = File.createTempFile("pgdump_meta_", ".dump");
+        try (OutputStream out = new FileOutputStream(finalFile);
+             InputStream in = new FileInputStream(dumpFile)) {
+            out.write(metadataBytes);
+            byte[] buffer = new byte[8192];
+            int read;
+            while ((read = in.read(buffer)) != -1) {
+                out.write(buffer, 0, read);
+            }
+        }
+        dumpFile.delete();
+        return finalFile;
+    }
+
+    private File stripMetadataLine(File source) throws IOException {
+        byte[] content = Files.readAllBytes(source.toPath());
+        int newlinePos = -1;
+        for (int i = 0; i < Math.min(content.length, 2048); i++) {
+            if (content[i] == '\n') {
+                newlinePos = i;
+                break;
+            }
+        }
+
+        if (newlinePos <= 0 || newlinePos >= 1000 || content[0] != '{') {
+            // No metadata header present, return the file as-is
+            return source;
+        }
+
+        File cleanFile = File.createTempFile("restore_clean_", ".dump");
+        try (OutputStream out = new FileOutputStream(cleanFile)) {
+            out.write(content, newlinePos + 1, content.length - newlinePos - 1);
+        }
+        return cleanFile;
     }
 
     // ---- Helpers ----

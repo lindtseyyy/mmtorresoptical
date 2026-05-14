@@ -3,6 +3,8 @@ package com.mmtorresoptical.OpticalClinicManagementSystem.services.auditlog.reso
 import com.mmtorresoptical.OpticalClinicManagementSystem.dto.audit.backup.DatabaseBackupAuditDTO;
 import com.mmtorresoptical.OpticalClinicManagementSystem.enums.ActionType;
 import com.mmtorresoptical.OpticalClinicManagementSystem.enums.ResourceType;
+import com.mmtorresoptical.OpticalClinicManagementSystem.model.User;
+import com.mmtorresoptical.OpticalClinicManagementSystem.services.AuthenticatedUserService;
 import com.mmtorresoptical.OpticalClinicManagementSystem.services.auditlog.AuditLogService;
 import com.mmtorresoptical.OpticalClinicManagementSystem.services.helper.JSONService;
 import lombok.RequiredArgsConstructor;
@@ -16,16 +18,22 @@ public class DatabaseBackupAuditHelper {
 
     private final AuditLogService auditLogService;
     private final JSONService jsonService;
+    private final AuthenticatedUserService authenticatedUserService;
 
     public void logBackup(String filename, long fileSizeBytes) {
+        User user = authenticatedUserService.getCurrentUser();
+        Instant now = Instant.now();
+
         DatabaseBackupAuditDTO dto = new DatabaseBackupAuditDTO(
                 "BACKUP",
                 filename,
                 fileSizeBytes,
-                Instant.now()
+                now,
+                now.toString(),
+                user.getFirstName() + " " + user.getLastName()
         );
 
-        String details = "Database backup created: " + filename + " (" + fileSizeBytes + " bytes)";
+        String details = "Backup by " + dto.backupPerformedBy();
 
         auditLogService.log(
                 ActionType.BACKUP,
@@ -36,15 +44,20 @@ public class DatabaseBackupAuditHelper {
         );
     }
 
-    public void logRestore(String filename, long fileSizeBytes) {
+    public void logRestore(String filename, long fileSizeBytes,
+                           String backupTimestamp, String backupPerformedBy) {
+        User user = authenticatedUserService.getCurrentUser();
+
         DatabaseBackupAuditDTO dto = new DatabaseBackupAuditDTO(
                 "RESTORE",
                 filename,
                 fileSizeBytes,
-                Instant.now()
+                Instant.now(),
+                backupTimestamp,
+                backupPerformedBy
         );
 
-        String details = "Database restored from: " + filename + " (" + fileSizeBytes + " bytes)";
+        String details = "Restored backup originally created by " + backupPerformedBy;
 
         auditLogService.log(
                 ActionType.RESTORE,

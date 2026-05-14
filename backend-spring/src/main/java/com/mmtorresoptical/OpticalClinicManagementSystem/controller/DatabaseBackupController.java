@@ -1,5 +1,6 @@
 package com.mmtorresoptical.OpticalClinicManagementSystem.controller;
 
+import com.fasterxml.jackson.databind.ObjectMapper;
 import com.mmtorresoptical.OpticalClinicManagementSystem.dto.backup.BackupRequestDTO;
 import com.mmtorresoptical.OpticalClinicManagementSystem.enums.ActionType;
 import com.mmtorresoptical.OpticalClinicManagementSystem.enums.ResourceType;
@@ -7,6 +8,7 @@ import com.mmtorresoptical.OpticalClinicManagementSystem.repository.AuditLogRepo
 import com.mmtorresoptical.OpticalClinicManagementSystem.services.controller.DatabaseBackupService;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
@@ -26,6 +28,7 @@ import java.time.ZoneId;
 import java.time.format.DateTimeFormatter;
 import java.util.Map;
 
+@Slf4j
 @RestController
 @RequiredArgsConstructor
 @RequestMapping("/api/admin/database")
@@ -33,6 +36,7 @@ public class DatabaseBackupController {
 
     private final DatabaseBackupService databaseBackupService;
     private final AuditLogRepository auditLogRepository;
+    private final ObjectMapper objectMapper;
 
     @GetMapping("/last-backup")
     public ResponseEntity<Map<String, String>> getLastBackup() {
@@ -61,16 +65,35 @@ public class DatabaseBackupController {
                 .map(auditLog -> {
                     var user = auditLog.getUser();
                     String performedBy = user.getFirstName() + " " + user.getLastName();
+
+                    String backupTs = "";
+                    String backupBy = "";
+                    try {
+                        var node = objectMapper.readTree(auditLog.getDetailsJson());
+                        if (node.has("backupTimestamp")) {
+                            backupTs = node.get("backupTimestamp").asText();
+                        }
+                        if (node.has("backupPerformedBy")) {
+                            backupBy = node.get("backupPerformedBy").asText();
+                        }
+                    } catch (Exception e) {
+                        log.warn("Failed to parse restore audit detailsJson: {}", e.getMessage());
+                    }
+
                     return ResponseEntity.ok(Map.of(
                             "timestamp", auditLog.getLoggedAt().toString(),
                             "details", auditLog.getDetails(),
-                            "performedBy", performedBy
+                            "performedBy", performedBy,
+                            "backupTimestamp", backupTs,
+                            "backupPerformedBy", backupBy
                     ));
                 })
                 .orElseGet(() -> ResponseEntity.ok(Map.of(
                         "timestamp", "",
                         "details", "",
-                        "performedBy", ""
+                        "performedBy", "",
+                        "backupTimestamp", "",
+                        "backupPerformedBy", ""
                 )));
     }
 
