@@ -304,7 +304,8 @@ const DatabaseBackup: React.FC = () => {
                 onChange={handleFileSelect}
               />
             </div>
-            <p className="text-sm text-muted-foreground">
+            <p className="flex items-center gap-1 text-sm text-red-600">
+              <TriangleAlert className="h-4 w-4" />
               Warning: Existing data will be replaced by the backup file.
             </p>
             <Button
