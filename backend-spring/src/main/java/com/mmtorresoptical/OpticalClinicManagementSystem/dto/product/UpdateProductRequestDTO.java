@@ -1,5 +1,6 @@
 package com.mmtorresoptical.OpticalClinicManagementSystem.dto.product;
 
+import com.mmtorresoptical.OpticalClinicManagementSystem.enums.ProductType;
 import jakarta.validation.constraints.DecimalMin;
 import jakarta.validation.constraints.Min;
 import jakarta.validation.constraints.NotEmpty;
@@ -36,4 +37,6 @@ public class UpdateProductRequestDTO {
     @NotNull(message = "Overstocked threshold is required")
     @Min(value = 1, message = "Threshold must be at least 1")
     private Integer overstockedThreshold;
+
+    private ProductType productType;
 }

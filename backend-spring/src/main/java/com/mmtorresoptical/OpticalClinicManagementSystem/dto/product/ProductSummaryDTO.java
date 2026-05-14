@@ -12,4 +12,5 @@ public class ProductSummaryDTO {
     private String imageDir;
     private String category;
     private String supplier;
+    private String productType;
 }

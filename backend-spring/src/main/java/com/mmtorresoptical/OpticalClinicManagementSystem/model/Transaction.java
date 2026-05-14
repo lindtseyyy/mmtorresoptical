@@ -1,6 +1,5 @@
 package com.mmtorresoptical.OpticalClinicManagementSystem.model;
 
-import com.mmtorresoptical.OpticalClinicManagementSystem.enums.PaymentType;
 import com.mmtorresoptical.OpticalClinicManagementSystem.enums.TransactionStatus;
 import jakarta.persistence.*;
 import jakarta.validation.constraints.NotNull;
@@ -39,25 +38,18 @@ public class Transaction {
 
     @Enumerated(EnumType.STRING)
     @NotNull
-    @Column(name = "payment_type", nullable = false)
-    private PaymentType paymentType;
-
-    // OPTIONAL — for GCash
-    @Column(name = "reference_number", length = 100, unique = true)
-    private String referenceNumber;
-
-    // OPTIONAL — for GCash / online payments
-    @Column(name = "gcash_payment_img_dir", length = 255)
-    private String gcashPaymentImgDir;
-
-    // OPTIONAL — for cash payments
-    @Column(name = "cash_tender", precision = 10, scale = 2)
-    private BigDecimal cashTender;
-
-    @Enumerated(EnumType.STRING)
-    @NotNull
     @Column(name = "transaction_status", nullable = false)
     private TransactionStatus transactionStatus;
+
+    @Column(name = "amount_paid", precision = 10, scale = 2)
+    private BigDecimal amountPaid = BigDecimal.ZERO;
+
+    @Column(name = "balance_due", precision = 10, scale = 2,
+            insertable = false, updatable = false)
+    private BigDecimal balanceDue;
+
+    @Column(name = "completed_at")
+    private LocalDateTime completedAt;
 
     @Column(name = "voided_at")
     private LocalDateTime voidedAt;
@@ -85,5 +77,10 @@ public class Transaction {
             cascade = CascadeType.ALL,
             orphanRemoval = true)
     private List<TransactionItem> transactionItems;
+
+    @OneToMany(mappedBy = "transaction",
+            cascade = CascadeType.ALL,
+            orphanRemoval = true)
+    private List<Payment> payments;
 }
 

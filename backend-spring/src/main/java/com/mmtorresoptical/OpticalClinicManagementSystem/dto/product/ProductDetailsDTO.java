@@ -11,11 +11,12 @@ public class ProductDetailsDTO {
 
     private UUID productId;
     private String productName;
-    private String imageDir; // Optional
+    private String imageDir;
     private String category;
     private String supplier;
     private BigDecimal unitPrice;
     private Integer quantity;
+    private String productType;
     private Integer lowLevelThreshold;
     private Integer overstockedThreshold;
     private Boolean isArchived;

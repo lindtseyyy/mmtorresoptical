@@ -1,5 +1,6 @@
 package com.mmtorresoptical.OpticalClinicManagementSystem.model;
 
+import com.mmtorresoptical.OpticalClinicManagementSystem.enums.ProductType;
 import jakarta.persistence.*;
 import lombok.Data;
 import org.hibernate.annotations.CreationTimestamp;
@@ -30,6 +31,10 @@ public class Product {
 
     @Column(nullable = false)
     private BigDecimal unitPrice;
+
+    @Enumerated(EnumType.STRING)
+    @Column(name = "product_type", nullable = false)
+    private ProductType productType = ProductType.PHYSICAL;
 
     @Column(nullable = false)
     private Integer quantity;
