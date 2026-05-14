@@ -15,7 +15,8 @@ import { Input } from "@/shared/components/ui/input";
 import { Label } from "@/shared/components/ui/label";
 import { Dialog, DialogHeader, DialogTitle, DialogDescription } from "@/shared/components/ui/dialog";
 import { toast } from "sonner";
-import { downloadBackup, restoreBackup, fetchLastBackup, fetchLastRestore } from "@/features/admin/services/databaseApi";
+import { downloadBackup, restoreBackup, fetchLastBackup, fetchLastRestore, readMetadataFromFile } from "@/features/admin/services/databaseApi";
+import type { BackupFileMetadata } from "@/features/admin/services/databaseApi";
 
 const formatTimestamp = (iso: string) =>
   new Date(iso).toLocaleString("en-US", {
@@ -54,6 +55,7 @@ const DatabaseBackup: React.FC = () => {
   // ── Restore state ──
   const [selectedFile, setSelectedFile] = useState<File | null>(null);
   const [isDragOver, setIsDragOver] = useState(false);
+  const [fileMetadata, setFileMetadata] = useState<BackupFileMetadata | null>(null);
   const [restoreDialogOpen, setRestoreDialogOpen] = useState(false);
   const [restoreConfirmText, setRestoreConfirmText] = useState("");
   const [restorePassword, setRestorePassword] = useState("");
@@ -88,6 +90,7 @@ const DatabaseBackup: React.FC = () => {
       toast.success(message);
       setRestoreDialogOpen(false);
       setSelectedFile(null);
+      setFileMetadata(null);
       setRestoreConfirmText("");
       setRestorePassword("");
       setShowRestorePassword(false);
@@ -99,12 +102,14 @@ const DatabaseBackup: React.FC = () => {
 
   // ── File handling ──
 
-  const validateAndSetFile = (file: File) => {
+  const validateAndSetFile = async (file: File) => {
     if (!file.name.endsWith(".dump")) {
       toast.error("Invalid file type. Please provide a .dump backup file.");
       return;
     }
     setSelectedFile(file);
+    const metadata = await readMetadataFromFile(file);
+    setFileMetadata(metadata);
   };
 
   const handleFileSelect = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -133,7 +138,10 @@ const DatabaseBackup: React.FC = () => {
     if (file) validateAndSetFile(file);
   }, []);
 
-  const clearFile = () => setSelectedFile(null);
+  const clearFile = () => {
+    setSelectedFile(null);
+    setFileMetadata(null);
+  };
 
   // ── Restore overlay ──
 
@@ -229,6 +237,16 @@ const DatabaseBackup: React.FC = () => {
               {lastRestore?.performedBy && (
                 <p className="text-xs text-muted-foreground">by {lastRestore.performedBy}</p>
               )}
+              {lastRestore?.backupPerformedBy && (
+                <>
+                  <hr className="my-2 border-muted-foreground/30" />
+                  <p className="text-xs text-muted-foreground">Restored from backup by</p>
+                  <p className="text-sm font-medium">{lastRestore.backupPerformedBy}</p>
+                  {lastRestore.backupTimestamp && (
+                    <p className="text-xs text-muted-foreground">{formatTimestamp(lastRestore.backupTimestamp)}</p>
+                  )}
+                </>
+              )}
             </div>
             {/* Drop zone */}
             <div
@@ -243,11 +261,20 @@ const DatabaseBackup: React.FC = () => {
               onClick={() => fileInputRef.current?.click()}
             >
               {selectedFile ? (
-                <div className="flex items-center gap-3">
-                  <FileArchive className="h-8 w-8 text-amber-600" />
-                  <div>
-                    <p className="font-medium text-sm">{selectedFile.name}</p>
+                <div className="flex items-start gap-3">
+                  <FileArchive className="mt-0.5 h-8 w-8 shrink-0 text-amber-600" />
+                  <div className="min-w-0">
+                    <p className="truncate font-medium text-sm">{selectedFile.name}</p>
                     <p className="text-xs text-muted-foreground">{formatFileSize(selectedFile.size)}</p>
+                    {fileMetadata && (
+                      <div className="mt-1 rounded bg-amber-500/10 px-2 py-1">
+                        <p className="text-xs text-muted-foreground">
+                          Backup by <span className="font-medium text-foreground">{fileMetadata.performedBy}</span>
+                          {" · "}
+                          {formatTimestamp(fileMetadata.backupTimestamp)}
+                        </p>
+                      </div>
+                    )}
                   </div>
                   <button
                     type="button"
@@ -363,6 +390,15 @@ const DatabaseBackup: React.FC = () => {
           </DialogDescription>
         </DialogHeader>
         <div className="space-y-4 mt-4">
+          {fileMetadata && (
+            <div className="rounded-lg border bg-muted/50 p-3">
+              <p className="text-xs text-muted-foreground">Backup File Info</p>
+              <p className="text-sm font-medium">
+                {formatTimestamp(fileMetadata.backupTimestamp)}
+              </p>
+              <p className="text-xs text-muted-foreground">by {fileMetadata.performedBy}</p>
+            </div>
+          )}
           <div className="space-y-2">
             <Label htmlFor="restore-confirm">Type RESTORE to confirm</Label>
             <Input

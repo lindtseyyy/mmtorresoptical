@@ -7,7 +7,33 @@ export interface LastBackupInfo {
   timestamp: string;
   details: string;
   performedBy: string;
+  backupTimestamp: string;
+  backupPerformedBy: string;
 }
+
+export interface BackupFileMetadata {
+  backupTimestamp: string;
+  performedBy: string;
+  databaseName: string;
+}
+
+export const readMetadataFromFile = async (file: File): Promise<BackupFileMetadata | null> => {
+  try {
+    const slice = file.slice(0, 2048);
+    const text = await slice.text();
+    const newlineIdx = text.indexOf("\n");
+    if (newlineIdx <= 0) return null;
+    const firstLine = text.substring(0, newlineIdx);
+    if (!firstLine.startsWith("{")) return null;
+    const parsed = JSON.parse(firstLine);
+    if (parsed.backupTimestamp && parsed.performedBy) {
+      return parsed as BackupFileMetadata;
+    }
+    return null;
+  } catch {
+    return null;
+  }
+};
 
 export const fetchLastBackup = async (): Promise<LastBackupInfo> => {
   const { data } = await api.get("/admin/database/last-backup");
