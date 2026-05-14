@@ -84,8 +84,8 @@ const fetchTransaction = async (id: string): Promise<TransactionResponse> => {
   return data;
 };
 
-const voidTransaction = async (id: string, reason: string): Promise<void> => {
-  await api.post(`/transactions/${id}/void`, { reason });
+const voidTransaction = async (id: string, reason: string, password: string): Promise<void> => {
+  await api.post(`/transactions/${id}/void`, { reason, password });
 };
 
 const refundTransaction = async (data: {

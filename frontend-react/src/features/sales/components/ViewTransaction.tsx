@@ -9,12 +9,18 @@ import {
   RotateCcw,
   Undo2,
   X,
+  Ban,
+  Eye,
+  EyeOff,
 } from "lucide-react";
 import { Button } from "@/shared/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/shared/components/ui/card";
 import { Badge } from "@/shared/components/ui/badge";
 import { Checkbox } from "@/shared/components/ui/checkbox";
-import { fetchTransaction, refundTransaction } from "@/features/sales/services/transactionApi";
+import { Input } from "@/shared/components/ui/input";
+import { Label } from "@/shared/components/ui/label";
+import { Dialog, DialogHeader, DialogTitle, DialogDescription } from "@/shared/components/ui/dialog";
+import { fetchTransaction, refundTransaction, voidTransaction } from "@/features/sales/services/transactionApi";
 import { toast } from "sonner";
 import type { TransactionItemResponse, RefundStateItem, RefundMethod } from "@/features/sales/types";
 import RefundDrawer from "./RefundDrawer";
@@ -60,11 +66,34 @@ const ViewTransaction: React.FC = () => {
     },
   });
 
+  const voidMutation = useMutation({
+    mutationFn: ({ reason, password }: { reason: string; password: string }) =>
+      voidTransaction(transactionId, reason, password),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["transaction", transactionId] });
+      queryClient.invalidateQueries({ queryKey: ["transactions"] });
+      toast.success("Transaction voided successfully.");
+      setVoidDialogOpen(false);
+      setVoidReason("");
+      setVoidPassword("");
+      setShowVoidPassword(false);
+    },
+    onError: (error: Error) => {
+      toast.error(error.message || "Void failed.");
+    },
+  });
+
   // ── Refund workflow state ──
   const [selectionMode, setSelectionMode] = useState(false);
   const [selectedItems, setSelectedItems] = useState<Set<string>>(new Set());
   const [drawerOpen, setDrawerOpen] = useState(false);
   const [refundItems, setRefundItems] = useState<RefundStateItem[]>([]);
+
+  // ── Void dialog state ──
+  const [voidDialogOpen, setVoidDialogOpen] = useState(false);
+  const [voidReason, setVoidReason] = useState("");
+  const [voidPassword, setVoidPassword] = useState("");
+  const [showVoidPassword, setShowVoidPassword] = useState(false);
 
   const cancelSelection = () => {
     setSelectionMode(false);
@@ -219,10 +248,24 @@ const ViewTransaction: React.FC = () => {
       {/* Payment Details */}
       <Card>
         <CardHeader>
-          <CardTitle className="flex items-center gap-2">
-            <Banknote className="h-5 w-5" />
-            Payment Details
-          </CardTitle>
+          <div className="flex items-center justify-between">
+            <CardTitle className="flex items-center gap-2">
+              <Banknote className="h-5 w-5" />
+              Payment Details
+            </CardTitle>
+            {tx.transactionStatus === "COMPLETED" && (
+              <Button
+                size="sm"
+                variant="destructive"
+                className="h-8 text-white"
+                onClick={() => setVoidDialogOpen(true)}
+                disabled={voidMutation.isPending}
+              >
+                <Ban className="mr-1 h-3.5 w-3.5" />
+                Void Transaction
+              </Button>
+            )}
+          </div>
         </CardHeader>
         <CardContent>
           <div className="grid grid-cols-2 gap-x-8 gap-y-3 sm:grid-cols-3">
@@ -492,6 +535,77 @@ const ViewTransaction: React.FC = () => {
           )}
         </CardContent>
       </Card>
+
+      {/* Void Transaction Dialog */}
+      <Dialog open={voidDialogOpen} onOpenChange={setVoidDialogOpen}>
+        <DialogHeader>
+          <DialogTitle>Void Transaction</DialogTitle>
+          <DialogDescription>
+            This will mark <strong>{tx.transactionNumber}</strong> as voided and restore all item quantities to stock. This action cannot be undone.
+          </DialogDescription>
+        </DialogHeader>
+        <div className="space-y-4 mt-4">
+          <div className="space-y-2">
+            <Label htmlFor="void-reason">Reason</Label>
+            <Input
+              id="void-reason"
+              placeholder="Enter reason for voiding"
+              value={voidReason}
+              onChange={(e) => setVoidReason(e.target.value)}
+            />
+          </div>
+          <div className="space-y-2">
+            <Label htmlFor="void-password">Password</Label>
+            <div className="relative">
+              <Input
+                id="void-password"
+                type={showVoidPassword ? "text" : "password"}
+                placeholder="Enter your password to confirm"
+                className="pr-10"
+                value={voidPassword}
+                onChange={(e) => setVoidPassword(e.target.value)}
+                onKeyDown={(e) => {
+                  if (e.key === "Enter") {
+                    voidMutation.mutate({ reason: voidReason, password: voidPassword });
+                  }
+                }}
+              />
+              <button
+                type="button"
+                className="absolute right-2 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground"
+                onClick={() => setShowVoidPassword(!showVoidPassword)}
+                tabIndex={-1}
+              >
+                {showVoidPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
+              </button>
+            </div>
+          </div>
+          <div className="flex justify-end gap-2 pt-2">
+            <Button
+              variant="outline"
+              onClick={() => {
+                setVoidDialogOpen(false);
+                setVoidReason("");
+                setVoidPassword("");
+                setShowVoidPassword(false);
+              }}
+              disabled={voidMutation.isPending}
+            >
+              Cancel
+            </Button>
+            <Button
+              variant="destructive"
+              className="text-white"
+              onClick={() =>
+                voidMutation.mutate({ reason: voidReason, password: voidPassword })
+              }
+              disabled={!voidReason.trim() || !voidPassword || voidMutation.isPending}
+            >
+              {voidMutation.isPending ? "Processing..." : "Proceed"}
+            </Button>
+          </div>
+        </div>
+      </Dialog>
 
       {/* Refund Drawer */}
       <RefundDrawer

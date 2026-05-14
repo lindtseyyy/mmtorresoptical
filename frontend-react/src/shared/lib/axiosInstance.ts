@@ -29,7 +29,7 @@ api.interceptors.request.use(
   }
 );
 
-// 3. Response interceptor — redirect to login on expired/invalid JWT
+// 3. Response interceptor — redirect to login on expired/invalid JWT, extract server errors
 api.interceptors.response.use(
   (response) => response,
   (error) => {
@@ -39,6 +39,17 @@ api.interceptors.response.use(
         window.location.href = "/login";
       }
     }
+
+    const serverMessage = error.response?.data;
+    if (serverMessage) {
+      if (typeof serverMessage === "string") {
+        error.message = serverMessage;
+      } else if (typeof serverMessage === "object") {
+        const messages = Object.values(serverMessage).flat().join(", ");
+        if (messages) error.message = messages;
+      }
+    }
+
     return Promise.reject(error);
   }
 );
