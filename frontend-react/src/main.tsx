@@ -43,6 +43,9 @@ import ManageSales from "@/features/sales/components/ManageSales";
 import ManageTransactions from "@/features/sales/components/ManageTransactions";
 import ViewTransaction from "@/features/sales/components/ViewTransaction";
 
+// --- Admin ---
+import DatabaseBackup from "@/features/admin/components/DatabaseBackup";
+
 // --- Profile ---
 import EditProfile from "@/features/profile/components/EditProfile";
 
@@ -92,6 +95,13 @@ const router = createBrowserRouter([
           { path: "edit/health-history", element: <EditHealthHistory /> },
           { path: "view/:id", element: <ViewPatient /> },
           { path: "edit/:id", element: <EditPatient /> },
+        ],
+      },
+      {
+        path: "admin",
+        element: <AdminGuard><Outlet /></AdminGuard>,
+        children: [
+          { path: "database", element: <DatabaseBackup /> },
         ],
       },
       {
