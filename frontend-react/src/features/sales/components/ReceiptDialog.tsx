@@ -1,9 +1,4 @@
-import { CheckCircle, Banknote, Smartphone } from "lucide-react";
-import {
-  Dialog,
-  DialogHeader,
-  DialogTitle,
-} from "@/shared/components/ui/dialog";
+import { Dialog } from "@/shared/components/ui/dialog";
 import { Button } from "@/shared/components/ui/button";
 import type { TransactionResponse } from "@/features/sales/types";
 
@@ -12,163 +7,206 @@ interface ReceiptDialogProps {
   onClose: () => void;
 }
 
+const BUSINESS_NAME = "MM Torres Optical Clinic";
+const BUSINESS_ADDRESS = "259 Shoe Avenue, Sto. Niño, Marikina City, 1806";
+const BUSINESS_ADDRESS_LINE2 = "Metro Manila, Philippines";
+const BUSINESS_PHONE = "(02) 933 7725";
+
 const ReceiptDialog: React.FC<ReceiptDialogProps> = ({ receipt, onClose }) => {
   if (!receipt) return null;
 
   const date = new Date(receipt.transactionDate);
   const dateStr = date.toLocaleDateString(undefined, {
     year: "numeric",
-    month: "short",
+    month: "long",
     day: "numeric",
   });
   const timeStr = date.toLocaleTimeString(undefined, {
     hour: "2-digit",
     minute: "2-digit",
+    second: "2-digit",
   });
 
-  const isCash = receipt.paymentType === "CASH";
+  const paymentLabel = receipt.paymentType === "CASH" ? "Cash" : "GCash";
+
+  const subtotal = receipt.transactionItems.reduce(
+    (sum, i) => sum + i.unitPrice * i.quantity,
+    0,
+  );
+
+  const totalDiscount = receipt.transactionItems.reduce((sum, i) => {
+    if (i.isDiscounted) {
+      return sum + (i.unitPrice * i.quantity - i.subtotal);
+    }
+    return sum;
+  }, 0);
+
+  const format = (n: number) => n.toFixed(2);
 
   return (
     <Dialog open={!!receipt} onOpenChange={onClose}>
-      <DialogHeader>
-        <div className="flex flex-col items-center text-center">
-          <CheckCircle className="h-10 w-10 text-green-600 mb-2" />
-          <DialogTitle>Payment Successful</DialogTitle>
-          <p className="text-xs text-muted-foreground mt-0.5">
-            {dateStr} &middot; {timeStr}
+      <div className="font-mono text-xs leading-relaxed text-foreground max-h-[65vh] overflow-y-auto">
+
+        {/* ---- Header ---- */}
+        <div className="text-center mb-4">
+          <h2 className="text-sm font-bold tracking-wide uppercase">
+            {BUSINESS_NAME}
+          </h2>
+          <p className="text-[10px] text-muted-foreground mt-0.5">
+            {BUSINESS_ADDRESS}
           </p>
-          <p className="text-[10px] text-muted-foreground/70 mt-0.5 font-mono">
-            #{receipt.transactionNumber}
+          <p className="text-[10px] text-muted-foreground">
+            {BUSINESS_ADDRESS_LINE2}
+          </p>
+          <p className="text-[10px] text-muted-foreground">
+            {BUSINESS_PHONE}
           </p>
         </div>
-      </DialogHeader>
 
-      <div className="space-y-3">
-        {/* Items table */}
-        <div className="rounded-md border border-border overflow-hidden">
-          <table className="w-full text-xs">
-            <thead>
-              <tr className="border-b border-border bg-muted/50 text-muted-foreground">
-                <th className="py-1.5 pl-2.5 text-left font-medium">Item</th>
-                <th className="py-1.5 text-center font-medium w-8">Qty</th>
-                <th className="py-1.5 pr-2.5 text-right font-medium">Amount</th>
+        <hr className="border-dashed border-border mb-3" />
+
+        {/* ---- Transaction Metadata ---- */}
+        <div className="space-y-0.5 mb-3">
+          <div className="flex justify-between">
+            <span className="text-muted-foreground">Receipt #</span>
+            <span className="font-semibold">{receipt.transactionNumber}</span>
+          </div>
+          <div className="flex justify-between">
+            <span className="text-muted-foreground">Date</span>
+            <span>{dateStr}</span>
+          </div>
+          <div className="flex justify-between">
+            <span className="text-muted-foreground">Time</span>
+            <span>{timeStr}</span>
+          </div>
+          <div className="flex justify-between">
+            <span className="text-muted-foreground">Cashier</span>
+            <span>{receipt.createdBy.fullName}</span>
+          </div>
+        </div>
+
+        {/* ---- Patient Info ---- */}
+        {receipt.patient && (
+          <div className="mb-3">
+            <div className="flex justify-between">
+              <span className="text-muted-foreground">Patient</span>
+              <span>{receipt.patient.fullName}</span>
+            </div>
+          </div>
+        )}
+
+        <hr className="border-dashed border-border mb-3" />
+
+        {/* ---- Itemized List ---- */}
+        <table className="w-full mb-3">
+          <thead>
+            <tr className="border-b border-border">
+              <th className="text-left font-semibold pb-1">Item</th>
+              <th className="text-center font-semibold pb-1 w-10">Qty</th>
+              <th className="text-right font-semibold pb-1 w-18">Price</th>
+              <th className="text-right font-semibold pb-1 w-20">Total</th>
+            </tr>
+          </thead>
+          <tbody>
+            {receipt.transactionItems.map((item) => (
+              <tr key={item.transactionItemId} className="border-b border-border/30">
+                <td className="py-1 align-top">
+                  <span className="font-medium">{item.product.productName}</span>
+                  {item.isDiscounted && (
+                    <>
+                      {" "}
+                      <span className="text-green-600">
+                        ({item.discountType === "PERCENT"
+                          ? `${item.discountValue}%`
+                          : `₱${format(item.discountValue)}`}{" "}
+                        off)
+                      </span>
+                    </>
+                  )}
+                </td>
+                <td className="py-1 text-center align-top text-muted-foreground">
+                  {item.quantity}
+                </td>
+                <td className="py-1 text-right align-top tabular-nums text-muted-foreground">
+                  {format(item.unitPrice)}
+                </td>
+                <td className="py-1 text-right align-top tabular-nums font-medium">
+                  {format(
+                    item.isDiscounted
+                      ? item.subtotal
+                      : item.unitPrice * item.quantity,
+                  )}
+                </td>
               </tr>
-            </thead>
-            <tbody>
-              {receipt.transactionItems.map((item) => {
-                const effectiveSubtotal = item.isDiscounted
-                  ? item.subtotal
-                  : item.unitPrice * item.quantity;
+            ))}
+          </tbody>
+        </table>
 
-                return (
-                  <tr
-                    key={item.transactionItemId}
-                    className="border-b border-border/50 last:border-b-0"
-                  >
-                    <td className="py-1.5 pl-2.5">
-                      <p className="font-medium text-card-foreground leading-tight">
-                        {item.product.productName}
-                      </p>
-                      {item.isDiscounted && (
-                        <span className="text-[10px] text-green-600">
-                          {item.discountType === "PERCENT"
-                            ? `${item.discountValue}% off`
-                            : `₱${item.discountValue.toFixed(2)} off`}
-                        </span>
-                      )}
-                    </td>
-                    <td className="py-1.5 text-center text-muted-foreground">
-                      {item.quantity}
-                    </td>
-                    <td className="py-1.5 pr-2.5 text-right tabular-nums font-medium">
-                      ₱{effectiveSubtotal.toFixed(2)}
-                    </td>
-                  </tr>
-                );
-              })}
-            </tbody>
-          </table>
-        </div>
+        <hr className="border-dashed border-border mb-3" />
 
-        {/* Totals */}
-        <div className="space-y-1 text-sm">
+        {/* ---- Financial Summary ---- */}
+        <div className="space-y-0.5 mb-3">
           <div className="flex justify-between text-muted-foreground">
             <span>Subtotal</span>
-            <span className="tabular-nums">
-              ₱
-              {receipt.transactionItems
-                .reduce(
-                  (sum, i) =>
-                    sum + i.unitPrice * i.quantity,
-                  0
-                )
-                .toFixed(2)}
-            </span>
+            <span className="tabular-nums">{format(subtotal)}</span>
           </div>
 
-          {receipt.transactionItems.some((i) => i.isDiscounted) && (
+          {totalDiscount > 0 && (
             <div className="flex justify-between text-green-600">
               <span>Discount</span>
-              <span className="tabular-nums">
-                -₱
-                {receipt.transactionItems
-                  .reduce((sum, i) => {
-                    const itemSub = i.unitPrice * i.quantity;
-                    if (i.isDiscounted) {
-                      return sum + (itemSub - i.subtotal);
-                    }
-                    return sum;
-                  }, 0)
-                  .toFixed(2)}
-              </span>
+              <span className="tabular-nums">-{format(totalDiscount)}</span>
             </div>
           )}
 
-          <div className="flex justify-between font-bold text-base border-t border-border pt-1.5">
-            <span>Total</span>
-            <span className="tabular-nums">
-              ₱{receipt.totalAmount.toFixed(2)}
-            </span>
+          <div className="flex justify-between font-bold text-sm border-t border-border pt-1 mt-1">
+            <span>TOTAL DUE</span>
+            <span className="tabular-nums">{format(receipt.totalAmount)}</span>
           </div>
         </div>
 
-        {/* Payment details */}
-        <div className="rounded-md bg-muted/40 p-2.5 space-y-1 text-xs">
-          <div className="flex items-center gap-1.5 text-muted-foreground">
-            {isCash ? (
-              <Banknote className="h-3.5 w-3.5" />
-            ) : (
-              <Smartphone className="h-3.5 w-3.5" />
-            )}
-            <span>{isCash ? "Cash Payment" : "GCash Payment"}</span>
+        {/* ---- Payment Information ---- */}
+        <div className="rounded-sm bg-muted/50 px-2 py-1.5 mb-3">
+          <div className="flex justify-between">
+            <span>Payment</span>
+            <span>{paymentLabel}</span>
           </div>
 
-          {isCash && (
+          {receipt.paymentType === "CASH" && (
             <>
-              <div className="flex justify-between">
-                <span className="text-muted-foreground">Cash Tender</span>
-                <span className="tabular-nums">
-                  ₱{receipt.cashTender.toFixed(2)}
-                </span>
+              <div className="flex justify-between text-muted-foreground">
+                <span>Tendered</span>
+                <span className="tabular-nums">{format(receipt.cashTender)}</span>
               </div>
-              <div className="flex justify-between">
-                <span className="text-muted-foreground">Change</span>
-                <span className="tabular-nums font-medium text-green-600">
-                  ₱{receipt.change.toFixed(2)}
-                </span>
+              <div className="flex justify-between font-semibold text-green-600">
+                <span>Change</span>
+                <span className="tabular-nums">{format(receipt.change)}</span>
               </div>
             </>
           )}
 
-          {!isCash && receipt.referenceNumber && (
-            <div className="flex justify-between">
-              <span className="text-muted-foreground">Ref #</span>
-              <span className="font-mono">{receipt.referenceNumber}</span>
+          {receipt.paymentType !== "CASH" && receipt.referenceNumber && (
+            <div className="flex justify-between text-muted-foreground">
+              <span>Ref #</span>
+              <span>{receipt.referenceNumber}</span>
             </div>
           )}
         </div>
 
-        <Button className="w-full" onClick={onClose}>
+        <hr className="border-dashed border-border mb-3" />
+
+        {/* ---- Footer ---- */}
+        <div className="text-center text-[10px] text-muted-foreground space-y-1">
+          <p>
+            Returns accepted within 7 days of purchase.
+            <br />
+            Receipt and original packaging required.
+          </p>
+          <p className="font-medium text-foreground text-xs mt-2">
+            Thank you for choosing MM Torres Optical!
+          </p>
+        </div>
+
+        <Button className="w-full mt-4" onClick={onClose}>
           Done
         </Button>
       </div>
