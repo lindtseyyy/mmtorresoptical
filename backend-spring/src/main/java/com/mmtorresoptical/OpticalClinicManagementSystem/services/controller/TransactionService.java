@@ -20,6 +20,7 @@ import com.mmtorresoptical.OpticalClinicManagementSystem.specification.Transacti
 import com.mmtorresoptical.OpticalClinicManagementSystem.utils.UUIDUtils;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.*;
+import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.data.jpa.domain.Specification;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -47,6 +48,7 @@ public class TransactionService {
     private final TransactionItemMapper transactionItemMapper;
     private final RefundRepository refundRepository;
     private final TransactionAuditHelper transactionAuditHelper;
+    private final PasswordEncoder passwordEncoder;
 
     @Transactional
     public TransactionResponseDTO createTransaction(TransactionRequestDTO transactionRequestDTO) {
@@ -296,6 +298,10 @@ public class TransactionService {
                 .orElseThrow(() -> new ResourceNotFoundException("Transaction not found with id: " + transactionId));
 
         User authenticatedUser = authenticatedUserService.getCurrentUser();
+
+        if (!passwordEncoder.matches(voidTransactionRequestDTO.getPassword(), authenticatedUser.getPasswordHash())) {
+            throw new BadRequestException("Invalid password");
+        }
 
         if (transaction.getTransactionStatus() == TransactionStatus.VOIDED) {
             throw new IllegalStateException("Transaction already voided");

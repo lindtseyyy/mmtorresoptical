@@ -8,4 +8,7 @@ public class VoidTransactionRequestDTO {
 
     @NotBlank
     private String reason;
+
+    @NotBlank
+    private String password;
 }
