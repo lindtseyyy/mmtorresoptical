@@ -1,11 +1,14 @@
 package com.mmtorresoptical.OpticalClinicManagementSystem.services.controller;
 
 import com.mmtorresoptical.OpticalClinicManagementSystem.dto.metrics.TransactionMetricsDTO;
+import com.mmtorresoptical.OpticalClinicManagementSystem.dto.payment.PaymentRequestDTO;
+import com.mmtorresoptical.OpticalClinicManagementSystem.dto.payment.PaymentResponseDTO;
 import com.mmtorresoptical.OpticalClinicManagementSystem.dto.refund.RefundTransactionRequestDTO;
 import com.mmtorresoptical.OpticalClinicManagementSystem.dto.transaction.*;
 import com.mmtorresoptical.OpticalClinicManagementSystem.dto.refund.RefundItemDTO;
 import com.mmtorresoptical.OpticalClinicManagementSystem.enums.DiscountType;
-import com.mmtorresoptical.OpticalClinicManagementSystem.enums.PaymentType;
+import com.mmtorresoptical.OpticalClinicManagementSystem.enums.PaymentMethod;
+import com.mmtorresoptical.OpticalClinicManagementSystem.enums.ProductType;
 import com.mmtorresoptical.OpticalClinicManagementSystem.enums.TransactionStatus;
 import com.mmtorresoptical.OpticalClinicManagementSystem.exception.custom.BadRequestException;
 import com.mmtorresoptical.OpticalClinicManagementSystem.exception.custom.InsufficientStockException;
@@ -34,6 +37,7 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
+import java.util.stream.Collectors;
 
 @Service
 @RequiredArgsConstructor
@@ -47,6 +51,7 @@ public class TransactionService {
     private final ProductRepository productRepository;
     private final TransactionItemMapper transactionItemMapper;
     private final RefundRepository refundRepository;
+    private final PaymentRepository paymentRepository;
     private final TransactionAuditHelper transactionAuditHelper;
     private final PasswordEncoder passwordEncoder;
 
@@ -56,19 +61,10 @@ public class TransactionService {
 
         Patient patient = null;
 
-        if(transactionRequestDTO.getPatientId() != null) {
+        if (transactionRequestDTO.getPatientId() != null) {
             UUID patientId = transactionRequestDTO.getPatientId();
-            // Retrieve patient or throw exception if not found
             patient = patientRepository.findById(patientId)
                     .orElseThrow(() -> new ResourceNotFoundException("Patient not found with id: " + patientId));
-        }
-
-        String ref = transactionRequestDTO.getReferenceNumber();
-
-        if (ref != null &&
-                transactionRepository.existsByReferenceNumber(ref)) {
-
-            throw new BadRequestException("Reference number already used");
         }
 
         Transaction transaction = transactionMapper.requestDTOtoEntity(transactionRequestDTO);
@@ -79,28 +75,27 @@ public class TransactionService {
         List<TransactionItem> transactionItems = transactionRequestDTO.getItems()
                 .stream().map(dto -> {
 
-                    // Retrieve product or throw exception if not found
                     Product retrievedProduct = productRepository.findById(dto.getProductId())
                             .orElseThrow(() -> new ResourceNotFoundException("Product not found with id: " + dto.getProductId()));
 
                     if (Boolean.TRUE.equals(retrievedProduct.getIsArchived())) {
                         throw new BadRequestException(
-                            "Cannot sell archived product: " + retrievedProduct.getProductName()
+                                "Cannot sell archived product: " + retrievedProduct.getProductName()
                         );
                     }
 
-                    // Check stock first
-                    if (retrievedProduct.getQuantity() < dto.getQuantity()) {
-                        throw new InsufficientStockException(
-                                "Not enough stock for product: "
-                                        + retrievedProduct.getProductName()
+                    // Inventory guard: only decrement stock for PHYSICAL products
+                    if (retrievedProduct.getProductType() == ProductType.PHYSICAL) {
+                        if (retrievedProduct.getQuantity() < dto.getQuantity()) {
+                            throw new InsufficientStockException(
+                                    "Not enough stock for product: "
+                                            + retrievedProduct.getProductName()
+                            );
+                        }
+                        retrievedProduct.setQuantity(
+                                retrievedProduct.getQuantity() - dto.getQuantity()
                         );
                     }
-
-                    // Deduct the stock
-                    retrievedProduct.setQuantity(
-                            retrievedProduct.getQuantity() - dto.getQuantity()
-                    );
 
                     TransactionItem transactionItem = transactionItemMapper.requestDTOtoEntity(dto);
 
@@ -119,12 +114,11 @@ public class TransactionService {
 
                         discountAmount = switch (dto.getDiscountType()) {
                             case PERCENT -> baseAmount.multiply(dto.getDiscountValue())
-                                    .divide(BigDecimal.valueOf(100), 2,  // scale (decimal places)
+                                    .divide(BigDecimal.valueOf(100), 2,
                                             RoundingMode.HALF_UP);
                             case FIXED -> dto.getDiscountValue();
                         };
                     }
-
 
                     transactionItem.setSubtotal(baseAmount.subtract(discountAmount));
 
@@ -137,26 +131,118 @@ public class TransactionService {
                 .reduce(BigDecimal.ZERO, BigDecimal::add);
 
         transaction.setTotalAmount(total);
-
         transaction.setTransactionItems(transactionItems);
-
         transaction.setTransactionNumber(generateTransactionNumber());
 
-        transaction.setTransactionStatus(TransactionStatus.COMPLETED);
+        // Determine initial payment
+        BigDecimal amountTendered = transactionRequestDTO.getAmountTendered();
+        if (amountTendered == null) {
+            amountTendered = BigDecimal.ZERO;
+        }
+        if (amountTendered.compareTo(total) > 0) {
+            amountTendered = total;
+        }
+
+        transaction.setAmountPaid(amountTendered);
+        transaction.setTransactionStatus(computeStatus(total, amountTendered));
 
         Transaction savedTransaction = transactionRepository.saveAndFlush(transaction);
+
+        // Create initial payment record if money was tendered
+        if (amountTendered.compareTo(BigDecimal.ZERO) > 0) {
+            Payment payment = new Payment();
+            payment.setTransaction(savedTransaction);
+            payment.setAmount(amountTendered);
+            payment.setPaymentMethod(
+                transactionRequestDTO.getPaymentMethod() != null
+                    ? transactionRequestDTO.getPaymentMethod()
+                    : PaymentMethod.CASH
+            );
+            payment.setReferenceNumber(transactionRequestDTO.getReferenceNumber());
+            paymentRepository.save(payment);
+        }
 
         // Audit Logging
         transactionAuditHelper.logCreate(savedTransaction);
 
-        return transactionMapper.entityToResponseDTO(savedTransaction);
+        return enrichWithPayments(transactionMapper.entityToResponseDTO(savedTransaction));
+    }
+
+    @Transactional
+    public PaymentResponseDTO addPayment(UUID transactionId, PaymentRequestDTO request) {
+        Transaction transaction = transactionRepository.findById(transactionId)
+                .orElseThrow(() -> new ResourceNotFoundException("Transaction not found with id: " + transactionId));
+
+        if (transaction.getTransactionStatus() == TransactionStatus.COMPLETED) {
+            throw new IllegalStateException("Cannot add payment to a completed transaction");
+        }
+
+        if (transaction.getTransactionStatus() == TransactionStatus.VOIDED) {
+            throw new IllegalStateException("Cannot add payment to a voided transaction");
+        }
+
+        if (transaction.getTransactionStatus() == TransactionStatus.FULLY_REFUNDED) {
+            throw new IllegalStateException("Cannot add payment to a fully refunded transaction");
+        }
+
+        BigDecimal remaining = transaction.getTotalAmount().subtract(transaction.getAmountPaid());
+        if (request.getAmount().compareTo(remaining) > 0) {
+            throw new BadRequestException("Payment amount exceeds remaining balance of " + remaining);
+        }
+
+        Payment payment = new Payment();
+        payment.setTransaction(transaction);
+        payment.setAmount(request.getAmount());
+        payment.setPaymentMethod(request.getPaymentMethod());
+        payment.setReferenceNumber(request.getReferenceNumber());
+        paymentRepository.save(payment);
+
+        BigDecimal newAmountPaid = transaction.getAmountPaid().add(request.getAmount());
+        transaction.setAmountPaid(newAmountPaid);
+        transaction.setTransactionStatus(computeStatus(transaction.getTotalAmount(), newAmountPaid));
+        transactionRepository.save(transaction);
+
+        PaymentResponseDTO response = new PaymentResponseDTO();
+        response.setId(payment.getId());
+        response.setAmount(payment.getAmount());
+        response.setPaymentMethod(payment.getPaymentMethod().name());
+        response.setReferenceNumber(payment.getReferenceNumber());
+        response.setCreatedAt(payment.getCreatedAt());
+        return response;
+    }
+
+    @Transactional
+    public TransactionResponseDTO completeTransaction(UUID transactionId) {
+        Transaction transaction = transactionRepository.findById(transactionId)
+                .orElseThrow(() -> new ResourceNotFoundException("Transaction not found with id: " + transactionId));
+
+        if (transaction.getTransactionStatus() != TransactionStatus.PAID) {
+            throw new IllegalStateException("Only fully paid transactions can be completed. Current status: " + transaction.getTransactionStatus());
+        }
+
+        transaction.setTransactionStatus(TransactionStatus.COMPLETED);
+        transaction.setCompletedAt(LocalDateTime.now());
+        Transaction saved = transactionRepository.save(transaction);
+        return enrichWithPayments(transactionMapper.entityToResponseDTO(saved));
+    }
+
+    public List<PaymentResponseDTO> getPaymentsForTransaction(UUID transactionId) {
+        return paymentRepository.findByTransactionTransactionIdOrderByCreatedAtDesc(transactionId)
+                .stream().map(p -> {
+                    PaymentResponseDTO dto = new PaymentResponseDTO();
+                    dto.setId(p.getId());
+                    dto.setAmount(p.getAmount());
+                    dto.setPaymentMethod(p.getPaymentMethod().name());
+                    dto.setReferenceNumber(p.getReferenceNumber());
+                    dto.setCreatedAt(p.getCreatedAt());
+                    return dto;
+                }).collect(Collectors.toList());
     }
 
     public Page<TransactionListDTO> getAllTransactions(
             String keyword,
             LocalDate minDate,
             LocalDate maxDate,
-            PaymentType paymentType,
             TransactionStatus status,
             UUID productId,
             int page,
@@ -166,7 +252,6 @@ public class TransactionService {
     ) {
 
         if (keyword != null && UUIDUtils.isUUID(keyword)) {
-
             Optional<Transaction> transaction =
                     transactionRepository.findById(UUID.fromString(keyword));
 
@@ -181,13 +266,10 @@ public class TransactionService {
             );
         }
 
-        // Determine sorting direction from request parameter
         Sort.Direction direction;
-
         try {
             direction = Sort.Direction.fromString(sortOrder);
         } catch (IllegalArgumentException ex) {
-            // Default to descending if invalid input
             direction = Sort.Direction.DESC;
         }
 
@@ -203,10 +285,6 @@ public class TransactionService {
             );
         }
 
-        if (paymentType != null) {
-            spec = spec.and(TransactionSpecification.hasPaymentType(paymentType));
-        }
-
         if (status != null) {
             spec = spec.and(TransactionSpecification.hasTransactionStatus(status));
         }
@@ -215,7 +293,6 @@ public class TransactionService {
             spec = spec.and(TransactionSpecification.hasProductId(productId));
         }
 
-        // Create pageable configuration with sorting
         Pageable pageable = PageRequest.of(page, size, Sort.by(direction, sortBy));
 
         Page<Transaction> transactions = transactionRepository.findAll(spec, pageable);
@@ -224,11 +301,26 @@ public class TransactionService {
     }
 
     public TransactionDetailsDTO getTransaction(UUID id) {
-        // Retrieve transaction or throw exception if not found
         Transaction transaction = transactionRepository.findById(id)
                 .orElseThrow(() -> new ResourceNotFoundException("Transaction not found with id: " + id));
 
-        return transactionMapper.entityToDetailsDTO(transaction);
+        TransactionDetailsDTO dto = transactionMapper.entityToDetailsDTO(transaction);
+
+        // Attach payments
+        List<PaymentResponseDTO> paymentDTOs = paymentRepository
+                .findByTransactionTransactionIdOrderByCreatedAtDesc(id)
+                .stream().map(p -> {
+                    PaymentResponseDTO pd = new PaymentResponseDTO();
+                    pd.setId(p.getId());
+                    pd.setAmount(p.getAmount());
+                    pd.setPaymentMethod(p.getPaymentMethod().name());
+                    pd.setReferenceNumber(p.getReferenceNumber());
+                    pd.setCreatedAt(p.getCreatedAt());
+                    return pd;
+                }).collect(Collectors.toList());
+        dto.setPayments(paymentDTOs);
+
+        return dto;
     }
 
     public List<Transaction> getTransactionsForReport(
@@ -244,8 +336,7 @@ public class TransactionService {
         }
 
         Sort sort = Sort.by(Sort.Direction.DESC, "transactionDate");
-
-                return transactionRepository.findAll(spec, sort);
+        return transactionRepository.findAll(spec, sort);
     }
 
     public TransactionMetricsDTO getTransactionMetrics() {
@@ -293,7 +384,6 @@ public class TransactionService {
     @Transactional
     public void voidTransaction(UUID transactionId, VoidTransactionRequestDTO voidTransactionRequestDTO) {
 
-        // Retrieve transaction or throw exception if not found
         Transaction transaction = transactionRepository.findById(transactionId)
                 .orElseThrow(() -> new ResourceNotFoundException("Transaction not found with id: " + transactionId));
 
@@ -311,23 +401,17 @@ public class TransactionService {
             throw new IllegalStateException("Cannot void refunded transaction");
         }
 
-        if (transaction.getTransactionStatus() != TransactionStatus.COMPLETED) {
-            throw new IllegalStateException(
-                    "Only completed transactions can be voided"
-            );
-        }
-
+        // Restore stock only for PHYSICAL products
         for (TransactionItem item : transaction.getTransactionItems()) {
-
             Product product = item.getProduct();
-
-            product.setQuantity(
-                    product.getQuantity() + item.getQuantity()
-            );
+            if (product.getProductType() == ProductType.PHYSICAL) {
+                product.setQuantity(
+                        product.getQuantity() + item.getQuantity()
+                );
+            }
         }
 
         transaction.setTransactionStatus(TransactionStatus.VOIDED);
-
         transaction.setVoidedBy(authenticatedUser);
         transaction.setVoidedAt(LocalDateTime.now());
         transaction.setVoidReason(voidTransactionRequestDTO.getReason());
@@ -363,7 +447,6 @@ public class TransactionService {
                 );
             }
 
-            // Current refunded qty
             int alreadyRefunded =
                     item.getRefundedQuantity() == null
                             ? 0
@@ -371,28 +454,27 @@ public class TransactionService {
 
             int newRefundQty = dto.getRefundQuantity();
 
-            // Prevent over-refund
             if (alreadyRefunded + newRefundQty > item.getQuantity()) {
                 throw new IllegalArgumentException(
                         "Refund exceeds purchased quantity"
                 );
             }
 
-            // Restore stock — route damaged items to non-sellable bucket
+            // Restore stock only for PHYSICAL products
             Product product = item.getProduct();
-            if ("Damaged".equalsIgnoreCase(dto.getRefundReason())) {
-                product.setDamagedQuantity(
-                        product.getDamagedQuantity() + newRefundQty
-                );
-            } else {
-                product.setQuantity(
-                        product.getQuantity() + newRefundQty
-                );
+            if (product.getProductType() == ProductType.PHYSICAL) {
+                if ("Damaged".equalsIgnoreCase(dto.getRefundReason())) {
+                    product.setDamagedQuantity(
+                            product.getDamagedQuantity() + newRefundQty
+                    );
+                } else {
+                    product.setQuantity(
+                            product.getQuantity() + newRefundQty
+                    );
+                }
             }
 
-            // 🆕 Create Refund record
             BigDecimal unitPrice = item.getUnitPrice();
-
             BigDecimal refundAmount =
                     unitPrice.multiply(
                             BigDecimal.valueOf(dto.getRefundQuantity())
@@ -436,7 +518,6 @@ public class TransactionService {
             }
 
             Refund refund = new Refund();
-
             refund.setRefundAmount(refundAmount);
             refund.setTransactionItem(item);
             refund.setRefundQuantity(newRefundQty);
@@ -447,19 +528,16 @@ public class TransactionService {
 
             refundRepository.save(refund);
 
-            // 📝 Update refunded qty
             item.setRefundedQuantity(
                     alreadyRefunded + newRefundQty
             );
         }
 
-        // 🔄 Update transaction refund status
         updateTransactionRefundStatus(
                 request.getItems().get(0)
                         .getTransactionItemId()
         );
 
-        // Audit Logging
         int count = request.getItems().size();
 
         if (count == 1) {
@@ -508,12 +586,36 @@ public class TransactionService {
             txn.setTransactionStatus(
                     TransactionStatus.FULLY_REFUNDED
             );
-        }
-        else if (anyRefunded) {
+        } else if (anyRefunded) {
             txn.setTransactionStatus(
                     TransactionStatus.PARTIALLY_REFUNDED
             );
         }
     }
 
+    private TransactionStatus computeStatus(BigDecimal totalAmount, BigDecimal amountPaid) {
+        if (amountPaid.compareTo(BigDecimal.ZERO) == 0) {
+            return TransactionStatus.PENDING;
+        } else if (amountPaid.compareTo(totalAmount) >= 0) {
+            return TransactionStatus.PAID;
+        } else {
+            return TransactionStatus.PARTIALLY_PAID;
+        }
+    }
+
+    private TransactionResponseDTO enrichWithPayments(TransactionResponseDTO dto) {
+        List<PaymentResponseDTO> paymentDTOs = paymentRepository
+                .findByTransactionTransactionIdOrderByCreatedAtDesc(dto.getTransactionId())
+                .stream().map(p -> {
+                    PaymentResponseDTO pd = new PaymentResponseDTO();
+                    pd.setId(p.getId());
+                    pd.setAmount(p.getAmount());
+                    pd.setPaymentMethod(p.getPaymentMethod().name());
+                    pd.setReferenceNumber(p.getReferenceNumber());
+                    pd.setCreatedAt(p.getCreatedAt());
+                    return pd;
+                }).collect(Collectors.toList());
+        dto.setPayments(paymentDTOs);
+        return dto;
+    }
 }

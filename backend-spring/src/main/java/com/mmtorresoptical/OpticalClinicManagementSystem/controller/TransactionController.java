@@ -1,9 +1,10 @@
 package com.mmtorresoptical.OpticalClinicManagementSystem.controller;
 
 import com.mmtorresoptical.OpticalClinicManagementSystem.dto.metrics.TransactionMetricsDTO;
+import com.mmtorresoptical.OpticalClinicManagementSystem.dto.payment.PaymentRequestDTO;
+import com.mmtorresoptical.OpticalClinicManagementSystem.dto.payment.PaymentResponseDTO;
 import com.mmtorresoptical.OpticalClinicManagementSystem.dto.refund.RefundTransactionRequestDTO;
 import com.mmtorresoptical.OpticalClinicManagementSystem.dto.transaction.*;
-import com.mmtorresoptical.OpticalClinicManagementSystem.enums.PaymentType;
 import com.mmtorresoptical.OpticalClinicManagementSystem.enums.TransactionStatus;
 import com.mmtorresoptical.OpticalClinicManagementSystem.services.controller.TransactionService;
 import jakarta.validation.Valid;
@@ -38,7 +39,6 @@ public class TransactionController {
             @RequestParam(required = false) LocalDate minDate,
             @RequestParam(required = false) LocalDate maxDate,
 
-            @RequestParam(required = false) PaymentType paymentType,
             @RequestParam(required = false) TransactionStatus status,
 
             @RequestParam(defaultValue = "0") int page,
@@ -51,7 +51,6 @@ public class TransactionController {
         List<String> allowedSortFields = List.of(
                 "transactionDate",
                 "totalAmount",
-                "paymentType",
                 "status"
         );
 
@@ -64,7 +63,6 @@ public class TransactionController {
                 keyword,
                 minDate,
                 maxDate,
-                paymentType,
                 status,
                 null,
                 page,
@@ -104,6 +102,31 @@ public class TransactionController {
     ) {
         transactionService.refundTransaction(request);
         return ResponseEntity.ok().build();
+    }
+
+    @PostMapping("/{id}/payments")
+    public ResponseEntity<PaymentResponseDTO> addPayment(
+            @PathVariable UUID id,
+            @Valid @RequestBody PaymentRequestDTO request
+    ) {
+        PaymentResponseDTO payment = transactionService.addPayment(id, request);
+        return ResponseEntity.ok(payment);
+    }
+
+    @GetMapping("/{id}/payments")
+    public ResponseEntity<List<PaymentResponseDTO>> getPayments(
+            @PathVariable UUID id
+    ) {
+        List<PaymentResponseDTO> payments = transactionService.getPaymentsForTransaction(id);
+        return ResponseEntity.ok(payments);
+    }
+
+    @PostMapping("/{id}/complete")
+    public ResponseEntity<TransactionResponseDTO> completeTransaction(
+            @PathVariable UUID id
+    ) {
+        TransactionResponseDTO transaction = transactionService.completeTransaction(id);
+        return ResponseEntity.ok(transaction);
     }
 
 }

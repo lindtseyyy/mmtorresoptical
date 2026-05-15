@@ -9,31 +9,34 @@ import com.mmtorresoptical.OpticalClinicManagementSystem.model.Transaction;
 import org.mapstruct.Mapper;
 import org.mapstruct.Mapping;
 
-import java.math.BigDecimal;
-
 @Mapper(componentModel = "spring",
-uses = {UserMapper.class, PatientMapper.class, TransactionItemMapper.class})
+        uses = {UserMapper.class, PatientMapper.class, TransactionItemMapper.class})
 public interface TransactionMapper {
 
+    @Mapping(target = "transactionId", ignore = true)
+    @Mapping(target = "transactionNumber", ignore = true)
+    @Mapping(target = "transactionDate", ignore = true)
+    @Mapping(target = "totalAmount", ignore = true)
+    @Mapping(target = "transactionStatus", ignore = true)
+    @Mapping(target = "amountPaid", ignore = true)
+    @Mapping(target = "balanceDue", ignore = true)
+    @Mapping(target = "completedAt", ignore = true)
+    @Mapping(target = "voidedAt", ignore = true)
+    @Mapping(target = "voidReason", ignore = true)
+    @Mapping(target = "voidedBy", ignore = true)
+    @Mapping(target = "user", ignore = true)
+    @Mapping(target = "patient", ignore = true)
+    @Mapping(target = "transactionItems", ignore = true)
+    @Mapping(target = "payments", ignore = true)
     Transaction requestDTOtoEntity(TransactionRequestDTO transactionRequestDTO);
 
     @Mapping(
-            target = "paymentType",
-            expression = "java(transaction.getPaymentType().name())"
-    )
-    @Mapping(
             target = "createdBy",
             source = "user"
-
     )
     @Mapping(
             target = "patient",
             source = "patient"
-
-    )
-    @Mapping(
-            target = "change",
-            expression = "java(transaction.getCashTender() != null ? calculateChange(transaction.getCashTender(), transaction.getTotalAmount()) : null)"
     )
     @Mapping(
             target = "transactionStatus",
@@ -42,21 +45,12 @@ public interface TransactionMapper {
     TransactionDetailsDTO entityToDetailsDTO(Transaction transaction);
 
     @Mapping(
-            target = "paymentType",
-            expression = "java(transaction.getPaymentType().name())"
-    )
-    @Mapping(
             target = "createdBy",
             source = "user"
-
     )
     @Mapping(
             target = "patient",
             source = "patient"
-    )
-    @Mapping(
-            target = "change",
-            expression = "java(transaction.getCashTender() != null ? calculateChange(transaction.getCashTender(), transaction.getTotalAmount()) : null)"
     )
     @Mapping(
             target = "transactionStatus",
@@ -65,37 +59,19 @@ public interface TransactionMapper {
     TransactionResponseDTO entityToResponseDTO(Transaction transaction);
 
     @Mapping(
-            target = "paymentType",
-            expression = "java(transaction.getPaymentType().name())"
-    )
-    @Mapping(
             target = "createdBy",
             source = "user"
-
     )
     @Mapping(
             target = "patient",
             source = "patient"
     )
     @Mapping(
-            target = "change",
-            expression = "java(transaction.getCashTender() != null ? calculateChange(transaction.getCashTender(), transaction.getTotalAmount()) : null)"
-    )
-    @Mapping(
             target = "transactionStatus",
             expression = "java(transaction.getTransactionStatus().name())"
     )
-    @Mapping(
-            target = "transactionDate",
-            source = "transactionDate"
-    )
     TransactionListDTO entityToListDTO(Transaction transaction);
 
-
-    @Mapping(
-            target = "paymentProofUrl",
-            source = "gcashPaymentImgDir"
-    )
     @Mapping(
             target = "voidedByUserId",
             source = "voidedBy.userId"
@@ -109,8 +85,4 @@ public interface TransactionMapper {
             source = "user.userId"
     )
     TransactionAuditDTO entityToAuditDTO(Transaction transaction);
-
-    default BigDecimal calculateChange(BigDecimal cashTender, BigDecimal totalAmount) {
-        return cashTender.subtract(totalAmount);
-    }
 }

@@ -155,7 +155,7 @@ public class ProductController {
             @RequestParam(defaultValue = "desc") String sortOrder
     ) {
         Page<TransactionListDTO> transactions = transactionService.getAllTransactions(
-                null, null, null, null, null,
+                null, null, null, null,
                 productId,
                 page, size, sortBy, sortOrder
         );

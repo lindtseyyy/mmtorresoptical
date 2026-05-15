@@ -17,11 +17,9 @@ public class TransactionListDTO {
     private String transactionNumber;
     private LocalDateTime transactionDate;
     private BigDecimal totalAmount;
-    private String paymentType;
-    private String referenceNumber;
-    private String gcashPaymentImgDir;
-    private BigDecimal cashTender;
-    private BigDecimal change;
+    private BigDecimal amountPaid;
+    private BigDecimal balanceDue;
+    private LocalDateTime completedAt;
     private String transactionStatus;
 
     private UserSummaryDTO createdBy;

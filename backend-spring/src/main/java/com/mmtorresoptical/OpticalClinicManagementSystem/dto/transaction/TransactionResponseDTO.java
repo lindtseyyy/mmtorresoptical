@@ -1,6 +1,7 @@
 package com.mmtorresoptical.OpticalClinicManagementSystem.dto.transaction;
 
 import com.mmtorresoptical.OpticalClinicManagementSystem.dto.patient.PatientSummaryDTO;
+import com.mmtorresoptical.OpticalClinicManagementSystem.dto.payment.PaymentResponseDTO;
 import com.mmtorresoptical.OpticalClinicManagementSystem.dto.transactionitem.TransactionItemResponseDTO;
 import com.mmtorresoptical.OpticalClinicManagementSystem.dto.user.UserSummaryDTO;
 import lombok.Data;
@@ -17,15 +18,14 @@ public class TransactionResponseDTO {
     private String transactionNumber;
     private LocalDateTime transactionDate;
     private BigDecimal totalAmount;
-    private String paymentType;
-    private String referenceNumber;
-    private String gcashPaymentImgDir;
-    private BigDecimal cashTender;
-    private BigDecimal change;
+    private BigDecimal amountPaid;
+    private BigDecimal balanceDue;
+    private LocalDateTime completedAt;
     private String transactionStatus;
 
     private UserSummaryDTO createdBy;
     private PatientSummaryDTO patient;
 
     private List<TransactionItemResponseDTO> transactionItems;
+    private List<PaymentResponseDTO> payments;
 }
