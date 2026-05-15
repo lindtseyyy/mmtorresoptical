@@ -397,7 +397,7 @@ const ViewProduct: React.FC = () => {
                       <div className="flex items-center gap-4 text-sm text-muted-foreground">
                         <span>{formatDateTime(tx.transactionDate)}</span>
                         <span>₱ {tx.totalAmount.toFixed(2)}</span>
-                        <span className="capitalize">{tx.paymentType.toLowerCase()}</span>
+                        <span className="capitalize">{tx.paymentType?.toLowerCase() ?? "N/A"}</span>
                       </div>
                       {tx.patient && (
                         <p className="text-xs text-muted-foreground">
