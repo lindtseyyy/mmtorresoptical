@@ -42,6 +42,8 @@ interface Props {
   items: RefundStateItem[];
   onComplete: (items: RefundStateItem[], refundMethod: RefundMethod) => void;
   isPending: boolean;
+  amountPaid?: number;
+  totalAlreadyRefunded?: number;
 }
 
 const RefundDrawer: React.FC<Props> = ({
@@ -50,6 +52,8 @@ const RefundDrawer: React.FC<Props> = ({
   items,
   onComplete,
   isPending,
+  amountPaid,
+  totalAlreadyRefunded,
 }) => {
   const [reasons, setReasons] = useState<Record<string, string>>({});
   const [quantities, setQuantities] = useState<Record<string, number>>({});
@@ -74,8 +78,10 @@ const RefundDrawer: React.FC<Props> = ({
     [items, reasons]
   );
 
-  const getItemSubtotal = useCallback(
-    (item: RefundStateItem) => {
+  // Full-value subtotals before payment scaling
+  const fullSubtotals = useMemo(() => {
+    const result: Record<string, number> = {};
+    for (const item of items) {
       const qty = quantities[item.transactionItemId] ?? item.refundQuantity;
       let lineTotal = item.unitPrice * qty;
       if (item.isDiscounted) {
@@ -86,18 +92,27 @@ const RefundDrawer: React.FC<Props> = ({
           lineTotal -= discountPerUnit * qty;
         }
       }
-      return Math.max(0, lineTotal);
-    },
-    [quantities]
+      result[item.transactionItemId] = Math.max(0, lineTotal);
+    }
+    return result;
+  }, [items, quantities]);
+
+  const fullTotal = useMemo(
+    () => Object.values(fullSubtotals).reduce((a, b) => a + b, 0),
+    [fullSubtotals]
   );
 
-  const refundTotal = useMemo(() => {
-    let total = 0;
-    for (const item of items) {
-      total += getItemSubtotal(item);
-    }
-    return total;
-  }, [items, getItemSubtotal]);
+  const scaleFactor = useMemo(() => {
+    if (amountPaid == null || totalAlreadyRefunded == null) return 1;
+    const pool = amountPaid - totalAlreadyRefunded;
+    if (pool <= 0 || fullTotal <= 0) return 0;
+    return Math.min(1, pool / fullTotal);
+  }, [amountPaid, totalAlreadyRefunded, fullTotal]);
+
+  const refundTotal = fullTotal * scaleFactor;
+
+  const getItemSubtotal = (item: RefundStateItem) =>
+    (fullSubtotals[item.transactionItemId] ?? 0) * scaleFactor;
 
   const handleApplyToAll = useCallback(
     (reason: string) => {

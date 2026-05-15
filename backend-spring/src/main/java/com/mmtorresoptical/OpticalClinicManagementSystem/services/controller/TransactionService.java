@@ -408,6 +408,7 @@ public class TransactionService {
                 product.setQuantity(
                         product.getQuantity() + item.getQuantity()
                 );
+                productRepository.save(product);
             }
         }
 
@@ -425,7 +426,12 @@ public class TransactionService {
             RefundTransactionRequestDTO request
     ) {
 
+        // Phase 1: validate, restore stock, calculate full-value refund amounts
+        List<Refund> pendingRefunds = new ArrayList<>();
         List<TransactionItem> refundItems = new ArrayList<>();
+        Transaction transaction = null;
+        BigDecimal batchTotalFullAmount = BigDecimal.ZERO;
+
         for (RefundItemDTO dto : request.getItems()) {
 
             TransactionItem item =
@@ -438,10 +444,10 @@ public class TransactionService {
                             )
                     );
             refundItems.add(item);
-            Transaction txn = item.getTransaction();
+            transaction = item.getTransaction();
 
             // Block voided txn
-            if (txn.getTransactionStatus() == TransactionStatus.VOIDED) {
+            if (transaction.getTransactionStatus() == TransactionStatus.VOIDED) {
                 throw new IllegalStateException(
                         "Cannot refund voided transaction"
                 );
@@ -472,6 +478,7 @@ public class TransactionService {
                             product.getQuantity() + newRefundQty
                     );
                 }
+                productRepository.save(product);
             }
 
             BigDecimal unitPrice = item.getUnitPrice();
@@ -517,6 +524,8 @@ public class TransactionService {
                 }
             }
 
+            batchTotalFullAmount = batchTotalFullAmount.add(refundAmount);
+
             Refund refund = new Refund();
             refund.setRefundAmount(refundAmount);
             refund.setTransactionItem(item);
@@ -526,11 +535,67 @@ public class TransactionService {
             refund.setRefundMethod(request.getRefundMethod());
             refund.setUser(authenticatedUserService.getCurrentUser());
 
-            refundRepository.save(refund);
+            pendingRefunds.add(refund);
+        }
 
-            item.setRefundedQuantity(
-                    alreadyRefunded + newRefundQty
-            );
+        // Phase 2: calculate payment cap and scaling factor
+        BigDecimal totalAlreadyRefunded = BigDecimal.ZERO;
+        if (transaction != null) {
+            for (TransactionItem ti : transaction.getTransactionItems()) {
+                if (ti.getRefunds() != null) {
+                    for (Refund r : ti.getRefunds()) {
+                        totalAlreadyRefunded = totalAlreadyRefunded.add(r.getRefundAmount());
+                    }
+                }
+            }
+        }
+
+        BigDecimal maxRefundable = transaction.getAmountPaid().subtract(totalAlreadyRefunded);
+        BigDecimal scale = BigDecimal.ONE;
+        if (batchTotalFullAmount.compareTo(maxRefundable) > 0) {
+            if (maxRefundable.compareTo(BigDecimal.ZERO) <= 0) {
+                throw new IllegalArgumentException(
+                        "Cannot refund: the paid amount has already been fully refunded."
+                );
+            }
+            scale = maxRefundable.divide(batchTotalFullAmount, 4, RoundingMode.HALF_UP);
+        }
+
+        // Phase 3: save refunds with scaled amounts
+        if (scale.compareTo(BigDecimal.ONE) < 0) {
+            BigDecimal remaining = maxRefundable;
+            for (int i = 0; i < pendingRefunds.size(); i++) {
+                Refund refund = pendingRefunds.get(i);
+                TransactionItem item = refund.getTransactionItem();
+
+                BigDecimal scaledAmount;
+                if (i == pendingRefunds.size() - 1) {
+                    scaledAmount = remaining.max(BigDecimal.ZERO);
+                } else {
+                    scaledAmount = refund.getRefundAmount()
+                            .multiply(scale).setScale(2, RoundingMode.HALF_UP);
+                    remaining = remaining.subtract(scaledAmount);
+                }
+                refund.setRefundAmount(scaledAmount);
+                refundRepository.save(refund);
+
+                int alreadyRefunded = item.getRefundedQuantity() == null
+                        ? 0 : item.getRefundedQuantity();
+                item.setRefundedQuantity(
+                        alreadyRefunded + refund.getRefundQuantity()
+                );
+            }
+        } else {
+            for (Refund refund : pendingRefunds) {
+                TransactionItem item = refund.getTransactionItem();
+                refundRepository.save(refund);
+
+                int alreadyRefunded = item.getRefundedQuantity() == null
+                        ? 0 : item.getRefundedQuantity();
+                item.setRefundedQuantity(
+                        alreadyRefunded + refund.getRefundQuantity()
+                );
+            }
         }
 
         updateTransactionRefundStatus(

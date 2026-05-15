@@ -60,6 +60,8 @@ const ViewTransaction: React.FC = () => {
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["transaction", transactionId] });
       queryClient.invalidateQueries({ queryKey: ["transactions"] });
+      queryClient.invalidateQueries({ queryKey: ["products"] });
+      queryClient.invalidateQueries({ queryKey: ["inventory-summary"] });
       toast.success("Refund processed successfully.");
     },
     onError: (error: Error) => {
@@ -73,6 +75,8 @@ const ViewTransaction: React.FC = () => {
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["transaction", transactionId] });
       queryClient.invalidateQueries({ queryKey: ["transactions"] });
+      queryClient.invalidateQueries({ queryKey: ["products"] });
+      queryClient.invalidateQueries({ queryKey: ["inventory-summary"] });
       toast.success("Transaction voided successfully.");
       setVoidDialogOpen(false);
       setVoidReason("");
@@ -212,6 +216,18 @@ const ViewTransaction: React.FC = () => {
     );
   };
 
+  const totalAlreadyRefunded = tx
+    ? tx.transactionItems.reduce((sum, item) => {
+        return (
+          sum +
+          (item.refundDetailsDTOList ?? []).reduce(
+            (s, r) => s + r.refundAmount,
+            0
+          )
+        );
+      }, 0)
+    : 0;
+
   const canRefund =
     tx &&
     tx.transactionStatus !== "VOIDED" &&
@@ -231,7 +247,7 @@ const ViewTransaction: React.FC = () => {
       <div className="py-16 text-center">
         <p className="text-muted-foreground">Transaction not found.</p>
         <Button variant="link" asChild className="mt-2">
-          <Link to="/transactions">Back to Transactions</Link>
+          <Link to="/transactions">Back to Sales and Transactions</Link>
         </Button>
       </div>
     );
@@ -262,7 +278,7 @@ const ViewTransaction: React.FC = () => {
         <Button variant="secondary" size="sm" asChild>
           <Link to="/transactions">
             <ArrowLeft className="mr-1 h-4 w-4" />
-            Back to Transactions
+            Back to Sales and Transactions
           </Link>
         </Button>
       </div>
@@ -712,6 +728,8 @@ const ViewTransaction: React.FC = () => {
         items={refundItems}
         onComplete={handleCompleteRefund}
         isPending={refundMutation.isPending}
+        amountPaid={tx.amountPaid}
+        totalAlreadyRefunded={totalAlreadyRefunded}
       />
 
       {/* Add Payment Drawer */}
