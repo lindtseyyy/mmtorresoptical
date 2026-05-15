@@ -2,6 +2,13 @@ import { queryOptions } from "@tanstack/react-query";
 import { fetchAuditLogs } from "@/features/users/services/auditApi";
 import type { AuditLogParams } from "@/features/users/services/auditApi";
 
+function createAuditLogsQueryOptions(params: AuditLogParams) {
+  return queryOptions({
+    queryKey: ["audit-logs", params],
+    queryFn: () => fetchAuditLogs(params),
+  });
+}
+
 function createUserAuditLogsQueryOptions(userId: string, page: number, size = 10) {
   return queryOptions({
     queryKey: ["audit-logs", userId, page, size],
@@ -49,6 +56,7 @@ function createUserTransactionCountQueryOptions(userId: string) {
 }
 
 export {
+  createAuditLogsQueryOptions,
   createUserAuditLogsQueryOptions,
   createUserLastLoginQueryOptions,
   createUserTransactionCountQueryOptions,

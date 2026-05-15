@@ -1,16 +1,34 @@
+import { useState } from "react";
 import { NavLink, useLocation, useNavigate } from "react-router-dom";
-import { Users, Eye, LogOut, UserRound, UserRoundCog, ShoppingCart, Receipt, Database, CircleHelp, Info } from "lucide-react";
+import { Users, Eye, LogOut, UserRound, UserRoundCog, ShoppingCart, Receipt, Database, CircleHelp, Info, ChevronDown } from "lucide-react";
 import { Button, buttonVariants } from "@/shared/components/ui/button";
+import { cn } from "@/shared/lib/utils";
 import { toast } from "sonner";
 import { isAdmin, type Role } from "@/shared/lib/auth";
 
-const menuItems = [
+interface MenuItem {
+  title: string;
+  href?: string;
+  icon: React.FC<{ className?: string }>;
+  roles: Role[];
+  children?: { title: string; href: string }[];
+}
+
+const menuItems: MenuItem[] = [
   { title: "Inventory Management", href: "/inventory", icon: Eye, roles: ["ADMIN", "STAFF"] as Role[] },
   { title: "Billing and Payment", href: "/sales", icon: ShoppingCart, roles: ["ADMIN", "STAFF"] as Role[] },
   { title: "Sales and Transactions", href: "/transactions", icon: Receipt, roles: ["ADMIN", "STAFF"] as Role[] },
   { title: "Patient Management", href: "/patients", icon: UserRound, roles: ["ADMIN"] as Role[] },
   { title: "User Management", href: "/users", icon: Users, roles: ["ADMIN"] as Role[] },
-  { title: "Maintenance", href: "/admin/database", icon: Database, roles: ["ADMIN"] as Role[] },
+  {
+    title: "Maintenance",
+    icon: Database,
+    roles: ["ADMIN"] as Role[],
+    children: [
+      { title: "Backup & Restore", href: "/admin/backup-restore" },
+      { title: "Audit Logs", href: "/admin/audit-logs" },
+    ],
+  },
   { title: "Help", href: "/help", icon: CircleHelp, roles: ["ADMIN", "STAFF"] as Role[] },
   { title: "About", href: "/about", icon: Info, roles: ["ADMIN", "STAFF"] as Role[] },
 ];
@@ -40,19 +58,38 @@ function getUserFromToken() {
 const Sidenav: React.FC = () => {
   const location = useLocation();
   const navigate = useNavigate();
+  const [expandedMenus, setExpandedMenus] = useState<Set<string>>(() => {
+    // Auto-expand menus that contain the current path
+    const expanded = new Set<string>();
+    for (const item of menuItems) {
+      if (item.children?.some((child) => location.pathname.startsWith(child.href))) {
+        expanded.add(item.title);
+      }
+    }
+    return expanded;
+  });
 
   const user = getUserFromToken();
   const visibleItems = menuItems.filter((item) => isAdmin() || item.roles.includes("STAFF"));
 
   const handleLogout = () => {
     localStorage.removeItem("authToken");
-
-    // 👈 3. Call sonner's toast function
     toast.success("Logged Out", {
       description: "You have been successfully logged out.",
     });
-
     navigate("/login");
+  };
+
+  const toggleMenu = (title: string) => {
+    setExpandedMenus((prev) => {
+      const next = new Set(prev);
+      if (next.has(title)) {
+        next.delete(title);
+      } else {
+        next.add(title);
+      }
+      return next;
+    });
   };
 
   return (
@@ -71,11 +108,54 @@ const Sidenav: React.FC = () => {
         <div className="px-4 py-2">
           <nav className="flex-1 space-y-1">
             {visibleItems.map((item) => {
+              const hasChildren = !!item.children?.length;
+              const childPaths = item.children?.map((c) => c.href) ?? [];
+              const isChildActive = childPaths.some((p) => location.pathname === p || location.pathname.startsWith(p + "/"));
+              const isExpanded = expandedMenus.has(item.title);
+
+              if (hasChildren) {
+                return (
+                  <div key={item.title}>
+                    <button
+                      onClick={() => toggleMenu(item.title)}
+                      className={cn(
+                        buttonVariants({
+                          variant: isChildActive ? "default" : "ghost",
+                          className: "w-full justify-start gap-2",
+                        })
+                      )}
+                    >
+                      <item.icon className="h-4 w-4" />
+                      <span className="flex-1 text-left">{item.title}</span>
+                      <ChevronDown
+                        className={cn(
+                          "h-4 w-4 shrink-0 transition-transform",
+                          isExpanded && "rotate-180"
+                        )}
+                      />
+                    </button>
+                    {isExpanded && (
+                      <div className="ml-4 mt-1 space-y-1 border-l border-border pl-4">
+                        {item.children!.map((child) => (
+                          <NavLink
+                            key={child.href}
+                            to={child.href}
+                            className={getLinkClassName}
+                          >
+                            <span>{child.title}</span>
+                          </NavLink>
+                        ))}
+                      </div>
+                    )}
+                  </div>
+                );
+              }
+
               const isActive = location.pathname === item.href || location.pathname.startsWith(item.href + "/");
               return (
                 <NavLink
                   key={item.title}
-                  to={item.href}
+                  to={item.href!}
                   className={getLinkClassName({ isActive })}
                 >
                   <item.icon className="h-4 w-4" />

@@ -13,6 +13,7 @@ export interface AuditLogEntry {
 }
 
 export interface AuditLogParams {
+  keyword?: string;
   userId?: string;
   actionType?: string;
   resourceType?: string;
@@ -20,6 +21,8 @@ export interface AuditLogParams {
   size?: number;
   sortBy?: string;
   sortOrder?: string;
+  minDate?: string;
+  maxDate?: string;
 }
 
 const fetchAuditLogs = async (params: AuditLogParams): Promise<PageResponse<AuditLogEntry>> => {
