@@ -3,13 +3,7 @@ import { useQuery, keepPreviousData } from "@tanstack/react-query";
 import { Button } from "@/shared/components/ui/button";
 import { Input } from "@/shared/components/ui/input";
 import { Badge } from "@/shared/components/ui/badge";
-import { Plus, Search, Eye, ChevronLeft, ChevronRight, MoreHorizontal, Users, UserCheck, ArchiveIcon, Shield, UserCog, ArrowUp, ArrowDown } from "lucide-react";
-import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuTrigger,
-} from "@/shared/components/ui/dropdown-menu";
+import { Plus, Search, Eye, ChevronLeft, ChevronRight, Users, UserCheck, ArchiveIcon, Shield, UserCog, ArrowUp, ArrowDown } from "lucide-react";
 import {
   Select,
   SelectContent,
@@ -247,7 +241,7 @@ const ManageUsers: React.FC = () => {
                       <th className="w-[8%] py-3 pr-4 text-center font-medium">Role</th>
                       <th className="w-[16%] py-3 pr-4 font-medium">Contact Number</th>
                       <th className="w-[8%] py-3 pr-4 font-medium">Gender</th>
-                      <th className="w-[8%] py-3 pl-4 font-medium"></th>
+                      <th className="w-[8%] py-3 text-center font-medium">Action</th>
                     </tr>
                   </thead>
                   <tbody>
@@ -284,27 +278,22 @@ const ManageUsers: React.FC = () => {
                         <td className="py-3 pr-4 capitalize">
                           <span className="block truncate">{user.gender}</span>
                         </td>
-                        <td className="py-3 pl-4">
+                        <td className="py-3">
                           {user.userId !== currentUserId ? (
-                            <DropdownMenu>
-                              <DropdownMenuTrigger asChild>
-                                <Button variant="ghost" className="h-10 w-10 shrink-0 p-0 [&_svg]:size-auto focus-visible:ring-0">
-                                  <MoreHorizontal className="h-8 w-8" />
-                                </Button>
-                              </DropdownMenuTrigger>
-                              <DropdownMenuContent align="end" className="bg-gray-100 dark:bg-gray-800 border-gray-300 dark:border-gray-700">
-                                <DropdownMenuItem
-                                  onClick={() =>
-                                    navigate(`/users/view/${user.userId}`)
-                                  }
-                                >
-                                  <Eye className="mr-2 h-4 w-4" />
-                                  View
-                                </DropdownMenuItem>
-                              </DropdownMenuContent>
-                            </DropdownMenu>
+                            <div className="flex justify-center">
+                              <Button
+                                variant="outline"
+                                size="sm"
+                                onClick={() => navigate(`/users/view/${user.userId}`)}
+                              >
+                                <Eye className="mr-1.5 h-3.5 w-3.5" />
+                                View
+                              </Button>
+                            </div>
                           ) : (
-                            <Badge className="bg-violet-600 text-white hover:bg-violet-600">You</Badge>
+                            <div className="flex justify-center">
+                              <Badge className="bg-violet-600 text-white hover:bg-violet-600">You</Badge>
+                            </div>
                           )}
                         </td>
                       </tr>
