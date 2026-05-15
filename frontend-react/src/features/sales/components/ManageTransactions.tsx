@@ -146,9 +146,9 @@ const ManageTransactions: React.FC = () => {
     <div className="space-y-6">
       <div className="flex items-center justify-between">
         <div>
-          <h2 className="text-3xl font-bold">Transactions</h2>
+          <h2 className="text-3xl font-bold">Sales and Transactions</h2>
           <p className="text-muted-foreground">
-            View and manage all transactions.
+            View and manage all sales and transactions.
           </p>
         </div>
       </div>
@@ -162,7 +162,7 @@ const ManageTransactions: React.FC = () => {
             </div>
             <div>
               <p className="text-2xl font-bold">{metrics?.totalTransactions ?? "—"}</p>
-              <p className="text-sm text-muted-foreground">Total Transactions</p>
+              <p className="text-sm text-muted-foreground">Total Sales and Transactions</p>
             </div>
           </CardContent>
         </Card>
@@ -202,7 +202,7 @@ const ManageTransactions: React.FC = () => {
             </div>
             <div>
               <p className="text-2xl font-bold">{metrics?.totalTransactionsThisMonth ?? "—"}</p>
-              <p className="text-sm text-muted-foreground">Total Transactions This Month</p>
+              <p className="text-sm text-muted-foreground">Total Sales and Transactions This Month</p>
             </div>
           </CardContent>
         </Card>
@@ -214,7 +214,7 @@ const ManageTransactions: React.FC = () => {
             </div>
             <div>
               <p className="text-2xl font-bold">{metrics?.todayTransactions ?? "—"}</p>
-              <p className="text-sm text-muted-foreground">Transactions Today</p>
+              <p className="text-sm text-muted-foreground">Sales and Transactions Today</p>
             </div>
           </CardContent>
         </Card>

@@ -1,16 +1,18 @@
 import { NavLink, useLocation, useNavigate } from "react-router-dom";
-import { Users, Eye, LogOut, UserRound, UserRoundCog, ShoppingCart, Receipt, Database } from "lucide-react";
+import { Users, Eye, LogOut, UserRound, UserRoundCog, ShoppingCart, Receipt, Database, CircleHelp, Info } from "lucide-react";
 import { Button, buttonVariants } from "@/shared/components/ui/button";
 import { toast } from "sonner";
 import { isAdmin, type Role } from "@/shared/lib/auth";
 
 const menuItems = [
-  { title: "Point of Sale", href: "/sales", icon: ShoppingCart, roles: ["ADMIN", "STAFF"] as Role[] },
   { title: "Inventory Management", href: "/inventory", icon: Eye, roles: ["ADMIN", "STAFF"] as Role[] },
-  { title: "Transactions", href: "/transactions", icon: Receipt, roles: ["ADMIN", "STAFF"] as Role[] },
+  { title: "Billing and Payment", href: "/sales", icon: ShoppingCart, roles: ["ADMIN", "STAFF"] as Role[] },
+  { title: "Sales and Transactions", href: "/transactions", icon: Receipt, roles: ["ADMIN", "STAFF"] as Role[] },
   { title: "Patient Management", href: "/patients", icon: UserRound, roles: ["ADMIN"] as Role[] },
   { title: "User Management", href: "/users", icon: Users, roles: ["ADMIN"] as Role[] },
   { title: "Database Backup", href: "/admin/database", icon: Database, roles: ["ADMIN"] as Role[] },
+  { title: "Help", href: "/help", icon: CircleHelp, roles: ["ADMIN", "STAFF"] as Role[] },
+  { title: "About", href: "/about", icon: Info, roles: ["ADMIN", "STAFF"] as Role[] },
 ];
 
 function getLinkClassName({ isActive }: { isActive: boolean }): string {

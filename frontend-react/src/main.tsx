@@ -46,6 +46,12 @@ import ViewTransaction from "@/features/sales/components/ViewTransaction";
 // --- Admin ---
 import DatabaseBackup from "@/features/admin/components/DatabaseBackup";
 
+// --- Help ---
+import HelpPage from "@/features/help/components/HelpPage";
+
+// --- About ---
+import AboutPage from "@/features/about/components/AboutPage";
+
 // --- Profile ---
 import EditProfile from "@/features/profile/components/EditProfile";
 
@@ -76,6 +82,8 @@ const router = createBrowserRouter([
     children: [
       { index: true, element: <Navigate to="/inventory" replace /> },
       { path: "profile", element: <EditProfile /> },
+      { path: "help", element: <HelpPage /> },
+      { path: "about", element: <AboutPage /> },
       { path: "sales", element: <ManageSales /> },
       { path: "transactions", element: <ManageTransactions /> },
       { path: "transactions/:id", element: <ViewTransaction /> },
