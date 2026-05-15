@@ -18,6 +18,7 @@ import {
 } from "@/features/inventory/services/productApi";
 import { fetchProductTransactions } from "@/features/sales/services/transactionApi";
 import type { TransactionListItem } from "@/features/sales/types";
+import { CATEGORY_LABELS, type Category } from "@/features/inventory/types";
 import {
   createArchiveProductMutationOptions,
   createRestoreProductMutationOptions,
@@ -112,6 +113,7 @@ const ViewProduct: React.FC = () => {
     );
   }
 
+  const isService = product.productType === "SERVICE";
   const inventoryValue = product.unitPrice * product.quantity;
 
   return (
@@ -144,18 +146,18 @@ const ViewProduct: React.FC = () => {
                   >
                     {product.isArchived ? "Archived" : "Active"}
                   </Badge>
-                  {!product.isArchived && product.quantity <= product.lowLevelThreshold && (
+                  {!product.isArchived && !isService && product.quantity <= product.lowLevelThreshold && (
                     <Badge className="bg-red-700 text-white hover:bg-red-700 cursor-default">
                       Low Stock
                     </Badge>
                   )}
-                  {!product.isArchived && product.quantity >= product.overstockedThreshold && (
+                  {!product.isArchived && !isService && product.quantity >= product.overstockedThreshold && (
                     <Badge className="bg-yellow-700 text-white hover:bg-yellow-700 cursor-default">
                       Overstocked
                     </Badge>
                   )}
                 </div>
-                <p className="text-muted-foreground">Product details and transaction history</p>
+                <p className="text-muted-foreground">Item details and transaction history</p>
               </div>
             </div>
           </div>
@@ -176,8 +178,12 @@ const ViewProduct: React.FC = () => {
               <Package className="h-4 w-4 text-primary" />
             </div>
             <div className="min-w-0">
-              <p className="text-xl font-bold">{product.quantity}</p>
-              <p className="text-xs text-muted-foreground">Current Stock</p>
+              <p className="text-xl font-bold">
+                {isService ? "—" : product.quantity}
+              </p>
+              <p className="text-xs text-muted-foreground">
+                {isService ? "Not Applicable" : "Current Stock"}
+              </p>
             </div>
           </CardContent>
         </Card>
@@ -241,7 +247,10 @@ const ViewProduct: React.FC = () => {
             </div>
             <div className="min-w-0">
               <p className="text-xl font-bold">
-                ₱ {inventoryValue.toLocaleString("en-US", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+                {isService
+                  ? "—"
+                  : `₱ ${inventoryValue.toLocaleString("en-US", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`
+                }
               </p>
               <p className="text-xs text-muted-foreground">Inventory Value</p>
             </div>
@@ -255,7 +264,7 @@ const ViewProduct: React.FC = () => {
           <div className="flex items-center justify-between">
             <div>
               <CardTitle>Overview</CardTitle>
-              <CardDescription>Product information</CardDescription>
+              <CardDescription>Item information</CardDescription>
             </div>
             <DropdownMenu>
               <DropdownMenuTrigger asChild>
@@ -298,7 +307,7 @@ const ViewProduct: React.FC = () => {
             </div>
             <div>
               <p className="text-xs text-muted-foreground">Category</p>
-              <p className="font-medium capitalize">{product.category}</p>
+              <p className="font-medium">{CATEGORY_LABELS[product.category as Category] ?? product.category}</p>
             </div>
             <div>
               <p className="text-xs text-muted-foreground">Supplier</p>
@@ -308,22 +317,28 @@ const ViewProduct: React.FC = () => {
               <p className="text-xs text-muted-foreground">Unit Price</p>
               <p className="font-medium">₱ {product.unitPrice.toFixed(2)}</p>
             </div>
-            <div>
-              <p className="text-xs text-muted-foreground">Quantity</p>
-              <p className="font-medium">{product.quantity}</p>
-            </div>
+            {!isService && (
+              <div>
+                <p className="text-xs text-muted-foreground">Quantity</p>
+                <p className="font-medium">{product.quantity}</p>
+              </div>
+            )}
             <div>
               <p className="text-xs text-muted-foreground">Created</p>
               <p className="font-medium">{formatDate(product.createdAt)}</p>
             </div>
-            <div>
-              <p className="text-xs text-muted-foreground">Low Stock Threshold</p>
-              <p className="font-medium">{product.lowLevelThreshold}</p>
-            </div>
-            <div>
-              <p className="text-xs text-muted-foreground">Overstock Threshold</p>
-              <p className="font-medium">{product.overstockedThreshold}</p>
-            </div>
+            {!isService && (
+              <div>
+                <p className="text-xs text-muted-foreground">Low Stock Threshold</p>
+                <p className="font-medium">{product.lowLevelThreshold}</p>
+              </div>
+            )}
+            {!isService && (
+              <div>
+                <p className="text-xs text-muted-foreground">Overstock Threshold</p>
+                <p className="font-medium">{product.overstockedThreshold}</p>
+              </div>
+            )}
           </div>
         </CardContent>
       </Card>

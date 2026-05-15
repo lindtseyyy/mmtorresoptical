@@ -30,7 +30,8 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
 } from "@/shared/components/ui/alert-dialog";
-import type { Product } from "@/features/inventory/types";
+import type { Product, Category } from "@/features/inventory/types";
+import { CATEGORY_LABELS } from "@/features/inventory/types";
 import {
   createArchiveProductMutationOptions,
   createRestoreProductMutationOptions,
@@ -110,6 +111,9 @@ const ManageInventory: React.FC = () => {
 
   // Helper function from your reference
   const getStockStatus = (product: Product) => {
+    if (product.productType === "SERVICE") {
+      return { label: "Service", variant: "default" as const };
+    }
     if (product.quantity <= product.lowLevelThreshold) {
       return { label: "Low Stock", variant: "destructive" as const };
     } else if (product.quantity >= product.overstockedThreshold) {
@@ -130,7 +134,7 @@ const ManageInventory: React.FC = () => {
         {/* Updated Button to navigate */}
         <Button onClick={() => navigate("/inventory/add")}>
           <Plus className="mr-2 h-4 w-4" />
-          Add Product
+          Add Item to Catalog
         </Button>
       </div>
 
@@ -280,6 +284,8 @@ const ManageInventory: React.FC = () => {
                     <SelectItem value="prisms">Prisms</SelectItem>
                     <SelectItem value="eyedrop">Eyedrop</SelectItem>
                     <SelectItem value="sunglasses">Sunglasses</SelectItem>
+                    <SelectItem value="clinical_services">Clinical Services</SelectItem>
+                    <SelectItem value="lens_fitting">Lens Fitting</SelectItem>
                   </SelectContent>
                 </Select>
               </div>
@@ -341,21 +347,25 @@ const ManageInventory: React.FC = () => {
                               {product.productName}
                             </span>
                           </td>
-                          <td className="py-3 pr-4 capitalize">
-                            {product.category}
+                          <td className="py-3 pr-4">
+                            {CATEGORY_LABELS[product.category as Category] ?? product.category}
                           </td>
                           <td className="py-3 pr-4 text-center">
-                            <Badge
-                              className={`text-white ${
-                                stockStatus.variant === "destructive"
-                                  ? "bg-red-700 hover:bg-red-700"
-                                  : stockStatus.variant === "secondary"
-                                    ? "bg-yellow-700 hover:bg-yellow-700"
-                                    : "bg-green-700 hover:bg-green-700"
-                              }`}
-                            >
-                              {product.quantity}
-                            </Badge>
+                            {product.productType === "SERVICE" ? (
+                              <span className="text-muted-foreground">—</span>
+                            ) : (
+                              <Badge
+                                className={`text-white ${
+                                  stockStatus.variant === "destructive"
+                                    ? "bg-red-700 hover:bg-red-700"
+                                    : stockStatus.variant === "secondary"
+                                      ? "bg-yellow-700 hover:bg-yellow-700"
+                                      : "bg-green-700 hover:bg-green-700"
+                                }`}
+                              >
+                                {product.quantity}
+                              </Badge>
+                            )}
                           </td>
                           <td className="py-3 pr-4 text-center">
                             ₱{product.unitPrice.toFixed(2)}

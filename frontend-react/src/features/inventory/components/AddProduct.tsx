@@ -19,9 +19,9 @@ const AddProduct: React.FC = () => {
   return (
     <div className="mx-auto max-w-2xl space-y-6">
       <div>
-        <h2 className="text-3xl font-bold">Add New Product</h2>
+        <h2 className="text-3xl font-bold">Add New Item to Catalog</h2>
         <p className="text-muted-foreground">
-          Enter product details to add to inventory
+          Enter item details to add to inventory
         </p>
       </div>
       <ProductForm

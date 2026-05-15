@@ -21,11 +21,17 @@ import { Button } from "@/shared/components/ui/button";
 import {
   Card,
   CardContent,
-  CardDescription,
-  CardHeader,
-  CardTitle,
 } from "@/shared/components/ui/card";
-import { productSchema, productFormSchema, type ProductFormData, type ProductFormValues } from "@/features/inventory/types";
+import {
+  productSchema,
+  productFormSchema,
+  PHYSICAL_CATEGORIES,
+  SERVICE_CATEGORIES,
+  CATEGORY_LABELS,
+  type ProductFormData,
+  type ProductFormValues,
+  type Category,
+} from "@/features/inventory/types";
 
 interface ProductFormProps {
   defaultValues?: ProductFormData;
@@ -37,26 +43,39 @@ interface ProductFormProps {
 const DECIMAL_INPUT_REGEX = /^\d*(?:\.\d*)?$/;
 const INTEGER_INPUT_REGEX = /^\d*$/;
 
-const mapToFormValues = (values?: ProductFormData): ProductFormValues => ({
-  productName: values?.productName ?? "",
-  category: values?.category ?? "eyeglasses",
-  supplier: values?.supplier ?? "",
-  productType: values?.productType ?? "PHYSICAL",
-  unitPrice:
-    values && values.unitPrice !== undefined ? String(values.unitPrice) : "",
-  quantity:
-    values && values.quantity !== undefined ? String(values.quantity) : "",
-  lowLevelThreshold:
-    values && values.lowLevelThreshold !== undefined
-      ? String(values.lowLevelThreshold)
-      : "",
-  overstockedThreshold:
-    values && values.overstockedThreshold !== undefined
-      ? String(values.overstockedThreshold)
-      : "",
-  imageDir: values?.imageDir ?? "",
-  isArchived: values?.isArchived ?? false,
-});
+const mapToFormValues = (values?: ProductFormData): ProductFormValues => {
+  const productType = values?.productType ?? "PHYSICAL";
+  const isService = productType === "SERVICE";
+
+  return {
+    productName: values?.productName ?? "",
+    category: values?.category ?? (isService ? "clinical_services" : "eyeglasses"),
+    supplier: isService ? "" : (values?.supplier ?? ""),
+    productType,
+    unitPrice:
+      values && values.unitPrice !== undefined ? String(values.unitPrice) : "",
+    quantity:
+      isService
+        ? ""
+        : values && values.quantity !== undefined && values.quantity >= 0
+          ? String(values.quantity)
+          : "",
+    lowLevelThreshold:
+      isService
+        ? ""
+        : values && values.lowLevelThreshold !== undefined && values.lowLevelThreshold !== 0
+          ? String(values.lowLevelThreshold)
+          : "",
+    overstockedThreshold:
+      isService
+        ? ""
+        : values && values.overstockedThreshold !== undefined && values.overstockedThreshold !== 0
+          ? String(values.overstockedThreshold)
+          : "",
+    imageDir: values?.imageDir ?? "",
+    isArchived: values?.isArchived ?? false,
+  };
+};
 
 export const ProductForm: React.FC<ProductFormProps> = ({
   onFormSubmit,
@@ -83,7 +102,27 @@ export const ProductForm: React.FC<ProductFormProps> = ({
     form.reset(initialFormValues);
   }, [initialFormValues, form]);
 
+  // Reset category to a valid option when product type changes
+  useEffect(() => {
+    const currentCategory = form.getValues("category");
+    const validCategories = isService ? SERVICE_CATEGORIES : PHYSICAL_CATEGORIES;
+    if (!(validCategories as readonly string[]).includes(currentCategory)) {
+      form.setValue(
+        "category",
+        isService ? "clinical_services" : "eyeglasses",
+        { shouldValidate: false }
+      );
+    }
+  }, [isService, form]);
+
   const handleSubmit = form.handleSubmit(async (values) => {
+    // Clear PHYSICAL-only fields for services so the transform receives clean values
+    if (values.productType === "SERVICE") {
+      values.supplier = "";
+      values.quantity = "";
+      values.lowLevelThreshold = "";
+      values.overstockedThreshold = "";
+    }
     const payload = productSchema.parse(values);
     await onFormSubmit(payload);
   });
@@ -92,43 +131,72 @@ export const ProductForm: React.FC<ProductFormProps> = ({
     <FormProvider {...form}>
       <form onSubmit={handleSubmit}>
         <Card>
-          <CardHeader>
-            <CardTitle>
-              {isEditMode ? "Edit Product" : "Product Information"}
-            </CardTitle>
-            <CardDescription>Fill in all required fields</CardDescription>
-          </CardHeader>
-          <CardContent className="space-y-4">
-            <div className="grid gap-4 md:grid-cols-2">
+          <CardContent className="space-y-4 pt-6">
+            <FormField
+              control={form.control}
+              name="productType"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel className="font-semibold">Item Type</FormLabel>
+                  <Select
+                    value={field.value}
+                    onValueChange={(value) => {
+                      field.onChange(value);
+                      field.onBlur();
+                    }}
+                  >
+                    <FormControl>
+                      <SelectTrigger>
+                        <SelectValue placeholder="Select item type" />
+                      </SelectTrigger>
+                    </FormControl>
+                    <SelectContent>
+                      <SelectItem value="PHYSICAL">Physical (Inventory)</SelectItem>
+                      <SelectItem value="SERVICE">Service</SelectItem>
+                    </SelectContent>
+                  </Select>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+
+            <div className={isService ? "" : "grid gap-4 md:grid-cols-2"}>
               <FormField
                 control={form.control}
                 name="productName"
                 render={({ field }) => (
                   <FormItem>
                     <FormLabel className="font-semibold">
-                      Product Name
+                      {isService ? "Service Name" : "Product Name"}
                     </FormLabel>
                     <FormControl>
-                      <Input placeholder="Enter product name" {...field} />
+                      <Input
+                        placeholder={
+                          isService ? "Enter service name" : "Enter product name"
+                        }
+                        {...field}
+                      />
                     </FormControl>
                     <FormMessage />
                   </FormItem>
                 )}
               />
 
-              <FormField
-                control={form.control}
-                name="supplier"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel className="font-semibold">Supplier</FormLabel>
-                    <FormControl>
-                      <Input placeholder="Enter supplier name" {...field} />
-                    </FormControl>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
+              {!isService && (
+                <FormField
+                  control={form.control}
+                  name="supplier"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel className="font-semibold">Supplier</FormLabel>
+                      <FormControl>
+                        <Input placeholder="Enter supplier name" {...field} />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+              )}
             </div>
 
             <FormField
@@ -150,41 +218,13 @@ export const ProductForm: React.FC<ProductFormProps> = ({
                       </SelectTrigger>
                     </FormControl>
                     <SelectContent>
-                      <SelectItem value="eyeglasses">Eyeglasses</SelectItem>
-                      <SelectItem value="frames">Frames</SelectItem>
-                      <SelectItem value="lens">Lens</SelectItem>
-                      <SelectItem value="goggles">Goggles</SelectItem>
-                      <SelectItem value="prisms">Prisms</SelectItem>
-                      <SelectItem value="eyedrop">Eyedrop</SelectItem>
-                      <SelectItem value="sunglasses">Sunglasses</SelectItem>
-                    </SelectContent>
-                  </Select>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
-
-            <FormField
-              control={form.control}
-              name="productType"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel className="font-semibold">Product Type</FormLabel>
-                  <Select
-                    value={field.value}
-                    onValueChange={(value) => {
-                      field.onChange(value);
-                      field.onBlur();
-                    }}
-                  >
-                    <FormControl>
-                      <SelectTrigger>
-                        <SelectValue placeholder="Select product type" />
-                      </SelectTrigger>
-                    </FormControl>
-                    <SelectContent>
-                      <SelectItem value="PHYSICAL">Physical (Inventory)</SelectItem>
-                      <SelectItem value="SERVICE">Service (e.g., Eye Exam)</SelectItem>
+                      {(isService ? SERVICE_CATEGORIES : PHYSICAL_CATEGORIES).map(
+                        (cat) => (
+                          <SelectItem key={cat} value={cat}>
+                            {CATEGORY_LABELS[cat as Category]}
+                          </SelectItem>
+                        )
+                      )}
                     </SelectContent>
                   </Select>
                   <FormMessage />
@@ -223,11 +263,7 @@ export const ProductForm: React.FC<ProductFormProps> = ({
                 )}
               />
 
-              {isService ? (
-                <div className="flex items-center text-sm text-muted-foreground h-10">
-                  Quantity is not tracked for services.
-                </div>
-              ) : (
+              {!isService && (
                 <FormField
                   control={form.control}
                   name="quantity"
@@ -327,8 +363,8 @@ export const ProductForm: React.FC<ProductFormProps> = ({
                 {isLoading
                   ? "Saving..."
                   : isEditMode
-                  ? "Update Product"
-                  : "Add Product"}
+                  ? "Update Item"
+                  : "Add Item"}
               </Button>
               <Button
                 type="button"

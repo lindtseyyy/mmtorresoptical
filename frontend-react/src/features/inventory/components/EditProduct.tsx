@@ -38,6 +38,7 @@ const EditProduct: React.FC = () => {
         productName: product.productName,
         category: product.category as ProductFormData["category"],
         supplier: product.supplier,
+        productType: product.productType as ProductFormData["productType"],
         unitPrice: product.unitPrice,
         quantity: product.quantity,
         lowLevelThreshold: product.lowLevelThreshold,
@@ -51,7 +52,7 @@ const EditProduct: React.FC = () => {
     <div className="mx-auto max-w-2xl space-y-6">
       <div>
         <h2 className="text-3xl font-bold">Edit Product</h2>
-        <p className="text-muted-foreground">Update product details</p>
+        <p className="text-muted-foreground">Update item details</p>
       </div>
       <ProductForm
         onFormSubmit={handleFormSubmit}

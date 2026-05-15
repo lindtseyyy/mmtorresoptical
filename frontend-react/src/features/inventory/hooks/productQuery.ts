@@ -34,14 +34,14 @@ function createAddProductMutationOptions(queryClient: any, navigate: NavigateFun
         onSuccess: () => {
           // Invalidate the "products" query to refetch new data
           queryClient.invalidateQueries({ queryKey: ["products"] });
-          toast.success("Product Added", {
-            description: "The product has been successfully added to inventory.",
+          toast.success("Item Added", {
+            description: "The item has been successfully added to inventory.",
           });
           navigate("/inventory");
         },
         onError: (error: any) => {
           toast.error("Error", {
-            description: "Failed to add product. Please try again.",
+            description: "Failed to add item. Please try again.",
           });
           console.error(error);
         },
