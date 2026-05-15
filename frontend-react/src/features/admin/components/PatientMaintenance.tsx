@@ -270,7 +270,8 @@ const PatientMaintenance: React.FC = () => {
                         <td className="py-3 pr-4 text-center text-muted-foreground">
                           {formatDate(patient.birthDate)}
                         </td>
-                        <td className="py-3 pl-4 text-center">
+                        <td className="py-3">
+                          <div className="flex justify-center">
                           <Button
                             variant={patient.isArchived ? "default" : "outline"}
                             size="sm"
@@ -294,6 +295,7 @@ const PatientMaintenance: React.FC = () => {
                               </>
                             )}
                           </Button>
+                          </div>
                         </td>
                       </tr>
                     ))}
