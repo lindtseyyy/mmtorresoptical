@@ -95,15 +95,22 @@ public class ProductSpecification {
             }
             String upper = stockStatus.toUpperCase();
             if ("LOW_STOCK".equals(upper)) {
-                return cb.lessThanOrEqualTo(
-                    cb.diff(root.get("quantity"), root.get("lowLevelThreshold")), 0);
+                return cb.and(
+                    cb.notEqual(root.get("productType"), "SERVICE"),
+                    cb.lessThanOrEqualTo(
+                        cb.diff(root.get("quantity"), root.get("lowLevelThreshold")), 0)
+                );
             }
             if ("OVERSTOCKED".equals(upper)) {
-                return cb.greaterThanOrEqualTo(
-                    cb.diff(root.get("quantity"), root.get("overstockedThreshold")), 0);
+                return cb.and(
+                    cb.notEqual(root.get("productType"), "SERVICE"),
+                    cb.greaterThanOrEqualTo(
+                        cb.diff(root.get("quantity"), root.get("overstockedThreshold")), 0)
+                );
             }
             if ("NORMAL".equals(upper)) {
                 return cb.and(
+                    cb.notEqual(root.get("productType"), "SERVICE"),
                     cb.greaterThan(cb.diff(root.get("quantity"), root.get("lowLevelThreshold")), 0),
                     cb.lessThan(cb.diff(root.get("quantity"), root.get("overstockedThreshold")), 0)
                 );
