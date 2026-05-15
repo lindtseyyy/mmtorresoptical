@@ -14,8 +14,8 @@ interface PaymentSectionProps {
 }
 
 export interface PaymentData {
-  paymentType: "CASH" | "GCASH";
-  cashTender?: number;
+  paymentMethod: "CASH" | "GCASH";
+  amountTendered: number;
   referenceNumber?: string;
 }
 
