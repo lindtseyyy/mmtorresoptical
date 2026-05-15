@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { X, Banknote, Smartphone, CreditCard, Loader2, Receipt } from "lucide-react";
+import { X, Banknote, Smartphone, Loader2, AlertTriangle, CreditCard } from "lucide-react";
 import { Button } from "@/shared/components/ui/button";
 import { Input } from "@/shared/components/ui/input";
 import { Label } from "@/shared/components/ui/label";
@@ -24,35 +24,43 @@ const PaymentDrawer: React.FC<PaymentDrawerProps> = ({
   onComplete,
   pending,
 }) => {
-  const [paymentType, setPaymentType] = useState<"CASH" | "GCASH">("CASH");
-  const [cashTender, setCashTender] = useState("");
+  const [paymentMethod, setPaymentMethod] = useState<"CASH" | "GCASH">("CASH");
+  const [amountTenderedStr, setAmountTenderedStr] = useState("");
   const [referenceNumber, setReferenceNumber] = useState("");
 
-  const cashTenderAmount = parseFloat(cashTender) || 0;
-  const change = cashTenderAmount - grandTotal;
+  const isGcash = paymentMethod === "GCASH";
+  const amountTendered = Math.min(parseFloat(amountTenderedStr) || 0, isGcash ? grandTotal : Infinity);
+  const remainingBalance = Math.max(0, grandTotal - amountTendered);
+  const isPartial = amountTendered > 0 && amountTendered < grandTotal;
+  const isFullPayment = amountTendered >= grandTotal;
+  const isNoPayment = amountTendered === 0;
+
   const canComplete =
     items.length > 0 &&
     !pending &&
-    (paymentType === "GCASH"
-      ? referenceNumber.trim().length > 0
-      : cashTenderAmount >= grandTotal);
+    (paymentMethod === "GCASH"
+      ? isNoPayment || referenceNumber.trim().length > 0
+      : true);
 
   const handleComplete = () => {
-    if (paymentType === "CASH" && cashTenderAmount < grandTotal) {
-      toast.error("Insufficient cash tender");
-      return;
-    }
-    if (paymentType === "GCASH" && !referenceNumber.trim()) {
-      toast.error("Reference number is required for GCash");
+    if (paymentMethod === "GCASH" && amountTendered > 0 && !referenceNumber.trim()) {
+      toast.error("Reference number is required for GCash payment");
       return;
     }
     onComplete({
-      paymentType,
-      ...(paymentType === "CASH" && { cashTender: cashTenderAmount }),
-      ...(paymentType === "GCASH" && {
+      paymentMethod,
+      amountTendered,
+      ...(paymentMethod === "GCASH" && {
         referenceNumber: referenceNumber.trim(),
       }),
     });
+  };
+
+  const getButtonLabel = () => {
+    if (pending) return "Processing...";
+    if (isNoPayment) return `Create Pending Order (₱${grandTotal.toFixed(2)})`;
+    if (isPartial) return `Pay ₱${amountTendered.toFixed(2)} — ₱${remainingBalance.toFixed(2)} Remaining`;
+    return `Pay in Full — ₱${grandTotal.toFixed(2)}`;
   };
 
   if (!open) return null;
@@ -113,9 +121,16 @@ const PaymentDrawer: React.FC<PaymentDrawerProps> = ({
                     return (
                       <tr key={item.uid} className="border-b border-muted-foreground/20 last:border-b-0">
                         <td className="py-1.5 pl-2.5">
-                          <p className="font-medium text-card-foreground leading-tight">
-                            {item.product.productName}
-                          </p>
+                          <div className="flex items-center gap-1">
+                            <p className="font-medium text-card-foreground leading-tight">
+                              {item.product.productName}
+                            </p>
+                            {item.product.productType === "SERVICE" && (
+                              <span className="text-[9px] bg-blue-600 text-white px-1 py-px rounded">
+                                SVC
+                              </span>
+                            )}
+                          </div>
                           {item.isDiscounted && (
                             <span className="text-[10px] text-green-600">
                               {item.discountType === "PERCENT"
@@ -184,9 +199,9 @@ const PaymentDrawer: React.FC<PaymentDrawerProps> = ({
             <div className="grid grid-cols-2 gap-2 mb-3">
               <button
                 type="button"
-                onClick={() => setPaymentType("CASH")}
+                onClick={() => setPaymentMethod("CASH")}
                 className={`flex items-center justify-center gap-2 rounded-lg border p-2.5 text-sm font-medium transition-colors cursor-pointer ${
-                  paymentType === "CASH"
+                  paymentMethod === "CASH"
                     ? "border-primary bg-primary/10 text-primary"
                     : "border-border bg-card text-muted-foreground hover:border-primary/50"
                 }`}
@@ -196,9 +211,9 @@ const PaymentDrawer: React.FC<PaymentDrawerProps> = ({
               </button>
               <button
                 type="button"
-                onClick={() => setPaymentType("GCASH")}
+                onClick={() => setPaymentMethod("GCASH")}
                 className={`flex items-center justify-center gap-2 rounded-lg border p-2.5 text-sm font-medium transition-colors cursor-pointer ${
-                  paymentType === "GCASH"
+                  paymentMethod === "GCASH"
                     ? "border-primary bg-primary/10 text-primary"
                     : "border-border bg-card text-muted-foreground hover:border-primary/50"
                 }`}
@@ -208,45 +223,81 @@ const PaymentDrawer: React.FC<PaymentDrawerProps> = ({
               </button>
             </div>
 
-            {paymentType === "CASH" && (
-              <div className="space-y-2 rounded-lg border border-border bg-background/50 p-3">
-                <div className="space-y-1.5">
-                  <Label className="text-xs text-muted-foreground">
-                    Cash Tender
-                  </Label>
-                  <div className="relative">
-                    <span className="absolute left-2.5 top-1/2 -translate-y-1/2 text-sm text-muted-foreground">
-                      ₱
-                    </span>
-                    <Input
-                      type="number"
-                      min="0"
-                      step="0.01"
-                      value={cashTender}
-                      onChange={(e) => setCashTender(e.target.value)}
-                      placeholder="0.00"
-                      className="pl-7"
-                      disabled={pending}
-                    />
-                  </div>
+            {/* Amount Tendered (always shown) */}
+            <div className="space-y-2 rounded-lg border border-border bg-background/50 p-3 mb-3">
+              <div className="space-y-1.5">
+                <Label className="text-xs text-muted-foreground">
+                  Amount Tendered
+                </Label>
+                <div className="relative">
+                  <span className="absolute left-2.5 top-1/2 -translate-y-1/2 text-sm text-muted-foreground">
+                    ₱
+                  </span>
+                  <Input
+                    type="number"
+                    min="0"
+                    max={isGcash ? grandTotal : undefined}
+                    step="0.01"
+                    value={amountTenderedStr}
+                    onChange={(e) => {
+                      let val = e.target.value;
+                      if (isGcash && parseFloat(val) > grandTotal) {
+                        val = grandTotal.toFixed(2);
+                      }
+                      setAmountTenderedStr(val);
+                    }}
+                    placeholder="0.00"
+                    className="pl-7"
+                    disabled={pending}
+                  />
                 </div>
-                {cashTenderAmount > 0 && change >= 0 && (
-                  <div className="flex justify-between rounded-md bg-green-50 p-2 text-sm dark:bg-green-950">
-                    <span className="text-green-700 dark:text-green-300">Change</span>
-                    <span className="font-bold tabular-nums text-green-700 dark:text-green-300">
-                      ₱{change.toFixed(2)}
-                    </span>
-                  </div>
-                )}
-                {cashTenderAmount > 0 && change < 0 && (
-                  <p className="text-xs text-destructive">
-                    Insufficient. Need at least ₱{grandTotal.toFixed(2)}
-                  </p>
-                )}
               </div>
-            )}
 
-            {paymentType === "GCASH" && (
+              {/* Live remaining balance */}
+              {!isNoPayment && (remainingBalance > 0 || (!isGcash && amountTendered > grandTotal)) && (
+                <div className={`flex justify-between rounded-md p-2 text-sm ${
+                  isFullPayment && !isGcash
+                    ? "bg-green-50 dark:bg-green-950"
+                    : isFullPayment && isGcash
+                    ? "bg-green-50 dark:bg-green-950"
+                    : "bg-amber-50 dark:bg-amber-950"
+                }`}>
+                  <span className={
+                    isFullPayment
+                      ? "text-green-700 dark:text-green-300"
+                      : "text-amber-700 dark:text-amber-300"
+                  }>
+                    {isFullPayment && !isGcash ? "Change" : isFullPayment ? "Full Payment" : "Remaining Balance"}
+                  </span>
+                  <span className={`font-bold tabular-nums ${
+                    isFullPayment
+                      ? "text-green-700 dark:text-green-300"
+                      : "text-amber-700 dark:text-amber-300"
+                  }`}>
+                    ₱{isFullPayment && !isGcash
+                      ? (amountTendered - grandTotal).toFixed(2)
+                      : remainingBalance.toFixed(2)}
+                  </span>
+                </div>
+              )}
+
+              {isPartial && (
+                <div className="flex items-center gap-1.5 text-xs text-amber-600">
+                  <AlertTriangle className="h-3.5 w-3.5" />
+                  Partial payment — ₱{remainingBalance.toFixed(2)} will remain as balance due.
+                </div>
+              )}
+
+              {isNoPayment && (
+                <div className="flex items-center gap-1.5 text-xs text-muted-foreground">
+                  <AlertTriangle className="h-3.5 w-3.5" />
+                  No payment now — order will be created as PENDING.
+                </div>
+              )}
+            </div>
+
+            {/* GCash reference (only when paying) */}
+            {paymentMethod === "GCASH" && amountTendered > 0 && (
               <div className="space-y-2 rounded-lg border border-border bg-background/50 p-3">
                 <div className="space-y-1.5">
                   <Label className="text-xs text-muted-foreground">
@@ -281,7 +332,7 @@ const PaymentDrawer: React.FC<PaymentDrawerProps> = ({
             ) : (
               <>
                 <CreditCard className="h-4 w-4" />
-                Pay ₱{grandTotal.toFixed(2)}
+                {getButtonLabel()}
               </>
             )}
           </Button>

@@ -27,7 +27,8 @@ const ReceiptDialog: React.FC<ReceiptDialogProps> = ({ receipt, onClose }) => {
     second: "2-digit",
   });
 
-  const paymentLabel = receipt.paymentType === "CASH" ? "Cash" : "GCash";
+  const isPending = receipt.transactionStatus === "PENDING";
+  const documentTitle = isPending ? "INVOICE" : "OFFICIAL RECEIPT";
 
   const subtotal = receipt.transactionItems.reduce(
     (sum, i) => sum + i.unitPrice * i.quantity,
@@ -49,6 +50,9 @@ const ReceiptDialog: React.FC<ReceiptDialogProps> = ({ receipt, onClose }) => {
 
         {/* ---- Header ---- */}
         <div className="text-center mb-4">
+          <h2 className="text-xs font-bold tracking-wide uppercase text-muted-foreground mb-1">
+            {documentTitle}
+          </h2>
           <h2 className="text-sm font-bold tracking-wide uppercase">
             {BUSINESS_NAME}
           </h2>
@@ -70,6 +74,15 @@ const ReceiptDialog: React.FC<ReceiptDialogProps> = ({ receipt, onClose }) => {
           <div className="flex justify-between">
             <span className="text-muted-foreground">Receipt #</span>
             <span className="font-semibold">{receipt.transactionNumber}</span>
+          </div>
+          <div className="flex justify-between">
+            <span className="text-muted-foreground">Status</span>
+            <span className={`text-[10px] font-bold px-2 py-0.5 rounded ${
+              receipt.transactionStatus === "PAID" ? "bg-green-100 text-green-700 dark:bg-green-950 dark:text-green-300" :
+              receipt.transactionStatus === "PARTIALLY_PAID" ? "bg-amber-100 text-amber-700 dark:bg-amber-950 dark:text-amber-300" :
+              receipt.transactionStatus === "PENDING" ? "bg-yellow-100 text-yellow-700 dark:bg-yellow-950 dark:text-yellow-300" :
+              "bg-blue-100 text-blue-700 dark:bg-blue-950 dark:text-blue-300"
+            }`}>{receipt.transactionStatus.replace(/_/g, " ")}</span>
           </div>
           <div className="flex justify-between">
             <span className="text-muted-foreground">Date</span>
@@ -102,6 +115,7 @@ const ReceiptDialog: React.FC<ReceiptDialogProps> = ({ receipt, onClose }) => {
           <thead>
             <tr className="border-b border-border">
               <th className="text-left font-semibold pb-1">Item</th>
+              <th className="text-center font-semibold pb-1 w-8">Type</th>
               <th className="text-center font-semibold pb-1 w-10">Qty</th>
               <th className="text-right font-semibold pb-1 w-18">Price</th>
               <th className="text-right font-semibold pb-1 w-20">Total</th>
@@ -123,6 +137,11 @@ const ReceiptDialog: React.FC<ReceiptDialogProps> = ({ receipt, onClose }) => {
                       </span>
                     </>
                   )}
+                </td>
+                <td className="py-1 text-center align-top text-[11px]">
+                  <span className={item.product?.productType === "SERVICE" ? "text-blue-600" : "text-muted-foreground"}>
+                    {item.product?.productType === "SERVICE" ? "SVC" : "PHY"}
+                  </span>
                 </td>
                 <td className="py-1 text-center align-top text-muted-foreground">
                   {item.quantity}
@@ -159,40 +178,49 @@ const ReceiptDialog: React.FC<ReceiptDialogProps> = ({ receipt, onClose }) => {
           )}
 
           <div className="flex justify-between font-bold text-sm border-t border-border pt-1 mt-1">
-            <span>TOTAL DUE</span>
+            <span>TOTAL</span>
             <span className="tabular-nums">{format(receipt.totalAmount)}</span>
           </div>
         </div>
 
         {/* ---- Payment Information ---- */}
-        <div className="rounded-sm bg-muted/50 px-2 py-1.5 mb-3">
-          <div className="flex justify-between">
-            <span>Payment</span>
-            <span>{paymentLabel}</span>
-          </div>
-
-          {receipt.paymentType === "CASH" && (
-            <>
-              <div className="flex justify-between text-muted-foreground">
-                <span>Tendered</span>
-                <span className="tabular-nums">{format(receipt.cashTender)}</span>
-              </div>
-              <div className="flex justify-between font-semibold text-green-600">
-                <span>Change</span>
-                <span className="tabular-nums">{format(receipt.change)}</span>
-              </div>
-            </>
-          )}
-
-          {receipt.paymentType !== "CASH" && receipt.referenceNumber && (
-            <div className="flex justify-between text-muted-foreground">
-              <span>Ref #</span>
-              <span>{receipt.referenceNumber}</span>
+        {!isPending && (
+          <div className="rounded-sm bg-muted/50 px-2 py-1.5 mb-3">
+            <div className="flex justify-between font-semibold">
+              <span>Amount Paid</span>
+              <span className="tabular-nums">{format(receipt.amountPaid ?? 0)}</span>
             </div>
-          )}
-        </div>
 
-        <hr className="border-dashed border-border mb-3" />
+            {(receipt.balanceDue ?? 0) > 0 && (
+              <div className="flex justify-between text-amber-600 font-semibold mt-0.5">
+                <span>Remaining Balance</span>
+                <span className="tabular-nums">{format(receipt.balanceDue ?? 0)}</span>
+              </div>
+            )}
+
+            {/* Payment History */}
+            {(receipt.payments?.length ?? 0) > 0 && (
+              <>
+                <hr className="border-dashed border-border my-1.5" />
+                <div className="text-[10px] text-muted-foreground space-y-0.5">
+                  {receipt.payments.map((p) => (
+                    <div key={p.id} className="flex justify-between">
+                      <span>{p.paymentMethod} {p.referenceNumber ? `(#${p.referenceNumber})` : ""}</span>
+                      <span className="tabular-nums">{format(p.amount)}</span>
+                    </div>
+                  ))}
+                </div>
+              </>
+            )}
+          </div>
+        )}
+
+        {/* For PENDING, show total due only */}
+        {isPending && (
+          <div className="rounded-sm bg-muted/50 px-2 py-1.5 mb-3 text-center text-muted-foreground text-[10px]">
+            No payment received yet. Balance due: ₱{format(receipt.totalAmount)}
+          </div>
+        )}
 
         {/* ---- Footer ---- */}
         <div className="text-center text-[10px] text-muted-foreground space-y-1">

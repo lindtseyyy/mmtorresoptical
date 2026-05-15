@@ -2,6 +2,7 @@ import { useState, useRef, useEffect } from "react";
 import { Minus, Plus, Trash2, Tag, Receipt, X, CreditCard } from "lucide-react";
 import { toast } from "sonner";
 import { Button } from "@/shared/components/ui/button";
+import { Badge } from "@/shared/components/ui/badge";
 import { Input } from "@/shared/components/ui/input";
 import type { CartItem } from "@/features/sales/types";
 
@@ -122,13 +123,16 @@ const BillingEntry: React.FC<{
   const handleQtyChange = () => {
     const parsed = parseInt(qtyInput, 10);
     if (!isNaN(parsed) && parsed >= 1) {
-      const clamped = Math.min(parsed, item.product.quantity);
+      const max = item.product.productType === "SERVICE" ? parsed : item.product.quantity;
+      const clamped = Math.min(parsed, max);
       onUpdateQuantity(item.uid, clamped);
       setQtyInput(String(clamped));
     } else {
       setQtyInput(String(item.quantity));
     }
   };
+
+  const isService = item.product.productType === "SERVICE";
 
   let discountedSubtotal = itemSubtotal;
   if (item.isDiscounted && item.discountType && item.discountValue) {
@@ -165,9 +169,16 @@ const BillingEntry: React.FC<{
     <div className="rounded-lg border border-border/60 bg-muted/50 p-2.5">
       {/* Row 1: Product name (left) | Delete (right) */}
       <div className="flex items-start justify-between gap-2">
-        <p className="text-sm font-medium text-card-foreground leading-snug">
-          {item.product.productName}
-        </p>
+        <div className="flex items-center gap-1.5 min-w-0">
+          <p className="text-sm font-medium text-card-foreground leading-snug truncate">
+            {item.product.productName}
+          </p>
+          {isService && (
+            <Badge className="bg-blue-600 hover:bg-blue-600 text-white text-[10px] px-1 py-0 shrink-0">
+              Service
+            </Badge>
+          )}
+        </div>
         <Button
           variant="ghost"
           size="icon"
@@ -195,7 +206,7 @@ const BillingEntry: React.FC<{
             <input
               type="number"
               min="1"
-              max={item.product.quantity}
+              max={item.product.productType === "SERVICE" ? undefined : item.product.quantity}
               value={qtyInput}
               onChange={(e) => setQtyInput(e.target.value)}
               onBlur={handleQtyChange}
@@ -209,7 +220,7 @@ const BillingEntry: React.FC<{
               variant="outline"
               size="icon"
               className="h-6 w-6"
-              disabled={item.quantity >= item.product.quantity}
+              disabled={!isService && item.quantity >= item.product.quantity}
               onClick={() =>
                 onUpdateQuantity(item.uid, item.quantity + 1)
               }

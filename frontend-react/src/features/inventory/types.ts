@@ -33,6 +33,7 @@ export const productFormSchema = z
       "sunglasses",
     ]),
     supplier: z.string().min(1, "Required"),
+    productType: z.enum(["PHYSICAL", "SERVICE"]),
     unitPrice: decimalString("Unit price"),
     quantity: integerString("Quantity"),
     lowLevelThreshold: integerString("Low stock threshold"),
@@ -41,7 +42,7 @@ export const productFormSchema = z
     imageDir: z.string().optional(),
   })
   .refine(
-    (data) => Number(data.overstockedThreshold) > Number(data.lowLevelThreshold),
+    (data) => data.productType === "SERVICE" || Number(data.overstockedThreshold) > Number(data.lowLevelThreshold),
     {
       message: "Overstock threshold must be greater than low stock threshold",
       path: ["overstockedThreshold"],
@@ -66,6 +67,7 @@ export interface Product {
   supplier: string;
   unitPrice: number;
   quantity: number;
+  productType: "PHYSICAL" | "SERVICE";
   lowLevelThreshold: number;
   overstockedThreshold: number;
   isArchived: boolean;

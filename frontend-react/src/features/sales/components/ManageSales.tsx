@@ -78,11 +78,12 @@ const ManageSales: React.FC = () => {
 
   const addToCart = useCallback((product: Product) => {
     setCart((prev) => {
+      const isService = product.productType === "SERVICE";
       const undiscounted = prev.find(
         (i) => i.product.productId === product.productId && !i.isDiscounted
       );
       if (undiscounted) {
-        if (undiscounted.quantity >= product.quantity) return prev;
+        if (!isService && undiscounted.quantity >= product.quantity) return prev;
         return prev.map((i) =>
           i.product.productId === product.productId && !i.isDiscounted
             ? { ...i, quantity: i.quantity + 1 }
@@ -162,12 +163,10 @@ const ManageSales: React.FC = () => {
       }));
 
       const payload: TransactionRequest = {
-        paymentType: payment.paymentType,
+        amountTendered: payment.amountTendered,
+        paymentMethod: payment.paymentMethod,
         items,
-        ...(payment.paymentType === "CASH" && {
-          cashTender: payment.cashTender,
-        }),
-        ...(payment.paymentType === "GCASH" && {
+        ...(payment.referenceNumber && {
           referenceNumber: payment.referenceNumber,
         }),
       };

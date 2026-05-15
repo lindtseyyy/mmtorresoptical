@@ -41,6 +41,7 @@ const mapToFormValues = (values?: ProductFormData): ProductFormValues => ({
   productName: values?.productName ?? "",
   category: values?.category ?? "eyeglasses",
   supplier: values?.supplier ?? "",
+  productType: values?.productType ?? "PHYSICAL",
   unitPrice:
     values && values.unitPrice !== undefined ? String(values.unitPrice) : "",
   quantity:
@@ -74,6 +75,9 @@ export const ProductForm: React.FC<ProductFormProps> = ({
     resolver: zodResolver(productFormSchema),
     defaultValues: initialFormValues,
   });
+
+  const watchedProductType = form.watch("productType");
+  const isService = watchedProductType === "SERVICE";
 
   useEffect(() => {
     form.reset(initialFormValues);
@@ -160,6 +164,34 @@ export const ProductForm: React.FC<ProductFormProps> = ({
               )}
             />
 
+            <FormField
+              control={form.control}
+              name="productType"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel className="font-semibold">Product Type</FormLabel>
+                  <Select
+                    value={field.value}
+                    onValueChange={(value) => {
+                      field.onChange(value);
+                      field.onBlur();
+                    }}
+                  >
+                    <FormControl>
+                      <SelectTrigger>
+                        <SelectValue placeholder="Select product type" />
+                      </SelectTrigger>
+                    </FormControl>
+                    <SelectContent>
+                      <SelectItem value="PHYSICAL">Physical (Inventory)</SelectItem>
+                      <SelectItem value="SERVICE">Service (e.g., Eye Exam)</SelectItem>
+                    </SelectContent>
+                  </Select>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+
             <div className="grid gap-4 md:grid-cols-2">
               <FormField
                 control={form.control}
@@ -191,96 +223,104 @@ export const ProductForm: React.FC<ProductFormProps> = ({
                 )}
               />
 
-              <FormField
-                control={form.control}
-                name="quantity"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel className="font-semibold">Quantity</FormLabel>
-                    <FormControl>
-                      <Input
-                        type="text"
-                        inputMode="numeric"
-                        placeholder="Enter quantity"
-                        value={field.value ?? ""}
-                        name={field.name}
-                        ref={field.ref}
-                        onBlur={field.onBlur}
-                        onChange={(e) => {
-                          const value = e.target.value.trimStart();
-                          if (INTEGER_INPUT_REGEX.test(value)) {
-                            field.onChange(value);
-                          }
-                        }}
-                      />
-                    </FormControl>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
+              {isService ? (
+                <div className="flex items-center text-sm text-muted-foreground h-10">
+                  Quantity is not tracked for services.
+                </div>
+              ) : (
+                <FormField
+                  control={form.control}
+                  name="quantity"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel className="font-semibold">Quantity</FormLabel>
+                      <FormControl>
+                        <Input
+                          type="text"
+                          inputMode="numeric"
+                          placeholder="Enter quantity"
+                          value={field.value ?? ""}
+                          name={field.name}
+                          ref={field.ref}
+                          onBlur={field.onBlur}
+                          onChange={(e) => {
+                            const value = e.target.value.trimStart();
+                            if (INTEGER_INPUT_REGEX.test(value)) {
+                              field.onChange(value);
+                            }
+                          }}
+                        />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+              )}
             </div>
 
-            <div className="grid gap-4 md:grid-cols-2">
-              <FormField
-                control={form.control}
-                name="lowLevelThreshold"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel className="font-semibold">
-                      Low Stock Threshold
-                    </FormLabel>
-                    <FormControl>
-                      <Input
-                        type="text"
-                        inputMode="numeric"
-                        placeholder="Enter low stock threshold"
-                        value={field.value ?? ""}
-                        name={field.name}
-                        ref={field.ref}
-                        onBlur={field.onBlur}
-                        onChange={(e) => {
-                          const value = e.target.value.trimStart();
-                          if (INTEGER_INPUT_REGEX.test(value)) {
-                            field.onChange(value);
-                          }
-                        }}
-                      />
-                    </FormControl>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
+            {!isService && (
+              <div className="grid gap-4 md:grid-cols-2">
+                <FormField
+                  control={form.control}
+                  name="lowLevelThreshold"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel className="font-semibold">
+                        Low Stock Threshold
+                      </FormLabel>
+                      <FormControl>
+                        <Input
+                          type="text"
+                          inputMode="numeric"
+                          placeholder="Enter low stock threshold"
+                          value={field.value ?? ""}
+                          name={field.name}
+                          ref={field.ref}
+                          onBlur={field.onBlur}
+                          onChange={(e) => {
+                            const value = e.target.value.trimStart();
+                            if (INTEGER_INPUT_REGEX.test(value)) {
+                              field.onChange(value);
+                            }
+                          }}
+                        />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
 
-              <FormField
-                control={form.control}
-                name="overstockedThreshold"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel className="font-semibold">
-                      Overstock Threshold
-                    </FormLabel>
-                    <FormControl>
-                      <Input
-                        type="text"
-                        inputMode="numeric"
-                        placeholder="Enter overstock threshold"
-                        value={field.value ?? ""}
-                        name={field.name}
-                        ref={field.ref}
-                        onBlur={field.onBlur}
-                        onChange={(e) => {
-                          const value = e.target.value.trimStart();
-                          if (INTEGER_INPUT_REGEX.test(value)) {
-                            field.onChange(value);
-                          }
-                        }}
-                      />
-                    </FormControl>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
-            </div>
+                <FormField
+                  control={form.control}
+                  name="overstockedThreshold"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel className="font-semibold">
+                        Overstock Threshold
+                      </FormLabel>
+                      <FormControl>
+                        <Input
+                          type="text"
+                          inputMode="numeric"
+                          placeholder="Enter overstock threshold"
+                          value={field.value ?? ""}
+                          name={field.name}
+                          ref={field.ref}
+                          onBlur={field.onBlur}
+                          onChange={(e) => {
+                            const value = e.target.value.trimStart();
+                            if (INTEGER_INPUT_REGEX.test(value)) {
+                              field.onChange(value);
+                            }
+                          }}
+                        />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+              </div>
+            )}
 
             <div className="flex gap-2 pt-4">
               <Button type="submit" disabled={isLoading}>

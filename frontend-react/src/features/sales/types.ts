@@ -11,8 +11,8 @@ export interface CartItem {
 
 export interface TransactionRequest {
   patientId?: string;
-  paymentType: "CASH" | "GCASH";
-  cashTender?: number;
+  amountTendered?: number;
+  paymentMethod?: "CASH" | "GCASH";
   referenceNumber?: string;
   items: {
     productId: string;
@@ -21,6 +21,21 @@ export interface TransactionRequest {
     discountValue?: number;
     isDiscounted: boolean;
   }[];
+}
+
+export interface PaymentResponse {
+  id: string;
+  amount: number;
+  paymentMethod: string;
+  referenceNumber: string | null;
+  createdAt: string;
+}
+
+export interface PaymentRequest {
+  amount: number;
+  paymentMethod: string;
+  referenceNumber?: string;
+  gcashPaymentImg?: string;
 }
 
 export interface RefundDetails {
@@ -53,10 +68,9 @@ export interface TransactionResponse {
   transactionNumber: string;
   transactionDate: string;
   totalAmount: number;
-  paymentType: string;
-  referenceNumber: string;
-  cashTender: number;
-  change: number;
+  amountPaid: number;
+  balanceDue: number;
+  completedAt: string | null;
   transactionStatus: string;
   createdBy: { id: string; fullName: string };
   patient: { id: string; fullName: string } | null;
@@ -64,6 +78,7 @@ export interface TransactionResponse {
   voidedAt?: string;
   voidReason?: string;
   transactionItems: TransactionItemResponse[];
+  payments: PaymentResponse[];
 }
 
 export type RefundMethod = "CASH" | "GCASH" | "STORE_VOUCHER";
@@ -86,11 +101,9 @@ export interface TransactionListItem {
   transactionNumber: string;
   transactionDate: string;
   totalAmount: number;
-  paymentType: string;
-  referenceNumber: string;
-  gcashPaymentImgDir: string | null;
-  cashTender: number;
-  change: number;
+  amountPaid: number;
+  balanceDue: number;
+  completedAt: string | null;
   transactionStatus: string;
   createdBy: { userId: string; username: string; role: string; fullName: string };
   patient: { patientId: string; fullName: string } | null;
