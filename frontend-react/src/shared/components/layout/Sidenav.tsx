@@ -135,12 +135,21 @@ const Sidenav: React.FC = () => {
                       />
                     </button>
                     {isExpanded && (
-                      <div className="ml-4 mt-1 space-y-1 border-l border-border pl-4">
-                        {item.children!.map((child) => (
+                      <div className="ml-[1.125rem] mt-0.5 space-y-0 border-l-2 border-muted-foreground/25">
+                        {item.children!.map((child, i) => (
                           <NavLink
                             key={child.href}
                             to={child.href}
-                            className={getLinkClassName}
+                            className={(props) =>
+                              cn(
+                                getLinkClassName(props),
+                                "relative pl-6 text-sm",
+                                // Horizontal branch line
+                                "before:absolute before:left-0 before:top-1/2 before:h-px before:w-3 before:-translate-y-1/2 before:bg-muted-foreground/25",
+                                // Round the bottom corner for the last item
+                                i === item.children!.length - 1 && "last-child"
+                              )
+                            }
                           >
                             <span>{child.title}</span>
                           </NavLink>
