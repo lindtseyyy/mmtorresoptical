@@ -81,7 +81,7 @@ export interface TransactionResponse {
   payments: PaymentResponse[];
 }
 
-export type RefundMethod = "CASH" | "GCASH" | "STORE_VOUCHER";
+export type RefundMethod = "CASH" | "GCASH";
 
 export interface RefundStateItem {
   transactionItemId: string;

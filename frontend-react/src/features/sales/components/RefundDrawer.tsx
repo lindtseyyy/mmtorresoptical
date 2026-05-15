@@ -30,7 +30,7 @@ const REFUND_REASONS = [
 const REFUND_METHODS: { value: RefundMethod; label: string }[] = [
   { value: "CASH", label: "Cash" },
   { value: "GCASH", label: "GCash" },
-  { value: "STORE_VOUCHER", label: "Store Voucher" },
+
 ];
 
 const formatCurrency = (amount: number) =>
