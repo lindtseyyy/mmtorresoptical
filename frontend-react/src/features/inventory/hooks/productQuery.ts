@@ -57,7 +57,7 @@ function createEditProductMutationOptions(queryClient: any, navigate: NavigateFu
           toast.success("Product Updated", {
             description: "Successfully updated.",
           });
-          navigate("/inventory");
+          navigate(`/inventory/view/${id}`);
         },
         onError: () => {
           toast.error("Error", { description: "Failed to update product." });
