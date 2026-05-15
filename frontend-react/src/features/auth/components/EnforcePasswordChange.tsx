@@ -7,12 +7,31 @@ import api from "@/shared/lib/axiosInstance";
 import { Button } from "@/shared/components/ui/button";
 import { Input } from "@/shared/components/ui/input";
 import { Label } from "@/shared/components/ui/label";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/shared/components/ui/select";
 import { Eye, EyeOff, Lock } from "lucide-react";
+
+const SECURITY_QUESTIONS = [
+  "What is your mother's maiden name?",
+  "What was the name of your first pet?",
+  "What was the name of your first school?",
+  "What is your favorite book?",
+  "What city were you born in?",
+  "What is your favorite food?",
+  "What was the make of your first car?",
+];
 
 const schema = z
   .object({
     newPassword: z.string().min(8, "Password must be at least 8 characters"),
     confirmPassword: z.string(),
+    securityQuestion: z.string().min(1, "Security question is required"),
+    securityAnswer: z.string().min(3, "Security answer must be at least 3 characters"),
   })
   .refine((data) => data.newPassword === data.confirmPassword, {
     message: "Passwords do not match",
@@ -30,16 +49,28 @@ const EnforcePasswordChange: React.FC = () => {
   const {
     register,
     handleSubmit,
+    setValue,
+    watch,
     formState: { errors, isSubmitting },
   } = useForm<FormData>({
     resolver: zodResolver(schema),
+    defaultValues: {
+      newPassword: "",
+      confirmPassword: "",
+      securityQuestion: "",
+      securityAnswer: "",
+    },
   });
+
+  const securityQuestion = watch("securityQuestion");
 
   const onSubmit: SubmitHandler<FormData> = async (data) => {
     setError(null);
     try {
       await api.post("/auth/enforce-password-change", {
         newPassword: data.newPassword,
+        securityQuestion: data.securityQuestion,
+        securityAnswer: data.securityAnswer,
       });
       navigate("/");
     } catch (err: any) {
@@ -62,10 +93,10 @@ const EnforcePasswordChange: React.FC = () => {
               <Lock className="h-8 w-8 text-primary-foreground" />
             </div>
             <h1 className="text-2xl font-bold text-foreground">
-              Change Your Password
+              Set Up Your Account
             </h1>
             <p className="text-center text-sm text-muted-foreground">
-              Your password must be changed before you can continue.
+              You must change your password and set up security credentials before continuing.
             </p>
           </div>
 
@@ -133,6 +164,50 @@ const EnforcePasswordChange: React.FC = () => {
                 </p>
               )}
             </div>
+
+            <div className="space-y-2">
+              <Label htmlFor="securityQuestion" className="font-semibold">
+                Security Question
+              </Label>
+              <Select
+                onValueChange={(value) => setValue("securityQuestion", value, { shouldValidate: true })}
+                value={securityQuestion}
+              >
+                <SelectTrigger id="securityQuestion" className={errors.securityQuestion ? "border-destructive" : ""}>
+                  <SelectValue placeholder="Select a security question" />
+                </SelectTrigger>
+                <SelectContent>
+                  {SECURITY_QUESTIONS.map((question) => (
+                    <SelectItem key={question} value={question}>
+                      {question}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+              {errors.securityQuestion && (
+                <p className="text-xs text-destructive" role="alert">
+                  {errors.securityQuestion.message}
+                </p>
+              )}
+            </div>
+
+            <div className="space-y-2">
+              <Label htmlFor="securityAnswer" className="font-semibold">
+                Security Answer
+              </Label>
+              <Input
+                id="securityAnswer"
+                type="text"
+                placeholder="Enter your answer"
+                {...register("securityAnswer")}
+                className={errors.securityAnswer ? "border-destructive" : ""}
+              />
+              {errors.securityAnswer && (
+                <p className="text-xs text-destructive" role="alert">
+                  {errors.securityAnswer.message}
+                </p>
+              )}
+            </div>
           </div>
 
           {error && (
@@ -142,7 +217,7 @@ const EnforcePasswordChange: React.FC = () => {
           )}
 
           <Button type="submit" className="w-full" disabled={isSubmitting}>
-            {isSubmitting ? "Changing Password..." : "Change Password"}
+            {isSubmitting ? "Saving..." : "Set Up Account"}
           </Button>
         </form>
       </div>

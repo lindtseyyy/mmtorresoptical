@@ -118,8 +118,6 @@ export const UserForm: React.FC<UserFormProps> = ({
       contactNumber: "",
       username: "",
       password: "",
-      securityQuestion: "",
-      securityAnswer: "",
       role: "Staff",
     },
   });
@@ -135,8 +133,6 @@ export const UserForm: React.FC<UserFormProps> = ({
       contactNumber: data.contactNumber ?? "",
       username: data.username ?? "",
       password: data.password ?? "",
-      securityQuestion: data.securityQuestion ?? "",
-      securityAnswer: data.securityAnswer ?? "",
       role: data.role ?? "Staff",
     };
 
@@ -360,18 +356,16 @@ export const UserForm: React.FC<UserFormProps> = ({
           </CardContent>
         </Card>
 
-        {/* Security Information Card */}
-        <Card>
-          <CardHeader>
-            <CardTitle>Security Information</CardTitle>
-            <CardDescription>
-              {isEditMode
-                ? "Manage account recovery and password"
-                : "Set up account recovery credentials"}
-            </CardDescription>
-          </CardHeader>
-          <CardContent className="space-y-4">
-            {isEditMode && (
+        {/* Security Information Card — edit mode only */}
+        {isEditMode && (
+          <Card>
+            <CardHeader>
+              <CardTitle>Security Information</CardTitle>
+              <CardDescription>
+                Manage account recovery and password
+              </CardDescription>
+            </CardHeader>
+            <CardContent className="space-y-4">
               <div className="rounded-lg border p-4">
                 <div className="flex items-center justify-between">
                   <div>
@@ -392,65 +386,9 @@ export const UserForm: React.FC<UserFormProps> = ({
                   </Button>
                 </div>
               </div>
-            )}
-            <FormField
-              control={form.control}
-              name="securityQuestion"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel>Security Question *</FormLabel>
-                  <Select
-                    onValueChange={field.onChange}
-                    defaultValue={field.value}
-                  >
-                    <FormControl>
-                      <SelectTrigger>
-                        <SelectValue placeholder="Select a security question" />
-                      </SelectTrigger>
-                    </FormControl>
-                    <SelectContent>
-                      <SelectItem value="What is your mother's maiden name?">
-                        What is your mother's maiden name?
-                      </SelectItem>
-                      <SelectItem value="What was the name of your first pet?">
-                        What was the name of your first pet?
-                      </SelectItem>
-                      <SelectItem value="What was the name of your first school?">
-                        What was the name of your first school?
-                      </SelectItem>
-                      <SelectItem value="What is your favorite book?">
-                        What is your favorite book?
-                      </SelectItem>
-                      <SelectItem value="What city were you born in?">
-                        What city were you born in?
-                      </SelectItem>
-                      <SelectItem value="What is your favorite food?">
-                        What is your favorite food?
-                      </SelectItem>
-                      <SelectItem value="What was the make of your first car?">
-                        What was the make of your first car?
-                      </SelectItem>
-                    </SelectContent>
-                  </Select>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
-            <FormField
-              control={form.control}
-              name="securityAnswer"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel>Security Answer *</FormLabel>
-                  <FormControl>
-                    <Input placeholder="Enter your answer" {...field} />
-                  </FormControl>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
-          </CardContent>
-        </Card>
+            </CardContent>
+          </Card>
+        )}
 
         <div className="flex justify-end gap-2 pt-4">
           <Button type="submit" disabled={isLoading}>

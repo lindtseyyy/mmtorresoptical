@@ -10,8 +10,8 @@ export const userSchema = z.object({
   contactNumber: z.string().min(10, "Must be at least 10 digits"),
   username: z.string().min(3, "Username must be at least 3 characters"),
   password: z.string().min(8, "Password must be at least 8 characters"),
-  securityQuestion: z.string().min(1, "Security question is required"),
-  securityAnswer: z.string().min(3, "Security answer must be at least 3 characters"),
+  securityQuestion: z.string().optional(),
+  securityAnswer: z.string().optional(),
   role: z.enum(["Admin", "Staff"]),
   isArchived: z.boolean().default(false),
 });
