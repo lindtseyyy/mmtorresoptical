@@ -14,16 +14,9 @@ import {
   SelectValue,
 } from "@/shared/components/ui/select";
 import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuTrigger,
-} from "@/shared/components/ui/dropdown-menu";
-import {
   Search,
   ChevronLeft,
   ChevronRight,
-  MoreHorizontal,
   Eye,
   Receipt,
   Banknote,
@@ -32,8 +25,6 @@ import {
   ArrowUp,
   ArrowDown,
   Undo2,
-  CreditCard,
-  CheckCircle,
 } from "lucide-react";
 import {
   createTransactionsListQueryOptions,
@@ -353,7 +344,7 @@ const ManageTransactions: React.FC = () => {
                       <th className="w-[15%] py-3 pr-4 text-center font-medium">Status</th>
                       <th className="w-[17%] py-3 pr-4 text-center font-medium">Transaction Date</th>
                       <th className="w-[16%] py-3 pr-4 font-medium">Processed By</th>
-                      <th className="w-[8%] py-3 pl-4 font-medium"></th>
+                      <th className="w-[8%] py-3 text-center font-medium">Action</th>
                     </tr>
                   </thead>
                   <tbody>
@@ -381,44 +372,17 @@ const ManageTransactions: React.FC = () => {
                         <td className="py-3 pr-4 text-muted-foreground">
                           <span className="block truncate">{tx.createdBy.fullName}</span>
                         </td>
-                        <td className="py-3 pl-4">
-                          <DropdownMenu>
-                            <DropdownMenuTrigger asChild>
-                              <Button variant="ghost" className="h-10 w-10 shrink-0 p-0 [&_svg]:size-auto focus-visible:ring-0">
-                                <MoreHorizontal className="h-8 w-8" />
-                              </Button>
-                            </DropdownMenuTrigger>
-                            <DropdownMenuContent align="end" className="bg-gray-100 dark:bg-gray-800 border-gray-300 dark:border-gray-700">
-                              <DropdownMenuItem
-                                onClick={() =>
-                                  navigate(`/transactions/${tx.transactionId}`)
-                                }
-                              >
-                                <Eye className="mr-2 h-4 w-4" />
-                                View
-                              </DropdownMenuItem>
-                              {(tx.transactionStatus === "PARTIALLY_PAID" || tx.transactionStatus === "PENDING") && (
-                                <DropdownMenuItem
-                                  onClick={() => setPaymentDrawerTx(tx)}
-                                >
-                                  <CreditCard className="mr-2 h-4 w-4" />
-                                  Add Payment
-                                </DropdownMenuItem>
-                              )}
-                              {tx.transactionStatus === "PAID" && (
-                                <DropdownMenuItem
-                                  onClick={() => {
-                                    if (window.confirm(`Mark ${tx.transactionNumber} as complete? This confirms the patient has picked up their glasses and cannot be undone.`)) {
-                                      completeMutation.mutate(tx.transactionId);
-                                    }
-                                  }}
-                                >
-                                  <CheckCircle className="mr-2 h-4 w-4" />
-                                  Mark Complete
-                                </DropdownMenuItem>
-                              )}
-                            </DropdownMenuContent>
-                          </DropdownMenu>
+                        <td className="py-3">
+                          <div className="flex justify-center">
+                            <Button
+                              variant="outline"
+                              size="sm"
+                              onClick={() => navigate(`/transactions/${tx.transactionId}`)}
+                            >
+                              <Eye className="mr-1.5 h-3.5 w-3.5" />
+                              View
+                            </Button>
+                          </div>
                         </td>
                       </tr>
                     ))}
