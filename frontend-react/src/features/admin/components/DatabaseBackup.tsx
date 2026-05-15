@@ -488,7 +488,7 @@ const DatabaseBackup: React.FC = () => {
                     <thead>
                       <tr className="border-b text-left text-muted-foreground">
                         <th className="w-[18%] py-3 pr-4 font-medium">Date & Time</th>
-                        <th className="w-[12%] py-3 pr-4 font-medium">Action</th>
+                        <th className="w-[12%] py-3 pr-4 font-medium text-center">Action</th>
                         <th className="w-[14%] py-3 pr-4 font-medium">Resource</th>
                         <th className="w-[34%] py-3 pr-4 font-medium">Details</th>
                         <th className="w-[16%] py-3 pr-4 font-medium">User</th>
@@ -504,7 +504,7 @@ const DatabaseBackup: React.FC = () => {
                           <td className="py-3 pr-4 text-muted-foreground">
                             <span className="block truncate">{formatTimestamp(entry.loggedAt)}</span>
                           </td>
-                          <td className="py-3 pr-4">
+                          <td className="py-3 pr-4 text-center">
                             <Badge className={actionBadgeClass[entry.actionType] || "bg-gray-600 hover:bg-gray-600 text-white"}>
                               {entry.actionType}
                             </Badge>
