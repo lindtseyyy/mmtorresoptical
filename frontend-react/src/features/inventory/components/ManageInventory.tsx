@@ -315,7 +315,7 @@ const ManageInventory: React.FC = () => {
                           <td className="py-3">
                             <div className="flex justify-center">
                               <Button
-                                variant="ghost"
+                                variant="outline"
                                 size="sm"
                                 onClick={() => navigate(`/inventory/view/${product.productId}`)}
                               >
