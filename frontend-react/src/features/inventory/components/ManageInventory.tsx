@@ -26,7 +26,6 @@ const ManageInventory: React.FC = () => {
   const [debouncedSearchQuery, setDebouncedSearchQuery] = useState(searchQuery);
   const [categoryFilter, setCategoryFilter] = useState<string>("all");
   const [stockFilter, setStockFilter] = useState("all");
-  const [archivedFilter, setArchivedFilter] = useState("ACTIVE");
   const [sortBy, setSortBy] = useState("productName");
   const [sortOrder, setSortOrder] = useState<"asc" | "desc">("asc");
   const [page, setPage] = useState(0);
@@ -42,7 +41,7 @@ const ManageInventory: React.FC = () => {
     isLoading,
     isFetching,
   } = useQuery({
-    ...createProductsListQueryOptions(page, PAGE_SIZE, debouncedSearchQuery, categoryFilter, sortBy, sortOrder, stockFilter, archivedFilter),
+    ...createProductsListQueryOptions(page, PAGE_SIZE, debouncedSearchQuery, categoryFilter, sortBy, sortOrder, stockFilter),
     placeholderData: keepPreviousData,
   });
 
@@ -55,7 +54,7 @@ const ManageInventory: React.FC = () => {
   // Reset page when search or category filter changes
   useEffect(() => {
     setPage(0);
-  }, [debouncedSearchQuery, categoryFilter, sortBy, sortOrder, stockFilter, archivedFilter]);
+  }, [debouncedSearchQuery, categoryFilter, sortBy, sortOrder, stockFilter]);
 
   // If current page is empty and not the first page, step back
   useEffect(() => {
@@ -212,19 +211,6 @@ const ManageInventory: React.FC = () => {
             </div>
             <div className="flex flex-wrap items-center justify-end gap-4">
               <div className="flex items-center gap-2">
-                <span className="text-sm text-muted-foreground whitespace-nowrap">Status:</span>
-                <Select value={archivedFilter} onValueChange={setArchivedFilter}>
-                  <SelectTrigger className="w-[130px]">
-                    <SelectValue />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="ACTIVE">Active</SelectItem>
-                    <SelectItem value="ARCHIVED">Archived</SelectItem>
-                    <SelectItem value="ALL">All</SelectItem>
-                  </SelectContent>
-                </Select>
-              </div>
-              <div className="flex items-center gap-2">
                 <span className="text-sm text-muted-foreground whitespace-nowrap">Category:</span>
                 <Select value={categoryFilter} onValueChange={setCategoryFilter}>
                   <SelectTrigger className="w-[150px]">
@@ -272,12 +258,12 @@ const ManageInventory: React.FC = () => {
                 <table className="w-full table-fixed text-sm">
                   <thead>
                     <tr className="border-b text-left text-muted-foreground">
-                      <th className="w-[30%] py-3 pr-4 font-medium">Product Name</th>
-                      <th className="w-[18%] py-3 pr-4 font-medium">Category</th>
+                      <th className="w-[36%] py-3 pr-4 font-medium">Product Name</th>
+                      <th className="w-[12%] py-3 pr-4 font-medium">Category</th>
                       <th className="w-[12%] py-3 pr-4 text-center font-medium">Quantity</th>
                       <th className="w-[12%] py-3 pr-4 text-center font-medium">Unit Price</th>
                       <th className="w-[20%] py-3 pr-4 font-medium">Supplier</th>
-                      <th className="w-[8%] py-3 pl-4 font-medium"></th>
+                      <th className="w-[8%] py-3 text-center font-medium">Action</th>
                     </tr>
                   </thead>
                   <tbody>
@@ -326,15 +312,17 @@ const ManageInventory: React.FC = () => {
                             ₱{product.unitPrice.toFixed(2)}
                           </td>
                           <td className="py-3 pr-4">{product.supplier}</td>
-                          <td className="py-3 pl-4">
-                            <Button
-                              variant="ghost"
-                              size="sm"
-                              onClick={() => navigate(`/inventory/view/${product.productId}`)}
-                            >
-                              <Eye className="mr-1.5 h-3.5 w-3.5" />
-                              View
-                            </Button>
+                          <td className="py-3">
+                            <div className="flex justify-center">
+                              <Button
+                                variant="ghost"
+                                size="sm"
+                                onClick={() => navigate(`/inventory/view/${product.productId}`)}
+                              >
+                                <Eye className="mr-1.5 h-3.5 w-3.5" />
+                                View
+                              </Button>
+                            </div>
                           </td>
                         </tr>
                       );
