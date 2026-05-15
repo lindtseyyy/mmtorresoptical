@@ -74,7 +74,7 @@ const manualSections = [
           <h4 className="font-semibold">Maintenance (Admin only)</h4>
           <p className="text-muted-foreground">
             The <em>Maintenance</em> page allows administrators to create password-protected backups
-            and restore from previous backup files, manage user archiving and restoration, and
+            and restore from previous backup files, manage user and patient archiving and restoration, and
             view audit logs.
           </p>
         </div>

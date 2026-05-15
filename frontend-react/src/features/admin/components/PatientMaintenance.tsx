@@ -1,8 +1,8 @@
 import { useState, useEffect } from "react";
-import { useQuery, keepPreviousData } from "@tanstack/react-query";
+import { useQuery, useMutation, useQueryClient, keepPreviousData } from "@tanstack/react-query";
 import { Button } from "@/shared/components/ui/button";
 import { Input } from "@/shared/components/ui/input";
-import { Plus, Search, Eye, ChevronLeft, ChevronRight, Users, UserCheck, ArchiveIcon, ArrowUp, ArrowDown } from "lucide-react";
+import { Search, Archive, Undo2, ChevronLeft, ChevronRight, Users, UserCheck, ArchiveIcon, ArrowUp, ArrowDown } from "lucide-react";
 import {
   Select,
   SelectContent,
@@ -10,17 +10,28 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/shared/components/ui/select";
-import { useNavigate } from "react-router-dom";
 import { Card, CardContent } from "@/shared/components/ui/card";
-import type { Patient } from "@/features/patients/types";
 import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from "@/shared/components/ui/alert-dialog";
+import type { Patient } from "@/features/patients/types";
+import { restorePatient } from "@/features/patients/services/patientApi";
+import {
+  createArchivePatientMutationOptions,
   createPatientsListQueryOptions,
   createPatientMetricsQueryOptions,
 } from "@/features/patients/hooks/patientQuery";
 
 const PAGE_SIZE = 10;
 
-const ManagePatients: React.FC = () => {
+const PatientMaintenance: React.FC = () => {
   const [searchQuery, setSearchQuery] = useState("");
   const [debouncedSearchQuery, setDebouncedSearchQuery] = useState(searchQuery);
   const [sortBy, setSortBy] = useState("fullNameSortable");
@@ -33,7 +44,8 @@ const ManagePatients: React.FC = () => {
     const timer = setTimeout(() => setDebouncedSearchQuery(searchQuery), 300);
     return () => clearTimeout(timer);
   }, [searchQuery]);
-  const navigate = useNavigate();
+
+  const queryClient = useQueryClient();
 
   const { data: pageData, isLoading, isFetching } = useQuery({
     ...createPatientsListQueryOptions(page, PAGE_SIZE, debouncedSearchQuery, sortBy, sortOrder, archivedFilter, genderFilter),
@@ -41,14 +53,42 @@ const ManagePatients: React.FC = () => {
   });
 
   const patients = pageData?.content ?? [];
-  const totalElements = pageData?.totalElements ?? 0;
   const totalPages = pageData?.totalPages ?? 0;
 
-  // Stable counts — unaffected by filter changes
   const { data: metrics } = useQuery(createPatientMetricsQueryOptions());
   const totalPatients = metrics?.totalPatients ?? 0;
   const activePatients = (metrics?.totalPatients ?? 0) - (metrics?.archivedPatients ?? 0);
   const archivedPatients = metrics?.archivedPatients ?? 0;
+
+  const [pendingArchive, setPendingArchive] = useState<{ id: string; unarchive: boolean } | null>(null);
+
+  const archiveMutation = useMutation(
+    createArchivePatientMutationOptions(queryClient)
+  );
+
+  const restoreMutation = useMutation({
+    mutationFn: restorePatient,
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["patients"] });
+      queryClient.invalidateQueries({ queryKey: ["patient-metrics"] });
+    },
+    onError: () => {},
+  });
+
+  const handleArchive = (id: string, unarchive: boolean) => {
+    setPendingArchive({ id, unarchive });
+  };
+
+  const confirmArchive = () => {
+    if (pendingArchive) {
+      if (pendingArchive.unarchive) {
+        restoreMutation.mutate(pendingArchive.id);
+      } else {
+        archiveMutation.mutate(pendingArchive.id);
+      }
+      setPendingArchive(null);
+    }
+  };
 
   useEffect(() => {
     setPage(0);
@@ -74,20 +114,14 @@ const ManagePatients: React.FC = () => {
 
   return (
     <div className="space-y-6">
-      <div className="flex items-center justify-between">
-        <div>
-          <h2 className="text-3xl font-bold">Patient Management</h2>
-          <p className="text-muted-foreground">
-            Manage patient records and information.
-          </p>
-        </div>
-        <Button onClick={() => navigate("/patients/add")}>
-          <Plus className="mr-2 h-4 w-4" />
-          Add Patient
-        </Button>
+      <div>
+        <h2 className="text-3xl font-bold">Patient Maintenance</h2>
+        <p className="text-muted-foreground">
+          Archive and restore patient records.
+        </p>
       </div>
 
-      <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
+      <div className="grid grid-cols-1 gap-4 sm:grid-cols-3">
         <Card>
           <CardContent className="flex items-center gap-4 p-5">
             <div className="flex h-11 w-11 items-center justify-center rounded-full bg-primary/10">
@@ -210,7 +244,7 @@ const ManagePatients: React.FC = () => {
                       <th className="w-[10%] py-3 pr-4 text-center font-medium">Gender</th>
                       <th className="w-[16%] py-3 pr-4 font-medium">Contact Number</th>
                       <th className="w-[12%] py-3 pr-4 text-center font-medium">Birth Date</th>
-                      <th className="w-[10%] py-3 pr-4 font-medium"></th>
+                      <th className="w-[10%] py-3 pr-4 text-center font-medium">Action</th>
                     </tr>
                   </thead>
                   <tbody>
@@ -238,12 +272,27 @@ const ManagePatients: React.FC = () => {
                         </td>
                         <td className="py-3 pl-4 text-center">
                           <Button
-                            variant="outline"
+                            variant={patient.isArchived ? "default" : "outline"}
                             size="sm"
-                            onClick={() => navigate(`/patients/view/${patient.patientId}`)}
+                            onClick={() => handleArchive(patient.patientId, patient.isArchived)}
+                            disabled={archiveMutation.isPending || restoreMutation.isPending}
+                            className={
+                              patient.isArchived
+                                ? "bg-green-700 hover:bg-green-800 text-white"
+                                : "border-red-300 text-red-600 hover:bg-red-50 hover:text-red-700"
+                            }
                           >
-                            <Eye className="mr-1.5 h-3.5 w-3.5" />
-                            View
+                            {patient.isArchived ? (
+                              <>
+                                <Undo2 className="mr-1.5 h-3.5 w-3.5" />
+                                Restore
+                              </>
+                            ) : (
+                              <>
+                                <Archive className="mr-1.5 h-3.5 w-3.5" />
+                                Archive
+                              </>
+                            )}
                           </Button>
                         </td>
                       </tr>
@@ -290,8 +339,43 @@ const ManagePatients: React.FC = () => {
         </CardContent>
       </Card>
 
+      <AlertDialog open={!!pendingArchive} onOpenChange={(open) => !open && setPendingArchive(null)}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>
+              {pendingArchive?.unarchive ? "Restore Patient" : "Archive Patient"}
+            </AlertDialogTitle>
+            <AlertDialogDescription>
+              {pendingArchive?.unarchive
+                ? "Are you sure you want to restore "
+                : "Are you sure you want to archive "}
+              <span className="font-semibold text-foreground">
+                {(() => {
+                  const found = patients.find((p) => p.patientId === pendingArchive?.id);
+                  return found ? fullName(found) : "";
+                })()}
+              </span>
+              {pendingArchive?.unarchive
+                ? "? This will make the patient active again."
+                : "? This action can be reversed later."}
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>Cancel</AlertDialogCancel>
+            <AlertDialogAction
+              onClick={confirmArchive}
+              className={pendingArchive?.unarchive
+                ? "bg-green-700 text-white hover:bg-green-800"
+                : "bg-red-700 text-white hover:bg-red-800"
+              }
+            >
+              {pendingArchive?.unarchive ? "Restore" : "Archive"}
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </div>
   );
 };
 
-export default ManagePatients;
+export default PatientMaintenance;

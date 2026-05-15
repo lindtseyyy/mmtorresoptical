@@ -47,6 +47,7 @@ import ViewTransaction from "@/features/sales/components/ViewTransaction";
 import BackupRestore from "@/features/admin/components/BackupRestore";
 import AuditLogs from "@/features/admin/components/AuditLogs";
 import UserMaintenance from "@/features/admin/components/UserMaintenance";
+import PatientMaintenance from "@/features/admin/components/PatientMaintenance";
 
 // --- Help ---
 import HelpPage from "@/features/help/components/HelpPage";
@@ -114,6 +115,7 @@ const router = createBrowserRouter([
           { path: "backup-restore", element: <BackupRestore /> },
           { path: "audit-logs", element: <AuditLogs /> },
           { path: "user-maintenance", element: <UserMaintenance /> },
+          { path: "patient-maintenance", element: <PatientMaintenance /> },
         ],
       },
       {
