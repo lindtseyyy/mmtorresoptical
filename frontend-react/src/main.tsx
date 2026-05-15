@@ -48,6 +48,7 @@ import BackupRestore from "@/features/admin/components/BackupRestore";
 import AuditLogs from "@/features/admin/components/AuditLogs";
 import UserMaintenance from "@/features/admin/components/UserMaintenance";
 import PatientMaintenance from "@/features/admin/components/PatientMaintenance";
+import InventoryMaintenance from "@/features/admin/components/InventoryMaintenance";
 
 // --- Help ---
 import HelpPage from "@/features/help/components/HelpPage";
@@ -116,6 +117,7 @@ const router = createBrowserRouter([
           { path: "audit-logs", element: <AuditLogs /> },
           { path: "user-maintenance", element: <UserMaintenance /> },
           { path: "patient-maintenance", element: <PatientMaintenance /> },
+          { path: "inventory-maintenance", element: <InventoryMaintenance /> },
         ],
       },
       {

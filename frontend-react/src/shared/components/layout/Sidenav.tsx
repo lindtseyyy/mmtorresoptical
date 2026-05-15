@@ -29,6 +29,7 @@ const menuItems: MenuItem[] = [
       { title: "Audit Logs", href: "/admin/audit-logs" },
       { title: "User Maintenance", href: "/admin/user-maintenance" },
       { title: "Patient Maintenance", href: "/admin/patient-maintenance" },
+      { title: "Inventory Maintenance", href: "/admin/inventory-maintenance" },
     ],
   },
   { title: "Help", href: "/help", icon: CircleHelp, roles: ["ADMIN", "STAFF"] as Role[] },

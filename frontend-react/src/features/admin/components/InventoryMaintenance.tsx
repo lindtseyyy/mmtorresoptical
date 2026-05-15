@@ -1,7 +1,8 @@
 import { useState, useEffect } from "react";
-import { useQuery, keepPreviousData } from "@tanstack/react-query";
+import { useQuery, useMutation, useQueryClient, keepPreviousData } from "@tanstack/react-query";
 import { Button } from "@/shared/components/ui/button";
 import { Input } from "@/shared/components/ui/input";
+import { Search, Archive, Undo2, ChevronLeft, ChevronRight, Glasses, Package, Layers, AlertTriangle, TrendingUp, Banknote, ArrowUp, ArrowDown } from "lucide-react";
 import {
   Select,
   SelectContent,
@@ -10,22 +11,32 @@ import {
   SelectValue,
 } from "@/shared/components/ui/select";
 import { Badge } from "@/shared/components/ui/badge";
-import { Plus, Search, Eye, Archive, ChevronLeft, ChevronRight, Glasses, Package, Layers, AlertTriangle, TrendingUp, Banknote, ArrowUp, ArrowDown } from "lucide-react";
-import { useNavigate } from "react-router-dom";
 import { Card, CardContent } from "@/shared/components/ui/card";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from "@/shared/components/ui/alert-dialog";
 import type { Product, Category } from "@/features/inventory/types";
 import { CATEGORY_LABELS } from "@/features/inventory/types";
 import {
+  createArchiveProductMutationOptions,
+  createRestoreProductMutationOptions,
   createProductsListQueryOptions,
   createInventorySummaryQueryOptions,
 } from "@/features/inventory/hooks/productQuery";
 
-const ManageInventory: React.FC = () => {
-  const PAGE_SIZE = 10;
+const PAGE_SIZE = 10;
+
+const InventoryMaintenance: React.FC = () => {
   const [searchQuery, setSearchQuery] = useState("");
   const [debouncedSearchQuery, setDebouncedSearchQuery] = useState(searchQuery);
   const [categoryFilter, setCategoryFilter] = useState<string>("all");
-  const [stockFilter, setStockFilter] = useState("all");
   const [archivedFilter, setArchivedFilter] = useState("ACTIVE");
   const [sortBy, setSortBy] = useState("productName");
   const [sortOrder, setSortOrder] = useState<"asc" | "desc">("asc");
@@ -35,36 +46,54 @@ const ManageInventory: React.FC = () => {
     const timer = setTimeout(() => setDebouncedSearchQuery(searchQuery), 300);
     return () => clearTimeout(timer);
   }, [searchQuery]);
-  const navigate = useNavigate();
 
-  const {
-    data: pageData,
-    isLoading,
-    isFetching,
-  } = useQuery({
-    ...createProductsListQueryOptions(page, PAGE_SIZE, debouncedSearchQuery, categoryFilter, sortBy, sortOrder, stockFilter, archivedFilter),
+  const queryClient = useQueryClient();
+
+  const { data: pageData, isLoading, isFetching } = useQuery({
+    ...createProductsListQueryOptions(page, PAGE_SIZE, debouncedSearchQuery, categoryFilter, sortBy, sortOrder, "all", archivedFilter),
     placeholderData: keepPreviousData,
   });
 
   const products = pageData?.content ?? [];
-  const totalElements = pageData?.totalElements ?? 0;
   const totalPages = pageData?.totalPages ?? 0;
 
   const { data: summary } = useQuery(createInventorySummaryQueryOptions());
 
-  // Reset page when search or category filter changes
+  const [pendingArchive, setPendingArchive] = useState<{ id: string; unarchive: boolean } | null>(null);
+
+  const archiveMutation = useMutation(
+    createArchiveProductMutationOptions(queryClient)
+  );
+
+  const restoreMutation = useMutation(
+    createRestoreProductMutationOptions(queryClient)
+  );
+
+  const handleArchive = (id: string, unarchive: boolean) => {
+    setPendingArchive({ id, unarchive });
+  };
+
+  const confirmArchive = () => {
+    if (pendingArchive) {
+      if (pendingArchive.unarchive) {
+        restoreMutation.mutate(pendingArchive.id);
+      } else {
+        archiveMutation.mutate(pendingArchive.id);
+      }
+      setPendingArchive(null);
+    }
+  };
+
   useEffect(() => {
     setPage(0);
-  }, [debouncedSearchQuery, categoryFilter, sortBy, sortOrder, stockFilter, archivedFilter]);
+  }, [debouncedSearchQuery, categoryFilter, sortBy, sortOrder, archivedFilter]);
 
-  // If current page is empty and not the first page, step back
   useEffect(() => {
     if (products.length === 0 && page > 0 && !isFetching) {
       setPage((p) => Math.max(0, p - 1));
     }
   }, [products.length, page, isFetching]);
 
-  // Helper function from your reference
   const getStockStatus = (product: Product) => {
     if (product.productType === "SERVICE") {
       return { label: "Service", variant: "default" as const };
@@ -79,21 +108,13 @@ const ManageInventory: React.FC = () => {
 
   return (
     <div className="space-y-6">
-      <div className="flex items-center justify-between">
-        <div>
-          <h2 className="text-3xl font-bold">Inventory Management</h2>
-          <p className="text-muted-foreground">
-            Monitor and manage optical product inventory.
-          </p>
-        </div>
-        {/* Updated Button to navigate */}
-        <Button onClick={() => navigate("/inventory/add")}>
-          <Plus className="mr-2 h-4 w-4" />
-          Add Item to Catalog
-        </Button>
+      <div>
+        <h2 className="text-3xl font-bold">Inventory Maintenance</h2>
+        <p className="text-muted-foreground">
+          Archive and restore products.
+        </p>
       </div>
 
-      {/* Summary Cards */}
       <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
         <Card>
           <CardContent className="flex items-center gap-4 p-5">
@@ -192,7 +213,6 @@ const ManageInventory: React.FC = () => {
                   <SelectContent>
                     <SelectItem value="productName">Product Name</SelectItem>
                     <SelectItem value="quantity">Quantity</SelectItem>
-                    <SelectItem value="unitPrice">Price</SelectItem>
                   </SelectContent>
                 </Select>
                 <Button
@@ -244,24 +264,9 @@ const ManageInventory: React.FC = () => {
                   </SelectContent>
                 </Select>
               </div>
-              <div className="flex items-center gap-2">
-                <span className="text-sm text-muted-foreground whitespace-nowrap">Stock:</span>
-                <Select value={stockFilter} onValueChange={setStockFilter}>
-                  <SelectTrigger className="w-[150px]">
-                    <SelectValue placeholder="All Stock" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="all">All Stock</SelectItem>
-                    <SelectItem value="NORMAL">Normal</SelectItem>
-                    <SelectItem value="LOW_STOCK">Low Stock</SelectItem>
-                    <SelectItem value="OVERSTOCKED">Overstocked</SelectItem>
-                  </SelectContent>
-                </Select>
-              </div>
             </div>
           </div>
 
-          {/* Loading Spinner */}
           {isLoading ? (
             <div className="flex items-center justify-center py-8">
               <div className="h-8 w-8 animate-spin rounded-full border-4 border-primary border-t-transparent"></div>
@@ -276,12 +281,12 @@ const ManageInventory: React.FC = () => {
                       <th className="w-[18%] py-3 pr-4 font-medium">Category</th>
                       <th className="w-[12%] py-3 pr-4 text-center font-medium">Quantity</th>
                       <th className="w-[12%] py-3 pr-4 text-center font-medium">Unit Price</th>
-                      <th className="w-[20%] py-3 pr-4 font-medium">Supplier</th>
-                      <th className="w-[8%] py-3 pl-4 font-medium"></th>
+                      <th className="w-[18%] py-3 pr-4 font-medium">Supplier</th>
+                      <th className="w-[10%] py-3 pr-4 text-center font-medium">Action</th>
                     </tr>
                   </thead>
                   <tbody>
-                    {products?.map((product) => {
+                    {products.map((product) => {
                       const stockStatus = getStockStatus(product);
                       return (
                         <tr
@@ -326,14 +331,29 @@ const ManageInventory: React.FC = () => {
                             ₱{product.unitPrice.toFixed(2)}
                           </td>
                           <td className="py-3 pr-4">{product.supplier}</td>
-                          <td className="py-3 pl-4">
+                          <td className="py-3 pl-4 text-center">
                             <Button
-                              variant="ghost"
+                              variant={product.isArchived ? "default" : "outline"}
                               size="sm"
-                              onClick={() => navigate(`/inventory/view/${product.productId}`)}
+                              onClick={() => handleArchive(product.productId, product.isArchived)}
+                              disabled={archiveMutation.isPending || restoreMutation.isPending}
+                              className={
+                                product.isArchived
+                                  ? "bg-green-700 hover:bg-green-800 text-white"
+                                  : "border-red-300 text-red-600 hover:bg-red-50 hover:text-red-700"
+                              }
                             >
-                              <Eye className="mr-1.5 h-3.5 w-3.5" />
-                              View
+                              {product.isArchived ? (
+                                <>
+                                  <Undo2 className="mr-1.5 h-3.5 w-3.5" />
+                                  Restore
+                                </>
+                              ) : (
+                                <>
+                                  <Archive className="mr-1.5 h-3.5 w-3.5" />
+                                  Archive
+                                </>
+                              )}
                             </Button>
                           </td>
                         </tr>
@@ -343,7 +363,7 @@ const ManageInventory: React.FC = () => {
                 </table>
               </div>
 
-              {products?.length === 0 && (
+              {products.length === 0 && (
                 <p className="py-8 text-center text-muted-foreground">
                   No products found.
                 </p>
@@ -380,8 +400,41 @@ const ManageInventory: React.FC = () => {
           )}
         </CardContent>
       </Card>
+
+      <AlertDialog open={!!pendingArchive} onOpenChange={(open) => !open && setPendingArchive(null)}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>
+              {pendingArchive?.unarchive ? "Restore Product" : "Archive Product"}
+            </AlertDialogTitle>
+            <AlertDialogDescription>
+              {pendingArchive?.unarchive
+                ? "Are you sure you want to restore "
+                : "Are you sure you want to archive "}
+              <span className="font-semibold text-foreground">
+                {products.find((p) => p.productId === pendingArchive?.id)?.productName}
+              </span>
+              {pendingArchive?.unarchive
+                ? "? This will make the product active again."
+                : "? This action can be reversed later."}
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>Cancel</AlertDialogCancel>
+            <AlertDialogAction
+              onClick={confirmArchive}
+              className={pendingArchive?.unarchive
+                ? "bg-green-700 text-white hover:bg-green-800"
+                : "bg-red-700 text-white hover:bg-red-800"
+              }
+            >
+              {pendingArchive?.unarchive ? "Restore" : "Archive"}
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </div>
   );
 };
 
-export default ManageInventory;
+export default InventoryMaintenance;

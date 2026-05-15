@@ -44,8 +44,8 @@ const manualSections = [
           <h4 className="font-semibold">Inventory Management</h4>
           <p className="text-muted-foreground">
             Navigate to <em>Inventory Management</em> in the sidebar. Administrators and staff can view
-            products, filter by category or brand, and check stock levels. Administrators can add, edit,
-            and archive products.
+            products, filter by category or brand, and check stock levels. Administrators can add and edit
+            products. Product archiving and restoration is available under <em>Maintenance &gt; Inventory Maintenance</em>.
           </p>
         </div>
         <div>
@@ -74,8 +74,8 @@ const manualSections = [
           <h4 className="font-semibold">Maintenance (Admin only)</h4>
           <p className="text-muted-foreground">
             The <em>Maintenance</em> page allows administrators to create password-protected backups
-            and restore from previous backup files, manage user and patient archiving and restoration, and
-            view audit logs.
+            and restore from previous backup files, manage user, patient, and product archiving and restoration,
+            and view audit logs.
           </p>
         </div>
         <div>
