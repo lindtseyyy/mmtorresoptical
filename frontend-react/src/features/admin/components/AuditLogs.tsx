@@ -53,6 +53,8 @@ const AuditLogs: React.FC = () => {
   const [auditActionFilter, setAuditActionFilter] = useState("all");
   const [auditResourceFilter, setAuditResourceFilter] = useState("all");
   const [auditPage, setAuditPage] = useState(0);
+  const [auditDateFrom, setAuditDateFrom] = useState("");
+  const [auditDateTo, setAuditDateTo] = useState("");
   const [viewingEntry, setViewingEntry] = useState<AuditLogEntry | null>(null);
 
   useEffect(() => {
@@ -62,7 +64,7 @@ const AuditLogs: React.FC = () => {
 
   useEffect(() => {
     setAuditPage(0);
-  }, [debouncedAuditSearch, auditActionFilter, auditResourceFilter]);
+  }, [debouncedAuditSearch, auditActionFilter, auditResourceFilter, auditDateFrom, auditDateTo]);
 
   const auditParams = {
     keyword: debouncedAuditSearch || undefined,
@@ -70,6 +72,8 @@ const AuditLogs: React.FC = () => {
     resourceType: auditResourceFilter !== "all" ? auditResourceFilter : undefined,
     page: auditPage,
     size: AUDIT_PAGE_SIZE,
+    minDate: auditDateFrom || undefined,
+    maxDate: auditDateTo || undefined,
     sortBy: "loggedAt",
     sortOrder: "desc",
   };
@@ -112,6 +116,34 @@ const AuditLogs: React.FC = () => {
                   onChange={(e) => setAuditSearch(e.target.value)}
                   className="pl-10"
                 />
+              </div>
+            </div>
+            <div className="flex flex-wrap items-center justify-end gap-4">
+              <div className="flex items-center gap-3">
+                <span className="text-sm text-muted-foreground whitespace-nowrap">Date Range:</span>
+                <Input
+                  type="date"
+                  value={auditDateFrom}
+                  onChange={(e) => setAuditDateFrom(e.target.value)}
+                  className="w-[150px]"
+                />
+                <span className="text-sm text-muted-foreground">to</span>
+                <Input
+                  type="date"
+                  value={auditDateTo}
+                  onChange={(e) => setAuditDateTo(e.target.value)}
+                  className="w-[150px]"
+                />
+                {(auditDateFrom || auditDateTo) && (
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    onClick={() => { setAuditDateFrom(""); setAuditDateTo(""); }}
+                    className="text-xs text-muted-foreground"
+                  >
+                    Clear
+                  </Button>
+                )}
               </div>
             </div>
             <div className="flex flex-wrap items-center justify-end gap-4">
