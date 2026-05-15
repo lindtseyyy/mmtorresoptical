@@ -1,15 +1,9 @@
 import { useState, useEffect } from "react";
-import { useQuery, keepPreviousData } from "@tanstack/react-query";
+import { useQuery, useMutation, useQueryClient, keepPreviousData } from "@tanstack/react-query";
 import { Button } from "@/shared/components/ui/button";
 import { Input } from "@/shared/components/ui/input";
 import { Badge } from "@/shared/components/ui/badge";
-import { Plus, Search, Eye, ChevronLeft, ChevronRight, MoreHorizontal, Users, UserCheck, ArchiveIcon, Shield, UserCog, ArrowUp, ArrowDown } from "lucide-react";
-import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuTrigger,
-} from "@/shared/components/ui/dropdown-menu";
+import { Search, Archive, Undo2, ChevronLeft, ChevronRight, Users, UserCheck, ArchiveIcon, ArrowUp, ArrowDown } from "lucide-react";
 import {
   Select,
   SelectContent,
@@ -17,10 +11,20 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/shared/components/ui/select";
-import { useNavigate } from "react-router-dom";
 import { Card, CardContent } from "@/shared/components/ui/card";
-import type { User } from "@/features/users/types";
 import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from "@/shared/components/ui/alert-dialog";
+import {
+  createArchiveUserMutationOptions,
+  createRestoreUserMutationOptions,
   createUsersListQueryOptions,
   createUserSummaryQueryOptions,
 } from "@/features/users/hooks/userQuery";
@@ -38,13 +42,11 @@ const getCurrentUserId = (): string | null => {
 
 const PAGE_SIZE = 10;
 
-const ManageUsers: React.FC = () => {
+const UserMaintenance: React.FC = () => {
   const [searchQuery, setSearchQuery] = useState("");
   const [debouncedSearchQuery, setDebouncedSearchQuery] = useState(searchQuery);
   const [sortBy, setSortBy] = useState("fullNameSortable");
   const [sortOrder, setSortOrder] = useState<"asc" | "desc">("asc");
-  const [roleFilter, setRoleFilter] = useState("all");
-  const [genderFilter, setGenderFilter] = useState("all");
   const [archivedFilter, setArchivedFilter] = useState("ACTIVE");
   const [page, setPage] = useState(0);
 
@@ -52,31 +54,53 @@ const ManageUsers: React.FC = () => {
     const timer = setTimeout(() => setDebouncedSearchQuery(searchQuery), 300);
     return () => clearTimeout(timer);
   }, [searchQuery]);
-  const navigate = useNavigate();
+
+  const queryClient = useQueryClient();
   const currentUserId = getCurrentUserId();
 
   const { data: pageData, isLoading, isFetching } = useQuery({
-    ...createUsersListQueryOptions(page, PAGE_SIZE, debouncedSearchQuery, sortBy, sortOrder, roleFilter, genderFilter, archivedFilter),
+    ...createUsersListQueryOptions(page, PAGE_SIZE, debouncedSearchQuery, sortBy, sortOrder, undefined, undefined, archivedFilter),
     placeholderData: keepPreviousData,
   });
 
   const users = pageData?.content ?? [];
-  const totalElements = pageData?.totalElements ?? 0;
   const totalPages = pageData?.totalPages ?? 0;
 
-  // Reset page when search or sort changes
+  const [pendingArchive, setPendingArchive] = useState<{ id: string; unarchive: boolean } | null>(null);
+
+  const archiveMutation = useMutation(
+    createArchiveUserMutationOptions(queryClient)
+  );
+
+  const restoreMutation = useMutation(
+    createRestoreUserMutationOptions(queryClient)
+  );
+
+  const handleArchive = (id: string, unarchive: boolean) => {
+    setPendingArchive({ id, unarchive });
+  };
+
+  const confirmArchive = () => {
+    if (pendingArchive) {
+      if (pendingArchive.unarchive) {
+        restoreMutation.mutate(pendingArchive.id);
+      } else {
+        archiveMutation.mutate(pendingArchive.id);
+      }
+      setPendingArchive(null);
+    }
+  };
+
   useEffect(() => {
     setPage(0);
-  }, [debouncedSearchQuery, sortBy, sortOrder, roleFilter, genderFilter, archivedFilter]);
+  }, [debouncedSearchQuery, sortBy, sortOrder, archivedFilter]);
 
-  // If current page is empty and not the first page, step back
   useEffect(() => {
     if (users.length === 0 && page > 0 && !isFetching) {
       setPage((p) => Math.max(0, p - 1));
     }
   }, [users.length, page, isFetching]);
 
-  // Keep current user pinned to top; otherwise preserve server sort order
   const sortedUsers = [...users].sort((a, b) => {
     if (a.userId === currentUserId) return -1;
     if (b.userId === currentUserId) return 1;
@@ -87,20 +111,14 @@ const ManageUsers: React.FC = () => {
 
   return (
     <div className="space-y-6">
-      <div className="flex items-center justify-between">
-        <div>
-          <h2 className="text-3xl font-bold">Registration</h2>
-          <p className="text-muted-foreground">
-            Manage system users and their access permissions.
-          </p>
-        </div>
-        <Button onClick={() => navigate("/users/add")}>
-          <Plus className="mr-2 h-4 w-4" />
-          Add User
-        </Button>
+      <div>
+        <h2 className="text-3xl font-bold">User Maintenance</h2>
+        <p className="text-muted-foreground">
+          Archive and restore user accounts.
+        </p>
       </div>
 
-      <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
+      <div className="grid grid-cols-1 gap-4 sm:grid-cols-3">
         <Card>
           <CardContent className="flex items-center gap-4 p-5">
             <div className="flex h-11 w-11 items-center justify-center rounded-full bg-primary/10">
@@ -133,30 +151,6 @@ const ManageUsers: React.FC = () => {
             <div>
               <p className="text-2xl font-bold">{summary?.archivedUsers ?? "—"}</p>
               <p className="text-sm text-muted-foreground">Archived Users</p>
-            </div>
-          </CardContent>
-        </Card>
-
-        <Card className="border-blue-200">
-          <CardContent className="flex items-center gap-4 p-5">
-            <div className="flex h-11 w-11 items-center justify-center rounded-full bg-blue-500/10">
-              <Shield className="h-5 w-5 text-blue-500" />
-            </div>
-            <div>
-              <p className="text-2xl font-bold text-blue-600">{summary?.adminUsers ?? "—"}</p>
-              <p className="text-sm text-muted-foreground">Administrators</p>
-            </div>
-          </CardContent>
-        </Card>
-
-        <Card className="border-gray-300">
-          <CardContent className="flex items-center gap-4 p-5">
-            <div className="flex h-11 w-11 items-center justify-center rounded-full bg-gray-500/10">
-              <UserCog className="h-5 w-5 text-gray-500" />
-            </div>
-            <div>
-              <p className="text-2xl font-bold">{summary?.staffUsers ?? "—"}</p>
-              <p className="text-sm text-muted-foreground">Staff Members</p>
             </div>
           </CardContent>
         </Card>
@@ -215,33 +209,6 @@ const ManageUsers: React.FC = () => {
                   </SelectContent>
                 </Select>
               </div>
-              <div className="flex items-center gap-2">
-                <span className="text-sm text-muted-foreground whitespace-nowrap">Role:</span>
-                <Select value={roleFilter} onValueChange={setRoleFilter}>
-                  <SelectTrigger className="w-[130px]">
-                    <SelectValue />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="all">All Roles</SelectItem>
-                    <SelectItem value="ADMIN">Admin</SelectItem>
-                    <SelectItem value="STAFF">Staff</SelectItem>
-                  </SelectContent>
-                </Select>
-              </div>
-              <div className="flex items-center gap-2">
-                <span className="text-sm text-muted-foreground whitespace-nowrap">Gender:</span>
-                <Select value={genderFilter} onValueChange={setGenderFilter}>
-                  <SelectTrigger className="w-[130px]">
-                    <SelectValue />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="all">All Genders</SelectItem>
-                    <SelectItem value="MALE">Male</SelectItem>
-                    <SelectItem value="FEMALE">Female</SelectItem>
-                    <SelectItem value="OTHERS">Other</SelectItem>
-                  </SelectContent>
-                </Select>
-              </div>
             </div>
           </div>
 
@@ -258,10 +225,9 @@ const ManageUsers: React.FC = () => {
                       <th className="w-[22%] py-3 pr-4 font-medium">Full Name</th>
                       <th className="w-[14%] py-3 pr-4 font-medium">Username</th>
                       <th className="w-[24%] py-3 pr-4 font-medium">Email</th>
-                      <th className="w-[8%] py-3 pr-4 text-center font-medium">Role</th>
-                      <th className="w-[16%] py-3 pr-4 font-medium">Contact Number</th>
-                      <th className="w-[8%] py-3 pr-4 font-medium">Gender</th>
-                      <th className="w-[8%] py-3 pl-4 font-medium"></th>
+                      <th className="w-[10%] py-3 pr-4 text-center font-medium">Role</th>
+                      <th className="w-[10%] py-3 pr-4 text-center font-medium">Status</th>
+                      <th className="w-[20%] py-3 pl-4 text-center font-medium">Action</th>
                     </tr>
                   </thead>
                   <tbody>
@@ -292,33 +258,45 @@ const ManageUsers: React.FC = () => {
                             {user.role}
                           </Badge>
                         </td>
-                        <td className="py-3 pr-4 text-muted-foreground">
-                          <span className="block truncate">{user.contactNumber}</span>
+                        <td className="py-3 pr-4 text-center">
+                          <Badge
+                            variant={user.isArchived ? "outline" : "default"}
+                            className={
+                              user.isArchived
+                                ? "border-amber-500 text-amber-600"
+                                : "bg-emerald-600 hover:bg-emerald-600 text-white"
+                            }
+                          >
+                            {user.isArchived ? "Archived" : "Active"}
+                          </Badge>
                         </td>
-                        <td className="py-3 pr-4 capitalize">
-                          <span className="block truncate">{user.gender}</span>
-                        </td>
-                        <td className="py-3 pl-4">
-                          {user.userId !== currentUserId ? (
-                            <DropdownMenu>
-                              <DropdownMenuTrigger asChild>
-                                <Button variant="ghost" className="h-10 w-10 shrink-0 p-0 [&_svg]:size-auto focus-visible:ring-0">
-                                  <MoreHorizontal className="h-8 w-8" />
-                                </Button>
-                              </DropdownMenuTrigger>
-                              <DropdownMenuContent align="end" className="bg-gray-100 dark:bg-gray-800 border-gray-300 dark:border-gray-700">
-                                <DropdownMenuItem
-                                  onClick={() =>
-                                    navigate(`/users/view/${user.userId}`)
-                                  }
-                                >
-                                  <Eye className="mr-2 h-4 w-4" />
-                                  View
-                                </DropdownMenuItem>
-                              </DropdownMenuContent>
-                            </DropdownMenu>
-                          ) : (
+                        <td className="py-3 pl-4 text-center">
+                          {user.userId === currentUserId ? (
                             <Badge className="bg-violet-600 text-white hover:bg-violet-600">You</Badge>
+                          ) : (
+                            <Button
+                              variant={user.isArchived ? "default" : "outline"}
+                              size="sm"
+                              onClick={() => handleArchive(user.userId, user.isArchived)}
+                              disabled={archiveMutation.isPending || restoreMutation.isPending}
+                              className={
+                                user.isArchived
+                                  ? "bg-green-700 hover:bg-green-800 text-white"
+                                  : "border-red-300 text-red-600 hover:bg-red-50 hover:text-red-700"
+                              }
+                            >
+                              {user.isArchived ? (
+                                <>
+                                  <Undo2 className="mr-1.5 h-3.5 w-3.5" />
+                                  Restore
+                                </>
+                              ) : (
+                                <>
+                                  <Archive className="mr-1.5 h-3.5 w-3.5" />
+                                  Archive
+                                </>
+                              )}
+                            </Button>
                           )}
                         </td>
                       </tr>
@@ -365,8 +343,41 @@ const ManageUsers: React.FC = () => {
         </CardContent>
       </Card>
 
+      <AlertDialog open={!!pendingArchive} onOpenChange={(open) => !open && setPendingArchive(null)}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>
+              {pendingArchive?.unarchive ? "Restore User" : "Archive User"}
+            </AlertDialogTitle>
+            <AlertDialogDescription>
+              {pendingArchive?.unarchive
+                ? "Are you sure you want to restore "
+                : "Are you sure you want to archive "}
+              <span className="font-semibold text-foreground">
+                {users.find((u) => u.userId === pendingArchive?.id)?.firstName}{" "}
+                {users.find((u) => u.userId === pendingArchive?.id)?.lastName}
+              </span>
+              {pendingArchive?.unarchive
+                ? "? This will make the user active again."
+                : "? This action can be reversed later."}
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>Cancel</AlertDialogCancel>
+            <AlertDialogAction
+              onClick={confirmArchive}
+              className={pendingArchive?.unarchive
+                ? "bg-green-700 text-white hover:bg-green-800"
+                : "bg-red-700 text-white hover:bg-red-800"
+              }
+            >
+              {pendingArchive?.unarchive ? "Restore" : "Archive"}
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </div>
   );
 };
 
-export default ManageUsers;
+export default UserMaintenance;

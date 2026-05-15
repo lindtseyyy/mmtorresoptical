@@ -64,9 +64,9 @@ const manualSections = [
           </p>
         </div>
         <div>
-          <h4 className="font-semibold">User Management (Admin only)</h4>
+          <h4 className="font-semibold">Registration (Admin only)</h4>
           <p className="text-muted-foreground">
-            Under <em>User Management</em>, administrators can create, edit, and archive user accounts.
+            Under <em>Registration</em>, administrators can create, edit, and view user accounts.
             Each user is assigned a role (Admin or Staff) and can set security questions for password recovery.
           </p>
         </div>
@@ -74,8 +74,8 @@ const manualSections = [
           <h4 className="font-semibold">Maintenance (Admin only)</h4>
           <p className="text-muted-foreground">
             The <em>Maintenance</em> page allows administrators to create password-protected backups
-            and restore from previous backup files. Backup metadata including file size and timestamp is
-            displayed before restoration.
+            and restore from previous backup files, manage user archiving and restoration, and
+            view audit logs.
           </p>
         </div>
         <div>

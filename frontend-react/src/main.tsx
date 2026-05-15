@@ -46,6 +46,7 @@ import ViewTransaction from "@/features/sales/components/ViewTransaction";
 // --- Admin ---
 import BackupRestore from "@/features/admin/components/BackupRestore";
 import AuditLogs from "@/features/admin/components/AuditLogs";
+import UserMaintenance from "@/features/admin/components/UserMaintenance";
 
 // --- Help ---
 import HelpPage from "@/features/help/components/HelpPage";
@@ -112,6 +113,7 @@ const router = createBrowserRouter([
         children: [
           { path: "backup-restore", element: <BackupRestore /> },
           { path: "audit-logs", element: <AuditLogs /> },
+          { path: "user-maintenance", element: <UserMaintenance /> },
         ],
       },
       {
