@@ -92,9 +92,9 @@ public class ReportAggregationService {
                 "Transaction ID",
                 "Transaction Date",
                 "Total Amount",
-                "Payment Type",
-                "Status",
-                "Reference No"
+                "Amount Paid",
+                "Balance Due",
+                "Status"
         );
 
         List<List<Object>> rows = transactions.stream()
@@ -102,9 +102,9 @@ public class ReportAggregationService {
                         transaction.getTransactionId(),
                         transaction.getTransactionDate(),
                         transaction.getTotalAmount(),
-                        transaction.getPaymentType(),
-                        transaction.getTransactionStatus(),
-                        transaction.getReferenceNumber()
+                        transaction.getAmountPaid(),
+                        transaction.getBalanceDue(),
+                        transaction.getTransactionStatus()
                 ))
                 .toList();
 

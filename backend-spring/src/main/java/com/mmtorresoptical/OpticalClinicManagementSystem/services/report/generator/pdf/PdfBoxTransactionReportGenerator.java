@@ -1,6 +1,5 @@
 package com.mmtorresoptical.OpticalClinicManagementSystem.services.report.generator.pdf;
 
-import com.mmtorresoptical.OpticalClinicManagementSystem.enums.PaymentType;
 import com.mmtorresoptical.OpticalClinicManagementSystem.enums.TransactionStatus;
 import com.mmtorresoptical.OpticalClinicManagementSystem.services.report.ReportMetadata;
 import com.mmtorresoptical.OpticalClinicManagementSystem.services.report.transactionpdf.*;
@@ -22,8 +21,8 @@ import java.time.LocalDateTime;
 import java.time.ZoneId;
 import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
-import java.util.Collections;
 import java.util.List;
+import java.util.Map;
 
 @Service
 public class PdfBoxTransactionReportGenerator {
@@ -71,8 +70,6 @@ public class PdfBoxTransactionReportGenerator {
         }
     }
 
-    // ─── Document rendering ───────────────────────────────────────────
-
     private void renderDocument(PDDocument document,
                                 TransactionHierarchicalReportDataset dataset) throws IOException {
         PDFont headerFont = loadFont(document, FONT_PATHS_BOLD, PDType1Font.HELVETICA_BOLD);
@@ -82,25 +79,21 @@ public class PdfBoxTransactionReportGenerator {
         PageState state = startPage(document, headerFont, bodyFont, italicFont);
         state = writeReportHeader(document, state, dataset);
 
-        List<PaymentTypeSection> sections = dataset.getPaymentTypeSections();
-        if (sections == null || sections.isEmpty()) {
+        Map<String, List<TransactionEntry>> statusGroups = dataset.getStatusGroups();
+        if (statusGroups == null || statusGroups.isEmpty()) {
             state = writeBodyLine(document, state, dataset.getEmptyMessage());
             state.contentStream.close();
             return;
         }
 
-        // Overall summary
         state = writeOverallSummary(document, state, dataset.getSummary());
 
-        // Each payment type section
-        for (PaymentTypeSection section : sections) {
-            state = writePaymentTypeSection(document, state, section);
+        for (Map.Entry<String, List<TransactionEntry>> group : statusGroups.entrySet()) {
+            state = writeStatusGroupSection(document, state, group.getKey(), group.getValue());
         }
 
         state.contentStream.close();
     }
-
-    // ─── Report header ────────────────────────────────────────────────
 
     private PageState writeReportHeader(PDDocument document,
                                         PageState state,
@@ -138,8 +131,6 @@ public class PdfBoxTransactionReportGenerator {
         return state;
     }
 
-    // ─── Overall summary ──────────────────────────────────────────────
-
     private PageState writeOverallSummary(PDDocument document,
                                           PageState state,
                                           TransactionReportSummary summary) throws IOException {
@@ -171,89 +162,24 @@ public class PdfBoxTransactionReportGenerator {
         return state;
     }
 
-    // ─── Payment type section ─────────────────────────────────────────
-
-    private PageState writePaymentTypeSection(PDDocument document,
+    private PageState writeStatusGroupSection(PDDocument document,
                                               PageState state,
-                                              PaymentTypeSection section) throws IOException {
+                                              String statusLabel,
+                                              List<TransactionEntry> transactions) throws IOException {
 
-        // Section header with thick separator
-        float sectionHeaderHeight = SECTION_FONT_SIZE + LINE_HEIGHT * 3 + 30f;
-        state = ensureSpace(document, state, sectionHeaderHeight);
+        float headerHeight = SECTION_FONT_SIZE + LINE_HEIGHT + 30f;
+        state = ensureSpace(document, state, headerHeight);
 
-        // Double line separator before section
         drawThickHorizontalLine(state, MARGIN, state.page.getMediaBox().getWidth() - MARGIN);
         state.y -= 18f;
 
-        String sectionTitle = section.getPaymentType().name() + " TRANSACTIONS";
+        String sectionTitle = statusLabel.replace("_", " ") + " TRANSACTIONS";
         writeText(state.contentStream, sectionTitle, MARGIN, state.y, state.headerFont, SECTION_FONT_SIZE);
-        state.y -= LINE_HEIGHT + 4f;
-
-        // Section summary with status breakdown
-        TransactionReportSummary summary = section.getSummary();
-        if (summary != null) {
-            writeText(state.contentStream,
-                    "Total Amount: " + formatCurrency(summary.getTotalAmount()),
-                    MARGIN + 10f, state.y, state.bodyFont, BODY_FONT_SIZE);
-            state.y -= LINE_HEIGHT;
-
-            writeText(state.contentStream,
-                    "Completed: " + summary.getCompletedCount()
-                            + " (" + formatCurrency(summary.getCompletedAmount()) + ")",
-                    MARGIN + 10f, state.y, state.bodyFont, BODY_FONT_SIZE);
-            state.y -= LINE_HEIGHT;
-
-            writeText(state.contentStream,
-                    "Voided: " + summary.getVoidedCount()
-                            + " (" + formatCurrency(summary.getVoidedAmount()) + ")",
-                    MARGIN + 10f, state.y, state.bodyFont, BODY_FONT_SIZE);
-            state.y -= LINE_HEIGHT;
-
-            writeText(state.contentStream,
-                    "Refunded: " + summary.getRefundedCount()
-                            + " (" + formatCurrency(summary.getRefundedAmount()) + ")",
-                    MARGIN + 10f, state.y, state.bodyFont, BODY_FONT_SIZE);
-            state.y -= LINE_HEIGHT + 14f;
-        }
-
-        // Status groups
-        if (section.getCompleted() != null) {
-            state = writeStatusGroup(document, state, "COMPLETED", section.getCompleted(), section.getPaymentType());
-        }
-        if (section.getVoided() != null) {
-            state = writeStatusGroup(document, state, "VOIDED", section.getVoided(), section.getPaymentType());
-        }
-        if (section.getRefunded() != null) {
-            state = writeStatusGroup(document, state, "REFUNDED", section.getRefunded(), section.getPaymentType());
-        }
-
-        state.y -= 10f;
-        return state;
-    }
-
-    // ─── Status group ─────────────────────────────────────────────────
-
-    private PageState writeStatusGroup(PDDocument document,
-                                       PageState state,
-                                       String statusLabel,
-                                       StatusSection statusSection,
-                                       PaymentType paymentType) throws IOException {
-        List<TransactionEntry> transactions = statusSection.getTransactions();
-        if (transactions == null || transactions.isEmpty()) {
-            return state;
-        }
-
-        // Status sub-header
-        state = ensureSpace(document, state, SUBSECTION_FONT_SIZE + LINE_HEIGHT + 20f);
-        drawHorizontalLine(state, MARGIN, state.page.getMediaBox().getWidth() - MARGIN);
-        state.y -= 14f;
-        writeText(state.contentStream, statusLabel, MARGIN + 5f, state.y, state.headerFont, SUBSECTION_FONT_SIZE);
         state.y -= LINE_HEIGHT + 10f;
 
         for (int i = 0; i < transactions.size(); i++) {
-            state = writeTransactionBlock(document, state, transactions.get(i), paymentType);
+            state = writeTransactionBlock(document, state, transactions.get(i));
 
-            // Dashed separator between transactions (not after the last one)
             if (i < transactions.size() - 1) {
                 state = ensureSpace(document, state, LINE_HEIGHT);
                 drawDashedLine(state, MARGIN + 20f, state.page.getMediaBox().getWidth() - MARGIN - 20f);
@@ -261,105 +187,79 @@ public class PdfBoxTransactionReportGenerator {
             }
         }
 
-        state.y -= 8f;
+        state.y -= 10f;
         return state;
     }
 
-    // ─── Individual transaction block ─────────────────────────────────
-
     private PageState writeTransactionBlock(PDDocument document,
                                             PageState state,
-                                            TransactionEntry entry,
-                                            PaymentType paymentType) throws IOException {
+                                            TransactionEntry entry) throws IOException {
         float indent = MARGIN + 15f;
 
-        // Estimate minimum space for the transaction header
         state = ensureSpace(document, state, LINE_HEIGHT * 6 + 20f);
 
-        // Transaction ID
         writeText(state.contentStream, "Transaction: " + formatUuid(entry.getId()),
                 indent, state.y, state.headerFont, BODY_FONT_SIZE);
         state.y -= LINE_HEIGHT;
 
-        // Date
         writeText(state.contentStream, "Date: " + formatDateTime(entry.getDate()),
                 indent, state.y, state.bodyFont, BODY_FONT_SIZE);
         state.y -= LINE_HEIGHT;
 
-        // Status
         writeText(state.contentStream, "Status: " + entry.getStatus().name(),
                 indent, state.y, state.bodyFont, BODY_FONT_SIZE);
         state.y -= LINE_HEIGHT;
 
-        // Total amount
         writeText(state.contentStream, "Total Amount: " + formatCurrency(entry.getTotalAmount()),
                 indent, state.y, state.bodyFont, BODY_FONT_SIZE);
         state.y -= LINE_HEIGHT;
 
-        // Customer
+        if (entry.getAmountPaid() != null && entry.getAmountPaid().compareTo(BigDecimal.ZERO) > 0) {
+            writeText(state.contentStream, "Amount Paid: " + formatCurrency(entry.getAmountPaid()),
+                    indent, state.y, state.bodyFont, BODY_FONT_SIZE);
+            state.y -= LINE_HEIGHT;
+        }
+
+        if (entry.getBalanceDue() != null && entry.getBalanceDue().compareTo(BigDecimal.ZERO) > 0) {
+            writeText(state.contentStream, "Balance Due: " + formatCurrency(entry.getBalanceDue()),
+                    indent, state.y, state.bodyFont, BODY_FONT_SIZE);
+            state.y -= LINE_HEIGHT;
+        }
+
         if (entry.getCustomerName() != null && !entry.getCustomerName().isBlank()) {
             writeText(state.contentStream, "Customer: " + entry.getCustomerName(),
                     indent, state.y, state.bodyFont, BODY_FONT_SIZE);
             state.y -= LINE_HEIGHT;
         }
 
-        // Cashier
         if (entry.getCashierName() != null && !entry.getCashierName().isBlank()) {
             writeText(state.contentStream, "Processed By: " + entry.getCashierName(),
                     indent, state.y, state.bodyFont, BODY_FONT_SIZE);
             state.y -= LINE_HEIGHT;
         }
 
-        // Payment-type-specific details
-        state = writePaymentSpecificDetails(document, state, entry, paymentType, indent);
+        // Payment history
+        if (entry.getPayments() != null && !entry.getPayments().isEmpty()) {
+            state.y -= 4f;
+            writeText(state.contentStream, "Payments:", indent, state.y, state.headerFont, SMALL_FONT_SIZE);
+            state.y -= LINE_HEIGHT;
+            for (PaymentMethodEntry pmt : entry.getPayments()) {
+                String ref = pmt.getReferenceNumber() != null ? " (Ref: " + pmt.getReferenceNumber() + ")" : "";
+                writeText(state.contentStream,
+                    formatDateTime(pmt.getCreatedAt()) + " - " + pmt.getPaymentMethod()
+                        + " - " + formatCurrency(pmt.getAmount()) + ref,
+                    indent + 10f, state.y, state.bodyFont, SMALL_FONT_SIZE);
+                state.y -= LINE_HEIGHT;
+            }
+        }
 
-        // Status-specific details
         state = writeStatusSpecificDetails(document, state, entry, indent);
 
-        // Items table
         state = writeItemsSection(document, state, entry, indent);
 
         state.y -= 6f;
         return state;
     }
-
-    // ─── Payment-specific details ─────────────────────────────────────
-
-    private PageState writePaymentSpecificDetails(PDDocument document,
-                                                  PageState state,
-                                                  TransactionEntry entry,
-                                                  PaymentType paymentType,
-                                                  float indent) throws IOException {
-        if (paymentType == PaymentType.CASH) {
-            if (entry.getCashTender() != null) {
-                state = ensureSpace(document, state, LINE_HEIGHT * 2);
-                writeText(state.contentStream, "Cash Tender: " + formatCurrency(entry.getCashTender()),
-                        indent, state.y, state.bodyFont, BODY_FONT_SIZE);
-                state.y -= LINE_HEIGHT;
-            }
-            if (entry.getChange() != null) {
-                writeText(state.contentStream, "Change: " + formatCurrency(entry.getChange()),
-                        indent, state.y, state.bodyFont, BODY_FONT_SIZE);
-                state.y -= LINE_HEIGHT;
-            }
-        } else if (paymentType == PaymentType.GCASH) {
-            state = ensureSpace(document, state, LINE_HEIGHT * 2);
-            if (entry.getReferenceNumber() != null && !entry.getReferenceNumber().isBlank()) {
-                writeText(state.contentStream, "GCash Reference: " + entry.getReferenceNumber(),
-                        indent, state.y, state.bodyFont, BODY_FONT_SIZE);
-                state.y -= LINE_HEIGHT;
-            }
-            if (entry.getGcashPaymentImgDir() != null && !entry.getGcashPaymentImgDir().isBlank()) {
-                writeText(state.contentStream, "Payment Image: " + entry.getGcashPaymentImgDir(),
-                        indent, state.y, state.italicFont, SMALL_FONT_SIZE);
-                state.y -= LINE_HEIGHT;
-            }
-        }
-
-        return state;
-    }
-
-    // ─── Status-specific details ──────────────────────────────────────
 
     private PageState writeStatusSpecificDetails(PDDocument document,
                                                  PageState state,
@@ -392,8 +292,6 @@ public class PdfBoxTransactionReportGenerator {
         return state;
     }
 
-    // ─── Items section ────────────────────────────────────────────────
-
     private PageState writeItemsSection(PDDocument document,
                                         PageState state,
                                         TransactionEntry entry,
@@ -406,7 +304,6 @@ public class PdfBoxTransactionReportGenerator {
         state.y -= 8f;
 
         if (entry.getStatus() == TransactionStatus.PARTIALLY_REFUNDED) {
-            // Split into refunded and non-refunded
             List<TransactionItemEntry> refundedItems = new ArrayList<>();
             List<TransactionItemEntry> nonRefundedItems = new ArrayList<>();
 
@@ -443,7 +340,6 @@ public class PdfBoxTransactionReportGenerator {
             state = writeItemsTable(document, state, items, indent, true);
 
         } else {
-            // COMPLETED or VOIDED — regular items table
             state = ensureSpace(document, state, LINE_HEIGHT + ROW_HEIGHT * 2 + 10f);
             writeText(state.contentStream, "Items:",
                     indent, state.y, state.headerFont, SMALL_FONT_SIZE);
@@ -453,8 +349,6 @@ public class PdfBoxTransactionReportGenerator {
 
         return state;
     }
-
-    // ─── Items table ──────────────────────────────────────────────────
 
     private PageState writeItemsTable(PDDocument document,
                                       PageState state,
@@ -469,31 +363,21 @@ public class PdfBoxTransactionReportGenerator {
         if (showRefundColumns) {
             headers = List.of("Product", "Qty", "Price", "Discount", "Subtotal", "Ref Qty", "Ref Amt");
             columnWidths = new float[]{
-                    tableWidth * 0.25f,
-                    tableWidth * 0.08f,
-                    tableWidth * 0.13f,
-                    tableWidth * 0.14f,
-                    tableWidth * 0.14f,
-                    tableWidth * 0.10f,
-                    tableWidth * 0.16f
+                    tableWidth * 0.25f, tableWidth * 0.08f, tableWidth * 0.13f,
+                    tableWidth * 0.14f, tableWidth * 0.14f, tableWidth * 0.10f, tableWidth * 0.16f
             };
         } else {
             headers = List.of("Product", "Qty", "Unit Price", "Discount", "Subtotal");
             columnWidths = new float[]{
-                    tableWidth * 0.32f,
-                    tableWidth * 0.10f,
-                    tableWidth * 0.18f,
-                    tableWidth * 0.18f,
-                    tableWidth * 0.22f
+                    tableWidth * 0.32f, tableWidth * 0.10f, tableWidth * 0.18f,
+                    tableWidth * 0.18f, tableWidth * 0.22f
             };
         }
 
-        // Header row
         state = ensureSpace(document, state, ROW_HEIGHT * 2);
         drawItemRow(state, headers, indent, state.y, columnWidths, true);
         state.y -= ROW_HEIGHT;
 
-        // Data rows
         for (TransactionItemEntry item : items) {
             if (state.y - ROW_HEIGHT < MARGIN) {
                 state.contentStream.close();
@@ -505,20 +389,15 @@ public class PdfBoxTransactionReportGenerator {
             List<String> values;
             if (showRefundColumns) {
                 values = List.of(
-                        safe(item.getProductName()),
-                        safeInt(item.getQuantity()),
-                        formatCurrency(item.getUnitPrice()),
-                        formatDiscount(item),
-                        formatCurrency(item.getSubtotal()),
-                        safeInt(item.getRefundedQuantity()),
+                        safe(item.getProductName()), safeInt(item.getQuantity()),
+                        formatCurrency(item.getUnitPrice()), formatDiscount(item),
+                        formatCurrency(item.getSubtotal()), safeInt(item.getRefundedQuantity()),
                         formatCurrency(item.getRefundAmount())
                 );
             } else {
                 values = List.of(
-                        safe(item.getProductName()),
-                        safeInt(item.getQuantity()),
-                        formatCurrency(item.getUnitPrice()),
-                        formatDiscount(item),
+                        safe(item.getProductName()), safeInt(item.getQuantity()),
+                        formatCurrency(item.getUnitPrice()), formatDiscount(item),
                         formatCurrency(item.getSubtotal())
                 );
             }
@@ -531,12 +410,8 @@ public class PdfBoxTransactionReportGenerator {
         return state;
     }
 
-    private void drawItemRow(PageState state,
-                             List<String> values,
-                             float startX,
-                             float y,
-                             float[] columnWidths,
-                             boolean headerRow) throws IOException {
+    private void drawItemRow(PageState state, List<String> values, float startX,
+                             float y, float[] columnWidths, boolean headerRow) throws IOException {
         PDFont font = headerRow ? state.headerFont : state.bodyFont;
         float fontSize = SMALL_FONT_SIZE;
 
@@ -548,13 +423,10 @@ public class PdfBoxTransactionReportGenerator {
 
             String text = values.get(i) == null ? "" : values.get(i);
             String fittedText = fitToWidth(text, font, fontSize, colWidth - (CELL_PADDING * 2));
-            float textY = y - 12f;
-            writeText(state.contentStream, fittedText, currentX + CELL_PADDING, textY, font, fontSize);
+            writeText(state.contentStream, fittedText, currentX + CELL_PADDING, y - 12f, font, fontSize);
             currentX += colWidth;
         }
     }
-
-    // ─── Drawing helpers ──────────────────────────────────────────────
 
     private void drawHorizontalLine(PageState state, float startX, float endX) throws IOException {
         state.contentStream.moveTo(startX, state.y);
@@ -578,8 +450,6 @@ public class PdfBoxTransactionReportGenerator {
         state.contentStream.setLineDashPattern(new float[]{}, 0);
     }
 
-    // ─── Page management ──────────────────────────────────────────────
-
     private PageState startPage(PDDocument document, PDFont headerFont, PDFont bodyFont, PDFont italicFont) throws IOException {
         PDPage page = new PDPage(PDRectangle.LETTER);
         document.addPage(page);
@@ -588,9 +458,7 @@ public class PdfBoxTransactionReportGenerator {
         return new PageState(page, contentStream, y, headerFont, bodyFont, italicFont);
     }
 
-    private PageState ensureSpace(PDDocument document,
-                                  PageState state,
-                                  float requiredHeight) throws IOException {
+    private PageState ensureSpace(PDDocument document, PageState state, float requiredHeight) throws IOException {
         if (state.y - requiredHeight < MARGIN) {
             state.contentStream.close();
             return startPage(document, state.headerFont, state.bodyFont, state.italicFont);
@@ -604,31 +472,21 @@ public class PdfBoxTransactionReportGenerator {
             if (file.exists()) {
                 try {
                     return PDType0Font.load(document, file);
-                } catch (IOException ignored) {
-                    // fall through to next path or fallback
-                }
+                } catch (IOException ignored) {}
             }
         }
         return fallback;
     }
 
-    private PageState writeBodyLine(PDDocument document,
-                                    PageState state,
-                                    String text) throws IOException {
+    private PageState writeBodyLine(PDDocument document, PageState state, String text) throws IOException {
         state = ensureSpace(document, state, LINE_HEIGHT);
         writeText(state.contentStream, text, MARGIN, state.y, state.bodyFont, BODY_FONT_SIZE);
         state.y -= LINE_HEIGHT;
         return state;
     }
 
-    // ─── Text rendering ───────────────────────────────────────────────
-
-    private void writeText(PDPageContentStream contentStream,
-                           String text,
-                           float x,
-                           float y,
-                           PDFont font,
-                           float fontSize) throws IOException {
+    private void writeText(PDPageContentStream contentStream, String text,
+                           float x, float y, PDFont font, float fontSize) throws IOException {
         contentStream.beginText();
         contentStream.setFont(font, fontSize);
         contentStream.newLineAtOffset(x, y);
@@ -636,72 +494,46 @@ public class PdfBoxTransactionReportGenerator {
         contentStream.endText();
     }
 
-    private String fitToWidth(String text,
-                              PDFont font,
-                              float fontSize,
-                              float maxWidth) throws IOException {
-        if (text == null || text.isEmpty()) {
-            return "";
-        }
+    private String fitToWidth(String text, PDFont font, float fontSize, float maxWidth) throws IOException {
+        if (text == null || text.isEmpty()) return "";
         float textWidth = font.getStringWidth(text) / 1000f * fontSize;
-        if (textWidth <= maxWidth) {
-            return text;
-        }
+        if (textWidth <= maxWidth) return text;
         String ellipsis = "...";
         int end = text.length();
         while (end > 0) {
             String truncated = text.substring(0, end) + ellipsis;
-            float width = font.getStringWidth(truncated) / 1000f * fontSize;
-            if (width <= maxWidth) {
-                return truncated;
-            }
+            if (font.getStringWidth(truncated) / 1000f * fontSize <= maxWidth) return truncated;
             end--;
         }
         return "";
     }
 
-    // ─── Formatting helpers ───────────────────────────────────────────
-
     private String resolveTitle(ReportMetadata metadata) {
-        if (metadata == null) {
-            return "Transaction Report";
-        }
-        if (metadata.getTitle() != null && !metadata.getTitle().isBlank()) {
-            return metadata.getTitle();
-        }
-        if (metadata.getReportType() != null) {
-            return metadata.getReportType().name();
-        }
+        if (metadata == null) return "Transaction Report";
+        if (metadata.getTitle() != null && !metadata.getTitle().isBlank()) return metadata.getTitle();
+        if (metadata.getReportType() != null) return metadata.getReportType().name();
         return "Transaction Report";
     }
 
     private String formatCurrency(BigDecimal value) {
-        if (value == null) {
-            return "-";
-        }
-        return "\u20B1" + String.format("%,.2f", value);
+        if (value == null) return "-";
+        return "₱" + String.format("%,.2f", value);
     }
 
     private String formatDateTime(LocalDateTime dateTime) {
-        if (dateTime == null) {
-            return "N/A";
-        }
+        if (dateTime == null) return "N/A";
         return dateTime.format(DATE_TIME_FMT);
     }
 
     private String formatDateRange(LocalDate minDate, LocalDate maxDate) {
-        if (minDate == null && maxDate == null) {
-            return null;
-        }
+        if (minDate == null && maxDate == null) return null;
         String from = minDate != null ? minDate.format(DATE_FMT) : "Beginning";
         String to = maxDate != null ? maxDate.format(DATE_FMT) : "Present";
         return from + " to " + to;
     }
 
     private String formatDiscount(TransactionItemEntry item) {
-        if (item.getDiscountType() == null || item.getDiscountValue() == null) {
-            return "-";
-        }
+        if (item.getDiscountType() == null || item.getDiscountValue() == null) return "-";
         return switch (item.getDiscountType()) {
             case PERCENT -> item.getDiscountValue().toPlainString() + "%";
             case FIXED -> formatCurrency(item.getDiscountValue());
@@ -709,10 +541,7 @@ public class PdfBoxTransactionReportGenerator {
     }
 
     private String formatUuid(java.util.UUID uuid) {
-        if (uuid == null) {
-            return "N/A";
-        }
-        return uuid.toString();
+        return uuid == null ? "N/A" : uuid.toString();
     }
 
     private String safe(String value) {
@@ -722,8 +551,6 @@ public class PdfBoxTransactionReportGenerator {
     private String safeInt(Integer value) {
         return value == null ? "-" : value.toString();
     }
-
-    // ─── Inner class ──────────────────────────────────────────────────
 
     private static class PageState {
         private final PDPage page;

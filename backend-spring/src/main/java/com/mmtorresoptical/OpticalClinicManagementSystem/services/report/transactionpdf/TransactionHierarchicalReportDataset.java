@@ -8,6 +8,7 @@ import lombok.NoArgsConstructor;
 
 import java.time.LocalDate;
 import java.util.List;
+import java.util.Map;
 
 @Data
 @Builder
@@ -18,7 +19,7 @@ public class TransactionHierarchicalReportDataset {
     private LocalDate minDate;
     private LocalDate maxDate;
     private TransactionReportSummary summary;
-    private List<PaymentTypeSection> paymentTypeSections;
+    private Map<String, List<TransactionEntry>> statusGroups;
     @Builder.Default
     private String emptyMessage = "No transactions available.";
 }

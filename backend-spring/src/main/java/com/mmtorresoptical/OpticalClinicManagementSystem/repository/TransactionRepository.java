@@ -17,8 +17,6 @@ import java.util.UUID;
 
 public interface TransactionRepository extends JpaRepository<Transaction, UUID>, JpaSpecificationExecutor<Transaction> {
 
-    Boolean existsByReferenceNumber(String referenceNumber);
-
     @Query("SELECT MAX(t.transactionNumber) FROM Transaction t WHERE t.transactionNumber LIKE CONCAT(:prefix, '%')")
     String findMaxTransactionNumberByPrefix(String prefix);
 

@@ -1,6 +1,5 @@
 package com.mmtorresoptical.OpticalClinicManagementSystem.services.report;
 
-import com.mmtorresoptical.OpticalClinicManagementSystem.enums.PaymentType;
 import com.mmtorresoptical.OpticalClinicManagementSystem.enums.TransactionStatus;
 import com.mmtorresoptical.OpticalClinicManagementSystem.model.*;
 import com.mmtorresoptical.OpticalClinicManagementSystem.services.controller.TransactionService;
@@ -22,6 +21,10 @@ public class TransactionPdfAggregationService {
 
     private final TransactionService transactionService;
 
+    private static final List<String> STATUS_ORDER = List.of(
+        "PENDING", "PARTIALLY_PAID", "PAID", "COMPLETED", "VOIDED", "PARTIALLY_REFUNDED", "FULLY_REFUNDED"
+    );
+
     public TransactionHierarchicalReportDataset buildTransactionReport(
             LocalDate minDate, LocalDate maxDate
     ) {
@@ -34,8 +37,6 @@ public class TransactionPdfAggregationService {
 
         List<Transaction> transactions = transactionService.getTransactionsForReport(minDate, maxDate);
 
-        // Deduplicate — @EntityGraph JOINs on nested collections can produce
-        // duplicate root entities in the result list
         transactions = new ArrayList<>(transactions.stream()
                 .collect(Collectors.toMap(
                         Transaction::getTransactionId,
@@ -51,7 +52,7 @@ public class TransactionPdfAggregationService {
                     .minDate(minDate)
                     .maxDate(maxDate)
                     .summary(emptySummary())
-                    .paymentTypeSections(Collections.emptyList())
+                    .statusGroups(Collections.emptyMap())
                     .emptyMessage("No transactions available.")
                     .build();
         }
@@ -62,41 +63,33 @@ public class TransactionPdfAggregationService {
 
         TransactionReportSummary overallSummary = computeSummary(entries);
 
-        Map<PaymentType, List<TransactionEntry>> byPaymentType = entries.stream()
-                .collect(Collectors.groupingBy(
-                        TransactionEntry::getPaymentType,
-                        LinkedHashMap::new,
-                        Collectors.toList()
-                ));
-
-        List<PaymentTypeSection> sections = new ArrayList<>();
-        for (PaymentType pt : PaymentType.values()) {
-            List<TransactionEntry> group = byPaymentType.getOrDefault(pt, Collections.emptyList());
-            if (group.isEmpty()) {
-                continue;
+        Map<String, List<TransactionEntry>> statusGroups = new LinkedHashMap<>();
+        for (String statusKey : STATUS_ORDER) {
+            List<TransactionEntry> group = entries.stream()
+                .filter(e -> e.getStatus() != null && e.getStatus().name().equals(statusKey))
+                .collect(Collectors.toList());
+            if (!group.isEmpty()) {
+                statusGroups.put(statusKey, group);
             }
-            sections.add(buildPaymentTypeSection(pt, group));
         }
+
+        // Handle any statuses not in the predefined order
+        entries.stream()
+            .filter(e -> e.getStatus() != null && !STATUS_ORDER.contains(e.getStatus().name()))
+            .forEach(e -> statusGroups.computeIfAbsent(e.getStatus().name(), k -> new ArrayList<>()).add(e));
 
         return TransactionHierarchicalReportDataset.builder()
                 .metadata(metadata)
                 .minDate(minDate)
                 .maxDate(maxDate)
                 .summary(overallSummary)
-                .paymentTypeSections(sections)
+                .statusGroups(statusGroups)
                 .build();
     }
 
     private TransactionEntry mapTransactionToEntry(Transaction transaction) {
         String customerName = resolveCustomerName(transaction.getPatient());
         String cashierName = resolveCashierName(transaction.getUser());
-
-        BigDecimal change = null;
-        if (transaction.getPaymentType() == PaymentType.CASH
-                && transaction.getCashTender() != null
-                && transaction.getTotalAmount() != null) {
-            change = transaction.getCashTender().subtract(transaction.getTotalAmount());
-        }
 
         String voidedByName = null;
         if (transaction.getVoidedBy() != null) {
@@ -105,8 +98,6 @@ public class TransactionPdfAggregationService {
 
         List<TransactionItemEntry> itemEntries = Collections.emptyList();
         if (transaction.getTransactionItems() != null) {
-            // Deduplicate items — @EntityGraph JOINs on refunds can produce
-            // duplicate TransactionItem entries when an item has multiple refunds
             itemEntries = transaction.getTransactionItems().stream()
                     .collect(Collectors.toMap(
                             TransactionItem::getTransactionItemId,
@@ -119,22 +110,32 @@ public class TransactionPdfAggregationService {
                     .toList();
         }
 
+        List<PaymentMethodEntry> paymentEntries = Collections.emptyList();
+        if (transaction.getPayments() != null && !transaction.getPayments().isEmpty()) {
+            paymentEntries = transaction.getPayments().stream()
+                .map(p -> PaymentMethodEntry.builder()
+                    .amount(p.getAmount())
+                    .paymentMethod(p.getPaymentMethod().name())
+                    .referenceNumber(p.getReferenceNumber())
+                    .createdAt(p.getCreatedAt())
+                    .build())
+                .toList();
+        }
+
         return TransactionEntry.builder()
                 .id(transaction.getTransactionId())
                 .date(transaction.getTransactionDate())
                 .totalAmount(transaction.getTotalAmount())
-                .paymentType(transaction.getPaymentType())
+                .amountPaid(transaction.getAmountPaid())
+                .balanceDue(transaction.getBalanceDue())
                 .status(transaction.getTransactionStatus())
                 .customerName(customerName)
                 .cashierName(cashierName)
-                .cashTender(transaction.getCashTender())
-                .change(change)
-                .referenceNumber(transaction.getReferenceNumber())
-                .gcashPaymentImgDir(transaction.getGcashPaymentImgDir())
                 .voidReason(transaction.getVoidReason())
                 .voidedAt(transaction.getVoidedAt())
                 .voidedBy(voidedByName)
                 .items(itemEntries)
+                .payments(paymentEntries)
                 .build();
     }
 
@@ -166,42 +167,6 @@ public class TransactionPdfAggregationService {
                 .build();
     }
 
-    private PaymentTypeSection buildPaymentTypeSection(
-            PaymentType paymentType, List<TransactionEntry> entries
-    ) {
-        TransactionReportSummary sectionSummary = computeSummary(entries);
-
-        Map<String, List<TransactionEntry>> byStatus = new LinkedHashMap<>();
-        byStatus.put("completed", new ArrayList<>());
-        byStatus.put("voided", new ArrayList<>());
-        byStatus.put("refunded", new ArrayList<>());
-
-        for (TransactionEntry entry : entries) {
-            switch (entry.getStatus()) {
-                case COMPLETED -> byStatus.get("completed").add(entry);
-                case VOIDED -> byStatus.get("voided").add(entry);
-                case PARTIALLY_REFUNDED, FULLY_REFUNDED -> byStatus.get("refunded").add(entry);
-            }
-        }
-
-        return PaymentTypeSection.builder()
-                .paymentType(paymentType)
-                .summary(sectionSummary)
-                .completed(buildStatusSection(byStatus.get("completed")))
-                .voided(buildStatusSection(byStatus.get("voided")))
-                .refunded(buildStatusSection(byStatus.get("refunded")))
-                .build();
-    }
-
-    private StatusSection buildStatusSection(List<TransactionEntry> entries) {
-        if (entries == null || entries.isEmpty()) {
-            return null;
-        }
-        return StatusSection.builder()
-                .transactions(entries)
-                .build();
-    }
-
     private TransactionReportSummary computeSummary(List<TransactionEntry> entries) {
         long totalCount = entries.size();
         BigDecimal totalAmount = BigDecimal.ZERO;
@@ -216,8 +181,9 @@ public class TransactionPdfAggregationService {
             BigDecimal amount = entry.getTotalAmount() != null ? entry.getTotalAmount() : BigDecimal.ZERO;
             totalAmount = totalAmount.add(amount);
 
+            if (entry.getStatus() == null) continue;
             switch (entry.getStatus()) {
-                case COMPLETED -> {
+                case PAID, COMPLETED -> {
                     completedCount++;
                     completedAmount = completedAmount.add(amount);
                 }

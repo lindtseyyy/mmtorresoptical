@@ -1,6 +1,5 @@
 package com.mmtorresoptical.OpticalClinicManagementSystem.services.report.transactionpdf;
 
-import com.mmtorresoptical.OpticalClinicManagementSystem.enums.PaymentType;
 import com.mmtorresoptical.OpticalClinicManagementSystem.enums.TransactionStatus;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
@@ -20,16 +19,14 @@ public class TransactionEntry {
     private UUID id;
     private LocalDateTime date;
     private BigDecimal totalAmount;
-    private PaymentType paymentType;
+    private BigDecimal amountPaid;
+    private BigDecimal balanceDue;
     private TransactionStatus status;
     private String customerName;
     private String cashierName;
-    private BigDecimal cashTender;
-    private BigDecimal change;
-    private String referenceNumber;
-    private String gcashPaymentImgDir;
     private String voidReason;
     private LocalDateTime voidedAt;
     private String voidedBy;
     private List<TransactionItemEntry> items;
+    private List<PaymentMethodEntry> payments;
 }

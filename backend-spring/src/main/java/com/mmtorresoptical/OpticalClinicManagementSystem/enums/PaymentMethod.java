@@ -1,6 +1,6 @@
 package com.mmtorresoptical.OpticalClinicManagementSystem.enums;
 
-public enum PaymentType {
+public enum PaymentMethod {
     CASH,
     GCASH
 }

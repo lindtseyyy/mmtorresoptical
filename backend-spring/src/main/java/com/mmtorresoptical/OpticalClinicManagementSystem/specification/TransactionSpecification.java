@@ -1,6 +1,5 @@
 package com.mmtorresoptical.OpticalClinicManagementSystem.specification;
 
-import com.mmtorresoptical.OpticalClinicManagementSystem.enums.PaymentType;
 import com.mmtorresoptical.OpticalClinicManagementSystem.enums.TransactionStatus;
 import com.mmtorresoptical.OpticalClinicManagementSystem.model.Product;
 import com.mmtorresoptical.OpticalClinicManagementSystem.model.Transaction;
@@ -53,11 +52,6 @@ public class TransactionSpecification {
                     end
             );
         };
-    }
-
-    public static Specification<Transaction> hasPaymentType(PaymentType paymentType) {
-        return (root, query, cb) ->
-                cb.equal(root.get("paymentType"), paymentType);
     }
 
     public static Specification<Transaction> hasTransactionStatus(TransactionStatus transactionStatus) {
