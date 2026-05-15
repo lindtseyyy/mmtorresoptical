@@ -64,6 +64,7 @@ export const UserForm: React.FC<UserFormProps> = ({
   const navigate = useNavigate();
   const queryClient = useQueryClient();
   const [showPassword, setShowPassword] = useState(false);
+  const [showConfirmPassword, setShowConfirmPassword] = useState(false);
   const [resettingPw, setResettingPw] = useState(false);
   const [pwRequired, setPwRequired] = useState(isPwChangeRequired);
   const [resetDialogOpen, setResetDialogOpen] = useState(false);
@@ -118,22 +119,24 @@ export const UserForm: React.FC<UserFormProps> = ({
       contactNumber: "",
       username: "",
       password: "",
+      confirmPassword: "",
       role: "Staff",
     },
   });
   // 👇 Add handleFormSubmit here
   const handleFormSubmit: SubmitHandler<FormSchemaType> = async (data) => {
+    const { confirmPassword, ...rest } = data;
     const payload: UserFormData = {
-      firstName: data.firstName ?? "",
-      middleName: data.middleName ?? "",
-      lastName: data.lastName ?? "",
-      gender: data.gender ?? "Other",
-      birthDate: data.birthDate ?? "",
-      email: data.email ?? "",
-      contactNumber: data.contactNumber ?? "",
-      username: data.username ?? "",
-      password: data.password ?? "",
-      role: data.role ?? "Staff",
+      firstName: rest.firstName ?? "",
+      middleName: rest.middleName ?? "",
+      lastName: rest.lastName ?? "",
+      gender: rest.gender ?? "Other",
+      birthDate: rest.birthDate ?? "",
+      email: rest.email ?? "",
+      contactNumber: rest.contactNumber ?? "",
+      username: rest.username ?? "",
+      password: rest.password ?? "",
+      role: rest.role ?? "Staff",
     };
 
     await onFormSubmit(payload);
@@ -341,6 +344,36 @@ export const UserForm: React.FC<UserFormProps> = ({
                           className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground"
                         >
                           {showPassword ? (
+                            <EyeOff className="h-4 w-4" />
+                          ) : (
+                            <Eye className="h-4 w-4" />
+                          )}
+                        </button>
+                      </div>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+                <FormField
+                  control={form.control}
+                  name="confirmPassword"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Confirm Password *</FormLabel>
+                      <div className="relative">
+                        <FormControl>
+                          <Input
+                            type={showConfirmPassword ? "text" : "password"}
+                            placeholder="Confirm password"
+                            {...field}
+                          />
+                        </FormControl>
+                        <button
+                          type="button"
+                          onClick={() => setShowConfirmPassword(!showConfirmPassword)}
+                          className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground"
+                        >
+                          {showConfirmPassword ? (
                             <EyeOff className="h-4 w-4" />
                           ) : (
                             <Eye className="h-4 w-4" />

@@ -10,10 +10,14 @@ export const userSchema = z.object({
   contactNumber: z.string().min(10, "Must be at least 10 digits"),
   username: z.string().min(3, "Username must be at least 3 characters"),
   password: z.string().min(8, "Password must be at least 8 characters"),
+  confirmPassword: z.string().min(1, "Please confirm your password"),
   securityQuestion: z.string().optional(),
   securityAnswer: z.string().optional(),
   role: z.enum(["Admin", "Staff"]),
   isArchived: z.boolean().default(false),
+}).refine((data) => data.password === data.confirmPassword, {
+  message: "Passwords do not match",
+  path: ["confirmPassword"],
 });
 
 export type UserFormData = z.infer<typeof userSchema>;
