@@ -1,8 +1,9 @@
 package com.mmtorresoptical.OpticalClinicManagementSystem.dto.product;
 
 import com.mmtorresoptical.OpticalClinicManagementSystem.enums.ProductType;
+import com.mmtorresoptical.OpticalClinicManagementSystem.validation.ProductRequest;
+import com.mmtorresoptical.OpticalClinicManagementSystem.validation.ValidProductRequest;
 import jakarta.validation.constraints.DecimalMin;
-import jakarta.validation.constraints.Min;
 import jakarta.validation.constraints.NotEmpty;
 import jakarta.validation.constraints.NotNull;
 import lombok.Data;
@@ -10,7 +11,8 @@ import lombok.Data;
 import java.math.BigDecimal;
 
 @Data
-public class UpdateProductRequestDTO {
+@ValidProductRequest
+public class UpdateProductRequestDTO implements ProductRequest {
     @NotEmpty(message = "Product name is required")
     private String productName;
 
@@ -19,23 +21,16 @@ public class UpdateProductRequestDTO {
     @NotEmpty(message = "Category is required")
     private String category;
 
-    @NotEmpty(message = "Supplier is required")
     private String supplier;
 
     @NotNull(message = "Unit price is required")
     @DecimalMin(value = "0.0", inclusive = false, message = "Price must be greater than 0")
     private BigDecimal unitPrice;
 
-    @NotNull(message = "Quantity is required")
-    @Min(value = 0, message = "Quantity cannot be negative")
     private Integer quantity;
 
-    @NotNull(message = "Low stock threshold is required")
-    @Min(value = 0, message = "Threshold cannot be negative")
     private Integer lowLevelThreshold;
 
-    @NotNull(message = "Overstocked threshold is required")
-    @Min(value = 1, message = "Threshold must be at least 1")
     private Integer overstockedThreshold;
 
     private ProductType productType;
