@@ -1,26 +1,18 @@
-import { useState, useMemo } from "react";
+import { useState, useMemo, useEffect } from "react";
 import { Search, Plus, Package, ImageOff, ArrowUp, ArrowDown, Stethoscope } from "lucide-react";
 import { Input } from "@/shared/components/ui/input";
 import { Button } from "@/shared/components/ui/button";
 import { Badge } from "@/shared/components/ui/badge";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/shared/components/ui/select";
 import type { Product } from "@/features/inventory/types";
+import { CATEGORY_LABELS, PHYSICAL_CATEGORIES, SERVICE_CATEGORIES } from "@/features/inventory/types";
 
 interface ProductDisplayProps {
   products: Product[];
+  productTypeFilter: "PHYSICAL" | "SERVICE";
   onAddToCart: (product: Product) => void;
   disabled?: boolean;
 }
-
-const CATEGORY_LABELS: Record<string, string> = {
-  eyeglasses: "Eyeglasses",
-  frames: "Frames",
-  lens: "Lens",
-  goggles: "Goggles",
-  prisms: "Prisms",
-  eyedrop: "Eye Drops",
-  sunglasses: "Sunglasses",
-};
 
 const ProductCard: React.FC<{
   product: Product;
@@ -109,6 +101,7 @@ const ProductCard: React.FC<{
 
 const ProductDisplay: React.FC<ProductDisplayProps> = ({
   products,
+  productTypeFilter,
   onAddToCart,
   disabled = false,
 }) => {
@@ -117,10 +110,18 @@ const ProductDisplay: React.FC<ProductDisplayProps> = ({
   const [sortBy, setSortBy] = useState<"name" | "price" | "quantity">("name");
   const [sortAsc, setSortAsc] = useState(true);
 
-  const categories = useMemo(() => {
-    const cats = new Set(products.map((p) => p.category));
-    return Array.from(cats).sort();
-  }, [products]);
+  const isPhysical = productTypeFilter === "PHYSICAL";
+  const segmentTotal = isPhysical
+    ? products.filter((p) => p.productType === "PHYSICAL").length
+    : products.filter((p) => p.productType === "SERVICE").length;
+  const filteredCategories = isPhysical ? PHYSICAL_CATEGORIES : SERVICE_CATEGORIES;
+  const availableSortOptions = isPhysical
+    ? (["name", "price", "quantity"] as const)
+    : (["name", "price"] as const);
+
+  useEffect(() => {
+    setCategoryFilter("all");
+  }, [productTypeFilter]);
 
   const categoryCounts = useMemo(() => {
     const counts: Record<string, number> = {};
@@ -134,7 +135,7 @@ const ProductDisplay: React.FC<ProductDisplayProps> = ({
     let low = 0;
     let over = 0;
     products.forEach((p) => {
-      if (p.quantity === 0) return;
+      if (p.productType !== "PHYSICAL" || p.quantity === 0) return;
       if (p.quantity <= p.lowLevelThreshold) low++;
       else if (p.quantity >= p.overstockedThreshold) over++;
     });
@@ -143,20 +144,22 @@ const ProductDisplay: React.FC<ProductDisplayProps> = ({
 
   const filtered = useMemo(() => {
     const result = products.filter((p) => {
+      if (p.productType !== productTypeFilter) return false;
       const matchSearch =
         !search ||
         p.productName.toLowerCase().includes(search.toLowerCase());
       const matchCategory =
         categoryFilter === "all" ||
         categoryFilter === p.category ||
-        (categoryFilter === "low_stock" && p.quantity <= p.lowLevelThreshold && p.quantity > 0) ||
-        (categoryFilter === "overstocked" && p.quantity >= p.overstockedThreshold && p.quantity > 0);
+        (isPhysical && categoryFilter === "low_stock" && p.quantity <= p.lowLevelThreshold && p.quantity > 0) ||
+        (isPhysical && categoryFilter === "overstocked" && p.quantity >= p.overstockedThreshold && p.quantity > 0);
       return matchSearch && matchCategory;
     });
 
+    const effectiveSortBy = !isPhysical && sortBy === "quantity" ? "name" : sortBy;
     result.sort((a, b) => {
       let cmp: number;
-      switch (sortBy) {
+      switch (effectiveSortBy) {
         case "price":
           cmp = a.unitPrice - b.unitPrice;
           break;
@@ -170,7 +173,7 @@ const ProductDisplay: React.FC<ProductDisplayProps> = ({
     });
 
     return result;
-  }, [products, search, categoryFilter, sortBy, sortAsc]);
+  }, [products, productTypeFilter, search, categoryFilter, sortBy, sortAsc, isPhysical]);
 
   return (
     <div className="flex flex-col flex-1 min-h-0">
@@ -179,21 +182,26 @@ const ProductDisplay: React.FC<ProductDisplayProps> = ({
           <div className="relative flex-1">
             <Search className="absolute left-2.5 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
             <Input
-              placeholder="Search products..."
+              placeholder={isPhysical ? "Search products..." : "Search services..."}
               value={search}
               onChange={(e) => setSearch(e.target.value)}
               className="pl-8"
             />
           </div>
           <span className="text-xs text-muted-foreground whitespace-nowrap">Sort by:</span>
-          <Select value={sortBy} onValueChange={(v) => setSortBy(v as typeof sortBy)}>
+          <Select
+            value={isPhysical ? sortBy : (sortBy === "quantity" ? "name" : sortBy)}
+            onValueChange={(v) => setSortBy(v as typeof sortBy)}
+          >
             <SelectTrigger className="h-9 text-xs w-28 shrink-0">
               <SelectValue />
             </SelectTrigger>
             <SelectContent>
-              <SelectItem value="name" className="text-sm">Name</SelectItem>
-              <SelectItem value="price" className="text-sm">Price</SelectItem>
-              <SelectItem value="quantity" className="text-sm">Quantity</SelectItem>
+              {availableSortOptions.map((opt) => (
+                <SelectItem key={opt} value={opt} className="text-sm">
+                  {opt === "name" ? "Name" : opt === "price" ? "Price" : "Quantity"}
+                </SelectItem>
+              ))}
             </SelectContent>
           </Select>
           <Button
@@ -207,45 +215,51 @@ const ProductDisplay: React.FC<ProductDisplayProps> = ({
           </Button>
         </div>
 
-        <div className="flex flex-wrap gap-1">
+        <div className="flex flex-wrap gap-1 rounded-md bg-muted/50 p-1.5 border">
           <Badge
             variant={categoryFilter === "all" ? "default" : "outline"}
             className="cursor-pointer text-[11px]"
             onClick={() => setCategoryFilter("all")}
           >
-            All ({products.length})
+            All ({segmentTotal})
           </Badge>
-          {categories.map((cat) => (
+          {filteredCategories.map((cat) => (
             <Badge
               key={cat}
               variant={categoryFilter === cat ? "default" : "outline"}
               className="cursor-pointer text-[11px]"
               onClick={() => setCategoryFilter(cat)}
             >
-              {CATEGORY_LABELS[cat] ?? cat} ({categoryCounts[cat] ?? 0})
+              {CATEGORY_LABELS[cat]} ({categoryCounts[cat] ?? 0})
             </Badge>
           ))}
-          <Badge
-            variant={categoryFilter === "low_stock" ? "default" : "outline"}
-            className="cursor-pointer text-[11px]"
-            onClick={() => setCategoryFilter("low_stock")}
-          >
-            Low Stock ({lowStockCount})
-          </Badge>
-          <Badge
-            variant={categoryFilter === "overstocked" ? "default" : "outline"}
-            className="cursor-pointer text-[11px]"
-            onClick={() => setCategoryFilter("overstocked")}
-          >
-            Overstock ({overstockCount})
-          </Badge>
+          {isPhysical && (
+            <>
+              <Badge
+                variant={categoryFilter === "low_stock" ? "default" : "outline"}
+                className="cursor-pointer text-[11px]"
+                onClick={() => setCategoryFilter("low_stock")}
+              >
+                Low Stock ({lowStockCount})
+              </Badge>
+              <Badge
+                variant={categoryFilter === "overstocked" ? "default" : "outline"}
+                className="cursor-pointer text-[11px]"
+                onClick={() => setCategoryFilter("overstocked")}
+              >
+                Overstock ({overstockCount})
+              </Badge>
+            </>
+          )}
         </div>
       </div>
 
       {filtered.length === 0 ? (
         <div className="flex flex-1 flex-col items-center justify-center gap-2 text-muted-foreground">
           <Package className="h-10 w-10" />
-          <p className="text-sm">No products found</p>
+          <p className="text-sm">
+            {isPhysical ? "No products found" : "No services found"}
+          </p>
         </div>
       ) : (
         <div className="flex-1 min-h-0 overflow-y-auto pr-1">

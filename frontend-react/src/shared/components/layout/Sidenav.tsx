@@ -10,7 +10,7 @@ const menuItems = [
   { title: "Sales and Transactions", href: "/transactions", icon: Receipt, roles: ["ADMIN", "STAFF"] as Role[] },
   { title: "Patient Management", href: "/patients", icon: UserRound, roles: ["ADMIN"] as Role[] },
   { title: "User Management", href: "/users", icon: Users, roles: ["ADMIN"] as Role[] },
-  { title: "Database Backup", href: "/admin/database", icon: Database, roles: ["ADMIN"] as Role[] },
+  { title: "Maintenance", href: "/admin/database", icon: Database, roles: ["ADMIN"] as Role[] },
   { title: "Help", href: "/help", icon: CircleHelp, roles: ["ADMIN", "STAFF"] as Role[] },
   { title: "About", href: "/about", icon: Info, roles: ["ADMIN", "STAFF"] as Role[] },
 ];

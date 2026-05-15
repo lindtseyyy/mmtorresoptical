@@ -1,9 +1,10 @@
-import { useState, useCallback, useEffect } from "react";
+import { useState, useCallback, useEffect, useMemo } from "react";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
 import { Loader2, Trash2 } from "lucide-react";
 
 import { Button } from "@/shared/components/ui/button";
+import SegmentedControl from "@/shared/components/ui/segmented-control";
 import { useProductsForSale } from "@/features/sales/hooks/salesQuery";
 import { createTransaction } from "@/features/sales/services/transactionApi";
 import ProductDisplay from "@/features/sales/components/ProductDisplay";
@@ -35,6 +36,16 @@ const ManageSales: React.FC = () => {
   const [resetKey, setResetKey] = useState(0);
   const [lastReceipt, setLastReceipt] = useState<TransactionResponse | null>(null);
   const [showDrawer, setShowDrawer] = useState(false);
+  const [productTypeFilter, setProductTypeFilter] = useState<"PHYSICAL" | "SERVICE">("PHYSICAL");
+
+  const physicalCount = useMemo(
+    () => products.filter((p) => p.productType === "PHYSICAL").length,
+    [products]
+  );
+  const serviceCount = useMemo(
+    () => products.filter((p) => p.productType === "SERVICE").length,
+    [products]
+  );
 
   useEffect(() => {
     sessionStorage.setItem(STORAGE_KEY, JSON.stringify(cart));
@@ -207,11 +218,20 @@ const ManageSales: React.FC = () => {
     <div className="flex h-[calc(100vh-4rem)] gap-4">
       {/* Left column — Products */}
       <div className="flex w-3/5 flex-col rounded-lg border border-border bg-card p-4 min-h-0">
-        <h2 className="mb-2 text-sm font-semibold text-card-foreground">
-          Products
-        </h2>
+        <div className="mb-3 border-b pb-2">
+          <SegmentedControl
+            className="w-full"
+            options={[
+              { value: "PHYSICAL", label: "Products", count: physicalCount },
+              { value: "SERVICE", label: "Services", count: serviceCount },
+            ]}
+            value={productTypeFilter}
+            onChange={(v) => setProductTypeFilter(v as "PHYSICAL" | "SERVICE")}
+          />
+        </div>
         <ProductDisplay
           products={products}
+          productTypeFilter={productTypeFilter}
           onAddToCart={addToCart}
           disabled={transactionMutation.isPending}
         />

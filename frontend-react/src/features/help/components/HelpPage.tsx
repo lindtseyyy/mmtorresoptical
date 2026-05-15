@@ -17,7 +17,7 @@ const manualSections = [
         </p>
         <p>The system serves two user roles:</p>
         <ul className="list-disc space-y-1 pl-6">
-          <li><strong>Administrator</strong> — Full access to all modules including patient management, user management, and database backup.</li>
+          <li><strong>Administrator</strong> — Full access to all modules including patient management, user management, and database maintenance.</li>
           <li><strong>Staff</strong> — Access to billing and payment, inventory management, and transaction records.</li>
         </ul>
         <p>
@@ -71,9 +71,9 @@ const manualSections = [
           </p>
         </div>
         <div>
-          <h4 className="font-semibold">Database Backup (Admin only)</h4>
+          <h4 className="font-semibold">Maintenance (Admin only)</h4>
           <p className="text-muted-foreground">
-            The <em>Database Backup</em> page allows administrators to create password-protected backups
+            The <em>Maintenance</em> page allows administrators to create password-protected backups
             and restore from previous backup files. Backup metadata including file size and timestamp is
             displayed before restoration.
           </p>
@@ -215,12 +215,12 @@ const faqItems = [
   {
     question: "How do I create a database backup?",
     answer:
-      "Navigate to Database Backup (Admin only). Click 'Create Backup', enter a password to protect the backup file, and confirm. The backup file will download to your computer. Keep this file secure — it contains all system data.",
+      "Navigate to Maintenance (Admin only). Click 'Create Backup', enter a password to protect the backup file, and confirm. The backup file will download to your computer. Keep this file secure — it contains all system data.",
   },
   {
     question: "How do I restore from a backup?",
     answer:
-      "Navigate to Database Backup, click 'Restore Backup', and select a previously downloaded backup file. Enter the password used when the backup was created and confirm. Note: restoration replaces all current data with the backup contents.",
+      "Navigate to Maintenance, click 'Restore Backup', and select a previously downloaded backup file. Enter the password used when the backup was created and confirm. Note: restoration replaces all current data with the backup contents.",
   },
   {
     question: "What should I do if the system is running slowly?",

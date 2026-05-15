@@ -169,9 +169,9 @@ const DatabaseBackup: React.FC = () => {
     <div className="space-y-6">
       {/* Header */}
       <div>
-        <h2 className="text-3xl font-bold">Database Backup & Restore</h2>
+        <h2 className="text-3xl font-bold">Maintenance</h2>
         <p className="text-muted-foreground">
-          Manage database backups and restore data when needed.
+          Manage database maintenance, backups, and restore data when needed.
         </p>
       </div>
 
