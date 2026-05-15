@@ -331,30 +331,32 @@ const InventoryMaintenance: React.FC = () => {
                             ₱{product.unitPrice.toFixed(2)}
                           </td>
                           <td className="py-3 pr-4">{product.supplier}</td>
-                          <td className="py-3 pl-4 text-center">
-                            <Button
-                              variant={product.isArchived ? "default" : "outline"}
-                              size="sm"
-                              onClick={() => handleArchive(product.productId, product.isArchived)}
-                              disabled={archiveMutation.isPending || restoreMutation.isPending}
-                              className={
-                                product.isArchived
-                                  ? "bg-green-700 hover:bg-green-800 text-white"
-                                  : "border-red-300 text-red-600 hover:bg-red-50 hover:text-red-700"
-                              }
-                            >
-                              {product.isArchived ? (
-                                <>
-                                  <Undo2 className="mr-1.5 h-3.5 w-3.5" />
-                                  Restore
-                                </>
-                              ) : (
-                                <>
-                                  <Archive className="mr-1.5 h-3.5 w-3.5" />
-                                  Archive
-                                </>
-                              )}
-                            </Button>
+                          <td className="py-3">
+                            <div className="flex justify-center">
+                              <Button
+                                variant={product.isArchived ? "default" : "outline"}
+                                size="sm"
+                                onClick={() => handleArchive(product.productId, product.isArchived)}
+                                disabled={archiveMutation.isPending || restoreMutation.isPending}
+                                className={
+                                  product.isArchived
+                                    ? "bg-green-700 hover:bg-green-800 text-white"
+                                    : "border-red-300 text-red-600 hover:bg-red-50 hover:text-red-700"
+                                }
+                              >
+                                {product.isArchived ? (
+                                  <>
+                                    <Undo2 className="mr-1.5 h-3.5 w-3.5" />
+                                    Restore
+                                  </>
+                                ) : (
+                                  <>
+                                    <Archive className="mr-1.5 h-3.5 w-3.5" />
+                                    Archive
+                                  </>
+                                )}
+                              </Button>
+                            </div>
                           </td>
                         </tr>
                       );
