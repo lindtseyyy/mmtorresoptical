@@ -4,7 +4,19 @@ import type { AuditLogParams } from "@/features/users/services/auditApi";
 
 function createAuditLogsQueryOptions(params: AuditLogParams) {
   return queryOptions({
-    queryKey: ["audit-logs", params],
+    queryKey: [
+      "audit-logs",
+      params.page,
+      params.size,
+      params.sortBy,
+      params.sortOrder,
+      params.keyword,
+      params.actionType,
+      params.resourceType,
+      params.userId,
+      params.minDate,
+      params.maxDate,
+    ],
     queryFn: () => fetchAuditLogs(params),
   });
 }

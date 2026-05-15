@@ -81,13 +81,16 @@ const AuditLogs: React.FC = () => {
     sortOrder: "desc",
   };
 
-  const { data: auditPageData, isLoading: auditLoading, isFetching: auditFetching } = useQuery({
+  const { data: auditPageData, isLoading: auditLoading, isFetching: auditFetching, error: auditError } = useQuery({
     ...createAuditLogsQueryOptions(auditParams),
     placeholderData: keepPreviousData,
   });
 
   const auditLogs = auditPageData?.content ?? [];
   const auditTotalPages = auditPageData?.totalPages ?? 0;
+
+  // DEBUG: trace pagination state
+  console.log("[AuditLogs]", { page: auditPage, totalPages: auditTotalPages, entries: auditLogs.length, totalElements: auditPageData?.totalElements, fetching: auditFetching, error: auditError, dataShape: auditPageData ? Object.keys(auditPageData) : null });
 
   useEffect(() => {
     if (auditLogs.length === 0 && auditPage > 0 && !auditFetching) {

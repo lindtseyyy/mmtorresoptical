@@ -27,12 +27,13 @@ export interface AuditLogParams {
 
 const fetchAuditLogs = async (params: AuditLogParams): Promise<PageResponse<AuditLogEntry>> => {
   const { data } = await api.get("/audit", { params });
+  const page = data.page ?? data;
   return {
     content: data.content,
-    totalPages: data.totalPages,
-    totalElements: data.totalElements,
-    size: data.size,
-    number: data.number,
+    totalPages: page.totalPages,
+    totalElements: page.totalElements,
+    size: page.size,
+    number: page.number,
   };
 };
 
