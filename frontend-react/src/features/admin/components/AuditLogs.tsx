@@ -207,7 +207,7 @@ const AuditLogs: React.FC = () => {
                           <span className="block truncate">{entry.details}</span>
                         </td>
                         <td className="py-3 pr-4 text-muted-foreground">
-                          <span className="block truncate font-mono text-xs">{entry.userId}</span>
+                          <span className="block truncate">{entry.userName}</span>
                         </td>
                         <td className="py-3 pl-4">
                           <DropdownMenu>
@@ -306,8 +306,8 @@ const AuditLogs: React.FC = () => {
                 </div>
               )}
               <div>
-                <Label className="text-xs text-muted-foreground">User ID</Label>
-                <p className="text-sm font-mono">{viewingEntry.userId}</p>
+                <Label className="text-xs text-muted-foreground">User</Label>
+                <p className="text-sm">{viewingEntry.userName}</p>
               </div>
             </div>
             <div>

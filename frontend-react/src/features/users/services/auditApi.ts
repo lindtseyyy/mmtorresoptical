@@ -10,6 +10,7 @@ export interface AuditLogEntry {
   detailsJson: string | null;
   loggedAt: string;
   userId: string;
+  userName: string;
 }
 
 export interface AuditLogParams {
