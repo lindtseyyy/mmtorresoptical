@@ -48,10 +48,10 @@ public class User {
     @Column(name = "contact_number", nullable = false)
     private String contactNumber;
 
-    @Column(name = "security_question", nullable = false)
+    @Column(name = "security_question")
     private String securityQuestion;
 
-    @Column(name = "security_answer_hash", nullable = false)
+    @Column(name = "security_answer_hash")
     private String securityAnswerHash;
 
     @Column(name = "is_pw_change_required", nullable = false)

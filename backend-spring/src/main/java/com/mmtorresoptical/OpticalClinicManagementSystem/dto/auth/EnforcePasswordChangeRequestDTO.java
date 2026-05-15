@@ -10,4 +10,11 @@ public class EnforcePasswordChangeRequestDTO {
     @NotEmpty(message = "New password is required")
     @Size(min = 8, message = "New password must be at least 8 characters")
     private String newPassword;
+
+    @NotEmpty(message = "Security question is required")
+    private String securityQuestion;
+
+    @NotEmpty(message = "Security answer is required")
+    @Size(min = 3, message = "Security answer must be at least 3 characters")
+    private String securityAnswer;
 }

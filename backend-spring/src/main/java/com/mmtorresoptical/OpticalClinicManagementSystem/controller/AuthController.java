@@ -93,10 +93,12 @@ public class AuthController {
         }
 
         user.setPasswordHash(passwordEncoder.encode(request.getNewPassword()));
+        user.setSecurityQuestion(request.getSecurityQuestion());
+        user.setSecurityAnswerHash(passwordEncoder.encode(request.getSecurityAnswer()));
         user.setPwChangeRequired(false);
         userRepository.save(user);
 
-        return ResponseEntity.ok(new MessageResponseDTO("Password changed successfully"));
+        return ResponseEntity.ok(new MessageResponseDTO("Password changed and security credentials set successfully"));
     }
 
     @PutMapping("/admin/reset-password/{id}")
