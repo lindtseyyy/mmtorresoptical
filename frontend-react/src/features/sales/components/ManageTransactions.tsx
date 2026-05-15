@@ -1,6 +1,7 @@
 import { useState, useEffect } from "react";
-import { useQuery, keepPreviousData } from "@tanstack/react-query";
+import { useQuery, useMutation, useQueryClient, keepPreviousData } from "@tanstack/react-query";
 import { useNavigate } from "react-router-dom";
+import { toast } from "sonner";
 import { Button } from "@/shared/components/ui/button";
 import { Input } from "@/shared/components/ui/input";
 import { Badge } from "@/shared/components/ui/badge";
@@ -31,11 +32,16 @@ import {
   ArrowUp,
   ArrowDown,
   Undo2,
+  CreditCard,
+  CheckCircle,
 } from "lucide-react";
 import {
   createTransactionsListQueryOptions,
   createTransactionMetricsQueryOptions,
 } from "@/features/sales/hooks/transactionQuery";
+import StatusBadge from "@/shared/components/ui/StatusBadge";
+import AddPaymentDrawer from "@/features/sales/components/AddPaymentDrawer";
+import { addPayment, completeTransaction } from "@/features/sales/services/transactionApi";
 import type { TransactionListItem } from "@/features/sales/types";
 
 const formatDate = (dateStr: string | null) => {
@@ -67,7 +73,6 @@ const ManageTransactions: React.FC = () => {
   const navigate = useNavigate();
   const [searchQuery, setSearchQuery] = useState("");
   const [debouncedSearchQuery, setDebouncedSearchQuery] = useState(searchQuery);
-  const [paymentTypeFilter, setPaymentTypeFilter] = useState("all");
   const [statusFilter, setStatusFilter] = useState("all");
   const [page, setPage] = useState(0);
   const [sortBy, setSortBy] = useState("transactionDate");
@@ -85,12 +90,42 @@ const ManageTransactions: React.FC = () => {
       page,
       size: PAGE_SIZE,
       keyword: debouncedSearchQuery || undefined,
-      paymentType: paymentTypeFilter !== "all" ? paymentTypeFilter : undefined,
       status: statusFilter !== "all" ? statusFilter : undefined,
       sortBy,
       sortOrder,
     }),
     placeholderData: keepPreviousData,
+  });
+
+  const queryClient = useQueryClient();
+
+  // Payment drawer state
+  const [paymentDrawerTx, setPaymentDrawerTx] = useState<TransactionListItem | null>(null);
+
+  const addPaymentMutation = useMutation({
+    mutationFn: ({ id, data }: { id: string; data: { amount: number; paymentMethod: string; referenceNumber?: string } }) =>
+      addPayment(id, data),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["transactions"] });
+      queryClient.invalidateQueries({ queryKey: ["transaction-metrics"] });
+      toast.success("Payment added successfully");
+      setPaymentDrawerTx(null);
+    },
+    onError: (error: any) => {
+      toast.error(error?.response?.data?.message ?? error?.message ?? "Payment failed");
+    },
+  });
+
+  const completeMutation = useMutation({
+    mutationFn: (id: string) => completeTransaction(id),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["transactions"] });
+      queryClient.invalidateQueries({ queryKey: ["transaction-metrics"] });
+      toast.success("Transaction marked as completed");
+    },
+    onError: (error: any) => {
+      toast.error(error?.response?.data?.message ?? error?.message ?? "Failed to complete");
+    },
   });
 
   const transactions = pageData?.content ?? [];
@@ -99,16 +134,13 @@ const ManageTransactions: React.FC = () => {
 
   useEffect(() => {
     setPage(0);
-  }, [debouncedSearchQuery, paymentTypeFilter, statusFilter, sortBy, sortOrder]);
+  }, [debouncedSearchQuery, statusFilter, sortBy, sortOrder]);
 
   useEffect(() => {
     if (transactions.length === 0 && page > 0 && !isFetching) {
       setPage((p) => Math.max(0, p - 1));
     }
   }, [transactions.length, page, isFetching]);
-
-  const paymentTypeLabel = (pt: string) =>
-    pt === "CASH" ? "Cash" : pt === "GCASH" ? "GCash" : pt;
 
   return (
     <div className="space-y-6">
@@ -293,23 +325,13 @@ const ManageTransactions: React.FC = () => {
                   </SelectTrigger>
                   <SelectContent>
                     <SelectItem value="all">All Statuses</SelectItem>
+                    <SelectItem value="PENDING">Pending</SelectItem>
+                    <SelectItem value="PARTIALLY_PAID">Partially Paid</SelectItem>
+                    <SelectItem value="PAID">Paid</SelectItem>
                     <SelectItem value="COMPLETED">Completed</SelectItem>
                     <SelectItem value="VOIDED">Voided</SelectItem>
                     <SelectItem value="PARTIALLY_REFUNDED">Partially Refunded</SelectItem>
                     <SelectItem value="FULLY_REFUNDED">Fully Refunded</SelectItem>
-                  </SelectContent>
-                </Select>
-              </div>
-              <div className="flex items-center gap-2">
-                <span className="text-sm text-muted-foreground whitespace-nowrap">Payment:</span>
-                <Select value={paymentTypeFilter} onValueChange={setPaymentTypeFilter}>
-                  <SelectTrigger className="w-[130px]">
-                    <SelectValue />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="all">All Types</SelectItem>
-                    <SelectItem value="CASH">Cash</SelectItem>
-                    <SelectItem value="GCASH">GCash</SelectItem>
                   </SelectContent>
                 </Select>
               </div>
@@ -326,10 +348,9 @@ const ManageTransactions: React.FC = () => {
                 <table className="w-full table-fixed text-sm">
                   <thead>
                     <tr className="border-b text-left text-muted-foreground">
-                      <th className="w-[16%] py-3 pr-4 font-medium">Transaction Number</th>
-                      <th className="w-[13%] py-3 pr-4 text-center font-medium">Total Amount</th>
-                      <th className="w-[12%] py-3 pr-4 text-center font-medium">Payment Type</th>
-                      <th className="w-[14%] py-3 pr-4 text-center font-medium">Status</th>
+                      <th className="w-[18%] py-3 pr-4 font-medium">Transaction Number</th>
+                      <th className="w-[14%] py-3 pr-4 text-center font-medium">Total Amount</th>
+                      <th className="w-[15%] py-3 pr-4 text-center font-medium">Status</th>
                       <th className="w-[17%] py-3 pr-4 text-center font-medium">Transaction Date</th>
                       <th className="w-[16%] py-3 pr-4 font-medium">Processed By</th>
                       <th className="w-[8%] py-3 pl-4 font-medium"></th>
@@ -352,22 +373,7 @@ const ManageTransactions: React.FC = () => {
                           </span>
                         </td>
                         <td className="py-3 pr-4 text-center">
-                          <span className="block truncate">{paymentTypeLabel(tx.paymentType)}</span>
-                        </td>
-                        <td className="py-3 pr-4 text-center">
-                          <Badge
-                            className={
-                              tx.transactionStatus === "COMPLETED"
-                                ? "bg-green-700 text-white"
-                                : tx.transactionStatus === "VOIDED"
-                                  ? "bg-red-700 text-white"
-                                  : tx.transactionStatus === "PARTIALLY_REFUNDED"
-                                    ? "bg-amber-700 text-white"
-                                    : "bg-gray-600 text-white"
-                            }
-                          >
-                            {tx.transactionStatus.replace(/_/g, " ")}
-                          </Badge>
+                          <StatusBadge status={tx.transactionStatus} />
                         </td>
                         <td className="py-3 pr-4 text-center text-muted-foreground">
                           <span className="block truncate">{formatDateTime(tx.transactionDate)}</span>
@@ -391,6 +397,26 @@ const ManageTransactions: React.FC = () => {
                                 <Eye className="mr-2 h-4 w-4" />
                                 View
                               </DropdownMenuItem>
+                              {(tx.transactionStatus === "PARTIALLY_PAID" || tx.transactionStatus === "PENDING") && (
+                                <DropdownMenuItem
+                                  onClick={() => setPaymentDrawerTx(tx)}
+                                >
+                                  <CreditCard className="mr-2 h-4 w-4" />
+                                  Add Payment
+                                </DropdownMenuItem>
+                              )}
+                              {tx.transactionStatus === "PAID" && (
+                                <DropdownMenuItem
+                                  onClick={() => {
+                                    if (window.confirm(`Mark ${tx.transactionNumber} as complete? This confirms the patient has picked up their glasses and cannot be undone.`)) {
+                                      completeMutation.mutate(tx.transactionId);
+                                    }
+                                  }}
+                                >
+                                  <CheckCircle className="mr-2 h-4 w-4" />
+                                  Mark Complete
+                                </DropdownMenuItem>
+                              )}
                             </DropdownMenuContent>
                           </DropdownMenu>
                         </td>
@@ -437,6 +463,21 @@ const ManageTransactions: React.FC = () => {
           )}
         </CardContent>
       </Card>
+
+      {/* Add Payment Drawer */}
+      <AddPaymentDrawer
+        open={!!paymentDrawerTx}
+        onClose={() => setPaymentDrawerTx(null)}
+        transactionNumber={paymentDrawerTx?.transactionNumber ?? ""}
+        totalAmount={paymentDrawerTx?.totalAmount ?? 0}
+        balanceDue={paymentDrawerTx?.balanceDue ?? 0}
+        onComplete={(data) => {
+          if (paymentDrawerTx) {
+            addPaymentMutation.mutate({ id: paymentDrawerTx.transactionId, data });
+          }
+        }}
+        pending={addPaymentMutation.isPending}
+      />
     </div>
   );
 };

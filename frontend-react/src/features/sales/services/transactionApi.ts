@@ -1,6 +1,6 @@
 import api from "@/shared/lib/axiosInstance";
 import type { PageResponse } from "@/shared/types";
-import type { TransactionRequest, TransactionResponse, TransactionListItem } from "@/features/sales/types";
+import type { TransactionRequest, TransactionResponse, TransactionListItem, PaymentResponse, PaymentRequest } from "@/features/sales/types";
 
 export interface TransactionMetrics {
   totalTransactions: number;
@@ -18,7 +18,6 @@ export interface TransactionFilters {
   keyword?: string;
   minDate?: string;
   maxDate?: string;
-  paymentType?: string;
   status?: string;
   page?: number;
   size?: number;
@@ -60,7 +59,6 @@ const fetchTransactions = async (filters: TransactionFilters = {}): Promise<Page
   if (rest.keyword) params.keyword = rest.keyword;
   if (rest.minDate) params.minDate = rest.minDate;
   if (rest.maxDate) params.maxDate = rest.maxDate;
-  if (rest.paymentType) params.paymentType = rest.paymentType;
   if (rest.status) params.status = rest.status;
 
   const { data } = await api.get("/transactions", { params });
@@ -95,4 +93,19 @@ const refundTransaction = async (data: {
   await api.post("/transactions/refund", data);
 };
 
-export { createTransaction, fetchTransactions, fetchProductTransactions, fetchTransactionMetrics, fetchTransaction, voidTransaction, refundTransaction };
+const addPayment = async (transactionId: string, data: PaymentRequest): Promise<PaymentResponse> => {
+  const { data: response } = await api.post(`/transactions/${transactionId}/payments`, data);
+  return response;
+};
+
+const fetchPayments = async (transactionId: string): Promise<PaymentResponse[]> => {
+  const { data } = await api.get(`/transactions/${transactionId}/payments`);
+  return data;
+};
+
+const completeTransaction = async (transactionId: string): Promise<TransactionResponse> => {
+  const { data } = await api.post(`/transactions/${transactionId}/complete`);
+  return data;
+};
+
+export { createTransaction, fetchTransactions, fetchProductTransactions, fetchTransactionMetrics, fetchTransaction, voidTransaction, refundTransaction, addPayment, fetchPayments, completeTransaction };

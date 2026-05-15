@@ -12,18 +12,22 @@ import {
   Ban,
   Eye,
   EyeOff,
+  CreditCard,
+  CheckCircle,
 } from "lucide-react";
 import { Button } from "@/shared/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/shared/components/ui/card";
+import StatusBadge from "@/shared/components/ui/StatusBadge";
 import { Badge } from "@/shared/components/ui/badge";
 import { Checkbox } from "@/shared/components/ui/checkbox";
 import { Input } from "@/shared/components/ui/input";
 import { Label } from "@/shared/components/ui/label";
 import { Dialog, DialogHeader, DialogTitle, DialogDescription } from "@/shared/components/ui/dialog";
-import { fetchTransaction, refundTransaction, voidTransaction } from "@/features/sales/services/transactionApi";
+import { fetchTransaction, refundTransaction, voidTransaction, addPayment, completeTransaction } from "@/features/sales/services/transactionApi";
 import { toast } from "sonner";
-import type { TransactionItemResponse, RefundStateItem, RefundMethod } from "@/features/sales/types";
+import type { TransactionItemResponse, RefundStateItem, RefundMethod, PaymentResponse } from "@/features/sales/types";
 import RefundDrawer from "./RefundDrawer";
+import AddPaymentDrawer from "./AddPaymentDrawer";
 
 const formatDateTime = (dateStr: string | null) => {
   if (!dateStr) return "—";
@@ -38,9 +42,6 @@ const formatDateTime = (dateStr: string | null) => {
 
 const formatCurrency = (amount: number) =>
   `₱ ${amount.toLocaleString("en-US", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
-
-const paymentTypeLabel = (pt: string) =>
-  pt === "CASH" ? "Cash" : pt === "GCASH" ? "GCash" : pt;
 
 const ViewTransaction: React.FC = () => {
   const { id } = useParams<{ id: string }>();
@@ -83,11 +84,44 @@ const ViewTransaction: React.FC = () => {
     },
   });
 
+  const addPaymentMutation = useMutation({
+    mutationFn: (data: { amount: number; paymentMethod: string; referenceNumber?: string }) =>
+      addPayment(transactionId, data),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["transaction", transactionId] });
+      queryClient.invalidateQueries({ queryKey: ["transactions"] });
+      toast.success("Payment added successfully");
+      setPaymentDrawerOpen(false);
+    },
+    onError: (error: any) => {
+      toast.error(error?.response?.data?.message ?? error?.message ?? "Payment failed");
+    },
+  });
+
+  const completeMutation = useMutation({
+    mutationFn: () => completeTransaction(transactionId),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["transaction", transactionId] });
+      queryClient.invalidateQueries({ queryKey: ["transactions"] });
+      setCompleteDialogOpen(false);
+      toast.success("Transaction marked as completed");
+    },
+    onError: (error: any) => {
+      toast.error(error?.response?.data?.message ?? error?.message ?? "Failed to complete");
+    },
+  });
+
   // ── Refund workflow state ──
   const [selectionMode, setSelectionMode] = useState(false);
   const [selectedItems, setSelectedItems] = useState<Set<string>>(new Set());
   const [drawerOpen, setDrawerOpen] = useState(false);
   const [refundItems, setRefundItems] = useState<RefundStateItem[]>([]);
+
+  // ── Payment drawer state ──
+  const [paymentDrawerOpen, setPaymentDrawerOpen] = useState(false);
+
+  // ── Complete dialog state ──
+  const [completeDialogOpen, setCompleteDialogOpen] = useState(false);
 
   // ── Void dialog state ──
   const [voidDialogOpen, setVoidDialogOpen] = useState(false);
@@ -219,19 +253,7 @@ const ViewTransaction: React.FC = () => {
             <div>
               <div className="flex items-center gap-2">
                 <h2 className="text-3xl font-bold">{tx.transactionNumber}</h2>
-                <Badge
-                  className={
-                    tx.transactionStatus === "COMPLETED"
-                      ? "bg-green-700 text-white"
-                      : tx.transactionStatus === "VOIDED"
-                        ? "bg-red-700 text-white"
-                        : tx.transactionStatus === "PARTIALLY_REFUNDED"
-                          ? "bg-amber-700 text-white"
-                          : "bg-gray-600 text-white"
-                  }
-                >
-                  {tx.transactionStatus.replace(/_/g, " ")}
-                </Badge>
+                <StatusBadge status={tx.transactionStatus} />
               </div>
               <p className="text-muted-foreground">Transaction details</p>
             </div>
@@ -253,18 +275,41 @@ const ViewTransaction: React.FC = () => {
               <Banknote className="h-5 w-5" />
               Payment Details
             </CardTitle>
-            {tx.transactionStatus === "COMPLETED" && (
-              <Button
-                size="sm"
-                variant="destructive"
-                className="h-8 text-white"
-                onClick={() => setVoidDialogOpen(true)}
-                disabled={voidMutation.isPending}
-              >
-                <Ban className="mr-1 h-3.5 w-3.5" />
-                Void Transaction
-              </Button>
-            )}
+            <div className="flex items-center gap-2">
+              {(tx.transactionStatus === "PARTIALLY_PAID" || tx.transactionStatus === "PENDING") && (
+                <Button
+                  size="sm"
+                  className="h-8"
+                  onClick={() => setPaymentDrawerOpen(true)}
+                >
+                  <CreditCard className="mr-1 h-3.5 w-3.5" />
+                  Add Payment
+                </Button>
+              )}
+              {tx.transactionStatus === "PAID" && (
+                <Button
+                  size="sm"
+                  className="h-8 bg-blue-600 hover:bg-blue-700 text-white"
+                  onClick={() => setCompleteDialogOpen(true)}
+                  disabled={completeMutation.isPending}
+                >
+                  <CheckCircle className="mr-1 h-3.5 w-3.5" />
+                  Mark Complete
+                </Button>
+              )}
+              {(tx.transactionStatus === "PAID" || tx.transactionStatus === "PARTIALLY_PAID" || tx.transactionStatus === "PENDING") && (
+                <Button
+                  size="sm"
+                  variant="destructive"
+                  className="h-8 text-white"
+                  onClick={() => setVoidDialogOpen(true)}
+                  disabled={voidMutation.isPending}
+                >
+                  <Ban className="mr-1 h-3.5 w-3.5" />
+                  Void
+                </Button>
+              )}
+            </div>
           </div>
         </CardHeader>
         <CardContent>
@@ -278,30 +323,24 @@ const ViewTransaction: React.FC = () => {
               <p className="font-medium">{formatDateTime(tx.transactionDate)}</p>
             </div>
             <div>
-              <p className="text-xs text-muted-foreground">Payment Type</p>
-              <p className="font-medium">{paymentTypeLabel(tx.paymentType)}</p>
-            </div>
-            {tx.referenceNumber && (
-              <div>
-                <p className="text-xs text-muted-foreground">Reference Number</p>
-                <p className="font-medium">{tx.referenceNumber}</p>
-              </div>
-            )}
-            <div>
               <p className="text-xs text-muted-foreground">Total Amount</p>
               <p className="font-medium">{formatCurrency(tx.totalAmount)}</p>
             </div>
-            {tx.paymentType === "CASH" && (
-              <>
-                <div>
-                  <p className="text-xs text-muted-foreground">Cash Tender</p>
-                  <p className="font-medium">{formatCurrency(tx.cashTender)}</p>
-                </div>
-                <div>
-                  <p className="text-xs text-muted-foreground">Change</p>
-                  <p className="font-medium">{formatCurrency(tx.change)}</p>
-                </div>
-              </>
+            <div>
+              <p className="text-xs text-muted-foreground">Amount Paid</p>
+              <p className="font-medium text-green-600">{formatCurrency(tx.amountPaid ?? 0)}</p>
+            </div>
+            {(tx.balanceDue ?? 0) > 0 && (
+              <div>
+                <p className="text-xs text-muted-foreground">Balance Due</p>
+                <p className="font-medium text-amber-600">{formatCurrency(tx.balanceDue ?? 0)}</p>
+              </div>
+            )}
+            {tx.transactionStatus === "COMPLETED" && tx.completedAt && (
+              <div>
+                <p className="text-xs text-muted-foreground">Completed At</p>
+                <p className="font-medium">{formatDateTime(tx.completedAt)}</p>
+              </div>
             )}
             <div>
               <p className="text-xs text-muted-foreground">Processed By</p>
@@ -314,6 +353,39 @@ const ViewTransaction: React.FC = () => {
               </div>
             )}
           </div>
+
+          {/* Payment History */}
+          {(tx.payments?.length ?? 0) > 0 && (
+            <div className="mt-4 border-t pt-4">
+              <h3 className="text-sm font-semibold mb-2">Payment History</h3>
+              <div className="overflow-x-auto rounded-md bg-muted/50 p-3">
+                <table className="w-full text-sm">
+                  <thead>
+                    <tr className="border-b text-left text-muted-foreground">
+                      <th className="py-2 pr-4 font-medium">Date</th>
+                      <th className="py-2 pr-4 text-right font-medium">Amount</th>
+                      <th className="py-2 pr-4 font-medium">Method</th>
+                      <th className="py-2 font-medium">Reference</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {tx.payments.map((p: PaymentResponse) => (
+                      <tr key={p.id} className="border-b text-muted-foreground last:border-b-0">
+                        <td className="py-2 pr-4 whitespace-nowrap">
+                          {formatDateTime(p.createdAt)}
+                        </td>
+                        <td className="py-2 pr-4 text-right font-medium text-green-600">
+                          {formatCurrency(p.amount)}
+                        </td>
+                        <td className="py-2 pr-4 capitalize">{p.paymentMethod}</td>
+                        <td className="py-2">{p.referenceNumber || "—"}</td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+            </div>
+          )}
 
           {tx.transactionItems.some(
             (item) => (item.refundDetailsDTOList?.length ?? 0) > 0
@@ -607,6 +679,32 @@ const ViewTransaction: React.FC = () => {
         </div>
       </Dialog>
 
+      {/* Complete Transaction Dialog */}
+      <Dialog open={completeDialogOpen} onOpenChange={setCompleteDialogOpen}>
+        <DialogHeader>
+          <DialogTitle>Mark as Complete</DialogTitle>
+          <DialogDescription>
+            This will mark <strong>{tx.transactionNumber}</strong> as completed. This confirms the patient has picked up their glasses and the transaction is fully settled. This action cannot be undone.
+          </DialogDescription>
+        </DialogHeader>
+        <div className="flex justify-end gap-2 pt-4">
+          <Button
+            variant="outline"
+            onClick={() => setCompleteDialogOpen(false)}
+            disabled={completeMutation.isPending}
+          >
+            Cancel
+          </Button>
+          <Button
+            className="bg-blue-600 hover:bg-blue-700 text-white"
+            onClick={() => completeMutation.mutate()}
+            disabled={completeMutation.isPending}
+          >
+            {completeMutation.isPending ? "Processing..." : "Confirm Complete"}
+          </Button>
+        </div>
+      </Dialog>
+
       {/* Refund Drawer */}
       <RefundDrawer
         open={drawerOpen}
@@ -615,6 +713,19 @@ const ViewTransaction: React.FC = () => {
         onComplete={handleCompleteRefund}
         isPending={refundMutation.isPending}
       />
+
+      {/* Add Payment Drawer */}
+      {tx && (
+        <AddPaymentDrawer
+          open={paymentDrawerOpen}
+          onClose={() => setPaymentDrawerOpen(false)}
+          transactionNumber={tx.transactionNumber}
+          totalAmount={tx.totalAmount}
+          balanceDue={tx.balanceDue ?? tx.totalAmount - (tx.amountPaid ?? 0)}
+          onComplete={(data) => addPaymentMutation.mutate(data)}
+          pending={addPaymentMutation.isPending}
+        />
+      )}
     </div>
   );
 };
