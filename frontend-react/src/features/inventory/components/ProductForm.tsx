@@ -38,6 +38,7 @@ interface ProductFormProps {
   onFormSubmit: (data: ProductFormData) => Promise<void>;
   isLoading: boolean;
   isEditMode: boolean;
+  productId?: string;
 }
 
 const DECIMAL_INPUT_REGEX = /^\d*(?:\.\d*)?$/;
@@ -82,6 +83,7 @@ export const ProductForm: React.FC<ProductFormProps> = ({
   defaultValues: passedDefaultValues,
   isLoading,
   isEditMode,
+  productId,
 }) => {
   const navigate = useNavigate();
 
@@ -362,7 +364,13 @@ export const ProductForm: React.FC<ProductFormProps> = ({
               <Button
                 type="button"
                 variant="outline"
-                onClick={() => navigate("/inventory")}
+                onClick={() =>
+                    navigate(
+                      isEditMode && productId
+                        ? `/inventory/view/${productId}`
+                        : "/inventory"
+                    )
+                  }
               >
                 Cancel
               </Button>

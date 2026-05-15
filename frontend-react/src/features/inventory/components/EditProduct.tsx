@@ -59,6 +59,7 @@ const EditProduct: React.FC = () => {
         isLoading={mutation.isPending}
         isEditMode={true}
         defaultValues={defaultValues}
+        productId={id}
       />
     </div>
   );
