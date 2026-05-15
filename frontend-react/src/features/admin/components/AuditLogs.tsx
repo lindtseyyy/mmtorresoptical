@@ -98,7 +98,7 @@ const AuditLogs: React.FC = () => {
   return (
     <div className="space-y-6">
       <div>
-        <h2 className="text-3xl font-bold">Audit Logs</h2>
+        <h2 className="text-3xl font-bold">Audit Trail</h2>
         <p className="text-muted-foreground">
           View and track all system activity and changes.
         </p>
@@ -111,7 +111,7 @@ const AuditLogs: React.FC = () => {
               <div className="relative flex-1">
                 <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
                 <Input
-                  placeholder="Search audit logs..."
+                  placeholder="Search audit trail..."
                   value={auditSearch}
                   onChange={(e) => setAuditSearch(e.target.value)}
                   className="pl-10"
@@ -229,7 +229,7 @@ const AuditLogs: React.FC = () => {
 
               {auditLogs.length === 0 && (
                 <p className="py-8 text-center text-muted-foreground">
-                  No audit logs found.
+                  No audit trail entries found.
                 </p>
               )}
 

@@ -75,7 +75,7 @@ const manualSections = [
           <p className="text-muted-foreground">
             The <em>Maintenance</em> page allows administrators to create password-protected backups
             and restore from previous backup files, manage user, patient, and product archiving and restoration,
-            and view audit logs.
+            and view audit trail.
           </p>
         </div>
         <div>

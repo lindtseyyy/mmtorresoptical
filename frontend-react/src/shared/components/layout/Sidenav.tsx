@@ -26,7 +26,7 @@ const menuItems: MenuItem[] = [
     roles: ["ADMIN"] as Role[],
     children: [
       { title: "Backup & Restore", href: "/admin/backup-restore" },
-      { title: "Audit Logs", href: "/admin/audit-logs" },
+      { title: "Audit Trail", href: "/admin/audit-logs" },
       { title: "User Maintenance", href: "/admin/user-maintenance" },
       { title: "Patient Maintenance", href: "/admin/patient-maintenance" },
       { title: "Inventory Maintenance", href: "/admin/inventory-maintenance" },

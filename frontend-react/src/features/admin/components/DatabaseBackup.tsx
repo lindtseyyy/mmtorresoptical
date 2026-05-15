@@ -252,7 +252,7 @@ const DatabaseBackup: React.FC = () => {
       <div>
         <h2 className="text-3xl font-bold">Maintenance</h2>
         <p className="text-muted-foreground">
-          Manage database maintenance, backups, restore data, and view audit logs.
+          Manage database maintenance, backups, restore data, and view audit trail.
         </p>
       </div>
 
@@ -260,7 +260,7 @@ const DatabaseBackup: React.FC = () => {
       <SegmentedControl
         options={[
           { value: "backup-restore", label: "Backup & Restore" },
-          { value: "audit-logs", label: "Audit Logs" },
+          { value: "audit-logs", label: "Audit Trail" },
         ]}
         value={activeTab}
         onChange={setActiveTab}
@@ -423,7 +423,7 @@ const DatabaseBackup: React.FC = () => {
                 <div className="relative flex-1">
                   <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
                   <Input
-                    placeholder="Search audit logs..."
+                    placeholder="Search audit trail..."
                     value={auditSearch}
                     onChange={(e) => setAuditSearch(e.target.value)}
                     className="pl-10"
@@ -541,7 +541,7 @@ const DatabaseBackup: React.FC = () => {
 
                 {auditLogs.length === 0 && (
                   <p className="py-8 text-center text-muted-foreground">
-                    No audit logs found.
+                    No audit trail entries found.
                   </p>
                 )}
 
