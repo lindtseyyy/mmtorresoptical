@@ -232,7 +232,7 @@ const ViewProduct: React.FC = () => {
               <CardDescription>Item information</CardDescription>
             </div>
             <Button
-              variant="secondary"
+              variant="default"
               size="sm"
               onClick={() => navigate(`/inventory/edit/${productId}`)}
             >

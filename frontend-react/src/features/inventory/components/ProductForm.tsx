@@ -358,20 +358,20 @@ export const ProductForm: React.FC<ProductFormProps> = ({
               </div>
             )}
 
-            <div className="flex gap-2 pt-4">
-              <Button type="submit" disabled={isLoading}>
-                {isLoading
-                  ? "Saving..."
-                  : isEditMode
-                  ? "Update Item"
-                  : "Add Item"}
-              </Button>
+            <div className="flex justify-end gap-2 pt-4">
               <Button
                 type="button"
                 variant="outline"
                 onClick={() => navigate("/inventory")}
               >
                 Cancel
+              </Button>
+              <Button type="submit" disabled={isLoading}>
+                {isLoading
+                  ? "Saving..."
+                  : isEditMode
+                  ? "Update Item"
+                  : "Add Item"}
               </Button>
             </div>
           </CardContent>
