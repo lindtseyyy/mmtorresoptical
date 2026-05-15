@@ -57,6 +57,7 @@ public interface InventoryAnalyticsRepository extends JpaRepository<Product, UUI
         SELECT COALESCE(SUM(p.unitPrice * p.quantity), 0)
         FROM Product p
         WHERE p.isArchived = false
+          AND p.productType = com.mmtorresoptical.OpticalClinicManagementSystem.enums.ProductType.PHYSICAL
     """)
     BigDecimal inventoryValue();
 
