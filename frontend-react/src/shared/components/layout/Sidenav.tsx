@@ -40,6 +40,16 @@ function getLinkClassName({ isActive }: { isActive: boolean }): string {
   });
 }
 
+function getSubLinkClassName({ isActive }: { isActive: boolean }): string {
+  return cn(
+    buttonVariants({
+      variant: "ghost",
+      className: "w-full justify-start gap-2",
+    }),
+    isActive && "bg-primary/75 text-primary-foreground shadow hover:bg-primary/65"
+  );
+}
+
 function getUserFromToken() {
   const token = localStorage.getItem("authToken");
   if (!token) return { name: "User", role: "Staff" };
@@ -142,7 +152,7 @@ const Sidenav: React.FC = () => {
                             to={child.href}
                             className={(props) =>
                               cn(
-                                getLinkClassName(props),
+                                getSubLinkClassName(props),
                                 "relative pl-6 text-sm",
                                 // Horizontal branch line
                                 "before:absolute before:left-0 before:top-1/2 before:h-px before:w-3 before:-translate-y-1/2 before:bg-muted-foreground/25",
