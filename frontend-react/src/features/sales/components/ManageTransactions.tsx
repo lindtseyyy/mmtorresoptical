@@ -68,6 +68,10 @@ const ManageTransactions: React.FC = () => {
   const [page, setPage] = useState(0);
   const [sortBy, setSortBy] = useState("transactionDate");
   const [sortOrder, setSortOrder] = useState<"asc" | "desc">("desc");
+  const [dateFrom, setDateFrom] = useState("");
+  const [dateTo, setDateTo] = useState("");
+
+  const today = new Date().toISOString().split("T")[0];
 
   useEffect(() => {
     const timer = setTimeout(() => setDebouncedSearchQuery(searchQuery), 300);
@@ -84,6 +88,8 @@ const ManageTransactions: React.FC = () => {
       status: statusFilter !== "all" ? statusFilter : undefined,
       sortBy,
       sortOrder,
+      minDate: dateFrom || undefined,
+      maxDate: dateTo || undefined,
     }),
     placeholderData: keepPreviousData,
   });
@@ -125,7 +131,7 @@ const ManageTransactions: React.FC = () => {
 
   useEffect(() => {
     setPage(0);
-  }, [debouncedSearchQuery, statusFilter, sortBy, sortOrder]);
+  }, [debouncedSearchQuery, statusFilter, sortBy, sortOrder, dateFrom, dateTo]);
 
   useEffect(() => {
     if (transactions.length === 0 && page > 0 && !isFetching) {
@@ -308,6 +314,39 @@ const ManageTransactions: React.FC = () => {
               </div>
             </div>
             <div className="flex flex-wrap items-center justify-end gap-4">
+              <div className="flex items-center gap-3">
+                <span className="text-sm text-muted-foreground whitespace-nowrap">Date Range:</span>
+                <Input
+                  type="date"
+                  value={dateFrom}
+                  max={today}
+                  onChange={(e) => {
+                    const v = e.target.value;
+                    setDateFrom(v);
+                    if (dateTo && v && dateTo < v) setDateTo("");
+                  }}
+                  className="w-[150px]"
+                />
+                <span className="text-sm text-muted-foreground">to</span>
+                <Input
+                  type="date"
+                  value={dateTo}
+                  min={dateFrom || undefined}
+                  max={today}
+                  onChange={(e) => setDateTo(e.target.value)}
+                  className="w-[150px]"
+                />
+                {(dateFrom || dateTo) && (
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    onClick={() => { setDateFrom(""); setDateTo(""); }}
+                    className="text-xs text-muted-foreground"
+                  >
+                    Clear
+                  </Button>
+                )}
+              </div>
               <div className="flex items-center gap-2">
                 <span className="text-sm text-muted-foreground whitespace-nowrap">Status:</span>
                 <Select value={statusFilter} onValueChange={setStatusFilter}>

@@ -55,6 +55,8 @@ const AuditLogs: React.FC = () => {
   const [auditPage, setAuditPage] = useState(0);
   const [auditDateFrom, setAuditDateFrom] = useState("");
   const [auditDateTo, setAuditDateTo] = useState("");
+
+  const today = new Date().toISOString().split("T")[0];
   const [viewingEntry, setViewingEntry] = useState<AuditLogEntry | null>(null);
 
   useEffect(() => {
@@ -124,13 +126,20 @@ const AuditLogs: React.FC = () => {
                 <Input
                   type="date"
                   value={auditDateFrom}
-                  onChange={(e) => setAuditDateFrom(e.target.value)}
+                  max={today}
+                  onChange={(e) => {
+                    const v = e.target.value;
+                    setAuditDateFrom(v);
+                    if (auditDateTo && v && auditDateTo < v) setAuditDateTo("");
+                  }}
                   className="w-[150px]"
                 />
                 <span className="text-sm text-muted-foreground">to</span>
                 <Input
                   type="date"
                   value={auditDateTo}
+                  min={auditDateFrom || undefined}
+                  max={today}
                   onChange={(e) => setAuditDateTo(e.target.value)}
                   className="w-[150px]"
                 />
@@ -145,8 +154,6 @@ const AuditLogs: React.FC = () => {
                   </Button>
                 )}
               </div>
-            </div>
-            <div className="flex flex-wrap items-center justify-end gap-4">
               <div className="flex items-center gap-2">
                 <span className="text-sm text-muted-foreground whitespace-nowrap">Action:</span>
                 <Select value={auditActionFilter} onValueChange={setAuditActionFilter}>
