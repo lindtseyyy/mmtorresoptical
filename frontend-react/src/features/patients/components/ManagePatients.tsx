@@ -25,7 +25,6 @@ const ManagePatients: React.FC = () => {
   const [debouncedSearchQuery, setDebouncedSearchQuery] = useState(searchQuery);
   const [sortBy, setSortBy] = useState("fullNameSortable");
   const [sortOrder, setSortOrder] = useState<"asc" | "desc">("asc");
-  const [archivedFilter, setArchivedFilter] = useState("ACTIVE");
   const [genderFilter, setGenderFilter] = useState("all");
   const [page, setPage] = useState(0);
 
@@ -36,7 +35,7 @@ const ManagePatients: React.FC = () => {
   const navigate = useNavigate();
 
   const { data: pageData, isLoading, isFetching } = useQuery({
-    ...createPatientsListQueryOptions(page, PAGE_SIZE, debouncedSearchQuery, sortBy, sortOrder, archivedFilter, genderFilter),
+    ...createPatientsListQueryOptions(page, PAGE_SIZE, debouncedSearchQuery, sortBy, sortOrder, undefined, genderFilter),
     placeholderData: keepPreviousData,
   });
 
@@ -52,7 +51,7 @@ const ManagePatients: React.FC = () => {
 
   useEffect(() => {
     setPage(0);
-  }, [debouncedSearchQuery, sortBy, sortOrder, archivedFilter, genderFilter]);
+  }, [debouncedSearchQuery, sortBy, sortOrder, genderFilter]);
 
   useEffect(() => {
     if (patients.length === 0 && page > 0 && !isFetching) {
@@ -165,19 +164,6 @@ const ManagePatients: React.FC = () => {
               </div>
             </div>
             <div className="flex flex-wrap items-center justify-end gap-4">
-              <div className="flex items-center gap-2">
-                <span className="text-sm text-muted-foreground whitespace-nowrap">Status:</span>
-                <Select value={archivedFilter} onValueChange={setArchivedFilter}>
-                  <SelectTrigger className="w-[130px]">
-                    <SelectValue />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="ACTIVE">Active</SelectItem>
-                    <SelectItem value="ARCHIVED">Archived</SelectItem>
-                    <SelectItem value="ALL">All</SelectItem>
-                  </SelectContent>
-                </Select>
-              </div>
               <div className="flex items-center gap-2">
                 <span className="text-sm text-muted-foreground whitespace-nowrap">Gender:</span>
                 <Select value={genderFilter} onValueChange={setGenderFilter}>
