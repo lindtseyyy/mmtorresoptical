@@ -22,5 +22,9 @@ public interface AuditMapper {
             target = "userId",
             source = "user.userId"
     )
+    @Mapping(
+            target = "userName",
+            expression = "java(auditLog.getUser().getFirstName() + \" \" + auditLog.getUser().getLastName())"
+    )
     AuditDetailsDTO entityToDetailsDTO(AuditLog auditLog);
 }

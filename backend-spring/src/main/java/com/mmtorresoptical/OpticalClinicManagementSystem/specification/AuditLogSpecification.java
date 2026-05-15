@@ -28,7 +28,7 @@ public class AuditLogSpecification {
 
     public static Specification<AuditLog> hasUserId(UUID userId) {
         return (root, query, cb) ->
-                cb.equal(root.get("userId"), userId);
+                cb.equal(root.get("user").get("userId"), userId);
     }
 
     public static Specification<AuditLog> dateBetween(LocalDate minDate, LocalDate maxDate) {

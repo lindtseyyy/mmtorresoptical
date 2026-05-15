@@ -16,5 +16,6 @@ public class AuditDetailsDTO {
     private String detailsJson;
     private LocalDateTime loggedAt;
     private UUID userId;
+    private String userName;
 
 }

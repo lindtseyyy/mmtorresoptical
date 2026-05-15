@@ -14,7 +14,10 @@ import com.mmtorresoptical.OpticalClinicManagementSystem.exception.custom.BadReq
 import com.mmtorresoptical.OpticalClinicManagementSystem.model.User;
 import com.mmtorresoptical.OpticalClinicManagementSystem.repository.UserRepository;
 import com.mmtorresoptical.OpticalClinicManagementSystem.security.JwtTokenProvider;
+import com.mmtorresoptical.OpticalClinicManagementSystem.enums.ActionType;
+import com.mmtorresoptical.OpticalClinicManagementSystem.enums.ResourceType;
 import com.mmtorresoptical.OpticalClinicManagementSystem.services.AuthenticatedUserService;
+import com.mmtorresoptical.OpticalClinicManagementSystem.services.auditlog.AuditLogService;
 
 import jakarta.validation.Valid;
 import org.springframework.http.ResponseEntity;
@@ -32,12 +35,14 @@ public class AuthController {
     private final PasswordEncoder passwordEncoder;
     private final JwtTokenProvider jwtTokenProvider;
     private final AuthenticatedUserService authenticatedUserService;
+    private final AuditLogService auditLogService;
 
-    AuthController(UserRepository userRepository, PasswordEncoder passwordEncoder, JwtTokenProvider jwtTokenProvider, AuthenticatedUserService authenticatedUserService) {
+    AuthController(UserRepository userRepository, PasswordEncoder passwordEncoder, JwtTokenProvider jwtTokenProvider, AuthenticatedUserService authenticatedUserService, AuditLogService auditLogService) {
         this.userRepository = userRepository;
         this.passwordEncoder = passwordEncoder;
         this.jwtTokenProvider = jwtTokenProvider;
         this.authenticatedUserService = authenticatedUserService;
+        this.auditLogService = auditLogService;
     }
 
     @PostMapping("/login")
@@ -62,7 +67,11 @@ public class AuthController {
         // 3. If yes, generate a JWT token
         String token = jwtTokenProvider.generateToken(user.getUsername(), user.getUserId(), user.getRole().name());
 
-        // 4. Return the token in a DTO
+        // 4. Log the successful login
+        auditLogService.logForUser(ActionType.LOGIN, ResourceType.USER, user.getUserId(),
+                "User \"" + user.getUsername() + "\" logged in", "{}", user);
+
+        // 5. Return the token in a DTO
         return ResponseEntity.ok(new LoginResponseDTO(token, user.isPwChangeRequired()));
     }
 

@@ -47,6 +47,24 @@ public class AuditLogService {
         auditLogRepository.save(log);
     }
 
+    public void logForUser(ActionType actionType,
+                           ResourceType resourceType,
+                           UUID resourceId,
+                           String details,
+                           String detailsJSON,
+                           User user) {
+
+        AuditLog log = new AuditLog();
+        log.setUser(user);
+        log.setActionType(actionType);
+        log.setResourceType(resourceType);
+        log.setResourceId(resourceId);
+        log.setDetails(details);
+        log.setDetailsJson(detailsJSON);
+
+        auditLogRepository.save(log);
+    }
+
     public Page<AuditDetailsDTO> getAllAuditLogs(String keyword,
                                                  ActionType actionType,
                                                  ResourceType resourceType,
