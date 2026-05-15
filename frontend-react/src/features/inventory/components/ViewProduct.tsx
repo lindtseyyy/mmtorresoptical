@@ -1,16 +1,10 @@
 import { useState } from "react";
 import { useParams, Link, useNavigate } from "react-router-dom";
-import { useQuery, useMutation, useQueryClient, keepPreviousData } from "@tanstack/react-query";
-import { ArrowLeft, ChevronLeft, ChevronRight, MoreHorizontal, Pencil, Archive, Undo2, Package, ShoppingCart, Banknote, Calendar, Hash, TrendingUp } from "lucide-react";
+import { useQuery, keepPreviousData } from "@tanstack/react-query";
+import { ArrowLeft, ChevronLeft, ChevronRight, Package, ShoppingCart, Banknote, Calendar, Hash, TrendingUp } from "lucide-react";
 import { Button } from "@/shared/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/shared/components/ui/card";
 import { Badge } from "@/shared/components/ui/badge";
-import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuTrigger,
-} from "@/shared/components/ui/dropdown-menu";
 import { toast } from "sonner";
 import {
   fetchProduct,
@@ -19,10 +13,6 @@ import {
 import { fetchProductTransactions } from "@/features/sales/services/transactionApi";
 import type { TransactionListItem } from "@/features/sales/types";
 import { CATEGORY_LABELS, type Category } from "@/features/inventory/types";
-import {
-  createArchiveProductMutationOptions,
-  createRestoreProductMutationOptions,
-} from "@/features/inventory/hooks/productQuery";
 
 const formatDate = (dateStr: string | null) => {
   if (!dateStr) return "—";
@@ -47,7 +37,6 @@ const formatDateTime = (dateStr: string | null) => {
 const ViewProduct: React.FC = () => {
   const { id } = useParams<{ id: string }>();
   const productId = id!;
-  const queryClient = useQueryClient();
   const navigate = useNavigate();
 
   const { data: product, isLoading: productLoading } = useQuery({
@@ -69,30 +58,6 @@ const ViewProduct: React.FC = () => {
     placeholderData: keepPreviousData,
     enabled: !!productId,
   });
-
-  const archiveMutation = useMutation(
-    createArchiveProductMutationOptions(queryClient)
-  );
-
-  const restoreMutation = useMutation(
-    createRestoreProductMutationOptions(queryClient)
-  );
-
-  const handleArchive = () => {
-    if (product?.isArchived) {
-      restoreMutation.mutate(productId, {
-        onSuccess: () => {
-          queryClient.invalidateQueries({ queryKey: ["product", productId] });
-        },
-      });
-    } else {
-      archiveMutation.mutate(productId, {
-        onSuccess: () => {
-          queryClient.invalidateQueries({ queryKey: ["product", productId] });
-        },
-      });
-    }
-  };
 
   if (productLoading) {
     return (
@@ -266,37 +231,13 @@ const ViewProduct: React.FC = () => {
               <CardTitle>Overview</CardTitle>
               <CardDescription>Item information</CardDescription>
             </div>
-            <DropdownMenu>
-              <DropdownMenuTrigger asChild>
-                <Button variant="ghost" className="h-10 w-10 shrink-0 p-0 [&_svg]:size-auto focus-visible:ring-0">
-                  <MoreHorizontal className="h-8 w-8" />
-                </Button>
-              </DropdownMenuTrigger>
-              <DropdownMenuContent align="end" className="bg-gray-100 dark:bg-gray-800 border-gray-300 dark:border-gray-700">
-                <DropdownMenuItem
-                  onClick={() => navigate(`/inventory/edit/${productId}`)}
-                >
-                  <Pencil className="mr-2 h-4 w-4" />
-                  Edit
-                </DropdownMenuItem>
-                <DropdownMenuItem
-                  onClick={handleArchive}
-                  disabled={archiveMutation.isPending || restoreMutation.isPending}
-                >
-                  {product.isArchived ? (
-                    <>
-                      <Undo2 className="mr-2 h-4 w-4" />
-                      Unarchive
-                    </>
-                  ) : (
-                    <>
-                      <Archive className="mr-2 h-4 w-4" />
-                      Archive
-                    </>
-                  )}
-                </DropdownMenuItem>
-              </DropdownMenuContent>
-            </DropdownMenu>
+            <Button
+              variant="secondary"
+              size="sm"
+              onClick={() => navigate(`/inventory/edit/${productId}`)}
+            >
+              Edit Product
+            </Button>
           </div>
         </CardHeader>
         <CardContent>
