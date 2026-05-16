@@ -2,6 +2,17 @@ import api from "@/shared/lib/axiosInstance";
 import type { PageResponse } from "@/shared/types";
 import type { TransactionRequest, TransactionResponse, TransactionListItem, PaymentResponse, PaymentRequest } from "@/features/sales/types";
 
+export interface AgingReceivable {
+  transactionId: string;
+  transactionNumber: string;
+  transactionDate: string;
+  customerName: string;
+  totalAmount: number;
+  amountPaid: number;
+  balanceDue: number;
+  daysOutstanding: number;
+}
+
 export interface TransactionMetrics {
   totalTransactions: number;
   totalRevenue: number;
@@ -80,6 +91,11 @@ const fetchTransactionMetrics = async (): Promise<TransactionMetrics> => {
   return data;
 };
 
+const fetchAccountsReceivable = async (): Promise<AgingReceivable[]> => {
+  const { data } = await api.get("/transactions/accounts-receivable");
+  return data;
+};
+
 const fetchTransaction = async (id: string): Promise<TransactionResponse> => {
   const { data } = await api.get(`/transactions/${id}`);
   return data;
@@ -111,4 +127,4 @@ const completeTransaction = async (transactionId: string): Promise<TransactionRe
   return data;
 };
 
-export { createTransaction, fetchTransactions, fetchProductTransactions, fetchTransactionMetrics, fetchTransaction, voidTransaction, refundTransaction, addPayment, fetchPayments, completeTransaction };
+export { createTransaction, fetchTransactions, fetchProductTransactions, fetchTransactionMetrics, fetchAccountsReceivable, fetchTransaction, voidTransaction, refundTransaction, addPayment, fetchPayments, completeTransaction };

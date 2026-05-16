@@ -1,11 +1,19 @@
 import { queryOptions } from "@tanstack/react-query";
-import { fetchTransactions, fetchTransactionMetrics, fetchTransaction, voidTransaction } from "@/features/sales/services/transactionApi";
+import { fetchTransactions, fetchTransactionMetrics, fetchAccountsReceivable, fetchTransaction, voidTransaction } from "@/features/sales/services/transactionApi";
 import type { TransactionFilters } from "@/features/sales/services/transactionApi";
 
 function createTransactionMetricsQueryOptions() {
   return queryOptions({
     queryKey: ["transaction-metrics"],
     queryFn: fetchTransactionMetrics,
+    staleTime: 30_000,
+  });
+}
+
+function createAccountsReceivableQueryOptions() {
+  return queryOptions({
+    queryKey: ["accounts-receivable"],
+    queryFn: fetchAccountsReceivable,
     staleTime: 30_000,
   });
 }
@@ -25,4 +33,4 @@ function createTransactionDetailQueryOptions(id: string) {
   });
 }
 
-export { createTransactionMetricsQueryOptions, createTransactionsListQueryOptions, createTransactionDetailQueryOptions };
+export { createTransactionMetricsQueryOptions, createAccountsReceivableQueryOptions, createTransactionsListQueryOptions, createTransactionDetailQueryOptions };

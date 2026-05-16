@@ -83,7 +83,6 @@ const Reports: React.FC = () => {
     enabled: reportType === "TRANSACTIONS",
   });
 
-  const needsDates = reportType === "TRANSACTIONS";
   const canExportExcel = reportType !== "INVENTORY_ANALYTICS";
 
   // ── Export handlers ──────────────────────────────────────────────
@@ -195,7 +194,16 @@ const Reports: React.FC = () => {
       case "INVENTORY_ANALYTICS":
         return renderInventoryReport(data as ComprehensiveInventoryReportDataset);
       case "TRANSACTIONS":
-        return <TransactionReport report={data as TransactionHierarchicalReportDataset} transactionMetrics={transactionMetrics} />;
+        return (
+          <TransactionReport
+            report={data as TransactionHierarchicalReportDataset}
+            transactionMetrics={transactionMetrics}
+            minDate={minDate}
+            maxDate={maxDate}
+            onMinDateChange={setMinDate}
+            onMaxDateChange={setMaxDate}
+          />
+        );
       case "PATIENTS":
         return <PatientReport report={data as PatientReportDataset} />;
       default:
@@ -226,8 +234,8 @@ const Reports: React.FC = () => {
         }}
       />
 
-      {/* Date range filters */}
-      {(needsDates || reportType === "PATIENTS") && (
+      {/* Date range filters — only for Patients; Transactions has its own in-section picker */}
+      {reportType === "PATIENTS" && (
         <div className="flex items-center justify-end gap-2">
           <span className="text-sm font-medium text-muted-foreground">Date Range:</span>
           <Input
@@ -250,22 +258,14 @@ const Reports: React.FC = () => {
         </div>
       )}
 
-      {/* Date hint for transactions */}
-      {needsDates && (!minDate || !maxDate) && !isLoading && (
-        <Card className="border-blue-300 bg-blue-50">
-          <CardContent className="flex items-center gap-3 py-4">
-            <AlertCircle className="h-5 w-5 shrink-0 text-blue-600" />
-            <p className="text-sm text-blue-800">
-              Showing all-time data. Select a date range above to filter by period.
-            </p>
-          </CardContent>
+      {/* Report content */}
+      {reportType === "TRANSACTIONS" ? (
+        renderReportContent()
+      ) : (
+        <Card>
+          <CardContent className="p-6">{renderReportContent()}</CardContent>
         </Card>
       )}
-
-      {/* Report content */}
-      <Card>
-        <CardContent className="p-6">{renderReportContent()}</CardContent>
-      </Card>
 
       {/* Export action bar */}
       {data && !isLoading && (
