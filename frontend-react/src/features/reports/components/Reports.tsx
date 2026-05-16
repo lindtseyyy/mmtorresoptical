@@ -15,12 +15,12 @@ import { Badge } from "@/shared/components/ui/badge";
 import StatusBadge from "@/shared/components/ui/StatusBadge";
 import { useReportData, useLowStockProducts, useOverstockedProducts, useOutOfStockProducts } from "@/features/reports/hooks/reportQuery";
 import { downloadPdfReport, downloadExcelReport } from "@/features/reports/services/reportApi";
-import InventoryValueChart from "@/features/reports/components/InventoryValueChart";
-import CategoryBreakdownChart from "@/features/reports/components/CategoryBreakdownChart";
-import TopSellingProductsTable from "@/features/reports/components/TopSellingProductsTable";
-import LowStockProductsTable from "@/features/reports/components/LowStockProductsTable";
-import OverstockedProductsTable from "@/features/reports/components/OverstockedProductsTable";
-import OutOfStockProductsTable from "@/features/reports/components/OutOfStockProductsTable";
+import InventoryValueChart from "@/features/reports/components/inventory/InventoryValueChart";
+import CategoryBreakdownChart from "@/features/reports/components/inventory/CategoryBreakdownChart";
+import TopSellingProductsTable from "@/features/reports/components/inventory/TopSellingProductsTable";
+import LowStockProductsTable from "@/features/reports/components/inventory/LowStockProductsTable";
+import OverstockedProductsTable from "@/features/reports/components/inventory/OverstockedProductsTable";
+import OutOfStockProductsTable from "@/features/reports/components/inventory/OutOfStockProductsTable";
 import type {
   ComprehensiveInventoryReportDataset,
   PatientReportDataset,
