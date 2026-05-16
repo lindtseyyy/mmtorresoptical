@@ -56,6 +56,9 @@ import Reports from "@/features/reports/components/Reports";
 // --- Help ---
 import HelpPage from "@/features/help/components/HelpPage";
 
+// --- Dashboard ---
+import Dashboard from "@/features/dashboard/components/Dashboard";
+
 // --- About ---
 import AboutPage from "@/features/about/components/AboutPage";
 
@@ -88,6 +91,7 @@ const router = createBrowserRouter([
     element: <MainLayout />,
     children: [
       { index: true, element: <Navigate to="/inventory" replace /> },
+      { path: "dashboard", element: <Dashboard /> },
       { path: "profile", element: <EditProfile /> },
       { path: "help", element: <HelpPage /> },
       { path: "about", element: <AboutPage /> },

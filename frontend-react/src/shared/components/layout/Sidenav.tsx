@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { NavLink, useLocation, useNavigate } from "react-router-dom";
-import { Users, Eye, LogOut, UserRound, UserRoundCog, ShoppingCart, Receipt, FileText, Database, CircleHelp, Info, ChevronDown } from "lucide-react";
+import { Users, Eye, LogOut, UserRound, UserRoundCog, ShoppingCart, Receipt, FileText, Database, CircleHelp, Info, ChevronDown, LayoutDashboard } from "lucide-react";
 import { Button, buttonVariants } from "@/shared/components/ui/button";
 import { cn } from "@/shared/lib/utils";
 import { toast } from "sonner";
@@ -15,6 +15,7 @@ interface MenuItem {
 }
 
 const menuItems: MenuItem[] = [
+  { title: "Dashboard", href: "/dashboard", icon: LayoutDashboard, roles: ["ADMIN", "STAFF"] as Role[] },
   { title: "Inventory Management", href: "/inventory", icon: Eye, roles: ["ADMIN", "STAFF"] as Role[] },
   { title: "Billing and Payment", href: "/sales", icon: ShoppingCart, roles: ["ADMIN", "STAFF"] as Role[] },
   { title: "Sales and Transactions", href: "/transactions", icon: Receipt, roles: ["ADMIN", "STAFF"] as Role[] },
