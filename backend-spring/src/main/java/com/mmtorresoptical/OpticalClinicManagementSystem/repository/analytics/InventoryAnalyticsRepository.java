@@ -142,6 +142,43 @@ public interface InventoryAnalyticsRepository extends JpaRepository<Product, UUI
 
 
     /*
+     * OUT OF STOCK COUNT
+     */
+    @Query("""
+        SELECT COUNT(p)
+        FROM Product p
+        WHERE p.quantity = 0
+          AND p.isArchived = false
+          AND p.productType = com.mmtorresoptical.OpticalClinicManagementSystem.enums.ProductType.PHYSICAL
+    """)
+    long countOutOfStockProducts();
+
+    /*
+     * OUT OF STOCK LIST (Paginated)
+     */
+    @Query("""
+        SELECT p
+        FROM Product p
+        WHERE p.quantity = 0
+          AND p.isArchived = false
+          AND p.productType = com.mmtorresoptical.OpticalClinicManagementSystem.enums.ProductType.PHYSICAL
+    """)
+    Page<Product> findOutOfStockProducts(Pageable pageable);
+
+    /*
+     * OUT OF STOCK LIST (Sortable)
+     */
+    @Query("""
+        SELECT p
+        FROM Product p
+        WHERE p.quantity = 0
+            AND p.isArchived = false
+            AND p.productType = com.mmtorresoptical.OpticalClinicManagementSystem.enums.ProductType.PHYSICAL
+    """)
+    List<Product> findOutOfStockProducts(Sort sort);
+
+
+    /*
      * TOP SELLING PRODUCTS BETWEEN DATE RANGE
      * Fully parameterized
      * Pageable controls limit

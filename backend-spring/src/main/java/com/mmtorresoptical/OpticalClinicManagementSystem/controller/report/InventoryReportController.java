@@ -64,6 +64,22 @@ public class InventoryReportController {
         return inventoryAnalyticsService.getOverStockedProducts(page, size, sortBy, sortOrder);
     }
 
+    @GetMapping("/outofstock-products")
+    public Page<ProductDetailsDTO> getOutOfStockProducts(
+            @RequestParam(defaultValue = "0") int page,
+            @RequestParam(defaultValue = "10") int size,
+            @RequestParam(defaultValue = "productName") String sortBy,
+            @RequestParam(defaultValue = "asc") String sortOrder,
+            Sort sort) {
+
+        List<String> allowedSortByValues = List.of("productName", "quantity", "unitPrice");
+        if (!allowedSortByValues.contains(sortBy)) {
+            sortBy = "productName";
+        }
+
+        return inventoryAnalyticsService.getOutOfStockProducts(page, size, sortBy, sortOrder);
+    }
+
     @GetMapping("/product/{productId}/metrics")
     public ProductMetricsDTO getProductMetrics(@PathVariable UUID productId) {
         return inventoryAnalyticsService.getProductMetrics(productId);

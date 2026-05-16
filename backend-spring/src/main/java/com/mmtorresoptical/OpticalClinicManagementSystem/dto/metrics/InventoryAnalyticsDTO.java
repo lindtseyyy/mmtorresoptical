@@ -18,5 +18,7 @@ public class InventoryAnalyticsDTO {
 
     long countOverstockedProducts;
 
+    long countOutOfStockProducts;
+
     long countArchivedProducts;
 }

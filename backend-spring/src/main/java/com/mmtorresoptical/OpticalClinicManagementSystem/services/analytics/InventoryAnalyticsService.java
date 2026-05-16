@@ -44,6 +44,7 @@ public class InventoryAnalyticsService {
         BigDecimal inventoryValue = inventoryAnalyticsRepository.inventoryValue();
         long countLowStockProducts = inventoryAnalyticsRepository.countLowStockProducts();
         long countOverStockedProducts = inventoryAnalyticsRepository.countOverstockedProducts();
+        long countOutOfStockProducts = inventoryAnalyticsRepository.countOutOfStockProducts();
         long countArchivedProducts = inventoryAnalyticsRepository.countArchivedProducts();
 
         return InventoryAnalyticsDTO.builder()
@@ -52,6 +53,7 @@ public class InventoryAnalyticsService {
                 .inventoryValue(inventoryValue)
                 .countLowStockProducts(countLowStockProducts)
                 .countOverstockedProducts(countOverStockedProducts)
+                .countOutOfStockProducts(countOutOfStockProducts)
                 .countArchivedProducts(countArchivedProducts)
                 .build();
     }
@@ -114,6 +116,35 @@ public class InventoryAnalyticsService {
     public List<ProductDetailsDTO> getAllOverStockedProducts() {
         Sort sort = Sort.by(Sort.Direction.DESC, "quantity");
         List<Product> products = inventoryAnalyticsRepository.findOverstockedProducts(sort);
+
+        return products.stream()
+                .map(productMapper::entityToDetailsDTO)
+                .toList();
+    }
+
+    public Page<ProductDetailsDTO> getOutOfStockProducts(int page,
+                                                       int size,
+                                                       String sortBy,
+                                                       String sortOrder) {
+
+        Sort.Direction direction;
+
+        try {
+            direction = Sort.Direction.fromString(sortOrder);
+        } catch (IllegalArgumentException ex) {
+            direction = Sort.Direction.DESC;
+        }
+
+        Pageable pageable = PageRequest.of(page, size, Sort.by(direction, sortBy));
+
+        Page<Product> products = inventoryAnalyticsRepository.findOutOfStockProducts(pageable);
+
+        return products.map(productMapper::entityToDetailsDTO);
+    }
+
+    public List<ProductDetailsDTO> getAllOutOfStockProducts() {
+        Sort sort = Sort.by(Sort.Direction.ASC, "productName");
+        List<Product> products = inventoryAnalyticsRepository.findOutOfStockProducts(sort);
 
         return products.stream()
                 .map(productMapper::entityToDetailsDTO)
