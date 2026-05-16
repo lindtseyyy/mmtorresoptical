@@ -71,6 +71,7 @@ public interface InventoryAnalyticsRepository extends JpaRepository<Product, UUI
         FROM Product p
         WHERE p.quantity <= p.lowLevelThreshold
           AND p.isArchived = false
+          AND p.productType = com.mmtorresoptical.OpticalClinicManagementSystem.enums.ProductType.PHYSICAL
     """)
     long countLowStockProducts();
 
@@ -83,6 +84,7 @@ public interface InventoryAnalyticsRepository extends JpaRepository<Product, UUI
         FROM Product p
         WHERE p.quantity >= p.overstockedThreshold
           AND p.isArchived = false
+          AND p.productType = com.mmtorresoptical.OpticalClinicManagementSystem.enums.ProductType.PHYSICAL
     """)
     long countOverstockedProducts();
 
@@ -95,6 +97,7 @@ public interface InventoryAnalyticsRepository extends JpaRepository<Product, UUI
         FROM Product p
         WHERE p.quantity <= p.lowLevelThreshold
           AND p.isArchived = false
+          AND p.productType = com.mmtorresoptical.OpticalClinicManagementSystem.enums.ProductType.PHYSICAL
     """)
     Page<Product> findLowStockProducts(Pageable pageable);
 
@@ -107,6 +110,7 @@ public interface InventoryAnalyticsRepository extends JpaRepository<Product, UUI
                 FROM Product p
                 WHERE p.quantity <= p.lowLevelThreshold
                     AND p.isArchived = false
+                    AND p.productType = com.mmtorresoptical.OpticalClinicManagementSystem.enums.ProductType.PHYSICAL
         """)
         List<Product> findLowStockProducts(Sort sort);
 
@@ -119,6 +123,7 @@ public interface InventoryAnalyticsRepository extends JpaRepository<Product, UUI
         FROM Product p
         WHERE p.quantity >= p.overstockedThreshold
           AND p.isArchived = false
+          AND p.productType = com.mmtorresoptical.OpticalClinicManagementSystem.enums.ProductType.PHYSICAL
     """)
     Page<Product> findOverstockedProducts(Pageable pageable);
 
@@ -131,6 +136,7 @@ public interface InventoryAnalyticsRepository extends JpaRepository<Product, UUI
                 FROM Product p
                 WHERE p.quantity >= p.overstockedThreshold
                     AND p.isArchived = false
+                    AND p.productType = com.mmtorresoptical.OpticalClinicManagementSystem.enums.ProductType.PHYSICAL
         """)
         List<Product> findOverstockedProducts(Sort sort);
 
