@@ -24,7 +24,7 @@ const LowStockProductsTable: React.FC<LowStockProductsTableProps> = ({
   pageSize,
 }) => (
   <Card>
-    <CardHeader className="bg-muted/50">
+    <CardHeader className="bg-muted">
       <CardTitle>Low Stock Products ({data?.totalElements ?? 0})</CardTitle>
     </CardHeader>
     <CardContent>

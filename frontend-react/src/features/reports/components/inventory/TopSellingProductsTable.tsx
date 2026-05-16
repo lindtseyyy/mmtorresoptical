@@ -10,7 +10,7 @@ interface TopSellingProductsTableProps {
 
 const TopSellingProductsTable: React.FC<TopSellingProductsTableProps> = ({ products }) => (
   <Card>
-    <CardHeader className="bg-muted/50">
+    <CardHeader className="bg-muted">
       <CardTitle>Top Selling Products</CardTitle>
     </CardHeader>
     <CardContent>

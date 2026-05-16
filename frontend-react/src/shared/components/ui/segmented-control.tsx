@@ -22,7 +22,7 @@ const SegmentedControl: React.FC<SegmentedControlProps> = ({
   return (
     <div
       role="radiogroup"
-      className={cn("inline-flex rounded-lg bg-muted p-0.5", className)}
+      className={cn("flex w-full rounded-lg bg-muted p-0.5", className)}
     >
       {options.map((opt) => {
         const isActive = opt.value === value;

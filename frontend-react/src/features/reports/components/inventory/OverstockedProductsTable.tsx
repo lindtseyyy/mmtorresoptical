@@ -24,7 +24,7 @@ const OverstockedProductsTable: React.FC<OverstockedProductsTableProps> = ({
   pageSize,
 }) => (
   <Card>
-    <CardHeader className="bg-muted/50">
+    <CardHeader className="bg-muted">
       <CardTitle>Overstocked Products ({data?.totalElements ?? 0})</CardTitle>
     </CardHeader>
     <CardContent>

@@ -207,42 +207,41 @@ const Reports: React.FC = () => {
       </div>
 
       {/* Report type selector */}
-      <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
-        <SegmentedControl
-          options={REPORT_TYPE_OPTIONS}
-          value={reportType}
-          onChange={(value) => {
-            setReportType(value);
-            if (value !== "TRANSACTIONS") {
-              setMinDate("");
-              setMaxDate("");
-            }
-          }}
-        />
+      <SegmentedControl
+        options={REPORT_TYPE_OPTIONS}
+        value={reportType}
+        onChange={(value) => {
+          setReportType(value);
+          if (value !== "TRANSACTIONS") {
+            setMinDate("");
+            setMaxDate("");
+          }
+        }}
+      />
 
-        {/* Date range filters */}
-        {(needsDates || reportType === "PATIENTS") && (
-          <div className="flex items-center gap-2">
-            <Input
-              type="date"
-              min={MIN_DATE_LOCAL}
-              max={MAX_DATE_LOCAL}
-              value={minDate}
-              onChange={(e) => setMinDate(e.target.value)}
-              className="w-auto"
-            />
-            <span className="text-muted-foreground text-sm">to</span>
-            <Input
-              type="date"
-              min={MIN_DATE_LOCAL}
-              max={MAX_DATE_LOCAL}
-              value={maxDate}
-              onChange={(e) => setMaxDate(e.target.value)}
-              className="w-auto"
-            />
-          </div>
-        )}
-      </div>
+      {/* Date range filters */}
+      {(needsDates || reportType === "PATIENTS") && (
+        <div className="flex items-center justify-end gap-2">
+          <span className="text-sm font-medium text-muted-foreground">Date Range:</span>
+          <Input
+            type="date"
+            min={MIN_DATE_LOCAL}
+            max={MAX_DATE_LOCAL}
+            value={minDate}
+            onChange={(e) => setMinDate(e.target.value)}
+            className="w-auto"
+          />
+          <span className="text-muted-foreground text-sm">to</span>
+          <Input
+            type="date"
+            min={MIN_DATE_LOCAL}
+            max={MAX_DATE_LOCAL}
+            value={maxDate}
+            onChange={(e) => setMaxDate(e.target.value)}
+            className="w-auto"
+          />
+        </div>
+      )}
 
       {/* Required date hint for transactions */}
       {needsDates && (!minDate || !maxDate) && !isLoading && (

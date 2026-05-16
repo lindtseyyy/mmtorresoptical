@@ -24,7 +24,7 @@ const OutOfStockProductsTable: React.FC<OutOfStockProductsTableProps> = ({
   pageSize,
 }) => (
   <Card>
-    <CardHeader className="bg-muted/50">
+    <CardHeader className="bg-muted">
       <CardTitle>Out of Stock Products ({data?.totalElements ?? 0})</CardTitle>
     </CardHeader>
     <CardContent>
