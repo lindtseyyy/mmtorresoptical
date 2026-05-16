@@ -52,6 +52,11 @@ export interface AgeGroupStat {
   count: number;
 }
 
+export interface PatientGrowthPoint {
+  month: string;
+  count: number;
+}
+
 export interface PatientReportDataset {
   metadata: ReportMetadata;
   minDate: string | null;
@@ -68,12 +73,7 @@ export interface PatientReportDataset {
   totalVisits: number;
   completedVisits: number;
   missedOrCancelledVisits: number;
-  growthComparisonAvailable: boolean;
-  currentPeriodLabel: string;
-  previousPeriodLabel: string;
-  currentPeriodCount: number;
-  previousPeriodCount: number;
-  growthPercentage: number;
+  patientGrowthTrend: PatientGrowthPoint[];
 }
 
 // ── Transaction Report ────────────────────────────────────────────────

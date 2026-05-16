@@ -1,5 +1,5 @@
 import { queryOptions, useQuery, keepPreviousData } from "@tanstack/react-query";
-import { fetchReportData, fetchCategoryBreakdown, fetchInventoryValueTrend, fetchLowStockProducts, fetchOverstockedProducts, fetchOutOfStockProducts } from "@/features/reports/services/reportApi";
+import { fetchReportData, fetchPatientGrowthTrend, fetchCategoryBreakdown, fetchInventoryValueTrend, fetchLowStockProducts, fetchOverstockedProducts, fetchOutOfStockProducts } from "@/features/reports/services/reportApi";
 
 function createReportDataQueryOptions(
   reportType: string,
@@ -10,6 +10,14 @@ function createReportDataQueryOptions(
     queryKey: ["reportData", reportType, minDate, maxDate],
     queryFn: () => fetchReportData(reportType, minDate, maxDate),
     enabled: true,
+  });
+}
+
+function usePatientGrowthTrend() {
+  return useQuery({
+    queryKey: ["patientGrowthTrend"],
+    queryFn: fetchPatientGrowthTrend,
+    staleTime: 60_000,
   });
 }
 
@@ -61,4 +69,4 @@ function useOutOfStockProducts(page: number, size: number) {
   });
 }
 
-export { createReportDataQueryOptions, useReportData, useCategoryBreakdown, useInventoryValueTrend, useLowStockProducts, useOverstockedProducts, useOutOfStockProducts };
+export { createReportDataQueryOptions, useReportData, usePatientGrowthTrend, useCategoryBreakdown, useInventoryValueTrend, useLowStockProducts, useOverstockedProducts, useOutOfStockProducts };

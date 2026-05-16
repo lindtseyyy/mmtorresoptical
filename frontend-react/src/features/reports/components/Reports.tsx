@@ -10,7 +10,7 @@ import { Button } from "@/shared/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/shared/components/ui/card";
 import { Input } from "@/shared/components/ui/input";
 import { useQuery } from "@tanstack/react-query";
-import { useReportData, useLowStockProducts, useOverstockedProducts, useOutOfStockProducts } from "@/features/reports/hooks/reportQuery";
+import { useReportData, usePatientGrowthTrend, useLowStockProducts, useOverstockedProducts, useOutOfStockProducts } from "@/features/reports/hooks/reportQuery";
 import { downloadPdfReport, downloadExcelReport } from "@/features/reports/services/reportApi";
 import { createTransactionMetricsQueryOptions } from "@/features/sales/hooks/transactionQuery";
 import InventoryValueChart from "@/features/reports/components/inventory/InventoryValueChart";
@@ -82,6 +82,8 @@ const Reports: React.FC = () => {
     ...createTransactionMetricsQueryOptions(),
     enabled: reportType === "TRANSACTIONS",
   });
+
+  const { data: growthTrend } = usePatientGrowthTrend();
 
   const canExportExcel = reportType !== "INVENTORY_ANALYTICS";
 
@@ -205,7 +207,16 @@ const Reports: React.FC = () => {
           />
         );
       case "PATIENTS":
-        return <PatientReport report={data as PatientReportDataset} />;
+        return (
+          <PatientReport
+            report={data as PatientReportDataset}
+            growthTrend={growthTrend ?? []}
+            minDate={minDate}
+            maxDate={maxDate}
+            onMinDateChange={setMinDate}
+            onMaxDateChange={setMaxDate}
+          />
+        );
       default:
         return renderEmpty();
     }
@@ -234,32 +245,8 @@ const Reports: React.FC = () => {
         }}
       />
 
-      {/* Date range filters — only for Patients; Transactions has its own in-section picker */}
-      {reportType === "PATIENTS" && (
-        <div className="flex items-center justify-end gap-2">
-          <span className="text-sm font-medium text-muted-foreground">Date Range:</span>
-          <Input
-            type="date"
-            min={MIN_DATE_LOCAL}
-            max={MAX_DATE_LOCAL}
-            value={minDate}
-            onChange={(e) => setMinDate(e.target.value)}
-            className="w-auto"
-          />
-          <span className="text-muted-foreground text-sm">to</span>
-          <Input
-            type="date"
-            min={MIN_DATE_LOCAL}
-            max={MAX_DATE_LOCAL}
-            value={maxDate}
-            onChange={(e) => setMaxDate(e.target.value)}
-            className="w-auto"
-          />
-        </div>
-      )}
-
       {/* Report content */}
-      {reportType === "TRANSACTIONS" ? (
+      {(reportType === "TRANSACTIONS" || reportType === "PATIENTS") ? (
         renderReportContent()
       ) : (
         <Card>

@@ -1,6 +1,6 @@
 import api from "@/shared/lib/axiosInstance";
 import type { PageResponse } from "@/shared/types";
-import type { ReportData, CategoryBreakdownDTO, InventoryValueTrendPoint, ProductDetailsDTO } from "@/features/reports/types";
+import type { ReportData, CategoryBreakdownDTO, InventoryValueTrendPoint, PatientGrowthPoint, ProductDetailsDTO } from "@/features/reports/types";
 
 const fetchReportData = async (
   reportType: string,
@@ -128,4 +128,9 @@ const fetchOutOfStockProducts = async (page: number, size: number): Promise<Page
   };
 };
 
-export { fetchReportData, downloadPdfReport, downloadExcelReport, fetchCategoryBreakdown, fetchInventoryValueTrend, fetchLowStockProducts, fetchOverstockedProducts, fetchOutOfStockProducts };
+const fetchPatientGrowthTrend = async (): Promise<PatientGrowthPoint[]> => {
+  const { data } = await api.get("/reports/patient-growth-trend");
+  return data;
+};
+
+export { fetchReportData, downloadPdfReport, downloadExcelReport, fetchCategoryBreakdown, fetchInventoryValueTrend, fetchLowStockProducts, fetchOverstockedProducts, fetchOutOfStockProducts, fetchPatientGrowthTrend };
