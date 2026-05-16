@@ -207,7 +207,7 @@ const Reports: React.FC = () => {
       {/* Low Stock Products */}
       <Card>
         <CardHeader>
-          <CardTitle>Low Stock Products</CardTitle>
+          <CardTitle>Low Stock Products ({lowStockData?.totalElements ?? 0})</CardTitle>
         </CardHeader>
         <CardContent>
           {lowStockLoading ? (
@@ -284,7 +284,7 @@ const Reports: React.FC = () => {
       {/* Overstocked Products */}
       <Card>
         <CardHeader>
-          <CardTitle>Overstocked Products</CardTitle>
+          <CardTitle>Overstocked Products ({overstockedData?.totalElements ?? 0})</CardTitle>
         </CardHeader>
         <CardContent>
           {overstockedLoading ? (
