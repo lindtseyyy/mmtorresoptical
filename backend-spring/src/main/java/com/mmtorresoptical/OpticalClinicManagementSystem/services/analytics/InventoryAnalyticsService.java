@@ -1,11 +1,15 @@
 package com.mmtorresoptical.OpticalClinicManagementSystem.services.analytics;
 
+import com.mmtorresoptical.OpticalClinicManagementSystem.dto.metrics.CategoryBreakdownDTO;
 import com.mmtorresoptical.OpticalClinicManagementSystem.dto.metrics.InventoryAnalyticsDTO;
+import com.mmtorresoptical.OpticalClinicManagementSystem.dto.metrics.InventoryValueTrendPoint;
 import com.mmtorresoptical.OpticalClinicManagementSystem.dto.metrics.ProductMetricsDTO;
 import com.mmtorresoptical.OpticalClinicManagementSystem.dto.product.ProductDetailsDTO;
 import com.mmtorresoptical.OpticalClinicManagementSystem.mapper.ProductMapper;
+import com.mmtorresoptical.OpticalClinicManagementSystem.model.InventoryValueSnapshot;
 import com.mmtorresoptical.OpticalClinicManagementSystem.model.Product;
 import com.mmtorresoptical.OpticalClinicManagementSystem.objects.TopSellingProductDTO;
+import com.mmtorresoptical.OpticalClinicManagementSystem.repository.InventoryValueSnapshotRepository;
 import com.mmtorresoptical.OpticalClinicManagementSystem.repository.analytics.InventoryAnalyticsRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
@@ -17,15 +21,21 @@ import org.springframework.stereotype.Service;
 import java.math.BigDecimal;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
+import java.time.YearMonth;
+import java.time.format.DateTimeFormatter;
+import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
 import java.util.Optional;
 import java.util.UUID;
+import java.util.stream.Collectors;
 
 @Service
 @RequiredArgsConstructor
 public class InventoryAnalyticsService {
 
     private final InventoryAnalyticsRepository inventoryAnalyticsRepository;
+    private final InventoryValueSnapshotRepository snapshotRepository;
     private final ProductMapper productMapper;
 
     public InventoryAnalyticsDTO getInventoryAnalytics() {
@@ -206,6 +216,55 @@ public class InventoryAnalyticsService {
                         .numberOfTransactions(0L)
                         .lastSoldDate(null)
                         .build());
+    }
+
+    public List<CategoryBreakdownDTO> getCategoryBreakdown() {
+        return inventoryAnalyticsRepository.findCategoryBreakdown();
+    }
+
+    /**
+     * Returns monthly inventory values for the last 12 months.
+     * Past months use exact snapshots; the current month uses the live value
+     * (inventoryValue() query). Months without a snapshot are skipped.
+     */
+    public List<InventoryValueTrendPoint> getInventoryValueTrend() {
+        YearMonth currentMonth = YearMonth.now();
+        YearMonth twelveMonthsAgo = currentMonth.minusMonths(11);
+        DateTimeFormatter fmt = DateTimeFormatter.ofPattern("yyyy-MM");
+
+        // Load snapshots for the window
+        Map<YearMonth, BigDecimal> snapshots = snapshotRepository
+                .findBySnapshotDateBetweenOrderBySnapshotDateAsc(
+                        twelveMonthsAgo.atDay(1),
+                        currentMonth.atEndOfMonth())
+                .stream()
+                .collect(Collectors.toMap(
+                        s -> YearMonth.from(s.getSnapshotDate()),
+                        InventoryValueSnapshot::getTotalValue));
+
+        // Live value for the current month
+        BigDecimal liveValue = inventoryAnalyticsRepository.inventoryValue();
+
+        List<InventoryValueTrendPoint> trend = new ArrayList<>();
+
+        for (int i = 11; i >= 0; i--) {
+            YearMonth m = currentMonth.minusMonths(i);
+
+            if (m.equals(currentMonth)) {
+                trend.add(InventoryValueTrendPoint.builder()
+                        .month(m.format(fmt))
+                        .value(liveValue)
+                        .build());
+            } else if (snapshots.containsKey(m)) {
+                trend.add(InventoryValueTrendPoint.builder()
+                        .month(m.format(fmt))
+                        .value(snapshots.get(m))
+                        .build());
+            }
+            // else: no snapshot yet for this month — skip
+        }
+
+        return trend;
     }
 
 }

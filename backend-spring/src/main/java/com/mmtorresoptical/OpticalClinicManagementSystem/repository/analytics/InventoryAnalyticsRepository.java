@@ -1,5 +1,6 @@
 package com.mmtorresoptical.OpticalClinicManagementSystem.repository.analytics;
 
+import com.mmtorresoptical.OpticalClinicManagementSystem.dto.metrics.CategoryBreakdownDTO;
 import com.mmtorresoptical.OpticalClinicManagementSystem.dto.metrics.ProductMetricsDTO;
 import com.mmtorresoptical.OpticalClinicManagementSystem.model.Product;
 import com.mmtorresoptical.OpticalClinicManagementSystem.objects.TopSellingProductDTO;
@@ -258,4 +259,22 @@ public interface InventoryAnalyticsRepository extends JpaRepository<Product, UUI
       )
 """)
     ProductMetricsDTO findProductMetrics(@Param("productId") UUID productId);
+
+    /*
+     * CATEGORY BREAKDOWN — active physical products grouped by category
+     */
+    @Query("""
+        SELECT new com.mmtorresoptical.OpticalClinicManagementSystem.dto.metrics.CategoryBreakdownDTO(
+            p.category,
+            COUNT(p),
+            COALESCE(SUM(p.unitPrice * p.quantity), 0)
+        )
+        FROM Product p
+        WHERE p.isArchived = false
+          AND p.productType = com.mmtorresoptical.OpticalClinicManagementSystem.enums.ProductType.PHYSICAL
+        GROUP BY p.category
+        ORDER BY SUM(p.unitPrice * p.quantity) DESC
+    """)
+    List<CategoryBreakdownDTO> findCategoryBreakdown();
+
 }

@@ -1,6 +1,8 @@
 package com.mmtorresoptical.OpticalClinicManagementSystem.controller.report;
 
+import com.mmtorresoptical.OpticalClinicManagementSystem.dto.metrics.CategoryBreakdownDTO;
 import com.mmtorresoptical.OpticalClinicManagementSystem.dto.metrics.InventoryAnalyticsDTO;
+import com.mmtorresoptical.OpticalClinicManagementSystem.dto.metrics.InventoryValueTrendPoint;
 import com.mmtorresoptical.OpticalClinicManagementSystem.dto.metrics.ProductMetricsDTO;
 import com.mmtorresoptical.OpticalClinicManagementSystem.dto.product.ProductDetailsDTO;
 import com.mmtorresoptical.OpticalClinicManagementSystem.objects.TopSellingProductDTO;
@@ -83,5 +85,15 @@ public class InventoryReportController {
         }
 
         return inventoryAnalyticsService.getTopSellingProducts(startDate, endDate, page, size, sortBy, sortOrder);
+    }
+
+    @GetMapping("/category-breakdown")
+    public List<CategoryBreakdownDTO> getCategoryBreakdown() {
+        return inventoryAnalyticsService.getCategoryBreakdown();
+    }
+
+    @GetMapping("/value-trend")
+    public List<InventoryValueTrendPoint> getInventoryValueTrend() {
+        return inventoryAnalyticsService.getInventoryValueTrend();
     }
 }
