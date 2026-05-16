@@ -7,6 +7,7 @@ import {
   UserPlus,
   AlertTriangle,
   TrendingUp,
+  Banknote,
 } from "lucide-react";
 import { useQuery } from "@tanstack/react-query";
 import { Card, CardContent, CardHeader, CardTitle } from "@/shared/components/ui/card";
@@ -15,6 +16,10 @@ import { Button } from "@/shared/components/ui/button";
 import { Separator } from "@/shared/components/ui/separator";
 import { useNavigate } from "react-router-dom";
 import { createInventorySummaryQueryOptions } from "@/features/inventory/hooks/productQuery";
+import { createTransactionMetricsQueryOptions } from "@/features/sales/hooks/transactionQuery";
+
+const formatCurrency = (amount: number) =>
+  `₱ ${amount.toLocaleString("en-US", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
 
 const quickActions = [
   { label: "Manage Inventory", href: "/inventory", icon: PackageOpen },
@@ -36,6 +41,12 @@ export default function Dashboard() {
     isError: inventoryError,
   } = useQuery(createInventorySummaryQueryOptions());
 
+  const { data: metrics } = useQuery(createTransactionMetricsQueryOptions());
+
+  const anomalyAmount = metrics != null
+    ? (metrics.todayTotalRefundedAmount ?? 0) + (metrics.todayTotalVoidedAmount ?? 0)
+    : 0;
+
   return (
     <div className="space-y-6">
       {/* Header */}
@@ -46,7 +57,34 @@ export default function Dashboard() {
         </p>
       </div>
 
-      {/* Inventory alerts — immediate action items */}
+      {/* Today's Target */}
+      <div>
+        <p className="text-sm font-medium text-muted-foreground mb-3 uppercase tracking-wide">Today's Target</p>
+        <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
+          <MetricCard
+            icon={Banknote}
+            label="Today's Revenue"
+            value={metrics != null ? formatCurrency(metrics.todayRevenue) : "—"}
+            color="rose"
+          />
+          <MetricCard
+            icon={Receipt}
+            label="Sales & Transactions Today"
+            value={metrics?.todayTransactions ?? "—"}
+            color="blue"
+          />
+          <MetricCard
+            icon={AlertTriangle}
+            label="Today's Refunds & Voids — Security Alert"
+            value={anomalyAmount > 0 ? formatCurrency(anomalyAmount) : "₱ 0.00"}
+            color="red"
+          />
+        </div>
+      </div>
+
+      <Separator />
+
+      {/* Inventory Alerts */}
       <div>
         <p className="text-sm font-medium text-muted-foreground mb-3 uppercase tracking-wide">Inventory Alerts</p>
         <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">

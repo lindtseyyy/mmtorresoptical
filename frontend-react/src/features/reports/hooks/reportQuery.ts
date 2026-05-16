@@ -9,8 +9,7 @@ function createReportDataQueryOptions(
   return queryOptions({
     queryKey: ["reportData", reportType, minDate, maxDate],
     queryFn: () => fetchReportData(reportType, minDate, maxDate),
-    enabled:
-      reportType !== "TRANSACTIONS" || (!!minDate && !!maxDate),
+    enabled: true,
   });
 }
 

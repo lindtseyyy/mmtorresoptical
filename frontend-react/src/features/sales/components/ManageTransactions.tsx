@@ -19,13 +19,11 @@ import {
   ChevronLeft,
   ChevronRight,
   Eye,
-  Receipt,
-  Banknote,
-  Calendar,
   TrendingUp,
   ArrowUp,
   ArrowDown,
-  Undo2,
+  Clock,
+  PackageOpen,
 } from "lucide-react";
 import {
   createTransactionsListQueryOptions,
@@ -152,17 +150,11 @@ const ManageTransactions: React.FC = () => {
         </div>
       </div>
 
-      {/* Metrics */}
+      {/* Operational Metrics */}
       <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
-        <MetricCard icon={Receipt} label="Total Sales and Transactions" value={metrics?.totalTransactions ?? "—"} color="primary" />
-        <MetricCard icon={Banknote} label="Total Revenue" value={metrics != null ? formatCurrency(metrics.totalRevenue) : "—"} color="emerald" />
         <MetricCard icon={TrendingUp} label="Average Transaction Value" value={metrics != null ? formatCurrency(metrics.averageTransactionValue) : "—"} color="amber" />
-        <MetricCard icon={Calendar} label="Total Sales and Transactions This Month" value={metrics?.totalTransactionsThisMonth ?? "—"} color="violet" />
-        <MetricCard icon={Receipt} label="Sales and Transactions Today" value={metrics?.todayTransactions ?? "—"} color="blue" />
-        <MetricCard icon={Banknote} label="Today's Revenue" value={metrics != null ? formatCurrency(metrics.todayRevenue) : "—"} color="rose" />
-        <MetricCard icon={Undo2} label="Total Refunded Amount" value={metrics?.totalRefundedAmount != null ? formatCurrency(metrics.totalRefundedAmount) : "—"} color="red" />
-        <MetricCard icon={Undo2} label="Today's Total Refunded Amount" value={metrics?.todayTotalRefundedAmount != null ? formatCurrency(metrics.todayTotalRefundedAmount) : "—"} color="orange" />
-        <MetricCard icon={Undo2} label="Total Refunded Amount This Month" value={metrics?.totalRefundedAmountThisMonth != null ? formatCurrency(metrics.totalRefundedAmountThisMonth) : "—"} color="yellow" />
+        <MetricCard icon={Clock} label="Outstanding Balances — Partially Paid" value={metrics != null ? formatCurrency(metrics.totalAccountsReceivable) : "—"} color="orange" />
+        <MetricCard icon={PackageOpen} label="Orders Ready for Pickup — Paid, Not Completed" value={metrics?.awaitingPickupCount ?? "—"} color="violet" />
       </div>
 
       {/* Transactions Table */}

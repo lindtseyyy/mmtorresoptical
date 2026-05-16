@@ -9,8 +9,10 @@ import SegmentedControl from "@/shared/components/ui/segmented-control";
 import { Button } from "@/shared/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/shared/components/ui/card";
 import { Input } from "@/shared/components/ui/input";
+import { useQuery } from "@tanstack/react-query";
 import { useReportData, useLowStockProducts, useOverstockedProducts, useOutOfStockProducts } from "@/features/reports/hooks/reportQuery";
 import { downloadPdfReport, downloadExcelReport } from "@/features/reports/services/reportApi";
+import { createTransactionMetricsQueryOptions } from "@/features/sales/hooks/transactionQuery";
 import InventoryValueChart from "@/features/reports/components/inventory/InventoryValueChart";
 import CategoryBreakdownChart from "@/features/reports/components/inventory/CategoryBreakdownChart";
 import TopSellingProductsTable from "@/features/reports/components/inventory/TopSellingProductsTable";
@@ -75,6 +77,11 @@ const Reports: React.FC = () => {
     data: outOfStockData,
     isLoading: outOfStockLoading,
   } = useOutOfStockProducts(outOfStockPage, PAGE_SIZE);
+
+  const { data: transactionMetrics } = useQuery({
+    ...createTransactionMetricsQueryOptions(),
+    enabled: reportType === "TRANSACTIONS",
+  });
 
   const needsDates = reportType === "TRANSACTIONS";
   const canExportExcel = reportType !== "INVENTORY_ANALYTICS";
@@ -188,7 +195,7 @@ const Reports: React.FC = () => {
       case "INVENTORY_ANALYTICS":
         return renderInventoryReport(data as ComprehensiveInventoryReportDataset);
       case "TRANSACTIONS":
-        return <TransactionReport report={data as TransactionHierarchicalReportDataset} />;
+        return <TransactionReport report={data as TransactionHierarchicalReportDataset} transactionMetrics={transactionMetrics} />;
       case "PATIENTS":
         return <PatientReport report={data as PatientReportDataset} />;
       default:
@@ -243,13 +250,13 @@ const Reports: React.FC = () => {
         </div>
       )}
 
-      {/* Required date hint for transactions */}
+      {/* Date hint for transactions */}
       {needsDates && (!minDate || !maxDate) && !isLoading && (
-        <Card className="border-amber-300 bg-amber-50">
+        <Card className="border-blue-300 bg-blue-50">
           <CardContent className="flex items-center gap-3 py-4">
-            <AlertCircle className="h-5 w-5 shrink-0 text-amber-600" />
-            <p className="text-sm text-amber-800">
-              Select a date range above to generate the Transactions report.
+            <AlertCircle className="h-5 w-5 shrink-0 text-blue-600" />
+            <p className="text-sm text-blue-800">
+              Showing all-time data. Select a date range above to filter by period.
             </p>
           </CardContent>
         </Card>

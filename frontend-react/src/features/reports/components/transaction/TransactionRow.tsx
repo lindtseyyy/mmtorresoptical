@@ -44,7 +44,7 @@ const TransactionRow: React.FC<TransactionRowProps> = ({ entry }) => {
         <span className="min-w-[100px] font-mono text-sm">
           {formatDate(entry.date)}
         </span>
-        <span className="flex-1 font-medium">{entry.customerName || "Walk-in"}</span>
+        <span className="flex-1 font-medium">{entry.customerName || ""}</span>
         <StatusBadge status={entry.status} className="shrink-0" />
         <span className="min-w-[100px] text-right font-medium">
           {currency(entry.totalAmount)}

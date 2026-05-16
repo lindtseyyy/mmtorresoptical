@@ -12,6 +12,9 @@ export interface TransactionMetrics {
   totalRefundedAmount: number;
   todayTotalRefundedAmount: number;
   totalRefundedAmountThisMonth: number;
+  todayTotalVoidedAmount: number;
+  totalAccountsReceivable: number;
+  awaitingPickupCount: number;
 }
 
 export interface TransactionFilters {
