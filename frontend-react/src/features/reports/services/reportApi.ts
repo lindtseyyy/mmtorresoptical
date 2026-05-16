@@ -114,4 +114,18 @@ const fetchOverstockedProducts = async (page: number, size: number): Promise<Pag
   };
 };
 
-export { fetchReportData, downloadPdfReport, downloadExcelReport, fetchCategoryBreakdown, fetchInventoryValueTrend, fetchLowStockProducts, fetchOverstockedProducts };
+const fetchOutOfStockProducts = async (page: number, size: number): Promise<PageResponse<ProductDetailsDTO>> => {
+  const { data } = await api.get("/reports/inventory/outofstock-products", {
+    params: { page, size, sortBy: "quantity", sortOrder: "asc" },
+  });
+  const pg = data.page;
+  return {
+    content: data.content,
+    totalPages: pg.totalPages,
+    totalElements: pg.totalElements,
+    size: pg.size,
+    number: pg.number,
+  };
+};
+
+export { fetchReportData, downloadPdfReport, downloadExcelReport, fetchCategoryBreakdown, fetchInventoryValueTrend, fetchLowStockProducts, fetchOverstockedProducts, fetchOutOfStockProducts };

@@ -1,5 +1,5 @@
 import { queryOptions, useQuery, keepPreviousData } from "@tanstack/react-query";
-import { fetchReportData, fetchCategoryBreakdown, fetchInventoryValueTrend, fetchLowStockProducts, fetchOverstockedProducts } from "@/features/reports/services/reportApi";
+import { fetchReportData, fetchCategoryBreakdown, fetchInventoryValueTrend, fetchLowStockProducts, fetchOverstockedProducts, fetchOutOfStockProducts } from "@/features/reports/services/reportApi";
 
 function createReportDataQueryOptions(
   reportType: string,
@@ -54,4 +54,12 @@ function useOverstockedProducts(page: number, size: number) {
   });
 }
 
-export { createReportDataQueryOptions, useReportData, useCategoryBreakdown, useInventoryValueTrend, useLowStockProducts, useOverstockedProducts };
+function useOutOfStockProducts(page: number, size: number) {
+  return useQuery({
+    queryKey: ["outOfStockProducts", page, size],
+    queryFn: () => fetchOutOfStockProducts(page, size),
+    placeholderData: keepPreviousData,
+  });
+}
+
+export { createReportDataQueryOptions, useReportData, useCategoryBreakdown, useInventoryValueTrend, useLowStockProducts, useOverstockedProducts, useOutOfStockProducts };
