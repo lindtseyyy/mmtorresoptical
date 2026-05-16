@@ -3,16 +3,12 @@ import {
   FileText,
   Download,
   AlertCircle,
-  ChevronDown,
-  ChevronRight,
 } from "lucide-react";
 import { toast } from "sonner";
 import SegmentedControl from "@/shared/components/ui/segmented-control";
 import { Button } from "@/shared/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/shared/components/ui/card";
 import { Input } from "@/shared/components/ui/input";
-import { Badge } from "@/shared/components/ui/badge";
-import StatusBadge from "@/shared/components/ui/StatusBadge";
 import { useReportData, useLowStockProducts, useOverstockedProducts, useOutOfStockProducts } from "@/features/reports/hooks/reportQuery";
 import { downloadPdfReport, downloadExcelReport } from "@/features/reports/services/reportApi";
 import InventoryValueChart from "@/features/reports/components/inventory/InventoryValueChart";
@@ -21,35 +17,13 @@ import TopSellingProductsTable from "@/features/reports/components/inventory/Top
 import LowStockProductsTable from "@/features/reports/components/inventory/LowStockProductsTable";
 import OverstockedProductsTable from "@/features/reports/components/inventory/OverstockedProductsTable";
 import OutOfStockProductsTable from "@/features/reports/components/inventory/OutOfStockProductsTable";
+import TransactionReport from "@/features/reports/components/transaction/TransactionReport";
+import PatientReport from "@/features/reports/components/patient/PatientReport";
 import type {
   ComprehensiveInventoryReportDataset,
   PatientReportDataset,
   TransactionHierarchicalReportDataset,
-  TransactionEntry,
 } from "@/features/reports/types";
-
-// ── Helpers ───────────────────────────────────────────────────────────
-
-const currency = (value: number) =>
-  new Intl.NumberFormat("en-PH", { style: "currency", currency: "PHP" }).format(value);
-
-const number = (value: number) => new Intl.NumberFormat("en-PH").format(value);
-
-const formatDate = (iso: string) =>
-  new Date(iso).toLocaleDateString("en-US", {
-    year: "numeric",
-    month: "short",
-    day: "numeric",
-  });
-
-const formatDateTime = (iso: string) =>
-  new Date(iso).toLocaleString("en-US", {
-    year: "numeric",
-    month: "short",
-    day: "numeric",
-    hour: "2-digit",
-    minute: "2-digit",
-  });
 
 const MIN_DATE_LOCAL = "2020-01-01";
 const MAX_DATE_LOCAL = "2099-12-31";
@@ -201,329 +175,7 @@ const Reports: React.FC = () => {
     </div>
   );
 
-  // ── Transaction report ───────────────────────────────────────────
-
-  const TransactionRow: React.FC<{ entry: TransactionEntry }> = ({ entry }) => {
-    const [expanded, setExpanded] = useState(false);
-
-    return (
-      <div className="border-b">
-        <button
-          className="flex w-full items-center gap-3 px-4 py-3 text-left hover:bg-muted/50 transition-colors"
-          onClick={() => setExpanded(!expanded)}
-        >
-          {expanded ? (
-            <ChevronDown className="h-4 w-4 shrink-0 text-muted-foreground" />
-          ) : (
-            <ChevronRight className="h-4 w-4 shrink-0 text-muted-foreground" />
-          )}
-          <span className="min-w-[100px] font-mono text-sm">
-            {formatDate(entry.date)}
-          </span>
-          <span className="flex-1 font-medium">{entry.customerName || "Walk-in"}</span>
-          <StatusBadge status={entry.status} className="shrink-0" />
-          <span className="min-w-[100px] text-right font-medium">
-            {currency(entry.totalAmount)}
-          </span>
-        </button>
-        {expanded && (
-          <div className="border-t bg-muted/30 px-4 py-3 space-y-3">
-            <div className="grid grid-cols-2 gap-x-6 gap-y-1 text-sm md:grid-cols-4">
-              <div>
-                <span className="text-muted-foreground">Cashier: </span>
-                <span>{entry.cashierName}</span>
-              </div>
-              <div>
-                <span className="text-muted-foreground">Amount Paid: </span>
-                <span>{currency(entry.amountPaid)}</span>
-              </div>
-              <div>
-                <span className="text-muted-foreground">Balance Due: </span>
-                <span>{currency(entry.balanceDue)}</span>
-              </div>
-              {entry.voidReason && (
-                <div className="col-span-2">
-                  <span className="text-muted-foreground">Void Reason: </span>
-                  <span className="text-red-600">{entry.voidReason}</span>
-                  {entry.voidedAt && (
-                    <span className="text-muted-foreground text-xs ml-2">
-                      ({formatDateTime(entry.voidedAt)}
-                      {entry.voidedBy ? ` by ${entry.voidedBy}` : ""})
-                    </span>
-                  )}
-                </div>
-              )}
-            </div>
-
-            {entry.items.length > 0 && (
-              <div>
-                <p className="mb-1 text-xs font-medium text-muted-foreground">Items</p>
-                <table className="w-full text-xs">
-                  <thead>
-                    <tr className="border-b text-left text-muted-foreground">
-                      <th className="py-1 pr-2">Product</th>
-                      <th className="py-1 pr-2 text-right">Qty</th>
-                      <th className="py-1 pr-2 text-right">Unit Price</th>
-                      <th className="py-1 pr-2 text-right">Subtotal</th>
-                      {entry.items.some((i) => i.refundedQuantity) && (
-                        <th className="py-1 pr-2 text-right">Refunded</th>
-                      )}
-                    </tr>
-                  </thead>
-                  <tbody>
-                    {entry.items.map((item, idx) => (
-                      <tr key={idx} className="border-b border-muted">
-                        <td className="py-1 pr-2">{item.productName}</td>
-                        <td className="py-1 pr-2 text-right">{item.quantity}</td>
-                        <td className="py-1 pr-2 text-right">{currency(item.unitPrice)}</td>
-                        <td className="py-1 pr-2 text-right">{currency(item.subtotal)}</td>
-                        {entry.items.some((i) => i.refundedQuantity) && (
-                          <td className="py-1 pr-2 text-right">
-                            {item.refundedQuantity
-                              ? `${item.refundedQuantity}${item.refundAmount ? ` (${currency(item.refundAmount)})` : ""}`
-                              : "-"}
-                          </td>
-                        )}
-                      </tr>
-                    ))}
-                  </tbody>
-                </table>
-              </div>
-            )}
-
-            {entry.payments.length > 0 && (
-              <div>
-                <p className="mb-1 text-xs font-medium text-muted-foreground">Payments</p>
-                <div className="space-y-1">
-                  {entry.payments.map((pmt, idx) => (
-                    <div key={idx} className="flex items-center gap-4 text-xs">
-                      <Badge variant="outline" className="capitalize">
-                        {pmt.paymentMethod}
-                      </Badge>
-                      <span className="font-medium">{currency(pmt.amount)}</span>
-                      {pmt.referenceNumber && (
-                        <span className="text-muted-foreground">Ref: {pmt.referenceNumber}</span>
-                      )}
-                      <span className="text-muted-foreground">{formatDateTime(pmt.createdAt)}</span>
-                    </div>
-                  ))}
-                </div>
-              </div>
-            )}
-          </div>
-        )}
-      </div>
-    );
-  };
-
-  const renderTransactionReport = (report: TransactionHierarchicalReportDataset) => (
-    <div className="space-y-6">
-      <div className="grid grid-cols-2 gap-4 md:grid-cols-4">
-        <Card>
-          <CardHeader className="pb-2">
-            <CardTitle className="text-sm font-medium text-muted-foreground">Total Transactions</CardTitle>
-          </CardHeader>
-          <CardContent>
-            <p className="text-2xl font-bold">{number(report.summary.totalCount)}</p>
-            <p className="text-sm text-muted-foreground mt-1">{currency(report.summary.totalAmount)}</p>
-          </CardContent>
-        </Card>
-        <Card>
-          <CardHeader className="pb-2">
-            <CardTitle className="text-sm font-medium text-muted-foreground">Completed</CardTitle>
-          </CardHeader>
-          <CardContent>
-            <p className="text-2xl font-bold text-green-600">{number(report.summary.completedCount)}</p>
-            <p className="text-sm text-muted-foreground mt-1">{currency(report.summary.completedAmount)}</p>
-          </CardContent>
-        </Card>
-        <Card>
-          <CardHeader className="pb-2">
-            <CardTitle className="text-sm font-medium text-muted-foreground">Voided</CardTitle>
-          </CardHeader>
-          <CardContent>
-            <p className="text-2xl font-bold text-red-600">{number(report.summary.voidedCount)}</p>
-            <p className="text-sm text-muted-foreground mt-1">{currency(report.summary.voidedAmount)}</p>
-          </CardContent>
-        </Card>
-        <Card>
-          <CardHeader className="pb-2">
-            <CardTitle className="text-sm font-medium text-muted-foreground">Refunded</CardTitle>
-          </CardHeader>
-          <CardContent>
-            <p className="text-2xl font-bold text-purple-600">{number(report.summary.refundedCount)}</p>
-            <p className="text-sm text-muted-foreground mt-1">{currency(report.summary.refundedAmount)}</p>
-          </CardContent>
-        </Card>
-      </div>
-
-      {/* Status groups */}
-      {Object.keys(report.statusGroups).length === 0 ? (
-        <p className="text-center text-muted-foreground py-8">{report.emptyMessage}</p>
-      ) : (
-        Object.entries(report.statusGroups).map(([status, entries]) => (
-          <Card key={status}>
-            <CardHeader className="pb-2">
-              <div className="flex items-center gap-2">
-                <StatusBadge status={status} />
-                <CardTitle className="text-base">
-                  {status.replace(/_/g, " ").replace(/\b\w/g, (c) => c.toUpperCase())}
-                </CardTitle>
-                <span className="text-sm text-muted-foreground">({entries.length})</span>
-              </div>
-            </CardHeader>
-            <CardContent>
-              {entries.map((entry) => (
-                <TransactionRow key={entry.id} entry={entry} />
-              ))}
-            </CardContent>
-          </Card>
-        ))
-      )}
-    </div>
-  );
-
   // ── Patient report ───────────────────────────────────────────────
-
-  const renderPatientReport = (report: PatientReportDataset) => (
-    <div className="space-y-6">
-      <div className="grid grid-cols-2 gap-4 md:grid-cols-4">
-        <Card>
-          <CardHeader className="pb-2">
-            <CardTitle className="text-sm font-medium text-muted-foreground">Total Patients</CardTitle>
-          </CardHeader>
-          <CardContent>
-            <p className="text-2xl font-bold">{number(report.totalPatients)}</p>
-          </CardContent>
-        </Card>
-        <Card>
-          <CardHeader className="pb-2">
-            <CardTitle className="text-sm font-medium text-muted-foreground">Active</CardTitle>
-          </CardHeader>
-          <CardContent>
-            <p className="text-2xl font-bold text-green-600">{number(report.activePatients)}</p>
-          </CardContent>
-        </Card>
-        <Card>
-          <CardHeader className="pb-2">
-            <CardTitle className="text-sm font-medium text-muted-foreground">Archived</CardTitle>
-          </CardHeader>
-          <CardContent>
-            <p className="text-2xl font-bold text-gray-500">{number(report.archivedPatients)}</p>
-          </CardContent>
-        </Card>
-        <Card>
-          <CardHeader className="pb-2">
-            <CardTitle className="text-sm font-medium text-muted-foreground">
-              {report.overallReport ? "New This Month" : "New in Period"}
-            </CardTitle>
-          </CardHeader>
-          <CardContent>
-            <p className="text-2xl font-bold text-blue-600">{number(report.newPatientsInPeriod)}</p>
-          </CardContent>
-        </Card>
-      </div>
-
-      <div className="grid grid-cols-1 gap-6 md:grid-cols-2">
-        {/* Gender distribution */}
-        <Card>
-          <CardHeader>
-            <CardTitle>Gender Distribution</CardTitle>
-          </CardHeader>
-          <CardContent>
-            <div className="space-y-3">
-              <div className="flex items-center justify-between">
-                <span>Male</span>
-                <span className="font-medium">{report.maleCount}</span>
-              </div>
-              <div className="flex items-center justify-between">
-                <span>Female</span>
-                <span className="font-medium">{report.femaleCount}</span>
-              </div>
-              <div className="flex items-center justify-between">
-                <span>Others</span>
-                <span className="font-medium">{report.otherGenderCount}</span>
-              </div>
-            </div>
-          </CardContent>
-        </Card>
-
-        {/* Age group distribution */}
-        {report.ageGroupDistribution.length > 0 && (
-          <Card>
-            <CardHeader>
-              <CardTitle>Age Groups</CardTitle>
-            </CardHeader>
-            <CardContent>
-              <div className="space-y-3">
-                {report.ageGroupDistribution.map((ag) => (
-                  <div key={ag.groupLabel} className="flex items-center justify-between">
-                    <span>{ag.groupLabel}</span>
-                    <span className="font-medium">{ag.count}</span>
-                  </div>
-                ))}
-              </div>
-            </CardContent>
-          </Card>
-        )}
-      </div>
-
-      {/* Visit statistics */}
-      <Card>
-        <CardHeader>
-          <CardTitle>Visit Statistics</CardTitle>
-        </CardHeader>
-        <CardContent>
-          <div className="grid grid-cols-3 gap-4">
-            <div className="text-center">
-              <p className="text-2xl font-bold">{number(report.totalVisits)}</p>
-              <p className="text-sm text-muted-foreground">Total Visits</p>
-            </div>
-            <div className="text-center">
-              <p className="text-2xl font-bold text-green-600">{number(report.completedVisits)}</p>
-              <p className="text-sm text-muted-foreground">Completed</p>
-            </div>
-            <div className="text-center">
-              <p className="text-2xl font-bold text-red-600">{number(report.missedOrCancelledVisits)}</p>
-              <p className="text-sm text-muted-foreground">Missed / Cancelled</p>
-            </div>
-          </div>
-        </CardContent>
-      </Card>
-
-      {/* Growth comparison */}
-      {report.growthComparisonAvailable && (
-        <Card>
-          <CardHeader>
-            <CardTitle>Growth Comparison</CardTitle>
-          </CardHeader>
-          <CardContent>
-            <div className="grid grid-cols-3 gap-4 text-center">
-              <div>
-                <p className="text-sm text-muted-foreground">{report.previousPeriodLabel}</p>
-                <p className="text-xl font-bold">{number(report.previousPeriodCount)}</p>
-              </div>
-              <div>
-                <p className="text-sm text-muted-foreground">{report.currentPeriodLabel}</p>
-                <p className="text-xl font-bold">{number(report.currentPeriodCount)}</p>
-              </div>
-              <div>
-                <p className="text-sm text-muted-foreground">Growth</p>
-                <p
-                  className={`text-xl font-bold ${
-                    report.growthPercentage >= 0 ? "text-green-600" : "text-red-600"
-                  }`}
-                >
-                  {report.growthPercentage >= 0 ? "+" : ""}
-                  {report.growthPercentage.toFixed(1)}%
-                </p>
-              </div>
-            </div>
-          </CardContent>
-        </Card>
-      )}
-    </div>
-  );
 
   // ── Main render ──────────────────────────────────────────────────
 
@@ -536,9 +188,9 @@ const Reports: React.FC = () => {
       case "INVENTORY_ANALYTICS":
         return renderInventoryReport(data as ComprehensiveInventoryReportDataset);
       case "TRANSACTIONS":
-        return renderTransactionReport(data as TransactionHierarchicalReportDataset);
+        return <TransactionReport report={data as TransactionHierarchicalReportDataset} />;
       case "PATIENTS":
-        return renderPatientReport(data as PatientReportDataset);
+        return <PatientReport report={data as PatientReportDataset} />;
       default:
         return renderEmpty();
     }
