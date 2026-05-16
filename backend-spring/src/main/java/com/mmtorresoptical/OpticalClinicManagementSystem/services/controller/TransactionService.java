@@ -28,11 +28,14 @@ import org.springframework.data.jpa.domain.Specification;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import com.mmtorresoptical.OpticalClinicManagementSystem.dto.metrics.AgingReceivableDTO;
+
 import java.math.BigDecimal;
 import java.math.RoundingMode;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
+import java.time.temporal.ChronoUnit;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
@@ -388,6 +391,31 @@ public class TransactionService {
                 .totalAccountsReceivable(totalAccountsReceivable)
                 .awaitingPickupCount(awaitingPickupCount)
                 .build();
+    }
+
+    public List<AgingReceivableDTO> getAgingAccountsReceivable() {
+        LocalDateTime cutoffDate = LocalDate.now().minusDays(14).atStartOfDay();
+        List<Transaction> transactions = transactionRepository.findAgingAccountsReceivable(cutoffDate);
+
+        LocalDate today = LocalDate.now();
+        return transactions.stream().map(t -> {
+            String customerName = t.getPatient() != null
+                    ? t.getPatient().getFirstName() + " " + t.getPatient().getLastName()
+                    : "Walk-in";
+
+            long daysOutstanding = ChronoUnit.DAYS.between(t.getTransactionDate().toLocalDate(), today);
+
+            return AgingReceivableDTO.builder()
+                    .transactionId(t.getTransactionId().toString())
+                    .transactionNumber(t.getTransactionNumber())
+                    .transactionDate(t.getTransactionDate().toLocalDate())
+                    .customerName(customerName)
+                    .totalAmount(t.getTotalAmount())
+                    .amountPaid(t.getAmountPaid())
+                    .balanceDue(t.getBalanceDue())
+                    .daysOutstanding(daysOutstanding)
+                    .build();
+        }).collect(Collectors.toList());
     }
 
     @Transactional

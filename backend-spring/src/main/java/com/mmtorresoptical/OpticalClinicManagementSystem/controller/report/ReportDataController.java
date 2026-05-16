@@ -2,6 +2,7 @@ package com.mmtorresoptical.OpticalClinicManagementSystem.controller.report;
 
 import com.mmtorresoptical.OpticalClinicManagementSystem.enums.ReportType;
 import com.mmtorresoptical.OpticalClinicManagementSystem.exception.custom.BadRequestException;
+import com.mmtorresoptical.OpticalClinicManagementSystem.repository.TransactionRepository;
 import com.mmtorresoptical.OpticalClinicManagementSystem.services.report.ComprehensiveInventoryReportDataset;
 import com.mmtorresoptical.OpticalClinicManagementSystem.services.report.PatientReportDataset;
 import com.mmtorresoptical.OpticalClinicManagementSystem.services.report.ReportAggregationService;
@@ -17,6 +18,7 @@ import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
 import java.time.LocalDate;
+import java.time.LocalDateTime;
 
 @RestController
 @RequiredArgsConstructor
@@ -25,6 +27,7 @@ public class ReportDataController {
 
     private final TransactionPdfAggregationService transactionPdfAggregationService;
     private final ReportAggregationService reportAggregationService;
+    private final TransactionRepository transactionRepository;
 
     @GetMapping("/data/{reportType}")
     public ResponseEntity<?> getReportData(
@@ -34,8 +37,18 @@ public class ReportDataController {
     ) {
         return switch (reportType) {
             case TRANSACTIONS -> {
-                LocalDate effectiveMin = minDate != null ? minDate : LocalDate.of(2020, 1, 1);
-                LocalDate effectiveMax = maxDate != null ? maxDate : LocalDate.of(2099, 12, 31);
+                LocalDate effectiveMin = minDate;
+                LocalDate effectiveMax = maxDate;
+                if (effectiveMin == null || effectiveMax == null) {
+                    LocalDateTime dbMin = transactionRepository.findMinTransactionDate();
+                    LocalDateTime dbMax = transactionRepository.findMaxTransactionDate();
+                    if (effectiveMin == null) {
+                        effectiveMin = dbMin != null ? dbMin.toLocalDate() : LocalDate.of(2020, 1, 1);
+                    }
+                    if (effectiveMax == null) {
+                        effectiveMax = dbMax != null ? dbMax.toLocalDate() : LocalDate.of(2099, 12, 31);
+                    }
+                }
                 TransactionHierarchicalReportDataset dataset =
                         transactionPdfAggregationService.buildTransactionReport(effectiveMin, effectiveMax);
                 yield ResponseEntity.ok(dataset);

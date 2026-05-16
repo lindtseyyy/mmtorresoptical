@@ -1,5 +1,6 @@
 package com.mmtorresoptical.OpticalClinicManagementSystem.controller;
 
+import com.mmtorresoptical.OpticalClinicManagementSystem.dto.metrics.AgingReceivableDTO;
 import com.mmtorresoptical.OpticalClinicManagementSystem.dto.metrics.TransactionMetricsDTO;
 import com.mmtorresoptical.OpticalClinicManagementSystem.dto.payment.PaymentRequestDTO;
 import com.mmtorresoptical.OpticalClinicManagementSystem.dto.payment.PaymentResponseDTO;
@@ -94,6 +95,11 @@ public class TransactionController {
     @GetMapping("/metrics")
     public ResponseEntity<TransactionMetricsDTO> getTransactionMetrics() {
         return ResponseEntity.ok(transactionService.getTransactionMetrics());
+    }
+
+    @GetMapping("/accounts-receivable")
+    public ResponseEntity<List<AgingReceivableDTO>> getAgingAccountsReceivable() {
+        return ResponseEntity.ok(transactionService.getAgingAccountsReceivable());
     }
 
     @PostMapping("/refund")
