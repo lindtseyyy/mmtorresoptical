@@ -133,6 +133,19 @@ export interface TransactionHierarchicalReportDataset {
   emptyMessage: string;
 }
 
+// ── Chart data types ───────────────────────────────────────────────────
+
+export interface CategoryBreakdownDTO {
+  category: string;
+  productCount: number;
+  totalValue: number;
+}
+
+export interface InventoryValueTrendPoint {
+  month: string;
+  value: number;
+}
+
 // ── Union type for report data ────────────────────────────────────────
 
 export type ReportData =

@@ -10,7 +10,7 @@ import {
   SelectValue,
 } from "@/shared/components/ui/select";
 import { Badge } from "@/shared/components/ui/badge";
-import { Plus, Search, Eye, Archive, ChevronLeft, ChevronRight, Glasses, Package, Layers, AlertTriangle, TrendingUp, Banknote, ArrowUp, ArrowDown } from "lucide-react";
+import { Plus, Search, Eye, Archive, ChevronLeft, ChevronRight, Glasses, Package, Layers, Banknote, ArrowUp, ArrowDown } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { Card, CardContent } from "@/shared/components/ui/card";
 import type { Product, Category } from "@/features/inventory/types";
@@ -93,7 +93,7 @@ const ManageInventory: React.FC = () => {
       </div>
 
       {/* Summary Cards */}
-      <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
+      <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4">
         <Card>
           <CardContent className="flex items-center gap-4 p-5">
             <div className="flex h-11 w-11 items-center justify-center rounded-full bg-primary/10">
@@ -128,30 +128,6 @@ const ManageInventory: React.FC = () => {
                 {summary != null ? `₱ ${summary.inventoryValue.toLocaleString("en-US", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}` : "—"}
               </p>
               <p className="text-sm text-muted-foreground">Total Inventory Value</p>
-            </div>
-          </CardContent>
-        </Card>
-
-        <Card className="border-red-200">
-          <CardContent className="flex items-center gap-4 p-5">
-            <div className="flex h-11 w-11 items-center justify-center rounded-full bg-red-500/10">
-              <AlertTriangle className="h-5 w-5 text-red-500" />
-            </div>
-            <div>
-              <p className="text-2xl font-bold text-red-600">{summary?.countLowStockProducts ?? "—"}</p>
-              <p className="text-sm text-muted-foreground">Low Stock Items</p>
-            </div>
-          </CardContent>
-        </Card>
-
-        <Card className="border-amber-200">
-          <CardContent className="flex items-center gap-4 p-5">
-            <div className="flex h-11 w-11 items-center justify-center rounded-full bg-amber-500/10">
-              <TrendingUp className="h-5 w-5 text-amber-500" />
-            </div>
-            <div>
-              <p className="text-2xl font-bold text-amber-600">{summary?.countOverstockedProducts ?? "—"}</p>
-              <p className="text-sm text-muted-foreground">Overstocked Items</p>
             </div>
           </CardContent>
         </Card>

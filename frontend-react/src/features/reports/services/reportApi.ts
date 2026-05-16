@@ -1,5 +1,5 @@
 import api from "@/shared/lib/axiosInstance";
-import type { ReportData } from "@/features/reports/types";
+import type { ReportData, CategoryBreakdownDTO, InventoryValueTrendPoint } from "@/features/reports/types";
 
 const fetchReportData = async (
   reportType: string,
@@ -75,4 +75,14 @@ const downloadExcelReport = async (
   URL.revokeObjectURL(url);
 };
 
-export { fetchReportData, downloadPdfReport, downloadExcelReport };
+const fetchCategoryBreakdown = async (): Promise<CategoryBreakdownDTO[]> => {
+  const { data } = await api.get("/reports/inventory/category-breakdown");
+  return data;
+};
+
+const fetchInventoryValueTrend = async (): Promise<InventoryValueTrendPoint[]> => {
+  const { data } = await api.get("/reports/inventory/value-trend");
+  return data;
+};
+
+export { fetchReportData, downloadPdfReport, downloadExcelReport, fetchCategoryBreakdown, fetchInventoryValueTrend };

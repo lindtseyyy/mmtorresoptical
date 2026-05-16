@@ -1,18 +1,20 @@
 import {
-  Eye,
   ShoppingCart,
-  Users,
-  UserRound,
   Clock,
   ArrowRight,
   PackageOpen,
   Receipt,
   UserPlus,
+  AlertTriangle,
+  TrendingUp,
 } from "lucide-react";
+import { useQuery } from "@tanstack/react-query";
 import { Card, CardContent, CardHeader, CardTitle } from "@/shared/components/ui/card";
 import { MetricCard } from "@/shared/components/MetricCard";
 import { Button } from "@/shared/components/ui/button";
+import { Separator } from "@/shared/components/ui/separator";
 import { useNavigate } from "react-router-dom";
+import { createInventorySummaryQueryOptions } from "@/features/inventory/hooks/productQuery";
 
 const quickActions = [
   { label: "Manage Inventory", href: "/inventory", icon: PackageOpen },
@@ -28,6 +30,12 @@ const recentActivity = [
 export default function Dashboard() {
   const navigate = useNavigate();
 
+  const {
+    data: inventorySummary,
+    isLoading: inventoryLoading,
+    isError: inventoryError,
+  } = useQuery(createInventorySummaryQueryOptions());
+
   return (
     <div className="space-y-6">
       {/* Header */}
@@ -38,13 +46,28 @@ export default function Dashboard() {
         </p>
       </div>
 
-      {/* Stat cards */}
-      <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4">
-        <MetricCard icon={Eye} label="Inventory Items" value="—" color="blue" labelPosition="top" />
-        <MetricCard icon={ShoppingCart} label="Today's Sales" value="—" color="emerald" labelPosition="top" />
-        <MetricCard icon={UserRound} label="Patients" value="—" color="violet" labelPosition="top" />
-        <MetricCard icon={Users} label="Users" value="—" color="orange" labelPosition="top" />
+      {/* Inventory alerts — immediate action items */}
+      <div>
+        <p className="text-sm font-medium text-muted-foreground mb-3 uppercase tracking-wide">Inventory Alerts</p>
+        <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
+          <MetricCard
+            icon={AlertTriangle}
+            label="Low Stock Items — Needs Reorder"
+            value={inventoryLoading ? "…" : inventoryError ? "—" : inventorySummary?.countLowStockProducts ?? "—"}
+            color="red"
+            labelPosition="bottom"
+          />
+          <MetricCard
+            icon={TrendingUp}
+            label="Overstocked Items — Excess Capital"
+            value={inventoryLoading ? "…" : inventoryError ? "—" : inventorySummary?.countOverstockedProducts ?? "—"}
+            color="amber"
+            labelPosition="bottom"
+          />
+        </div>
       </div>
+
+      <Separator />
 
       {/* Quick Actions */}
       <Card>

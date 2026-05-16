@@ -15,6 +15,8 @@ import { Badge } from "@/shared/components/ui/badge";
 import StatusBadge from "@/shared/components/ui/StatusBadge";
 import { useReportData } from "@/features/reports/hooks/reportQuery";
 import { downloadPdfReport, downloadExcelReport } from "@/features/reports/services/reportApi";
+import InventoryValueChart from "@/features/reports/components/InventoryValueChart";
+import CategoryBreakdownChart from "@/features/reports/components/CategoryBreakdownChart";
 import type {
   ComprehensiveInventoryReportDataset,
   PatientReportDataset,
@@ -142,31 +144,10 @@ const Reports: React.FC = () => {
 
   const renderInventoryReport = (report: ComprehensiveInventoryReportDataset) => (
     <div className="space-y-6">
-      <div className="grid grid-cols-1 gap-4 md:grid-cols-3">
-        <Card>
-          <CardHeader className="pb-2">
-            <CardTitle className="text-sm font-medium text-muted-foreground">Inventory Value</CardTitle>
-          </CardHeader>
-          <CardContent>
-            <p className="text-2xl font-bold">{currency(report.totalInventoryValue)}</p>
-          </CardContent>
-        </Card>
-        <Card>
-          <CardHeader className="pb-2">
-            <CardTitle className="text-sm font-medium text-muted-foreground">Low Stock Products</CardTitle>
-          </CardHeader>
-          <CardContent>
-            <p className="text-2xl font-bold text-yellow-600">{report.totalLowStockCount}</p>
-          </CardContent>
-        </Card>
-        <Card>
-          <CardHeader className="pb-2">
-            <CardTitle className="text-sm font-medium text-muted-foreground">Overstocked Products</CardTitle>
-          </CardHeader>
-          <CardContent>
-            <p className="text-2xl font-bold text-blue-600">{report.totalOverstockCount}</p>
-          </CardContent>
-        </Card>
+      {/* Charts replacing static cards */}
+      <div className="grid grid-cols-1 gap-6 lg:grid-cols-2">
+        <InventoryValueChart />
+        <CategoryBreakdownChart />
       </div>
 
       {/* Top Selling Products */}

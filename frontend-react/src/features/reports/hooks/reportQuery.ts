@@ -1,5 +1,5 @@
 import { queryOptions, useQuery } from "@tanstack/react-query";
-import { fetchReportData } from "@/features/reports/services/reportApi";
+import { fetchReportData, fetchCategoryBreakdown, fetchInventoryValueTrend } from "@/features/reports/services/reportApi";
 
 function createReportDataQueryOptions(
   reportType: string,
@@ -22,4 +22,20 @@ function useReportData(
   return useQuery(createReportDataQueryOptions(reportType, minDate, maxDate));
 }
 
-export { createReportDataQueryOptions, useReportData };
+function useCategoryBreakdown() {
+  return useQuery({
+    queryKey: ["categoryBreakdown"],
+    queryFn: fetchCategoryBreakdown,
+    staleTime: 60_000,
+  });
+}
+
+function useInventoryValueTrend() {
+  return useQuery({
+    queryKey: ["inventoryValueTrend"],
+    queryFn: fetchInventoryValueTrend,
+    staleTime: 60_000,
+  });
+}
+
+export { createReportDataQueryOptions, useReportData, useCategoryBreakdown, useInventoryValueTrend };
