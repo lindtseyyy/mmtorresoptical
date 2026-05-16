@@ -68,7 +68,7 @@ public class PdfBoxPatientReportGenerator {
         drawSectionSeparator(state.contentStream, state);
         state = writeVisitStatistics(document, state, dataset);
         drawSectionSeparator(state.contentStream, state);
-        state = writeGrowthComparison(document, state, dataset);
+        state = writePatientGrowthTrend(document, state, dataset);
         return state;
     }
 
@@ -160,37 +160,24 @@ public class PdfBoxPatientReportGenerator {
         return state;
     }
 
-    private PageState writeGrowthComparison(PDDocument document, PageState state,
-                                            PatientReportDataset dataset) throws IOException {
-        state = writeSectionHeader(document, state, "Growth Comparison");
+    private PageState writePatientGrowthTrend(PDDocument document, PageState state,
+                                              PatientReportDataset dataset) throws IOException {
+        state = writeSectionHeader(document, state, "12-Month Patient Growth Trend");
 
-        if (!dataset.isGrowthComparisonAvailable()) {
-            state = writeBodyLine(document, state, "Insufficient data for growth comparison.");
+        List<PatientReportDataset.PatientGrowthPoint> trend = dataset.getPatientGrowthTrend();
+        if (trend == null || trend.isEmpty()) {
+            state = writeBodyLine(document, state, "No growth trend data available.");
             return state;
         }
 
-        state = writeKeyValueLine(document, state, dataset.getCurrentPeriodLabel(),
-                String.valueOf(dataset.getCurrentPeriodCount()) + " patients");
-        state = writeKeyValueLine(document, state, dataset.getPreviousPeriodLabel(),
-                String.valueOf(dataset.getPreviousPeriodCount()) + " patients");
+        int total = trend.stream().mapToInt(PatientReportDataset.PatientGrowthPoint::count).sum();
+        state = writeKeyValueLine(document, state, "Total New Patients (12 Months)",
+                String.valueOf(total));
 
-        String growthStr = String.format("%+.2f%%", dataset.getGrowthPercentage());
-        state = writeKeyValueLine(document, state, "Growth", growthStr);
-
-        float indicatorX = MARGIN + 24f;
-        state = ensureSpace(document, state, LINE_HEIGHT);
-        if (dataset.getGrowthPercentage() > 0) {
-            writeText(state.contentStream, "[+] Positive growth", indicatorX, state.y,
-                    BODY_FONT, BODY_FONT_SIZE);
-        } else if (dataset.getGrowthPercentage() < 0) {
-            writeText(state.contentStream, "[-] Decline", indicatorX, state.y,
-                    BODY_FONT, BODY_FONT_SIZE);
-        } else {
-            writeText(state.contentStream, "[~] No change", indicatorX, state.y,
-                    BODY_FONT, BODY_FONT_SIZE);
+        for (PatientReportDataset.PatientGrowthPoint point : trend) {
+            state = writeKeyValueLine(document, state, "  " + point.month(),
+                    String.valueOf(point.count()));
         }
-        state.y -= LINE_HEIGHT;
-
         return state;
     }
 

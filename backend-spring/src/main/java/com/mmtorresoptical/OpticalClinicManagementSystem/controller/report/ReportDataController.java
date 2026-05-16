@@ -19,6 +19,7 @@ import org.springframework.web.bind.annotation.RestController;
 
 import java.time.LocalDate;
 import java.time.LocalDateTime;
+import java.util.List;
 
 @RestController
 @RequiredArgsConstructor
@@ -66,5 +67,10 @@ public class ReportDataController {
             default -> throw new BadRequestException(
                     "Report data endpoint currently supports TRANSACTIONS, PATIENTS, and INVENTORY_ANALYTICS report types.");
         };
+    }
+
+    @GetMapping("/patient-growth-trend")
+    public ResponseEntity<List<PatientReportDataset.PatientGrowthPoint>> getPatientGrowthTrend() {
+        return ResponseEntity.ok(reportAggregationService.computePatientGrowthTrend());
     }
 }

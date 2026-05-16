@@ -38,4 +38,7 @@ public interface PatientRepository extends JpaRepository<Patient, UUID>, JpaSpec
 
     @Query("SELECT COUNT(DISTINCT p) FROM Patient p JOIN p.prescriptions pr WHERE p.isArchived = false AND pr.isArchived = false")
     long countActivePatientsWithPrescriptions();
+
+    @Query("SELECT p FROM Patient p WHERE p.createdAt >= :start ORDER BY p.createdAt")
+    List<Patient> findByCreatedAtAfter(LocalDateTime start);
 }

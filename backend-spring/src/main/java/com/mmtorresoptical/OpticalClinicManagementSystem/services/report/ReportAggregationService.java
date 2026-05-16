@@ -116,6 +116,32 @@ public class ReportAggregationService {
     }
 
     @Transactional(readOnly = true)
+    public List<PatientReportDataset.PatientGrowthPoint> computePatientGrowthTrend() {
+        List<PatientReportDataset.PatientGrowthPoint> growthTrend = new ArrayList<>();
+
+        YearMonth currentMonth = YearMonth.now();
+        YearMonth trendStart = currentMonth.minusMonths(11);
+        LocalDateTime trendStartDateTime = trendStart.atDay(1).atStartOfDay();
+
+        List<Patient> patientsInTrendPeriod = patientRepository.findByCreatedAtAfter(trendStartDateTime);
+
+        java.util.Map<YearMonth, Integer> monthlyCounts = new java.util.LinkedHashMap<>();
+        for (YearMonth ym = trendStart; !ym.isAfter(currentMonth); ym = ym.plusMonths(1)) {
+            monthlyCounts.put(ym, 0);
+        }
+        for (Patient p : patientsInTrendPeriod) {
+            YearMonth ym = YearMonth.from(p.getCreatedAt());
+            monthlyCounts.merge(ym, 1, Integer::sum);
+        }
+        monthlyCounts.forEach((ym, count) ->
+            growthTrend.add(new PatientReportDataset.PatientGrowthPoint(
+                ym.getYear() + "-" + String.format("%02d", ym.getMonthValue()), count))
+        );
+
+        return growthTrend;
+    }
+
+    @Transactional(readOnly = true)
     public PatientReportDataset buildPatientReport(ReportType reportType, LocalDate minDate, LocalDate maxDate) {
         return buildPatientReportInternal(minDate, maxDate,
                 reportType != null ? reportType.getDisplayTitle() : "Patient Report",
@@ -146,38 +172,12 @@ public class ReportAggregationService {
 
         int totalVisits, completedVisits, missedOrCancelledVisits;
         int newPatientsInPeriod = 0;
-        boolean growthAvailable = false;
-        String currLabel = "", prevLabel = "";
-        int currCount = 0, prevCount = 0;
-        double growthPct = 0;
+        List<PatientReportDataset.PatientGrowthPoint> growthTrend = computePatientGrowthTrend();
 
         if (isOverall) {
             totalVisits = (int) transactionRepository.count();
             completedVisits = (int) transactionRepository.countByTransactionStatus(TransactionStatus.COMPLETED);
             missedOrCancelledVisits = (int) transactionRepository.countByTransactionStatus(TransactionStatus.VOIDED);
-
-            YearMonth thisMonth = YearMonth.now();
-            YearMonth lastMonth = thisMonth.minusMonths(1);
-
-            LocalDateTime thisMonthStart = thisMonth.atDay(1).atStartOfDay();
-            LocalDateTime thisMonthEnd = thisMonth.atEndOfMonth().atTime(LocalTime.MAX);
-            LocalDateTime lastMonthStart = lastMonth.atDay(1).atStartOfDay();
-            LocalDateTime lastMonthEnd = lastMonth.atEndOfMonth().atTime(LocalTime.MAX);
-
-            currCount = (int) patientRepository.countByCreatedAtBetween(thisMonthStart, thisMonthEnd);
-            prevCount = (int) patientRepository.countByCreatedAtBetween(lastMonthStart, lastMonthEnd);
-
-            DateTimeFormatter monthFmt = DateTimeFormatter.ofPattern("MMMM yyyy");
-            currLabel = thisMonth.format(monthFmt);
-            prevLabel = lastMonth.format(monthFmt);
-
-            if (prevCount > 0) {
-                growthPct = ((double)(currCount - prevCount) / prevCount) * 100.0;
-                growthAvailable = true;
-            } else if (currCount > 0) {
-                growthPct = 100.0;
-                growthAvailable = true;
-            }
         } else {
             LocalDateTime rangeStart = minDate != null ? minDate.atStartOfDay() : LocalDateTime.of(2000, 1, 1, 0, 0);
             LocalDateTime now = LocalDateTime.now();
@@ -208,12 +208,7 @@ public class ReportAggregationService {
                 .totalVisits(totalVisits)
                 .completedVisits(completedVisits)
                 .missedOrCancelledVisits(missedOrCancelledVisits)
-                .growthComparisonAvailable(growthAvailable)
-                .currentPeriodLabel(currLabel)
-                .previousPeriodLabel(prevLabel)
-                .currentPeriodCount(currCount)
-                .previousPeriodCount(prevCount)
-                .growthPercentage(growthPct)
+                .patientGrowthTrend(growthTrend)
                 .build();
     }
 
@@ -236,12 +231,6 @@ public class ReportAggregationService {
         rows.add(Arrays.<Object>asList("Total Visits", dataset.getTotalVisits()));
         rows.add(Arrays.<Object>asList("Completed Visits", dataset.getCompletedVisits()));
         rows.add(Arrays.<Object>asList("Missed/Cancelled Visits", dataset.getMissedOrCancelledVisits()));
-
-        if (dataset.isOverallReport() && dataset.isGrowthComparisonAvailable()) {
-            rows.add(Arrays.<Object>asList(
-                    "Growth (" + dataset.getCurrentPeriodLabel() + " vs " + dataset.getPreviousPeriodLabel() + ")",
-                    String.format("%+.2f%%", dataset.getGrowthPercentage())));
-        }
 
         if (!dataset.isOverallReport()) {
             rows.add(Arrays.<Object>asList("New Patients in Period", dataset.getNewPatientsInPeriod()));

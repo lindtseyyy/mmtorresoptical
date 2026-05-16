@@ -35,12 +35,8 @@ public class PatientReportDataset {
     private int completedVisits;
     private int missedOrCancelledVisits;
 
-    private boolean growthComparisonAvailable;
-    private String currentPeriodLabel;
-    private String previousPeriodLabel;
-    private int currentPeriodCount;
-    private int previousPeriodCount;
-    private double growthPercentage;
+    private List<PatientGrowthPoint> patientGrowthTrend;
 
     public record AgeGroupStat(String groupLabel, int count) {}
+    public record PatientGrowthPoint(String month, int count) {}
 }
