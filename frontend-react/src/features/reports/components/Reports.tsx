@@ -5,6 +5,7 @@ import {
   AlertCircle,
   ChevronDown,
   ChevronRight,
+  ChevronLeft,
 } from "lucide-react";
 import { toast } from "sonner";
 import SegmentedControl from "@/shared/components/ui/segmented-control";
@@ -13,7 +14,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/shared/components/ui
 import { Input } from "@/shared/components/ui/input";
 import { Badge } from "@/shared/components/ui/badge";
 import StatusBadge from "@/shared/components/ui/StatusBadge";
-import { useReportData } from "@/features/reports/hooks/reportQuery";
+import { useReportData, useLowStockProducts, useOverstockedProducts } from "@/features/reports/hooks/reportQuery";
 import { downloadPdfReport, downloadExcelReport } from "@/features/reports/services/reportApi";
 import InventoryValueChart from "@/features/reports/components/InventoryValueChart";
 import CategoryBreakdownChart from "@/features/reports/components/CategoryBreakdownChart";
@@ -66,6 +67,9 @@ const Reports: React.FC = () => {
   const [maxDate, setMaxDate] = useState("");
   const [exportingPdf, setExportingPdf] = useState(false);
   const [exportingExcel, setExportingExcel] = useState(false);
+  const [lowStockPage, setLowStockPage] = useState(0);
+  const [overstockedPage, setOverstockedPage] = useState(0);
+  const PAGE_SIZE = 10;
 
   const {
     data,
@@ -78,6 +82,16 @@ const Reports: React.FC = () => {
     minDate || undefined,
     maxDate || undefined
   );
+
+  const {
+    data: lowStockData,
+    isLoading: lowStockLoading,
+  } = useLowStockProducts(lowStockPage, PAGE_SIZE);
+
+  const {
+    data: overstockedData,
+    isLoading: overstockedLoading,
+  } = useOverstockedProducts(overstockedPage, PAGE_SIZE);
 
   const needsDates = reportType === "TRANSACTIONS";
   const canExportExcel = reportType !== "INVENTORY_ANALYTICS";
@@ -188,75 +202,147 @@ const Reports: React.FC = () => {
       )}
 
       {/* Low Stock Products */}
-      {report.lowStockProducts.length > 0 && (
+      {report.totalLowStockCount > 0 && (
         <Card>
           <CardHeader>
             <CardTitle>Low Stock Products</CardTitle>
           </CardHeader>
           <CardContent>
-            <div className="overflow-x-auto">
-              <table className="w-full table-fixed text-sm">
-                <thead>
-                  <tr className="border-b text-left text-muted-foreground">
-                    <th className="w-[35%] py-3 pr-4 font-medium">Product</th>
-                    <th className="w-[20%] py-3 pr-4 font-medium">Category</th>
-                    <th className="w-[15%] py-3 pr-4 font-medium text-right">Quantity</th>
-                    <th className="w-[15%] py-3 pr-4 font-medium text-right">Threshold</th>
-                    <th className="w-[15%] py-3 pr-4 font-medium text-right">Unit Price</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {report.lowStockProducts.map((p) => (
-                    <tr key={p.productId} className="border-b hover:bg-muted">
-                      <td className="py-3 pr-4 font-medium">{p.productName}</td>
-                      <td className="py-3 pr-4 capitalize text-muted-foreground">
-                        {p.category.replace(/_/g, " ")}
-                      </td>
-                      <td className="py-3 pr-4 text-right text-yellow-600 font-medium">{p.quantity}</td>
-                      <td className="py-3 pr-4 text-right">{p.lowLevelThreshold}</td>
-                      <td className="py-3 pr-4 text-right">{currency(p.unitPrice)}</td>
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
-            </div>
+            {lowStockLoading ? (
+              <div className="flex items-center justify-center py-8">
+                <div className="h-5 w-5 animate-spin rounded-full border-2 border-primary border-t-transparent" />
+              </div>
+            ) : (
+              <>
+                <div className="overflow-x-auto">
+                  <table className="w-full table-fixed text-sm">
+                    <thead>
+                      <tr className="border-b text-left text-muted-foreground">
+                        <th className="w-[35%] py-3 pr-4 font-medium">Product</th>
+                        <th className="w-[20%] py-3 pr-4 font-medium">Category</th>
+                        <th className="w-[15%] py-3 pr-4 font-medium text-right">Quantity</th>
+                        <th className="w-[15%] py-3 pr-4 font-medium text-right">Threshold</th>
+                        <th className="w-[15%] py-3 pr-4 font-medium text-right">Unit Price</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {(lowStockData?.content ?? []).map((p) => (
+                        <tr key={p.productId} className="border-b hover:bg-muted">
+                          <td className="py-3 pr-4 font-medium">{p.productName}</td>
+                          <td className="py-3 pr-4 capitalize text-muted-foreground">
+                            {p.category.replace(/_/g, " ")}
+                          </td>
+                          <td className="py-3 pr-4 text-right text-yellow-600 font-medium">{p.quantity}</td>
+                          <td className="py-3 pr-4 text-right">{p.lowLevelThreshold}</td>
+                          <td className="py-3 pr-4 text-right">{currency(p.unitPrice)}</td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                </div>
+                {/* Pagination */}
+                {(lowStockData?.totalPages ?? 0) > 1 && (
+                  <div className="flex items-center justify-between pt-4">
+                    <p className="text-xs text-muted-foreground">
+                      Page {lowStockPage + 1} of {lowStockData?.totalPages} ({lowStockData?.totalElements} items)
+                    </p>
+                    <div className="flex gap-2">
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        disabled={lowStockPage === 0}
+                        onClick={() => setLowStockPage((p) => p - 1)}
+                      >
+                        <ChevronLeft className="h-4 w-4" />
+                        Previous
+                      </Button>
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        disabled={lowStockPage >= (lowStockData?.totalPages ?? 1) - 1}
+                        onClick={() => setLowStockPage((p) => p + 1)}
+                      >
+                        Next
+                        <ChevronRight className="h-4 w-4" />
+                      </Button>
+                    </div>
+                  </div>
+                )}
+              </>
+            )}
           </CardContent>
         </Card>
       )}
 
       {/* Overstocked Products */}
-      {report.overstockProducts.length > 0 && (
+      {report.totalOverstockCount > 0 && (
         <Card>
           <CardHeader>
             <CardTitle>Overstocked Products</CardTitle>
           </CardHeader>
           <CardContent>
-            <div className="overflow-x-auto">
-              <table className="w-full table-fixed text-sm">
-                <thead>
-                  <tr className="border-b text-left text-muted-foreground">
-                    <th className="w-[35%] py-3 pr-4 font-medium">Product</th>
-                    <th className="w-[20%] py-3 pr-4 font-medium">Category</th>
-                    <th className="w-[15%] py-3 pr-4 font-medium text-right">Quantity</th>
-                    <th className="w-[15%] py-3 pr-4 font-medium text-right">Threshold</th>
-                    <th className="w-[15%] py-3 pr-4 font-medium text-right">Unit Price</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {report.overstockProducts.map((p) => (
-                    <tr key={p.productId} className="border-b hover:bg-muted">
-                      <td className="py-3 pr-4 font-medium">{p.productName}</td>
-                      <td className="py-3 pr-4 capitalize text-muted-foreground">
-                        {p.category.replace(/_/g, " ")}
-                      </td>
-                      <td className="py-3 pr-4 text-right text-blue-600 font-medium">{p.quantity}</td>
-                      <td className="py-3 pr-4 text-right">{p.overstockedThreshold}</td>
-                      <td className="py-3 pr-4 text-right">{currency(p.unitPrice)}</td>
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
-            </div>
+            {overstockedLoading ? (
+              <div className="flex items-center justify-center py-8">
+                <div className="h-5 w-5 animate-spin rounded-full border-2 border-primary border-t-transparent" />
+              </div>
+            ) : (
+              <>
+                <div className="overflow-x-auto">
+                  <table className="w-full table-fixed text-sm">
+                    <thead>
+                      <tr className="border-b text-left text-muted-foreground">
+                        <th className="w-[35%] py-3 pr-4 font-medium">Product</th>
+                        <th className="w-[20%] py-3 pr-4 font-medium">Category</th>
+                        <th className="w-[15%] py-3 pr-4 font-medium text-right">Quantity</th>
+                        <th className="w-[15%] py-3 pr-4 font-medium text-right">Threshold</th>
+                        <th className="w-[15%] py-3 pr-4 font-medium text-right">Unit Price</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {(overstockedData?.content ?? []).map((p) => (
+                        <tr key={p.productId} className="border-b hover:bg-muted">
+                          <td className="py-3 pr-4 font-medium">{p.productName}</td>
+                          <td className="py-3 pr-4 capitalize text-muted-foreground">
+                            {p.category.replace(/_/g, " ")}
+                          </td>
+                          <td className="py-3 pr-4 text-right text-blue-600 font-medium">{p.quantity}</td>
+                          <td className="py-3 pr-4 text-right">{p.overstockedThreshold}</td>
+                          <td className="py-3 pr-4 text-right">{currency(p.unitPrice)}</td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                </div>
+                {/* Pagination */}
+                {(overstockedData?.totalPages ?? 0) > 1 && (
+                  <div className="flex items-center justify-between pt-4">
+                    <p className="text-xs text-muted-foreground">
+                      Page {overstockedPage + 1} of {overstockedData?.totalPages} ({overstockedData?.totalElements} items)
+                    </p>
+                    <div className="flex gap-2">
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        disabled={overstockedPage === 0}
+                        onClick={() => setOverstockedPage((p) => p - 1)}
+                      >
+                        <ChevronLeft className="h-4 w-4" />
+                        Previous
+                      </Button>
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        disabled={overstockedPage >= (overstockedData?.totalPages ?? 1) - 1}
+                        onClick={() => setOverstockedPage((p) => p + 1)}
+                      >
+                        Next
+                        <ChevronRight className="h-4 w-4" />
+                      </Button>
+                    </div>
+                  </div>
+                )}
+              </>
+            )}
           </CardContent>
         </Card>
       )}

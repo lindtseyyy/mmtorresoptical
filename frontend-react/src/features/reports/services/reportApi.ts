@@ -1,5 +1,6 @@
 import api from "@/shared/lib/axiosInstance";
-import type { ReportData, CategoryBreakdownDTO, InventoryValueTrendPoint } from "@/features/reports/types";
+import type { PageResponse } from "@/shared/types";
+import type { ReportData, CategoryBreakdownDTO, InventoryValueTrendPoint, ProductDetailsDTO } from "@/features/reports/types";
 
 const fetchReportData = async (
   reportType: string,
@@ -85,4 +86,32 @@ const fetchInventoryValueTrend = async (): Promise<InventoryValueTrendPoint[]> =
   return data;
 };
 
-export { fetchReportData, downloadPdfReport, downloadExcelReport, fetchCategoryBreakdown, fetchInventoryValueTrend };
+const fetchLowStockProducts = async (page: number, size: number): Promise<PageResponse<ProductDetailsDTO>> => {
+  const { data } = await api.get("/reports/inventory/lowstock-products", {
+    params: { page, size, sortBy: "quantity", sortOrder: "asc" },
+  });
+  const pg = data.page;
+  return {
+    content: data.content,
+    totalPages: pg.totalPages,
+    totalElements: pg.totalElements,
+    size: pg.size,
+    number: pg.number,
+  };
+};
+
+const fetchOverstockedProducts = async (page: number, size: number): Promise<PageResponse<ProductDetailsDTO>> => {
+  const { data } = await api.get("/reports/inventory/overstocked-products", {
+    params: { page, size, sortBy: "quantity", sortOrder: "desc" },
+  });
+  const pg = data.page;
+  return {
+    content: data.content,
+    totalPages: pg.totalPages,
+    totalElements: pg.totalElements,
+    size: pg.size,
+    number: pg.number,
+  };
+};
+
+export { fetchReportData, downloadPdfReport, downloadExcelReport, fetchCategoryBreakdown, fetchInventoryValueTrend, fetchLowStockProducts, fetchOverstockedProducts };
