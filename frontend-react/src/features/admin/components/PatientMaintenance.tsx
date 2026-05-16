@@ -22,6 +22,7 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
 } from "@/shared/components/ui/alert-dialog";
+import EmptyTableRows from "@/shared/components/EmptyTableRows";
 import type { Patient } from "@/features/patients/types";
 import { restorePatient } from "@/features/patients/services/patientApi";
 import {
@@ -268,6 +269,11 @@ const PatientMaintenance: React.FC = () => {
                         </td>
                       </tr>
                     ))}
+                    <EmptyTableRows
+                      count={PAGE_SIZE - (patients?.length ?? 0)}
+                      colSpan={6}
+                      className="h-[57px]"
+                    />
                   </tbody>
                 </table>
               </div>

@@ -13,6 +13,7 @@ import {
 import { useNavigate } from "react-router-dom";
 import { Card, CardContent } from "@/shared/components/ui/card";
 import { MetricCard } from "@/shared/components/MetricCard";
+import EmptyTableRows from "@/shared/components/EmptyTableRows";
 import type { Patient } from "@/features/patients/types";
 import {
   createPatientsListQueryOptions,
@@ -203,6 +204,11 @@ const ManagePatients: React.FC = () => {
                         </td>
                       </tr>
                     ))}
+                    <EmptyTableRows
+                      count={PAGE_SIZE - (patients?.length ?? 0)}
+                      colSpan={6}
+                      className="h-[57px]"
+                    />
                   </tbody>
                 </table>
               </div>

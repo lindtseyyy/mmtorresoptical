@@ -38,6 +38,7 @@ import { downloadBackup, restoreBackup, fetchLastBackup, fetchLastRestore, readM
 import { createAuditLogsQueryOptions } from "@/features/users/hooks/auditQuery";
 import type { BackupFileMetadata } from "@/features/admin/services/databaseApi";
 import type { AuditLogEntry } from "@/features/users/services/auditApi";
+import EmptyTableRows from "@/shared/components/EmptyTableRows";
 
 const formatTimestamp = (iso: string) =>
   new Date(iso).toLocaleString("en-US", {
@@ -535,6 +536,10 @@ const DatabaseBackup: React.FC = () => {
                           </td>
                         </tr>
                       ))}
+                      <EmptyTableRows
+                        count={AUDIT_PAGE_SIZE - (auditLogs?.length ?? 0)}
+                        colSpan={6}
+                      />
                     </tbody>
                   </table>
                 </div>

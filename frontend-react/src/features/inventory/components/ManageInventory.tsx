@@ -13,6 +13,7 @@ import { Badge } from "@/shared/components/ui/badge";
 import { Plus, Search, Eye, Archive, ChevronLeft, ChevronRight, Glasses, Package, Layers, Banknote, ArrowUp, ArrowDown } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { Card, CardContent } from "@/shared/components/ui/card";
+import EmptyTableRows from "@/shared/components/EmptyTableRows";
 import type { Product, Category } from "@/features/inventory/types";
 import { CATEGORY_LABELS } from "@/features/inventory/types";
 import {
@@ -303,6 +304,11 @@ const ManageInventory: React.FC = () => {
                         </tr>
                       );
                     })}
+                    <EmptyTableRows
+                      count={PAGE_SIZE - (products?.length ?? 0)}
+                      colSpan={6}
+                      className="h-[57px]"
+                    />
                   </tbody>
                 </table>
               </div>

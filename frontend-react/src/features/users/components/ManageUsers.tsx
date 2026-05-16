@@ -13,6 +13,7 @@ import {
 } from "@/shared/components/ui/select";
 import { useNavigate } from "react-router-dom";
 import { Card, CardContent } from "@/shared/components/ui/card";
+import EmptyTableRows from "@/shared/components/EmptyTableRows";
 import type { User } from "@/features/users/types";
 import {
   createUsersListQueryOptions,
@@ -298,6 +299,11 @@ const ManageUsers: React.FC = () => {
                         </td>
                       </tr>
                     ))}
+                    <EmptyTableRows
+                      count={PAGE_SIZE - (sortedUsers?.length ?? 0)}
+                      colSpan={7}
+                      className="h-[55px]"
+                    />
                   </tbody>
                 </table>
               </div>

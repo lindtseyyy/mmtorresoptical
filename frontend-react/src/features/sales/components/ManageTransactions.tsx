@@ -32,6 +32,7 @@ import {
   createTransactionMetricsQueryOptions,
 } from "@/features/sales/hooks/transactionQuery";
 import StatusBadge from "@/shared/components/ui/StatusBadge";
+import EmptyTableRows from "@/shared/components/EmptyTableRows";
 import AddPaymentDrawer from "@/features/sales/components/AddPaymentDrawer";
 import { addPayment, completeTransaction } from "@/features/sales/services/transactionApi";
 import type { TransactionListItem } from "@/features/sales/types";
@@ -316,6 +317,11 @@ const ManageTransactions: React.FC = () => {
                         </td>
                       </tr>
                     ))}
+                    <EmptyTableRows
+                      count={PAGE_SIZE - (transactions?.length ?? 0)}
+                      colSpan={6}
+                      className="h-[57px]"
+                    />
                   </tbody>
                 </table>
               </div>

@@ -30,6 +30,7 @@ import {
   createProductsListQueryOptions,
   createInventorySummaryQueryOptions,
 } from "@/features/inventory/hooks/productQuery";
+import EmptyTableRows from "@/shared/components/EmptyTableRows";
 
 const PAGE_SIZE = 10;
 
@@ -361,6 +362,11 @@ const InventoryMaintenance: React.FC = () => {
                         </tr>
                       );
                     })}
+                    <EmptyTableRows
+                      count={PAGE_SIZE - (products?.length ?? 0)}
+                      colSpan={6}
+                      className="h-[57px]"
+                    />
                   </tbody>
                 </table>
               </div>

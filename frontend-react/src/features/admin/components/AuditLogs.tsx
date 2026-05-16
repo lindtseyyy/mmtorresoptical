@@ -21,6 +21,7 @@ import {
 } from "@/shared/components/ui/select";
 import { createAuditLogsQueryOptions } from "@/features/users/hooks/auditQuery";
 import type { AuditLogEntry } from "@/features/users/services/auditApi";
+import EmptyTableRows from "@/shared/components/EmptyTableRows";
 
 const formatTimestamp = (iso: string) =>
   new Date(iso).toLocaleString("en-US", {
@@ -253,6 +254,11 @@ const AuditLogs: React.FC = () => {
                         </td>
                       </tr>
                     ))}
+                    <EmptyTableRows
+                      count={AUDIT_PAGE_SIZE - (auditLogs?.length ?? 0)}
+                      colSpan={6}
+                      className="h-[57px]"
+                    />
                   </tbody>
                 </table>
               </div>

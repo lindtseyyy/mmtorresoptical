@@ -4,6 +4,7 @@ import { Button } from "@/shared/components/ui/button";
 import { Input } from "@/shared/components/ui/input";
 import { Badge } from "@/shared/components/ui/badge";
 import { Search, Archive, Undo2, ChevronLeft, ChevronRight, Users, UserCheck, ArchiveIcon, ArrowUp, ArrowDown } from "lucide-react";
+import EmptyTableRows from "@/shared/components/EmptyTableRows";
 import {
   Select,
   SelectContent,
@@ -301,6 +302,11 @@ const UserMaintenance: React.FC = () => {
                         </td>
                       </tr>
                     ))}
+                    <EmptyTableRows
+                      count={PAGE_SIZE - (sortedUsers?.length ?? 0)}
+                      colSpan={6}
+                      className="h-[55px]"
+                    />
                   </tbody>
                 </table>
               </div>

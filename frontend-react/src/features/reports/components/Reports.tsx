@@ -14,6 +14,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/shared/components/ui
 import { Input } from "@/shared/components/ui/input";
 import { Badge } from "@/shared/components/ui/badge";
 import StatusBadge from "@/shared/components/ui/StatusBadge";
+import EmptyTableRows from "@/shared/components/EmptyTableRows";
 import { useReportData, useLowStockProducts, useOverstockedProducts } from "@/features/reports/hooks/reportQuery";
 import { downloadPdfReport, downloadExcelReport } from "@/features/reports/services/reportApi";
 import InventoryValueChart from "@/features/reports/components/InventoryValueChart";
@@ -240,6 +241,10 @@ const Reports: React.FC = () => {
                         <td className="py-3 pr-4 text-right">{currency(p.unitPrice)}</td>
                       </tr>
                     ))}
+                    <EmptyTableRows
+                      count={PAGE_SIZE - (lowStockData?.content?.length ?? 0)}
+                      colSpan={5}
+                    />
                   </tbody>
                 </table>
               </div>
@@ -313,6 +318,10 @@ const Reports: React.FC = () => {
                         <td className="py-3 pr-4 text-right">{currency(p.unitPrice)}</td>
                       </tr>
                     ))}
+                    <EmptyTableRows
+                      count={PAGE_SIZE - (overstockedData?.content?.length ?? 0)}
+                      colSpan={5}
+                    />
                   </tbody>
                 </table>
               </div>
