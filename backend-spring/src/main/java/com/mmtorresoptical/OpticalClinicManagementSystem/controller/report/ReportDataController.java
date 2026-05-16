@@ -34,12 +34,10 @@ public class ReportDataController {
     ) {
         return switch (reportType) {
             case TRANSACTIONS -> {
-                if (minDate == null || maxDate == null) {
-                    throw new BadRequestException(
-                            "Both minDate and maxDate are required for transaction report data.");
-                }
+                LocalDate effectiveMin = minDate != null ? minDate : LocalDate.of(2020, 1, 1);
+                LocalDate effectiveMax = maxDate != null ? maxDate : LocalDate.of(2099, 12, 31);
                 TransactionHierarchicalReportDataset dataset =
-                        transactionPdfAggregationService.buildTransactionReport(minDate, maxDate);
+                        transactionPdfAggregationService.buildTransactionReport(effectiveMin, effectiveMax);
                 yield ResponseEntity.ok(dataset);
             }
             case PATIENTS -> {

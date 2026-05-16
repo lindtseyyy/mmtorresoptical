@@ -22,5 +22,8 @@ public class TransactionMetricsDTO {
     private BigDecimal totalRefundedAmount;
     private BigDecimal todayTotalRefundedAmount;
     private BigDecimal totalRefundedAmountThisMonth;
+    private BigDecimal todayTotalVoidedAmount;
+    private BigDecimal totalAccountsReceivable;
+    private long awaitingPickupCount;
 
 }

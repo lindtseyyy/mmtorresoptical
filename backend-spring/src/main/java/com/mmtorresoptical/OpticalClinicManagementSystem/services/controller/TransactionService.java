@@ -368,6 +368,12 @@ public class TransactionService {
 
         BigDecimal totalRefundedAmountThisMonth = refundRepository.sumRefundAmountByRefundedAtBetween(startOfMonth, startOfNextMonth);
 
+        BigDecimal todayTotalVoidedAmount = transactionRepository.sumVoidedAmountByTransactionDateBetween(startOfToday, startOfTomorrow);
+
+        BigDecimal totalAccountsReceivable = transactionRepository.sumBalanceDueByTransactionStatusPartiallyPaid();
+
+        long awaitingPickupCount = transactionRepository.countByTransactionStatus(TransactionStatus.PAID);
+
         return TransactionMetricsDTO.builder()
                 .totalTransactions(totalTransactions)
                 .totalRevenue(totalRevenue)
@@ -378,6 +384,9 @@ public class TransactionService {
                 .totalRefundedAmount(totalRefundedAmount)
                 .todayTotalRefundedAmount(todayTotalRefundedAmount)
                 .totalRefundedAmountThisMonth(totalRefundedAmountThisMonth)
+                .todayTotalVoidedAmount(todayTotalVoidedAmount)
+                .totalAccountsReceivable(totalAccountsReceivable)
+                .awaitingPickupCount(awaitingPickupCount)
                 .build();
     }
 
