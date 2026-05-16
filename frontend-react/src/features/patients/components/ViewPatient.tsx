@@ -4,6 +4,7 @@ import { useQuery, useMutation, useQueryClient, keepPreviousData } from "@tansta
 import { ArrowLeft, ShoppingCart, Calendar, FileText, Activity, ClipboardList, Stethoscope, ChevronLeft, ChevronRight, MoreHorizontal, Pencil, Archive, Clock, Plus, Undo2 } from "lucide-react";
 import { Button } from "@/shared/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/shared/components/ui/card";
+import { MetricCard } from "@/shared/components/MetricCard";
 import { Badge } from "@/shared/components/ui/badge";
 import {
   DropdownMenu,
@@ -164,81 +165,50 @@ const ViewPatient: React.FC = () => {
 
       {/* Card Metrics — 2 rows × 3 cards */}
       <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
-        <Card>
-          <CardContent className="flex items-center gap-3 p-4">
-            <div className="flex h-9 w-9 items-center justify-center rounded-full bg-primary/10">
-              <Calendar className="h-4 w-4 text-primary" />
-            </div>
-            <div className="min-w-0">
-              <p className="text-xl font-bold">{metrics?.totalVisits ?? "—"}</p>
-              <p className="text-xs text-muted-foreground">Total Visits</p>
-            </div>
-          </CardContent>
-        </Card>
-
-        <Card>
-          <CardContent className="flex items-center gap-3 p-4">
-            <div className="flex h-9 w-9 items-center justify-center rounded-full bg-blue-500/10">
-              <Activity className="h-4 w-4 text-blue-500" />
-            </div>
-            <div className="min-w-0">
-              <p className="text-xl font-bold">{formatDate(metrics?.lastVisitDate ?? null)}</p>
-              <p className="text-xs text-muted-foreground">Last Visit</p>
-            </div>
-          </CardContent>
-        </Card>
-
-        <Card>
-          <CardContent className="flex items-center gap-3 p-4">
-            <div className="flex h-9 w-9 items-center justify-center rounded-full bg-amber-500/10">
-              <Stethoscope className="h-4 w-4 text-amber-500" />
-            </div>
-            <div className="min-w-0">
-              <p className="text-xl font-bold">{formatDate(metrics?.lastPrescriptionDate ?? null)}</p>
-              <p className="text-xs text-muted-foreground">Last Prescription</p>
-            </div>
-          </CardContent>
-        </Card>
-
-        <Card>
-          <CardContent className="flex items-center gap-3 p-4">
-            <div className="flex h-9 w-9 items-center justify-center rounded-full bg-emerald-500/10">
-              <ShoppingCart className="h-4 w-4 text-emerald-500" />
-            </div>
-            <div className="min-w-0">
-              <p className="text-xl font-bold">{metrics?.purchasedProducts ?? "—"}</p>
-              <p className="text-xs text-muted-foreground">Products Purchased</p>
-            </div>
-          </CardContent>
-        </Card>
-
-        <Card>
-          <CardContent className="flex items-center gap-3 p-4">
-            <div className="flex h-9 w-9 items-center justify-center rounded-full bg-violet-500/10">
-              <FileText className="h-4 w-4 text-violet-500" />
-            </div>
-            <div className="min-w-0">
-              <p className="text-xl font-bold">
-                {metrics != null
-                  ? `₱ ${metrics.totalAmountPurchased.toLocaleString("en-US", { minimumFractionDigits: 2 })}`
-                  : "—"}
-              </p>
-              <p className="text-xs text-muted-foreground">Total Purchased</p>
-            </div>
-          </CardContent>
-        </Card>
-
-        <Card>
-          <CardContent className="flex items-center gap-3 p-4">
-            <div className="flex h-9 w-9 items-center justify-center rounded-full bg-rose-500/10">
-              <Clock className="h-4 w-4 text-rose-500" />
-            </div>
-            <div className="min-w-0">
-              <p className="text-lg font-bold">{formatDate(patient?.createdAt ?? null)}</p>
-              <p className="text-xs text-muted-foreground">Patient Since</p>
-            </div>
-          </CardContent>
-        </Card>
+        <MetricCard
+          icon={Calendar}
+          label="Total Visits"
+          value={metrics?.totalVisits ?? "—"}
+          color="primary"
+          size="sm"
+        />
+        <MetricCard
+          icon={Activity}
+          label="Last Visit"
+          value={formatDate(metrics?.lastVisitDate ?? null)}
+          color="blue"
+          size="sm"
+        />
+        <MetricCard
+          icon={Stethoscope}
+          label="Last Prescription"
+          value={formatDate(metrics?.lastPrescriptionDate ?? null)}
+          color="amber"
+          size="sm"
+        />
+        <MetricCard
+          icon={ShoppingCart}
+          label="Products Purchased"
+          value={metrics?.purchasedProducts ?? "—"}
+          color="emerald"
+          size="sm"
+        />
+        <MetricCard
+          icon={FileText}
+          label="Total Purchased"
+          value={metrics != null
+            ? `₱ ${metrics.totalAmountPurchased.toLocaleString("en-US", { minimumFractionDigits: 2 })}`
+            : "—"}
+          color="violet"
+          size="sm"
+        />
+        <MetricCard
+          icon={Clock}
+          label="Patient Since"
+          value={formatDate(patient?.createdAt ?? null)}
+          color="rose"
+          size="sm"
+        />
       </div>
 
       {/* Overview */}

@@ -4,6 +4,7 @@ import { useQuery, keepPreviousData } from "@tanstack/react-query";
 import { ArrowLeft, ChevronLeft, ChevronRight, Package, ShoppingCart, Banknote, Calendar, Hash, TrendingUp } from "lucide-react";
 import { Button } from "@/shared/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/shared/components/ui/card";
+import { MetricCard } from "@/shared/components/MetricCard";
 import { Badge } from "@/shared/components/ui/badge";
 import { toast } from "sonner";
 import {
@@ -137,90 +138,58 @@ const ViewProduct: React.FC = () => {
 
       {/* Card Metrics */}
       <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
-        <Card>
-          <CardContent className="flex items-center gap-3 p-4">
-            <div className="flex h-9 w-9 items-center justify-center rounded-full bg-primary/10">
-              <Package className="h-4 w-4 text-primary" />
-            </div>
-            <div className="min-w-0">
-              <p className="text-xl font-bold">
-                {isService ? "—" : product.quantity}
-              </p>
-              <p className="text-xs text-muted-foreground">
-                {isService ? "Not Applicable" : "Current Stock"}
-              </p>
-            </div>
-          </CardContent>
-        </Card>
+        <MetricCard
+          icon={Package}
+          label={isService ? "Not Applicable" : "Current Stock"}
+          value={isService ? "—" : product.quantity}
+          color="primary"
+          size="sm"
+        />
 
-        <Card>
-          <CardContent className="flex items-center gap-3 p-4">
-            <div className="flex h-9 w-9 items-center justify-center rounded-full bg-blue-500/10">
-              <ShoppingCart className="h-4 w-4 text-blue-500" />
-            </div>
-            <div className="min-w-0">
-              <p className="text-xl font-bold">{metrics?.totalUnitsSold ?? "—"}</p>
-              <p className="text-xs text-muted-foreground">Total Units Sold</p>
-            </div>
-          </CardContent>
-        </Card>
+        <MetricCard
+          icon={ShoppingCart}
+          label="Total Units Sold"
+          value={metrics?.totalUnitsSold ?? "—"}
+          color="blue"
+          size="sm"
+        />
 
-        <Card>
-          <CardContent className="flex items-center gap-3 p-4">
-            <div className="flex h-9 w-9 items-center justify-center rounded-full bg-emerald-500/10">
-              <Banknote className="h-4 w-4 text-emerald-500" />
-            </div>
-            <div className="min-w-0">
-              <p className="text-xl font-bold">
-                {metrics != null
-                  ? `₱ ${metrics.totalRevenue.toLocaleString("en-US", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`
-                  : "—"}
-              </p>
-              <p className="text-xs text-muted-foreground">Total Revenue Generated</p>
-            </div>
-          </CardContent>
-        </Card>
+        <MetricCard
+          icon={Banknote}
+          label="Total Revenue Generated"
+          value={metrics != null
+            ? `₱ ${metrics.totalRevenue.toLocaleString("en-US", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`
+            : "—"}
+          color="emerald"
+          size="sm"
+        />
 
-        <Card>
-          <CardContent className="flex items-center gap-3 p-4">
-            <div className="flex h-9 w-9 items-center justify-center rounded-full bg-amber-500/10">
-              <Calendar className="h-4 w-4 text-amber-500" />
-            </div>
-            <div className="min-w-0">
-              <p className="text-lg font-bold">{formatDate(metrics?.lastSoldDate ?? null)}</p>
-              <p className="text-xs text-muted-foreground">Last Sold Date</p>
-            </div>
-          </CardContent>
-        </Card>
+        <MetricCard
+          icon={Calendar}
+          label="Last Sold Date"
+          value={formatDate(metrics?.lastSoldDate ?? null)}
+          color="amber"
+          size="sm"
+        />
 
-        <Card>
-          <CardContent className="flex items-center gap-3 p-4">
-            <div className="flex h-9 w-9 items-center justify-center rounded-full bg-violet-500/10">
-              <Hash className="h-4 w-4 text-violet-500" />
-            </div>
-            <div className="min-w-0">
-              <p className="text-xl font-bold">{metrics?.numberOfTransactions ?? "—"}</p>
-              <p className="text-xs text-muted-foreground">Number of Transactions</p>
-            </div>
-          </CardContent>
-        </Card>
+        <MetricCard
+          icon={Hash}
+          label="Number of Transactions"
+          value={metrics?.numberOfTransactions ?? "—"}
+          color="violet"
+          size="sm"
+        />
 
-        <Card>
-          <CardContent className="flex items-center gap-3 p-4">
-            <div className="flex h-9 w-9 items-center justify-center rounded-full bg-rose-500/10">
-              <TrendingUp className="h-4 w-4 text-rose-500" />
-            </div>
-            <div className="min-w-0">
-              <p className="text-xl font-bold">
-                {isService
-                  ? "—"
-                  : `₱ ${inventoryValue.toLocaleString("en-US", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`
-                }
-              </p>
-              <p className="text-xs text-muted-foreground">Inventory Value</p>
-            </div>
-          </CardContent>
-        </Card>
+        <MetricCard
+          icon={TrendingUp}
+          label="Inventory Value"
+          value={isService
+            ? "—"
+            : `₱ ${inventoryValue.toLocaleString("en-US", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`
+          }
+          color="rose"
+          size="sm"
+        />
       </div>
 
       {/* Overview */}

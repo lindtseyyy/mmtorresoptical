@@ -1,5 +1,4 @@
 import {
-  LayoutDashboard,
   Eye,
   ShoppingCart,
   Users,
@@ -11,39 +10,9 @@ import {
   UserPlus,
 } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/shared/components/ui/card";
+import { MetricCard } from "@/shared/components/MetricCard";
 import { Button } from "@/shared/components/ui/button";
 import { useNavigate } from "react-router-dom";
-
-const statCards = [
-  {
-    title: "Inventory Items",
-    value: "—",
-    icon: Eye,
-    color: "text-blue-600",
-    bg: "bg-blue-50",
-  },
-  {
-    title: "Today's Sales",
-    value: "—",
-    icon: ShoppingCart,
-    color: "text-green-600",
-    bg: "bg-green-50",
-  },
-  {
-    title: "Patients",
-    value: "—",
-    icon: UserRound,
-    color: "text-purple-600",
-    bg: "bg-purple-50",
-  },
-  {
-    title: "Users",
-    value: "—",
-    icon: Users,
-    color: "text-orange-600",
-    bg: "bg-orange-50",
-  },
-];
 
 const quickActions = [
   { label: "Manage Inventory", href: "/inventory", icon: PackageOpen },
@@ -71,19 +40,10 @@ export default function Dashboard() {
 
       {/* Stat cards */}
       <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4">
-        {statCards.map((stat) => (
-          <Card key={stat.title}>
-            <CardContent className="flex items-center gap-4 p-6">
-              <div className={`flex h-12 w-12 items-center justify-center rounded-full ${stat.bg}`}>
-                <stat.icon className={`h-6 w-6 ${stat.color}`} />
-              </div>
-              <div>
-                <p className="text-sm font-medium text-muted-foreground">{stat.title}</p>
-                <p className="text-2xl font-bold">{stat.value}</p>
-              </div>
-            </CardContent>
-          </Card>
-        ))}
+        <MetricCard icon={Eye} label="Inventory Items" value="—" color="blue" labelPosition="top" />
+        <MetricCard icon={ShoppingCart} label="Today's Sales" value="—" color="emerald" labelPosition="top" />
+        <MetricCard icon={UserRound} label="Patients" value="—" color="violet" labelPosition="top" />
+        <MetricCard icon={Users} label="Users" value="—" color="orange" labelPosition="top" />
       </div>
 
       {/* Quick Actions */}

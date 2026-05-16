@@ -4,6 +4,7 @@ import { useQuery, useMutation, useQueryClient, keepPreviousData } from "@tansta
 import { ArrowLeft, ChevronLeft, ChevronRight, MoreHorizontal, Pencil, Archive, Undo2, User, Calendar, Key, ShoppingCart, ClipboardList } from "lucide-react";
 import { Button } from "@/shared/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/shared/components/ui/card";
+import { MetricCard } from "@/shared/components/MetricCard";
 import { Badge } from "@/shared/components/ui/badge";
 import {
   DropdownMenu,
@@ -172,55 +173,34 @@ const ViewUser: React.FC = () => {
 
       {/* Card Metrics */}
       <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4">
-        <Card>
-          <CardContent className="flex items-center gap-3 p-4">
-            <div className="flex h-9 w-9 items-center justify-center rounded-full bg-primary/10">
-              <Calendar className="h-4 w-4 text-primary" />
-            </div>
-            <div className="min-w-0">
-              <p className="text-lg font-bold">{formatDate(user.createdAt)}</p>
-              <p className="text-xs text-muted-foreground">Member Since</p>
-            </div>
-          </CardContent>
-        </Card>
-
-        <Card>
-          <CardContent className="flex items-center gap-3 p-4">
-            <div className="flex h-9 w-9 items-center justify-center rounded-full bg-blue-500/10">
-              <User className="h-4 w-4 text-blue-500" />
-            </div>
-            <div className="min-w-0">
-              <p className="text-lg font-bold">{formatDateTime(lastLogin)}</p>
-              <p className="text-xs text-muted-foreground">Last Login</p>
-            </div>
-          </CardContent>
-        </Card>
-
-        <Card>
-          <CardContent className="flex items-center gap-3 p-4">
-            <div className="flex h-9 w-9 items-center justify-center rounded-full bg-amber-500/10">
-              <Key className="h-4 w-4 text-amber-500" />
-            </div>
-            <div className="min-w-0">
-              <p className="text-sm font-bold">
-                {user.isPwChangeRequired ? "Password Reset Required" : "Active"}
-              </p>
-              <p className="text-xs text-muted-foreground">Password Status</p>
-            </div>
-          </CardContent>
-        </Card>
-
-        <Card>
-          <CardContent className="flex items-center gap-3 p-4">
-            <div className="flex h-9 w-9 items-center justify-center rounded-full bg-emerald-500/10">
-              <ShoppingCart className="h-4 w-4 text-emerald-500" />
-            </div>
-            <div className="min-w-0">
-              <p className="text-xl font-bold">{transactionsProcessed ?? "—"}</p>
-              <p className="text-xs text-muted-foreground">Transactions Processed</p>
-            </div>
-          </CardContent>
-        </Card>
+        <MetricCard
+          icon={Calendar}
+          label="Member Since"
+          value={formatDate(user.createdAt)}
+          color="primary"
+          size="sm"
+        />
+        <MetricCard
+          icon={User}
+          label="Last Login"
+          value={formatDateTime(lastLogin)}
+          color="blue"
+          size="sm"
+        />
+        <MetricCard
+          icon={Key}
+          label="Password Status"
+          value={user.isPwChangeRequired ? "Password Reset Required" : "Active"}
+          color="amber"
+          size="sm"
+        />
+        <MetricCard
+          icon={ShoppingCart}
+          label="Transactions Processed"
+          value={transactionsProcessed ?? "—"}
+          color="emerald"
+          size="sm"
+        />
       </div>
 
       {/* Overview */}

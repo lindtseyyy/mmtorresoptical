@@ -6,6 +6,7 @@ import { Button } from "@/shared/components/ui/button";
 import { Input } from "@/shared/components/ui/input";
 import { Badge } from "@/shared/components/ui/badge";
 import { Card, CardContent } from "@/shared/components/ui/card";
+import { MetricCard } from "@/shared/components/MetricCard";
 import {
   Select,
   SelectContent,
@@ -152,125 +153,15 @@ const ManageTransactions: React.FC = () => {
 
       {/* Metrics */}
       <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
-        <Card>
-          <CardContent className="flex items-center gap-4 p-5">
-            <div className="flex h-11 w-11 items-center justify-center rounded-full bg-primary/10">
-              <Receipt className="h-5 w-5 text-primary" />
-            </div>
-            <div>
-              <p className="text-2xl font-bold">{metrics?.totalTransactions ?? "—"}</p>
-              <p className="text-sm text-muted-foreground">Total Sales and Transactions</p>
-            </div>
-          </CardContent>
-        </Card>
-
-        <Card>
-          <CardContent className="flex items-center gap-4 p-5">
-            <div className="flex h-11 w-11 items-center justify-center rounded-full bg-emerald-500/10">
-              <Banknote className="h-5 w-5 text-emerald-500" />
-            </div>
-            <div>
-              <p className="text-2xl font-bold">
-                {metrics != null ? formatCurrency(metrics.totalRevenue) : "—"}
-              </p>
-              <p className="text-sm text-muted-foreground">Total Revenue</p>
-            </div>
-          </CardContent>
-        </Card>
-
-        <Card>
-          <CardContent className="flex items-center gap-4 p-5">
-            <div className="flex h-11 w-11 items-center justify-center rounded-full bg-amber-500/10">
-              <TrendingUp className="h-5 w-5 text-amber-500" />
-            </div>
-            <div>
-              <p className="text-2xl font-bold">
-                {metrics != null ? formatCurrency(metrics.averageTransactionValue) : "—"}
-              </p>
-              <p className="text-sm text-muted-foreground">Average Transaction Value</p>
-            </div>
-          </CardContent>
-        </Card>
-
-        <Card>
-          <CardContent className="flex items-center gap-4 p-5">
-            <div className="flex h-11 w-11 items-center justify-center rounded-full bg-violet-500/10">
-              <Calendar className="h-5 w-5 text-violet-500" />
-            </div>
-            <div>
-              <p className="text-2xl font-bold">{metrics?.totalTransactionsThisMonth ?? "—"}</p>
-              <p className="text-sm text-muted-foreground">Total Sales and Transactions This Month</p>
-            </div>
-          </CardContent>
-        </Card>
-
-        <Card>
-          <CardContent className="flex items-center gap-4 p-5">
-            <div className="flex h-11 w-11 items-center justify-center rounded-full bg-blue-500/10">
-              <Receipt className="h-5 w-5 text-blue-500" />
-            </div>
-            <div>
-              <p className="text-2xl font-bold">{metrics?.todayTransactions ?? "—"}</p>
-              <p className="text-sm text-muted-foreground">Sales and Transactions Today</p>
-            </div>
-          </CardContent>
-        </Card>
-
-        <Card>
-          <CardContent className="flex items-center gap-4 p-5">
-            <div className="flex h-11 w-11 items-center justify-center rounded-full bg-rose-500/10">
-              <Banknote className="h-5 w-5 text-rose-500" />
-            </div>
-            <div>
-              <p className="text-2xl font-bold">
-                {metrics != null ? formatCurrency(metrics.todayRevenue) : "—"}
-              </p>
-              <p className="text-sm text-muted-foreground">Today's Revenue</p>
-            </div>
-          </CardContent>
-        </Card>
-
-        <Card>
-          <CardContent className="flex items-center gap-4 p-5">
-            <div className="flex h-11 w-11 items-center justify-center rounded-full bg-red-500/10">
-              <Undo2 className="h-5 w-5 text-red-500" />
-            </div>
-            <div>
-              <p className="text-2xl font-bold">
-                {metrics?.totalRefundedAmount != null ? formatCurrency(metrics.totalRefundedAmount) : "—"}
-              </p>
-              <p className="text-sm text-muted-foreground">Total Refunded Amount</p>
-            </div>
-          </CardContent>
-        </Card>
-
-        <Card>
-          <CardContent className="flex items-center gap-4 p-5">
-            <div className="flex h-11 w-11 items-center justify-center rounded-full bg-orange-500/10">
-              <Undo2 className="h-5 w-5 text-orange-500" />
-            </div>
-            <div>
-              <p className="text-2xl font-bold">
-                {metrics?.todayTotalRefundedAmount != null ? formatCurrency(metrics.todayTotalRefundedAmount) : "—"}
-              </p>
-              <p className="text-sm text-muted-foreground">Today's Total Refunded Amount</p>
-            </div>
-          </CardContent>
-        </Card>
-
-        <Card>
-          <CardContent className="flex items-center gap-4 p-5">
-            <div className="flex h-11 w-11 items-center justify-center rounded-full bg-yellow-500/10">
-              <Undo2 className="h-5 w-5 text-yellow-500" />
-            </div>
-            <div>
-              <p className="text-2xl font-bold">
-                {metrics?.totalRefundedAmountThisMonth != null ? formatCurrency(metrics.totalRefundedAmountThisMonth) : "—"}
-              </p>
-              <p className="text-sm text-muted-foreground">Total Refunded Amount This Month</p>
-            </div>
-          </CardContent>
-        </Card>
+        <MetricCard icon={Receipt} label="Total Sales and Transactions" value={metrics?.totalTransactions ?? "—"} color="primary" />
+        <MetricCard icon={Banknote} label="Total Revenue" value={metrics != null ? formatCurrency(metrics.totalRevenue) : "—"} color="emerald" />
+        <MetricCard icon={TrendingUp} label="Average Transaction Value" value={metrics != null ? formatCurrency(metrics.averageTransactionValue) : "—"} color="amber" />
+        <MetricCard icon={Calendar} label="Total Sales and Transactions This Month" value={metrics?.totalTransactionsThisMonth ?? "—"} color="violet" />
+        <MetricCard icon={Receipt} label="Sales and Transactions Today" value={metrics?.todayTransactions ?? "—"} color="blue" />
+        <MetricCard icon={Banknote} label="Today's Revenue" value={metrics != null ? formatCurrency(metrics.todayRevenue) : "—"} color="rose" />
+        <MetricCard icon={Undo2} label="Total Refunded Amount" value={metrics?.totalRefundedAmount != null ? formatCurrency(metrics.totalRefundedAmount) : "—"} color="red" />
+        <MetricCard icon={Undo2} label="Today's Total Refunded Amount" value={metrics?.todayTotalRefundedAmount != null ? formatCurrency(metrics.todayTotalRefundedAmount) : "—"} color="orange" />
+        <MetricCard icon={Undo2} label="Total Refunded Amount This Month" value={metrics?.totalRefundedAmountThisMonth != null ? formatCurrency(metrics.totalRefundedAmountThisMonth) : "—"} color="yellow" />
       </div>
 
       {/* Transactions Table */}

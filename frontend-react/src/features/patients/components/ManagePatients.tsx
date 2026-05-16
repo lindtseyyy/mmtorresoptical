@@ -12,6 +12,7 @@ import {
 } from "@/shared/components/ui/select";
 import { useNavigate } from "react-router-dom";
 import { Card, CardContent } from "@/shared/components/ui/card";
+import { MetricCard } from "@/shared/components/MetricCard";
 import type { Patient } from "@/features/patients/types";
 import {
   createPatientsListQueryOptions,
@@ -87,41 +88,9 @@ const ManagePatients: React.FC = () => {
       </div>
 
       <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
-        <Card>
-          <CardContent className="flex items-center gap-4 p-5">
-            <div className="flex h-11 w-11 items-center justify-center rounded-full bg-primary/10">
-              <Users className="h-5 w-5 text-primary" />
-            </div>
-            <div>
-              <p className="text-2xl font-bold">{totalPatients}</p>
-              <p className="text-sm text-muted-foreground">Total Patients</p>
-            </div>
-          </CardContent>
-        </Card>
-
-        <Card>
-          <CardContent className="flex items-center gap-4 p-5">
-            <div className="flex h-11 w-11 items-center justify-center rounded-full bg-emerald-500/10">
-              <UserCheck className="h-5 w-5 text-emerald-500" />
-            </div>
-            <div>
-              <p className="text-2xl font-bold">{activePatients}</p>
-              <p className="text-sm text-muted-foreground">Active Patients</p>
-            </div>
-          </CardContent>
-        </Card>
-
-        <Card>
-          <CardContent className="flex items-center gap-4 p-5">
-            <div className="flex h-11 w-11 items-center justify-center rounded-full bg-muted">
-              <ArchiveIcon className="h-5 w-5 text-muted-foreground" />
-            </div>
-            <div>
-              <p className="text-2xl font-bold">{archivedPatients}</p>
-              <p className="text-sm text-muted-foreground">Archived Patients</p>
-            </div>
-          </CardContent>
-        </Card>
+        <MetricCard icon={Users} label="Total Patients" value={totalPatients} color="primary" />
+        <MetricCard icon={UserCheck} label="Active Patients" value={activePatients} color="emerald" />
+        <MetricCard icon={ArchiveIcon} label="Archived Patients" value={archivedPatients} color="muted" />
       </div>
 
       <Card>
