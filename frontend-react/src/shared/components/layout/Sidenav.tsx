@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { NavLink, useLocation, useNavigate } from "react-router-dom";
-import { Users, Eye, LogOut, UserRound, UserRoundCog, ShoppingCart, Receipt, Database, CircleHelp, Info, ChevronDown } from "lucide-react";
+import { Users, Eye, LogOut, UserRound, UserRoundCog, ShoppingCart, Receipt, FileText, Database, CircleHelp, Info, ChevronDown } from "lucide-react";
 import { Button, buttonVariants } from "@/shared/components/ui/button";
 import { cn } from "@/shared/lib/utils";
 import { toast } from "sonner";
@@ -32,6 +32,7 @@ const menuItems: MenuItem[] = [
       { title: "Audit Trail", href: "/admin/audit-logs" },
     ],
   },
+  { title: "Reports", href: "/reports", icon: FileText, roles: ["ADMIN", "STAFF"] as Role[] },
   { title: "Help", href: "/help", icon: CircleHelp, roles: ["ADMIN", "STAFF"] as Role[] },
   { title: "About", href: "/about", icon: Info, roles: ["ADMIN", "STAFF"] as Role[] },
 ];

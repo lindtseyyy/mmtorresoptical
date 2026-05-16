@@ -50,6 +50,9 @@ import UserMaintenance from "@/features/admin/components/UserMaintenance";
 import PatientMaintenance from "@/features/admin/components/PatientMaintenance";
 import InventoryMaintenance from "@/features/admin/components/InventoryMaintenance";
 
+// --- Reports ---
+import Reports from "@/features/reports/components/Reports";
+
 // --- Help ---
 import HelpPage from "@/features/help/components/HelpPage";
 
@@ -91,6 +94,7 @@ const router = createBrowserRouter([
       { path: "sales", element: <ManageSales /> },
       { path: "transactions", element: <ManageTransactions /> },
       { path: "transactions/:id", element: <ViewTransaction /> },
+      { path: "reports", element: <Reports /> },
       { path: "inventory", element: <ManageInventory /> },
       { path: "inventory/add", element: <AddProduct /> },
       { path: "inventory/edit/:id", element: <EditProduct /> },
