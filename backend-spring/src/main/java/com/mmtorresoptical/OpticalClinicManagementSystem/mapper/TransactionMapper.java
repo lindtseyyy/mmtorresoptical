@@ -42,6 +42,10 @@ public interface TransactionMapper {
             target = "transactionStatus",
             expression = "java(transaction.getTransactionStatus().name())"
     )
+    @Mapping(
+            target = "refundStatus",
+            expression = "java(transaction.getRefundStatus().name())"
+    )
     TransactionDetailsDTO entityToDetailsDTO(Transaction transaction);
 
     @Mapping(
@@ -56,6 +60,10 @@ public interface TransactionMapper {
             target = "transactionStatus",
             expression = "java(transaction.getTransactionStatus().name())"
     )
+    @Mapping(
+            target = "refundStatus",
+            expression = "java(transaction.getRefundStatus().name())"
+    )
     TransactionResponseDTO entityToResponseDTO(Transaction transaction);
 
     @Mapping(
@@ -69,6 +77,10 @@ public interface TransactionMapper {
     @Mapping(
             target = "transactionStatus",
             expression = "java(transaction.getTransactionStatus().name())"
+    )
+    @Mapping(
+            target = "refundStatus",
+            expression = "java(transaction.getRefundStatus().name())"
     )
     TransactionListDTO entityToListDTO(Transaction transaction);
 

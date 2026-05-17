@@ -21,6 +21,7 @@ public class TransactionListDTO {
     private BigDecimal balanceDue;
     private LocalDateTime completedAt;
     private String transactionStatus;
+    private String refundStatus;
 
     private UserSummaryDTO createdBy;
     private PatientSummaryDTO patient;

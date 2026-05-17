@@ -72,10 +72,10 @@ public interface TransactionRepository extends JpaRepository<Transaction, UUID>,
     @Query("SELECT COALESCE(SUM(t.totalAmount), 0) FROM Transaction t WHERE t.transactionStatus = 'VOIDED' AND t.transactionDate >= :start AND t.transactionDate < :end")
     BigDecimal sumVoidedAmountByTransactionDateBetween(LocalDateTime start, LocalDateTime end);
 
-    @Query("SELECT COALESCE(SUM(t.balanceDue), 0) FROM Transaction t WHERE t.transactionStatus = 'PARTIALLY_PAID'")
+    @Query("SELECT COALESCE(SUM(t.balanceDue), 0) FROM Transaction t WHERE t.transactionStatus = 'DEPOSIT'")
     BigDecimal sumBalanceDueByTransactionStatusPartiallyPaid();
 
-    @Query("SELECT t FROM Transaction t LEFT JOIN FETCH t.patient WHERE t.transactionStatus = 'PARTIALLY_PAID' AND t.balanceDue > 0 AND t.transactionDate < :cutoffDate ORDER BY t.transactionDate ASC")
+    @Query("SELECT t FROM Transaction t LEFT JOIN FETCH t.patient WHERE t.transactionStatus = 'DEPOSIT' AND t.balanceDue > 0 AND t.transactionDate < :cutoffDate ORDER BY t.transactionDate ASC")
     List<Transaction> findAgingAccountsReceivable(LocalDateTime cutoffDate);
 
     @Query("SELECT MIN(t.transactionDate) FROM Transaction t")

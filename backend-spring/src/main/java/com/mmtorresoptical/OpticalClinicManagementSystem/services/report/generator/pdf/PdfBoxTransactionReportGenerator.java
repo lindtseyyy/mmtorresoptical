@@ -1,5 +1,6 @@
 package com.mmtorresoptical.OpticalClinicManagementSystem.services.report.generator.pdf;
 
+import com.mmtorresoptical.OpticalClinicManagementSystem.enums.RefundStatus;
 import com.mmtorresoptical.OpticalClinicManagementSystem.enums.TransactionStatus;
 import com.mmtorresoptical.OpticalClinicManagementSystem.services.report.ReportMetadata;
 import com.mmtorresoptical.OpticalClinicManagementSystem.services.report.transactionpdf.*;
@@ -303,7 +304,7 @@ public class PdfBoxTransactionReportGenerator {
 
         state.y -= 8f;
 
-        if (entry.getStatus() == TransactionStatus.PARTIALLY_REFUNDED) {
+        if (entry.getRefundStatus() == RefundStatus.ADJUSTED) {
             List<TransactionItemEntry> refundedItems = new ArrayList<>();
             List<TransactionItemEntry> nonRefundedItems = new ArrayList<>();
 
@@ -332,7 +333,7 @@ public class PdfBoxTransactionReportGenerator {
                 state = writeItemsTable(document, state, refundedItems, indent, true);
             }
 
-        } else if (entry.getStatus() == TransactionStatus.FULLY_REFUNDED) {
+        } else if (entry.getRefundStatus() == RefundStatus.RETURNED) {
             state = ensureSpace(document, state, LINE_HEIGHT + ROW_HEIGHT * 2 + 10f);
             writeText(state.contentStream, "Refunded Items (All items refunded):",
                     indent, state.y, state.headerFont, SMALL_FONT_SIZE);

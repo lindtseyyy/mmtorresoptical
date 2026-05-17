@@ -1,5 +1,6 @@
 package com.mmtorresoptical.OpticalClinicManagementSystem.services.report.transactionpdf;
 
+import com.mmtorresoptical.OpticalClinicManagementSystem.enums.RefundStatus;
 import com.mmtorresoptical.OpticalClinicManagementSystem.enums.TransactionStatus;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
@@ -22,6 +23,7 @@ public class TransactionEntry {
     private BigDecimal amountPaid;
     private BigDecimal balanceDue;
     private TransactionStatus status;
+    private RefundStatus refundStatus;
     private String customerName;
     private String cashierName;
     private String voidReason;

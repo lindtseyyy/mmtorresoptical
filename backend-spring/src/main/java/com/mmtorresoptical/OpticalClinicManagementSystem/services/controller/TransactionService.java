@@ -9,6 +9,7 @@ import com.mmtorresoptical.OpticalClinicManagementSystem.dto.refund.RefundItemDT
 import com.mmtorresoptical.OpticalClinicManagementSystem.enums.DiscountType;
 import com.mmtorresoptical.OpticalClinicManagementSystem.enums.PaymentMethod;
 import com.mmtorresoptical.OpticalClinicManagementSystem.enums.ProductType;
+import com.mmtorresoptical.OpticalClinicManagementSystem.enums.RefundStatus;
 import com.mmtorresoptical.OpticalClinicManagementSystem.enums.TransactionStatus;
 import com.mmtorresoptical.OpticalClinicManagementSystem.exception.custom.BadRequestException;
 import com.mmtorresoptical.OpticalClinicManagementSystem.exception.custom.InsufficientStockException;
@@ -184,7 +185,7 @@ public class TransactionService {
             throw new IllegalStateException("Cannot add payment to a voided transaction");
         }
 
-        if (transaction.getTransactionStatus() == TransactionStatus.FULLY_REFUNDED) {
+        if (transaction.getRefundStatus() == RefundStatus.RETURNED) {
             throw new IllegalStateException("Cannot add payment to a fully refunded transaction");
         }
 
@@ -247,6 +248,7 @@ public class TransactionService {
             LocalDate minDate,
             LocalDate maxDate,
             TransactionStatus status,
+            RefundStatus refundStatus,
             UUID productId,
             int page,
             int size,
@@ -290,6 +292,10 @@ public class TransactionService {
 
         if (status != null) {
             spec = spec.and(TransactionSpecification.hasTransactionStatus(status));
+        }
+
+        if (refundStatus != null) {
+            spec = spec.and(TransactionSpecification.hasRefundStatus(refundStatus));
         }
 
         if (productId != null) {
@@ -434,8 +440,8 @@ public class TransactionService {
             throw new IllegalStateException("Transaction already voided");
         }
 
-        if (transaction.getTransactionStatus() == TransactionStatus.FULLY_REFUNDED) {
-            throw new IllegalStateException("Cannot void refunded transaction");
+        if (transaction.getRefundStatus() == RefundStatus.RETURNED) {
+            throw new IllegalStateException("Cannot void a fully refunded transaction");
         }
 
         // Restore stock only for PHYSICAL products
@@ -685,12 +691,12 @@ public class TransactionService {
                         );
 
         if (allRefunded) {
-            txn.setTransactionStatus(
-                    TransactionStatus.FULLY_REFUNDED
+            txn.setRefundStatus(
+                    RefundStatus.RETURNED
             );
         } else if (anyRefunded) {
-            txn.setTransactionStatus(
-                    TransactionStatus.PARTIALLY_REFUNDED
+            txn.setRefundStatus(
+                    RefundStatus.ADJUSTED
             );
         }
     }
@@ -701,7 +707,7 @@ public class TransactionService {
         } else if (amountPaid.compareTo(totalAmount) >= 0) {
             return TransactionStatus.PAID;
         } else {
-            return TransactionStatus.PARTIALLY_PAID;
+            return TransactionStatus.DEPOSIT;
         }
     }
 

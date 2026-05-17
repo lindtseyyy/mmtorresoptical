@@ -6,6 +6,7 @@ import com.mmtorresoptical.OpticalClinicManagementSystem.dto.payment.PaymentRequ
 import com.mmtorresoptical.OpticalClinicManagementSystem.dto.payment.PaymentResponseDTO;
 import com.mmtorresoptical.OpticalClinicManagementSystem.dto.refund.RefundTransactionRequestDTO;
 import com.mmtorresoptical.OpticalClinicManagementSystem.dto.transaction.*;
+import com.mmtorresoptical.OpticalClinicManagementSystem.enums.RefundStatus;
 import com.mmtorresoptical.OpticalClinicManagementSystem.enums.TransactionStatus;
 import com.mmtorresoptical.OpticalClinicManagementSystem.services.controller.TransactionService;
 import jakarta.validation.Valid;
@@ -41,6 +42,7 @@ public class TransactionController {
             @RequestParam(required = false) LocalDate maxDate,
 
             @RequestParam(required = false) TransactionStatus status,
+            @RequestParam(required = false) RefundStatus refundStatus,
 
             @RequestParam(defaultValue = "0") int page,
             @RequestParam(defaultValue = "10") int size,
@@ -51,8 +53,7 @@ public class TransactionController {
 
         List<String> allowedSortFields = List.of(
                 "transactionDate",
-                "totalAmount",
-                "status"
+                "totalAmount"
         );
 
         if (!allowedSortFields.contains(sortBy)) {
@@ -65,6 +66,7 @@ public class TransactionController {
                 minDate,
                 maxDate,
                 status,
+                refundStatus,
                 null,
                 page,
                 size,

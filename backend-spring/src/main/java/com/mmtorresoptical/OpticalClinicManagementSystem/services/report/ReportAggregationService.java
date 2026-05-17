@@ -1,11 +1,15 @@
 package com.mmtorresoptical.OpticalClinicManagementSystem.services.report;
 
+import com.mmtorresoptical.OpticalClinicManagementSystem.dto.metrics.TransactionMonthlyTrendPoint;
 import com.mmtorresoptical.OpticalClinicManagementSystem.dto.product.ProductDetailsDTO;
 import com.mmtorresoptical.OpticalClinicManagementSystem.enums.Gender;
+import com.mmtorresoptical.OpticalClinicManagementSystem.enums.RefundStatus;
 import com.mmtorresoptical.OpticalClinicManagementSystem.enums.ReportType;
 import com.mmtorresoptical.OpticalClinicManagementSystem.enums.TransactionStatus;
 import com.mmtorresoptical.OpticalClinicManagementSystem.model.Patient;
+import com.mmtorresoptical.OpticalClinicManagementSystem.model.Refund;
 import com.mmtorresoptical.OpticalClinicManagementSystem.model.Transaction;
+import com.mmtorresoptical.OpticalClinicManagementSystem.model.TransactionItem;
 import com.mmtorresoptical.OpticalClinicManagementSystem.objects.TopSellingProductDTO;
 import com.mmtorresoptical.OpticalClinicManagementSystem.repository.PatientRepository;
 import com.mmtorresoptical.OpticalClinicManagementSystem.repository.TransactionRepository;
@@ -17,6 +21,7 @@ import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.math.BigDecimal;
 import java.time.Instant;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
@@ -26,7 +31,9 @@ import java.time.YearMonth;
 import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.LinkedHashMap;
 import java.util.List;
+import java.util.Map;
 
 @Service
 @RequiredArgsConstructor
@@ -139,6 +146,81 @@ public class ReportAggregationService {
         );
 
         return growthTrend;
+    }
+
+    @Transactional(readOnly = true)
+    public List<TransactionMonthlyTrendPoint> computeTransactionMonthlyTrend() {
+        List<TransactionMonthlyTrendPoint> trend = new ArrayList<>();
+
+        YearMonth currentMonth = YearMonth.now();
+        YearMonth trendStart = currentMonth.minusMonths(11);
+        LocalDate trendStartDate = trendStart.atDay(1);
+        LocalDate trendEndDate = currentMonth.atEndOfMonth();
+
+        List<Transaction> transactions = transactionService.getTransactionsForReport(trendStartDate, trendEndDate);
+
+        Map<YearMonth, long[]> monthlyCounts = new LinkedHashMap<>();
+        Map<YearMonth, BigDecimal> netRevenueMap = new LinkedHashMap<>();
+        for (YearMonth ym = trendStart; !ym.isAfter(currentMonth); ym = ym.plusMonths(1)) {
+            monthlyCounts.put(ym, new long[1]);
+            netRevenueMap.put(ym, BigDecimal.ZERO);
+        }
+
+        for (Transaction t : transactions) {
+            YearMonth ym = YearMonth.from(t.getTransactionDate());
+            long[] bucket = monthlyCounts.get(ym);
+            if (bucket == null) continue;
+
+            bucket[0]++;
+
+            BigDecimal netContribution = computeNetRevenueContribution(t);
+            netRevenueMap.merge(ym, netContribution, BigDecimal::add);
+        }
+
+        for (YearMonth ym = trendStart; !ym.isAfter(currentMonth); ym = ym.plusMonths(1)) {
+            String monthKey = ym.getYear() + "-" + String.format("%02d", ym.getMonthValue());
+            trend.add(TransactionMonthlyTrendPoint.builder()
+                    .month(monthKey)
+                    .transactionCount(monthlyCounts.get(ym)[0])
+                    .netRevenue(netRevenueMap.get(ym))
+                    .build());
+        }
+
+        return trend;
+    }
+
+    private BigDecimal computeNetRevenueContribution(Transaction t) {
+        TransactionStatus paymentStatus = t.getTransactionStatus();
+        if (paymentStatus == null) return BigDecimal.ZERO;
+
+        BigDecimal totalAmount = t.getTotalAmount() != null ? t.getTotalAmount() : BigDecimal.ZERO;
+
+        BigDecimal base = switch (paymentStatus) {
+            case COMPLETED, PAID -> totalAmount;
+            case DEPOSIT -> t.getAmountPaid() != null ? t.getAmountPaid() : BigDecimal.ZERO;
+            case VOIDED -> totalAmount.negate();
+            default -> BigDecimal.ZERO;
+        };
+
+        // Subtract refunds if any were issued
+        RefundStatus refundStatus = t.getRefundStatus();
+        if (refundStatus == RefundStatus.ADJUSTED || refundStatus == RefundStatus.RETURNED) {
+            BigDecimal refundSum = BigDecimal.ZERO;
+            if (t.getTransactionItems() != null) {
+                for (TransactionItem item : t.getTransactionItems()) {
+                    if (item.getRefunds() != null) {
+                        for (Refund refund : item.getRefunds()) {
+                            if (refund.getRefundAmount() != null) {
+                                refundSum = refundSum.add(refund.getRefundAmount());
+                            }
+                        }
+                    }
+                }
+            }
+            base = base.subtract(refundSum);
+        }
+
+        return base;
     }
 
     @Transactional(readOnly = true)

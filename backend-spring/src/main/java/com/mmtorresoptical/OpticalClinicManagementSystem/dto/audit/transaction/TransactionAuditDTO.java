@@ -20,6 +20,7 @@ public class TransactionAuditDTO {
     private BigDecimal cashTender;
     private BigDecimal change;
     private String transactionStatus;
+    private String refundStatus;
 
     private UUID voidedByUserId;
     private LocalDateTime voidedAt;

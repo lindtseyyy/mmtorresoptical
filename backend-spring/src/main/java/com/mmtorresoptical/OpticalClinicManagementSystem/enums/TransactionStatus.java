@@ -2,10 +2,8 @@ package com.mmtorresoptical.OpticalClinicManagementSystem.enums;
 
 public enum TransactionStatus {
     PENDING,
-    PARTIALLY_PAID,
+    DEPOSIT,
     PAID,
     COMPLETED,
-    VOIDED,
-    PARTIALLY_REFUNDED,
-    FULLY_REFUNDED
+    VOIDED
 }

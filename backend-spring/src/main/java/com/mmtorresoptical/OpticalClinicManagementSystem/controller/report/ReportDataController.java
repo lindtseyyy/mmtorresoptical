@@ -6,6 +6,7 @@ import com.mmtorresoptical.OpticalClinicManagementSystem.repository.TransactionR
 import com.mmtorresoptical.OpticalClinicManagementSystem.services.report.ComprehensiveInventoryReportDataset;
 import com.mmtorresoptical.OpticalClinicManagementSystem.services.report.PatientReportDataset;
 import com.mmtorresoptical.OpticalClinicManagementSystem.services.report.ReportAggregationService;
+import com.mmtorresoptical.OpticalClinicManagementSystem.dto.metrics.TransactionMonthlyTrendPoint;
 import com.mmtorresoptical.OpticalClinicManagementSystem.services.report.TransactionPdfAggregationService;
 import com.mmtorresoptical.OpticalClinicManagementSystem.services.report.transactionpdf.TransactionHierarchicalReportDataset;
 import lombok.RequiredArgsConstructor;
@@ -72,5 +73,10 @@ public class ReportDataController {
     @GetMapping("/patient-growth-trend")
     public ResponseEntity<List<PatientReportDataset.PatientGrowthPoint>> getPatientGrowthTrend() {
         return ResponseEntity.ok(reportAggregationService.computePatientGrowthTrend());
+    }
+
+    @GetMapping("/transaction-monthly-trend")
+    public ResponseEntity<List<TransactionMonthlyTrendPoint>> getTransactionMonthlyTrend() {
+        return ResponseEntity.ok(reportAggregationService.computeTransactionMonthlyTrend());
     }
 }

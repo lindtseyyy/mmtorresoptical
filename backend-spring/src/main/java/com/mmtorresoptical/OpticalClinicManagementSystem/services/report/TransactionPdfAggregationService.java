@@ -1,5 +1,6 @@
 package com.mmtorresoptical.OpticalClinicManagementSystem.services.report;
 
+import com.mmtorresoptical.OpticalClinicManagementSystem.enums.RefundStatus;
 import com.mmtorresoptical.OpticalClinicManagementSystem.enums.TransactionStatus;
 import com.mmtorresoptical.OpticalClinicManagementSystem.model.*;
 import com.mmtorresoptical.OpticalClinicManagementSystem.services.controller.TransactionService;
@@ -22,7 +23,7 @@ public class TransactionPdfAggregationService {
     private final TransactionService transactionService;
 
     private static final List<String> STATUS_ORDER = List.of(
-        "PENDING", "PARTIALLY_PAID", "PAID", "COMPLETED", "VOIDED", "PARTIALLY_REFUNDED", "FULLY_REFUNDED"
+        "PENDING", "DEPOSIT", "PAID", "COMPLETED", "VOIDED"
     );
 
     public TransactionHierarchicalReportDataset buildTransactionReport(
@@ -129,6 +130,7 @@ public class TransactionPdfAggregationService {
                 .amountPaid(transaction.getAmountPaid())
                 .balanceDue(transaction.getBalanceDue())
                 .status(transaction.getTransactionStatus())
+                .refundStatus(transaction.getRefundStatus())
                 .customerName(customerName)
                 .cashierName(cashierName)
                 .voidReason(transaction.getVoidReason())
@@ -191,10 +193,12 @@ public class TransactionPdfAggregationService {
                     voidedCount++;
                     voidedAmount = voidedAmount.add(amount);
                 }
-                case PARTIALLY_REFUNDED, FULLY_REFUNDED -> {
-                    refundedCount++;
-                    refundedAmount = refundedAmount.add(amount);
-                }
+            }
+
+            if (entry.getRefundStatus() == RefundStatus.ADJUSTED
+                    || entry.getRefundStatus() == RefundStatus.RETURNED) {
+                refundedCount++;
+                refundedAmount = refundedAmount.add(amount);
             }
         }
 

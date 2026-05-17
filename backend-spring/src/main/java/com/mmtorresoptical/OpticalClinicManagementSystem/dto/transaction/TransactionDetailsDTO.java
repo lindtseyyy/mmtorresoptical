@@ -22,6 +22,7 @@ public class TransactionDetailsDTO {
     private BigDecimal balanceDue;
     private LocalDateTime completedAt;
     private String transactionStatus;
+    private String refundStatus;
 
     private UserSummaryDTO voidedBy;
     private LocalDateTime voidedAt;

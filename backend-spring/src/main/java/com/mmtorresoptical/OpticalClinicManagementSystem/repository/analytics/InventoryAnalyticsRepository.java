@@ -206,7 +206,8 @@ public interface InventoryAnalyticsRepository extends JpaRepository<Product, UUI
     JOIN ti.product p
     WHERE t.transactionStatus IN (
         com.mmtorresoptical.OpticalClinicManagementSystem.enums.TransactionStatus.COMPLETED,
-        com.mmtorresoptical.OpticalClinicManagementSystem.enums.TransactionStatus.PARTIALLY_REFUNDED
+        com.mmtorresoptical.OpticalClinicManagementSystem.enums.TransactionStatus.PAID,
+        com.mmtorresoptical.OpticalClinicManagementSystem.enums.TransactionStatus.DEPOSIT
     )
       AND t.transactionDate >= :startDate
       AND t.transactionDate < :endDate
@@ -256,7 +257,8 @@ public interface InventoryAnalyticsRepository extends JpaRepository<Product, UUI
     JOIN ti.product p
     WHERE t.transactionStatus IN (
         com.mmtorresoptical.OpticalClinicManagementSystem.enums.TransactionStatus.COMPLETED,
-        com.mmtorresoptical.OpticalClinicManagementSystem.enums.TransactionStatus.PARTIALLY_REFUNDED
+        com.mmtorresoptical.OpticalClinicManagementSystem.enums.TransactionStatus.PAID,
+        com.mmtorresoptical.OpticalClinicManagementSystem.enums.TransactionStatus.DEPOSIT
     )
       AND t.transactionDate >= :startDate
       AND t.transactionDate < :endDate
@@ -298,7 +300,8 @@ public interface InventoryAnalyticsRepository extends JpaRepository<Product, UUI
     WHERE ti.product.productId = :productId
       AND t.transactionStatus IN (
         com.mmtorresoptical.OpticalClinicManagementSystem.enums.TransactionStatus.COMPLETED,
-        com.mmtorresoptical.OpticalClinicManagementSystem.enums.TransactionStatus.PARTIALLY_REFUNDED
+        com.mmtorresoptical.OpticalClinicManagementSystem.enums.TransactionStatus.PAID,
+        com.mmtorresoptical.OpticalClinicManagementSystem.enums.TransactionStatus.DEPOSIT
       )
 """)
     ProductMetricsDTO findProductMetrics(@Param("productId") UUID productId);
