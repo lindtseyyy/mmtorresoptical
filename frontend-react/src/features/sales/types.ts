@@ -72,6 +72,7 @@ export interface TransactionResponse {
   balanceDue: number;
   completedAt: string | null;
   transactionStatus: string;
+  refundStatus: string;
   createdBy: { id: string; fullName: string };
   patient: { id: string; fullName: string } | null;
   voidedBy?: { userId: string; username: string; role: string; fullName: string } | null;
@@ -105,6 +106,7 @@ export interface TransactionListItem {
   balanceDue: number;
   completedAt: string | null;
   transactionStatus: string;
+  refundStatus: string;
   createdBy: { userId: string; username: string; role: string; fullName: string };
   patient: { patientId: string; fullName: string } | null;
 }

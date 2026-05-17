@@ -35,17 +35,23 @@ function paidAggregate(
   };
 }
 
-function refundAggregate(
+function refundDeductionAggregate(
   statusGroups: Record<string, TransactionEntry[]>,
-  key: string,
 ): StatusAggregate {
-  const entries = statusGroups[key];
-  if (!entries || entries.length === 0) return { count: 0, totalValue: 0 };
-  const totalValue = entries.reduce((sum, e) => {
-    const refunded = e.items.reduce((s, item) => s + (item.refundAmount ?? 0), 0);
-    return sum + refunded;
-  }, 0);
-  return { count: entries.length, totalValue };
+  let count = 0;
+  let totalValue = 0;
+  for (const entries of Object.values(statusGroups)) {
+    for (const e of entries) {
+      if (
+        e.refundStatus === "ADJUSTED" ||
+        e.refundStatus === "RETURNED"
+      ) {
+        count++;
+        totalValue += e.items.reduce((sum, item) => sum + (item.refundAmount ?? 0), 0);
+      }
+    }
+  }
+  return { count, totalValue };
 }
 
 const formatDate = (raw: string) => {
@@ -70,31 +76,36 @@ const AggregatedFinancialSummary: React.FC<AggregatedFinancialSummaryProps> = ({
 }) => {
   const completed = aggregate(statusGroups, "COMPLETED");
   const paid = aggregate(statusGroups, "PAID");
-  const partiallyPaid = paidAggregate(statusGroups, "PARTIALLY_PAID");
+  const partiallyPaid = paidAggregate(statusGroups, "DEPOSIT");
   const pending = aggregate(statusGroups, "PENDING");
   const voided = aggregate(statusGroups, "VOIDED");
-  const refunded = refundAggregate(statusGroups, "FULLY_REFUNDED");
-  const partiallyRefunded = refundAggregate(statusGroups, "PARTIALLY_REFUNDED");
+  const refunded = refundDeductionAggregate(statusGroups);
 
   // Unrealized Pending Balance = same count & value as Pending, framed as a deduction
   const unrealizedPending = pending;
 
   // Inflow subtotals
-  const grossCount = completed.count + paid.count + partiallyPaid.count + pending.count;
+  const grossCount =
+    completed.count +
+    paid.count +
+    partiallyPaid.count +
+    pending.count;
   const grossValue =
-    completed.totalValue + paid.totalValue + partiallyPaid.totalValue + pending.totalValue;
+    completed.totalValue +
+    paid.totalValue +
+    partiallyPaid.totalValue +
+    pending.totalValue;
 
   // Deduction subtotals
   const deductionCount =
-    voided.count + refunded.count + partiallyRefunded.count + unrealizedPending.count;
+    voided.count + refunded.count + unrealizedPending.count;
   const deductionValue =
     voided.totalValue +
     refunded.totalValue +
-    partiallyRefunded.totalValue +
     unrealizedPending.totalValue;
 
   // Bottom metrics
-  const totalTransactions = grossCount + voided.count + refunded.count + partiallyRefunded.count;
+  const totalTransactions = grossCount + voided.count;
   const netActiveTransactions = grossCount;
   const netRevenue = grossValue - deductionValue;
 
@@ -116,7 +127,7 @@ const AggregatedFinancialSummary: React.FC<AggregatedFinancialSummaryProps> = ({
             </tr>
             <InflowRow label="Completed" agg={completed} />
             <InflowRow label="Paid" agg={paid} />
-            <InflowRow label="Partially Paid" agg={partiallyPaid} />
+            <InflowRow label="Deposit" agg={partiallyPaid} />
             <InflowRow label="Pending" agg={pending} />
             <SubtotalRow label="Gross Total" agg={{ count: grossCount, totalValue: grossValue }} />
 
@@ -131,7 +142,6 @@ const AggregatedFinancialSummary: React.FC<AggregatedFinancialSummaryProps> = ({
             </tr>
             <DeductionRow label="Voided" agg={voided} />
             <DeductionRow label="Refunded" agg={refunded} />
-            <DeductionRow label="Partially Refunded" agg={partiallyRefunded} />
             <DeductionRow
               label="Unrealized Pending Balance"
               agg={unrealizedPending}

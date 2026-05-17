@@ -231,7 +231,7 @@ const ViewTransaction: React.FC = () => {
   const canRefund =
     tx &&
     tx.transactionStatus !== "VOIDED" &&
-    tx.transactionStatus !== "FULLY_REFUNDED" &&
+    tx.refundStatus !== "RETURNED" &&
     tx.transactionItems.some((i) => (i.refundedQuantity ?? 0) < i.quantity);
 
   if (isLoading) {
@@ -270,6 +270,9 @@ const ViewTransaction: React.FC = () => {
               <div className="flex items-center gap-2">
                 <h2 className="text-3xl font-bold">{tx.transactionNumber}</h2>
                 <StatusBadge status={tx.transactionStatus} />
+                {tx.refundStatus !== "NONE" && (
+                  <StatusBadge status={tx.refundStatus} />
+                )}
               </div>
               <p className="text-muted-foreground">Transaction details</p>
             </div>
@@ -292,7 +295,7 @@ const ViewTransaction: React.FC = () => {
               Payment Details
             </CardTitle>
             <div className="flex items-center gap-2">
-              {(tx.transactionStatus === "PARTIALLY_PAID" || tx.transactionStatus === "PENDING") && (
+              {(tx.transactionStatus === "DEPOSIT" || tx.transactionStatus === "PENDING") && (
                 <Button
                   size="sm"
                   className="h-8"
@@ -313,7 +316,7 @@ const ViewTransaction: React.FC = () => {
                   Mark Complete
                 </Button>
               )}
-              {(tx.transactionStatus === "PAID" || tx.transactionStatus === "PARTIALLY_PAID" || tx.transactionStatus === "PENDING") && (
+              {(tx.transactionStatus === "PAID" || tx.transactionStatus === "DEPOSIT" || tx.transactionStatus === "PENDING") && (
                 <Button
                   size="sm"
                   variant="destructive"

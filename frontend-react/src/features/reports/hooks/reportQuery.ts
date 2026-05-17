@@ -1,5 +1,5 @@
 import { queryOptions, useQuery, keepPreviousData } from "@tanstack/react-query";
-import { fetchReportData, fetchPatientGrowthTrend, fetchCategoryBreakdown, fetchInventoryValueTrend, fetchLowStockProducts, fetchOverstockedProducts, fetchOutOfStockProducts } from "@/features/reports/services/reportApi";
+import { fetchReportData, fetchPatientGrowthTrend, fetchCategoryBreakdown, fetchInventoryValueTrend, fetchLowStockProducts, fetchOverstockedProducts, fetchOutOfStockProducts, fetchTransactionMonthlyTrend } from "@/features/reports/services/reportApi";
 
 function createReportDataQueryOptions(
   reportType: string,
@@ -69,4 +69,12 @@ function useOutOfStockProducts(page: number, size: number) {
   });
 }
 
-export { createReportDataQueryOptions, useReportData, usePatientGrowthTrend, useCategoryBreakdown, useInventoryValueTrend, useLowStockProducts, useOverstockedProducts, useOutOfStockProducts };
+function useTransactionMonthlyTrend() {
+  return useQuery({
+    queryKey: ["transactionMonthlyTrend"],
+    queryFn: fetchTransactionMonthlyTrend,
+    staleTime: 60_000,
+  });
+}
+
+export { createReportDataQueryOptions, useReportData, usePatientGrowthTrend, useCategoryBreakdown, useInventoryValueTrend, useLowStockProducts, useOverstockedProducts, useOutOfStockProducts, useTransactionMonthlyTrend };

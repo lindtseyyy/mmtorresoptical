@@ -79,7 +79,7 @@ const ReceiptDialog: React.FC<ReceiptDialogProps> = ({ receipt, onClose }) => {
             <span className="text-muted-foreground">Status</span>
             <span className={`text-[10px] font-bold px-2 py-0.5 rounded ${
               receipt.transactionStatus === "PAID" ? "bg-green-100 text-green-700 dark:bg-green-950 dark:text-green-300" :
-              receipt.transactionStatus === "PARTIALLY_PAID" ? "bg-amber-100 text-amber-700 dark:bg-amber-950 dark:text-amber-300" :
+              receipt.transactionStatus === "DEPOSIT" ? "bg-amber-100 text-amber-700 dark:bg-amber-950 dark:text-amber-300" :
               receipt.transactionStatus === "PENDING" ? "bg-yellow-100 text-yellow-700 dark:bg-yellow-950 dark:text-yellow-300" :
               "bg-blue-100 text-blue-700 dark:bg-blue-950 dark:text-blue-300"
             }`}>{receipt.transactionStatus.replace(/_/g, " ")}</span>

@@ -1,4 +1,5 @@
-import { useState, useEffect } from "react";
+import { useEffect } from "react";
+import { useSessionState } from "@/shared/hooks/useSessionState";
 import { Link } from "react-router-dom";
 import { Eye, ChevronLeft, ChevronRight } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/shared/components/ui/card";
@@ -26,14 +27,14 @@ interface VoidedRefundedLogProps {
 }
 
 const refundedAmount = (entry: TransactionEntry): number => {
-  if (entry.status === "PARTIALLY_REFUNDED" || entry.status === "FULLY_REFUNDED") {
+  if (entry.refundStatus === "ADJUSTED" || entry.refundStatus === "RETURNED") {
     return entry.items.reduce((sum, item) => sum + (item.refundAmount ?? 0), 0);
   }
   return entry.totalAmount;
 };
 
 const VoidedRefundedLog: React.FC<VoidedRefundedLogProps> = ({ entries }) => {
-  const [page, setPage] = useState(0);
+  const [page, setPage] = useSessionState("reports:voidedRefundedPage", 0);
   const totalPages = Math.max(1, Math.ceil(entries.length / PAGE_SIZE));
   const paginated = entries.slice(page * PAGE_SIZE, (page + 1) * PAGE_SIZE);
 

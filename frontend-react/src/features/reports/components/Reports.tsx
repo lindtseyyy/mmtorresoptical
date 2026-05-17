@@ -1,4 +1,5 @@
 import { useState } from "react";
+import { useSessionState } from "@/shared/hooks/useSessionState";
 import {
   FileText,
   Download,
@@ -7,12 +8,9 @@ import {
 import { toast } from "sonner";
 import SegmentedControl from "@/shared/components/ui/segmented-control";
 import { Button } from "@/shared/components/ui/button";
-import { Card, CardContent, CardHeader, CardTitle } from "@/shared/components/ui/card";
-import { Input } from "@/shared/components/ui/input";
-import { useQuery } from "@tanstack/react-query";
+import { Card, CardContent } from "@/shared/components/ui/card";
 import { useReportData, usePatientGrowthTrend, useLowStockProducts, useOverstockedProducts, useOutOfStockProducts } from "@/features/reports/hooks/reportQuery";
 import { downloadPdfReport, downloadExcelReport } from "@/features/reports/services/reportApi";
-import { createTransactionMetricsQueryOptions } from "@/features/sales/hooks/transactionQuery";
 import InventoryValueChart from "@/features/reports/components/inventory/InventoryValueChart";
 import CategoryBreakdownChart from "@/features/reports/components/inventory/CategoryBreakdownChart";
 import TopSellingProductsTable from "@/features/reports/components/inventory/TopSellingProductsTable";
@@ -27,9 +25,6 @@ import type {
   TransactionHierarchicalReportDataset,
 } from "@/features/reports/types";
 
-const MIN_DATE_LOCAL = "2020-01-01";
-const MAX_DATE_LOCAL = "2099-12-31";
-
 // ── Report type options ───────────────────────────────────────────────
 
 const REPORT_TYPE_OPTIONS = [
@@ -41,9 +36,15 @@ const REPORT_TYPE_OPTIONS = [
 // ── Component ─────────────────────────────────────────────────────────
 
 const Reports: React.FC = () => {
-  const [reportType, setReportType] = useState("INVENTORY_ANALYTICS");
-  const [minDate, setMinDate] = useState("");
-  const [maxDate, setMaxDate] = useState("");
+  const [reportType, setReportType] = useState(() => {
+    const stored = localStorage.getItem("reports:lastReportType");
+    if (stored && REPORT_TYPE_OPTIONS.some((opt) => opt.value === stored)) {
+      return stored;
+    }
+    return "INVENTORY_ANALYTICS";
+  });
+  const [minDate, setMinDate] = useSessionState("reports:minDate", "");
+  const [maxDate, setMaxDate] = useSessionState("reports:maxDate", "");
   const [exportingPdf, setExportingPdf] = useState(false);
   const [exportingExcel, setExportingExcel] = useState(false);
   const [lowStockPage, setLowStockPage] = useState(0);
@@ -77,11 +78,6 @@ const Reports: React.FC = () => {
     data: outOfStockData,
     isLoading: outOfStockLoading,
   } = useOutOfStockProducts(outOfStockPage, PAGE_SIZE);
-
-  const { data: transactionMetrics } = useQuery({
-    ...createTransactionMetricsQueryOptions(),
-    enabled: reportType === "TRANSACTIONS",
-  });
 
   const { data: growthTrend } = usePatientGrowthTrend();
 
@@ -199,7 +195,6 @@ const Reports: React.FC = () => {
         return (
           <TransactionReport
             report={data as TransactionHierarchicalReportDataset}
-            transactionMetrics={transactionMetrics}
             minDate={minDate}
             maxDate={maxDate}
             onMinDateChange={setMinDate}
@@ -238,6 +233,7 @@ const Reports: React.FC = () => {
         value={reportType}
         onChange={(value) => {
           setReportType(value);
+          localStorage.setItem("reports:lastReportType", value);
           if (value !== "TRANSACTIONS") {
             setMinDate("");
             setMaxDate("");

@@ -115,6 +115,7 @@ export interface TransactionEntry {
   amountPaid: number;
   balanceDue: number;
   status: string;
+  refundStatus: string;
   customerName: string | null;
   cashierName: string;
   voidReason: string | null;
@@ -144,6 +145,14 @@ export interface CategoryBreakdownDTO {
 export interface InventoryValueTrendPoint {
   month: string;
   value: number;
+}
+
+// ── Transaction monthly trend ────────────────────────────────────────
+
+export interface TransactionMonthlyTrendPoint {
+  month: string;
+  transactionCount: number;
+  netRevenue: number;
 }
 
 // ── Union type for report data ────────────────────────────────────────

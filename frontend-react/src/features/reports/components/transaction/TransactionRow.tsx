@@ -46,6 +46,9 @@ const TransactionRow: React.FC<TransactionRowProps> = ({ entry }) => {
         </span>
         <span className="flex-1 font-medium">{entry.customerName || ""}</span>
         <StatusBadge status={entry.status} className="shrink-0" />
+        {entry.refundStatus && entry.refundStatus !== "NONE" && (
+          <StatusBadge status={entry.refundStatus} className="shrink-0" />
+        )}
         <span className="min-w-[100px] text-right font-medium">
           {currency(entry.totalAmount)}
         </span>

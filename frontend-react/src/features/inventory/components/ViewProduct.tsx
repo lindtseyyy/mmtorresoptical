@@ -6,6 +6,7 @@ import { Button } from "@/shared/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/shared/components/ui/card";
 import { MetricCard } from "@/shared/components/MetricCard";
 import { Badge } from "@/shared/components/ui/badge";
+import StatusBadge from "@/shared/components/ui/StatusBadge";
 import { toast } from "sonner";
 import {
   fetchProduct,
@@ -290,19 +291,10 @@ const ViewProduct: React.FC = () => {
                         <span className="font-medium">
                           {tx.referenceNumber || tx.transactionId.substring(0, 8)}
                         </span>
-                        <Badge
-                          className={
-                            tx.transactionStatus === "COMPLETED"
-                              ? "bg-green-700 text-white"
-                              : tx.transactionStatus === "VOIDED"
-                                ? "bg-red-700 text-white"
-                                : tx.transactionStatus === "PARTIALLY_REFUNDED"
-                                  ? "bg-amber-700 text-white"
-                                  : "bg-gray-600 text-white"
-                          }
-                        >
-                          {tx.transactionStatus.replace(/_/g, " ")}
-                        </Badge>
+                        <StatusBadge status={tx.transactionStatus} />
+                        {tx.refundStatus !== "NONE" && (
+                          <StatusBadge status={tx.refundStatus} />
+                        )}
                       </div>
                       <div className="flex items-center gap-4 text-sm text-muted-foreground">
                         <span>{formatDateTime(tx.transactionDate)}</span>

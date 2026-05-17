@@ -1,4 +1,5 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
+import { useSessionState } from "@/shared/hooks/useSessionState";
 import { useQuery, useMutation, useQueryClient, keepPreviousData } from "@tanstack/react-query";
 import { useNavigate } from "react-router-dom";
 import { toast } from "sonner";
@@ -62,14 +63,14 @@ const PAGE_SIZE = 10;
 
 const ManageTransactions: React.FC = () => {
   const navigate = useNavigate();
-  const [searchQuery, setSearchQuery] = useState("");
+  const [searchQuery, setSearchQuery] = useSessionState("transactions:searchQuery", "");
   const [debouncedSearchQuery, setDebouncedSearchQuery] = useState(searchQuery);
-  const [statusFilter, setStatusFilter] = useState("all");
-  const [page, setPage] = useState(0);
-  const [sortBy, setSortBy] = useState("transactionDate");
-  const [sortOrder, setSortOrder] = useState<"asc" | "desc">("desc");
-  const [dateFrom, setDateFrom] = useState("");
-  const [dateTo, setDateTo] = useState("");
+  const [statusFilter, setStatusFilter] = useSessionState("transactions:statusFilter", "all");
+  const [page, setPage] = useSessionState("transactions:page", 0);
+  const [sortBy, setSortBy] = useSessionState("transactions:sortBy", "transactionDate");
+  const [sortOrder, setSortOrder] = useSessionState<"asc" | "desc">("transactions:sortOrder", "desc");
+  const [dateFrom, setDateFrom] = useSessionState("transactions:dateFrom", "");
+  const [dateTo, setDateTo] = useSessionState("transactions:dateTo", "");
 
   const today = new Date().toISOString().split("T")[0];
 
@@ -129,7 +130,12 @@ const ManageTransactions: React.FC = () => {
   const totalElements = pageData?.totalElements ?? 0;
   const totalPages = pageData?.totalPages ?? 0;
 
+  const mountedRef = useRef(false);
   useEffect(() => {
+    if (!mountedRef.current) {
+      mountedRef.current = true;
+      return;
+    }
     setPage(0);
   }, [debouncedSearchQuery, statusFilter, sortBy, sortOrder, dateFrom, dateTo]);
 
@@ -153,7 +159,7 @@ const ManageTransactions: React.FC = () => {
       {/* Operational Metrics */}
       <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
         <MetricCard icon={TrendingUp} label="Average Transaction Value" value={metrics != null ? formatCurrency(metrics.averageTransactionValue) : "—"} color="amber" />
-        <MetricCard icon={Clock} label="Outstanding Balances — Partially Paid" value={metrics != null ? formatCurrency(metrics.totalAccountsReceivable) : "—"} color="orange" />
+        <MetricCard icon={Clock} label="Outstanding Balances — Deposit" value={metrics != null ? formatCurrency(metrics.totalAccountsReceivable) : "—"} color="orange" />
         <MetricCard icon={PackageOpen} label="Orders Ready for Pickup — Paid, Not Completed" value={metrics?.awaitingPickupCount ?? "—"} color="violet" />
       </div>
 
@@ -240,12 +246,10 @@ const ManageTransactions: React.FC = () => {
                   <SelectContent>
                     <SelectItem value="all">All Statuses</SelectItem>
                     <SelectItem value="PENDING">Pending</SelectItem>
-                    <SelectItem value="PARTIALLY_PAID">Partially Paid</SelectItem>
+                    <SelectItem value="DEPOSIT">Deposit</SelectItem>
                     <SelectItem value="PAID">Paid</SelectItem>
                     <SelectItem value="COMPLETED">Completed</SelectItem>
                     <SelectItem value="VOIDED">Voided</SelectItem>
-                    <SelectItem value="PARTIALLY_REFUNDED">Partially Refunded</SelectItem>
-                    <SelectItem value="FULLY_REFUNDED">Fully Refunded</SelectItem>
                   </SelectContent>
                 </Select>
               </div>
@@ -263,10 +267,11 @@ const ManageTransactions: React.FC = () => {
                   <thead>
                     <tr className="border-b text-left text-muted-foreground">
                       <th className="w-[18%] py-3 pr-4 font-medium">Transaction Number</th>
-                      <th className="w-[14%] py-3 pr-4 text-center font-medium">Total Amount</th>
-                      <th className="w-[15%] py-3 pr-4 text-center font-medium">Status</th>
-                      <th className="w-[17%] py-3 pr-4 text-center font-medium">Transaction Date</th>
-                      <th className="w-[16%] py-3 pr-4 font-medium">Processed By</th>
+                      <th className="w-[12%] py-3 pr-4 text-center font-medium">Total Amount</th>
+                      <th className="w-[11%] py-3 pr-4 text-center font-medium">Payment</th>
+                      <th className="w-[10%] py-3 pr-4 text-center font-medium">Refund</th>
+                      <th className="w-[13%] py-3 pr-4 text-center font-medium">Transaction Date</th>
+                      <th className="w-[14%] py-3 pr-4 font-medium">Processed By</th>
                       <th className="w-[8%] py-3 text-center font-medium">Action</th>
                     </tr>
                   </thead>
@@ -288,6 +293,13 @@ const ManageTransactions: React.FC = () => {
                         </td>
                         <td className="py-3 pr-4 text-center">
                           <StatusBadge status={tx.transactionStatus} />
+                        </td>
+                        <td className="py-3 pr-4 text-center">
+                          {tx.refundStatus !== "NONE" ? (
+                            <StatusBadge status={tx.refundStatus} />
+                          ) : (
+                            <span className="text-muted-foreground">—</span>
+                          )}
                         </td>
                         <td className="py-3 pr-4 text-center text-muted-foreground">
                           <span className="block truncate">{formatDateTime(tx.transactionDate)}</span>
