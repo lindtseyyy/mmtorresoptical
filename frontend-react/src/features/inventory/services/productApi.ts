@@ -78,4 +78,14 @@ const fetchProductMetrics = async (productId: string): Promise<ProductMetrics> =
   return data;
 };
 
-export { fetchProducts, fetchProduct, updateProduct, addProduct, archiveProduct, restoreProduct, fetchInventorySummary, fetchProductMetrics };
+interface StockAdjustmentPayload {
+  adjustmentType: string;
+  amount: number;
+  reason: string;
+}
+
+const adjustStock = async (id: string, data: StockAdjustmentPayload) => {
+  return await api.post(`/products/${id}/adjust-stock`, data);
+};
+
+export { fetchProducts, fetchProduct, updateProduct, addProduct, archiveProduct, restoreProduct, adjustStock, fetchInventorySummary, fetchProductMetrics };

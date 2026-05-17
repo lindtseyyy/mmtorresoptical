@@ -1,7 +1,8 @@
 import { useState } from "react";
 import { useParams, Link, useNavigate } from "react-router-dom";
 import { useQuery, keepPreviousData } from "@tanstack/react-query";
-import { ArrowLeft, ChevronLeft, ChevronRight, Package, ShoppingCart, Banknote, Calendar, Hash, TrendingUp } from "lucide-react";
+import { ArrowLeft, ChevronLeft, ChevronRight, Package, ShoppingCart, Banknote, Calendar, Hash, TrendingUp, Layers } from "lucide-react";
+import StockAdjustmentModal from "./StockAdjustmentModal";
 import { Button } from "@/shared/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/shared/components/ui/card";
 import { MetricCard } from "@/shared/components/MetricCard";
@@ -52,6 +53,8 @@ const ViewProduct: React.FC = () => {
     queryFn: () => fetchProductMetrics(productId),
     enabled: !!productId,
   });
+
+  const [adjustModalOpen, setAdjustModalOpen] = useState(false);
 
   const [txPage, setTxPage] = useState(0);
   const { data: txData, isFetching: txFetching } = useQuery({
@@ -201,13 +204,25 @@ const ViewProduct: React.FC = () => {
               <CardTitle>Overview</CardTitle>
               <CardDescription>Item information</CardDescription>
             </div>
-            <Button
-              variant="default"
-              size="sm"
-              onClick={() => navigate(`/inventory/edit/${productId}`)}
-            >
-              Edit Product
-            </Button>
+            <div className="flex items-center gap-2">
+              {!isService && (
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={() => setAdjustModalOpen(true)}
+                >
+                  <Layers className="mr-1.5 h-3.5 w-3.5" />
+                  Adjust Stock
+                </Button>
+              )}
+              <Button
+                variant="default"
+                size="sm"
+                onClick={() => navigate(`/inventory/edit/${productId}`)}
+              >
+                Edit Product
+              </Button>
+            </div>
           </div>
         </CardHeader>
         <CardContent>
@@ -341,6 +356,18 @@ const ViewProduct: React.FC = () => {
           )}
         </CardContent>
       </Card>
+
+      {!isService && (
+        <StockAdjustmentModal
+          open={adjustModalOpen}
+          onOpenChange={setAdjustModalOpen}
+          product={{
+            productId: product.productId,
+            productName: product.productName,
+            quantity: product.quantity,
+          }}
+        />
+      )}
     </div>
   );
 };

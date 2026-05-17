@@ -46,6 +46,7 @@ const actionBadgeClass: Record<string, string> = {
   BACKUP: "bg-sky-600 hover:bg-sky-600 text-white",
   VOID: "bg-rose-600 hover:bg-rose-600 text-white",
   REFUND: "bg-orange-600 hover:bg-orange-600 text-white",
+  ADJUSTMENT: "bg-violet-600 hover:bg-violet-600 text-white",
 };
 
 const AuditLogs: React.FC = () => {
@@ -174,6 +175,7 @@ const AuditLogs: React.FC = () => {
                     <SelectItem value="BACKUP">Backup</SelectItem>
                     <SelectItem value="VOID">Void</SelectItem>
                     <SelectItem value="REFUND">Refund</SelectItem>
+                    <SelectItem value="ADJUSTMENT">Adjustment</SelectItem>
                   </SelectContent>
                 </Select>
               </div>

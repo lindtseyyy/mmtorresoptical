@@ -1,5 +1,5 @@
 import { queryOptions } from "@tanstack/react-query";
-import { fetchProducts, fetchProduct, addProduct, updateProduct, archiveProduct, restoreProduct, fetchInventorySummary } from "@/features/inventory/services/productApi";
+import { fetchProducts, fetchProduct, addProduct, updateProduct, archiveProduct, restoreProduct, adjustStock, fetchInventorySummary } from "@/features/inventory/services/productApi";
 import { toast } from "sonner";
 import type { NavigateFunction } from "react-router";
 import type { ProductFormData } from "@/features/inventory/types";
@@ -101,6 +101,25 @@ function createRestoreProductMutationOptions(queryClient: any) {
   }
 }
 
+function createAdjustStockMutationOptions(queryClient: any) {
+  return {
+    mutationFn: ({ id, data }: { id: string; data: { adjustmentType: string; amount: number; reason: string } }) =>
+      adjustStock(id, data),
+    onSuccess: (_data: any, variables: { id: string }) => {
+      queryClient.invalidateQueries({ queryKey: ["product", variables.id] });
+      queryClient.invalidateQueries({ queryKey: ["products"] });
+      queryClient.invalidateQueries({ queryKey: ["inventory-summary"] });
+      toast.success("Stock Adjusted", {
+        description: "The stock quantity has been updated successfully.",
+      });
+    },
+    onError: (error: any) => {
+      const message = error?.response?.data?.message || "Failed to adjust stock. Please try again.";
+      toast.error("Error", { description: message });
+    },
+  };
+}
+
 function createInventorySummaryQueryOptions() {
     return queryOptions({
     queryKey: ["inventory-summary"],
@@ -109,4 +128,4 @@ function createInventorySummaryQueryOptions() {
   })
 }
 
-export {createProductsListQueryOptions, createEditProductQueryOptions, createAddProductMutationOptions, createEditProductMutationOptions, createArchiveProductMutationOptions, createRestoreProductMutationOptions, createInventorySummaryQueryOptions}
+export {createProductsListQueryOptions, createEditProductQueryOptions, createAddProductMutationOptions, createEditProductMutationOptions, createArchiveProductMutationOptions, createRestoreProductMutationOptions, createAdjustStockMutationOptions, createInventorySummaryQueryOptions}
