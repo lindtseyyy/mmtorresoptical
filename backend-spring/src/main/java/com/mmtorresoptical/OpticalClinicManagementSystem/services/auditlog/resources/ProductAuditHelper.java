@@ -2,6 +2,8 @@ package com.mmtorresoptical.OpticalClinicManagementSystem.services.auditlog.reso
 
 import com.mmtorresoptical.OpticalClinicManagementSystem.dto.audit.base.update.AuditUpdateEvent;
 import com.mmtorresoptical.OpticalClinicManagementSystem.dto.audit.product.ProductAuditDTO;
+import com.mmtorresoptical.OpticalClinicManagementSystem.dto.audit.product.StockAdjustmentAuditDTO;
+import com.mmtorresoptical.OpticalClinicManagementSystem.dto.product.StockAdjustmentRequestDTO;
 import com.mmtorresoptical.OpticalClinicManagementSystem.enums.ActionType;
 import com.mmtorresoptical.OpticalClinicManagementSystem.enums.ResourceType;
 import com.mmtorresoptical.OpticalClinicManagementSystem.mapper.ProductMapper;
@@ -104,4 +106,29 @@ public class ProductAuditHelper implements BatchAuditLogHelper<Product> {
         );
     }
 
+    public void logAdjustment(Product beforeProduct, Product afterProduct, StockAdjustmentRequestDTO request) {
+
+        StockAdjustmentAuditDTO auditDTO = StockAdjustmentAuditDTO.builder()
+                .productId(beforeProduct.getProductId())
+                .productName(beforeProduct.getProductName())
+                .adjustmentType(request.getAdjustmentType())
+                .amount(request.getAmount())
+                .reason(request.getReason())
+                .quantityBefore(beforeProduct.getQuantity())
+                .quantityAfter(afterProduct.getQuantity())
+                .build();
+
+        String detailsJson = jsonService.toJson(auditDTO);
+
+        String sign = "ADD_STOCK".equals(request.getAdjustmentType()) ? "+" : "-";
+        String description = "Stock adjusted: " + sign + request.getAmount()
+                + " — " + request.getReason();
+
+        auditLogService.log(ActionType.ADJUSTMENT,
+                ResourceType.PRODUCT,
+                beforeProduct.getProductId(),
+                description,
+                detailsJson
+        );
+    }
 }

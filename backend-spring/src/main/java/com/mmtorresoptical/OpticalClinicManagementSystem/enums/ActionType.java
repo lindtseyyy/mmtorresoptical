@@ -11,5 +11,6 @@ public enum ActionType {
     VOID,
     REFUND,
     EXPORT,
-    BACKUP
+    BACKUP,
+    ADJUSTMENT
 }

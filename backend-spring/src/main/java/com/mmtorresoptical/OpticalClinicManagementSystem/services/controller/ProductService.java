@@ -3,7 +3,9 @@ package com.mmtorresoptical.OpticalClinicManagementSystem.services.controller;
 import com.mmtorresoptical.OpticalClinicManagementSystem.dto.product.CreateProductRequestDTO;
 import com.mmtorresoptical.OpticalClinicManagementSystem.dto.product.ProductDetailsDTO;
 import com.mmtorresoptical.OpticalClinicManagementSystem.dto.product.ProductResponseDTO;
+import com.mmtorresoptical.OpticalClinicManagementSystem.dto.product.StockAdjustmentRequestDTO;
 import com.mmtorresoptical.OpticalClinicManagementSystem.dto.product.UpdateProductRequestDTO;
+import com.mmtorresoptical.OpticalClinicManagementSystem.exception.custom.InsufficientStockException;
 import com.mmtorresoptical.OpticalClinicManagementSystem.exception.custom.ResourceNotFoundException;
 import com.mmtorresoptical.OpticalClinicManagementSystem.mapper.ProductMapper;
 import com.mmtorresoptical.OpticalClinicManagementSystem.model.Product;
@@ -192,6 +194,41 @@ public class ProductService {
 
         // Audit Logging
         productAuditHelper.logArchive(retrievedProduct);
+    }
+
+    @Transactional
+    public ProductDetailsDTO adjustStock(UUID id, StockAdjustmentRequestDTO request) {
+        Product product = productRepository.findById(id)
+                .orElseThrow(() -> new ResourceNotFoundException("Product not found with id: " + id));
+
+        if (product.getProductType() == com.mmtorresoptical.OpticalClinicManagementSystem.enums.ProductType.SERVICE) {
+            throw new IllegalStateException("Cannot adjust stock for service products");
+        }
+
+        Product beforeProduct = new Product();
+        BeanUtils.copyProperties(product, beforeProduct);
+
+        String adjustmentType = request.getAdjustmentType();
+        int amount = request.getAmount();
+
+        if ("ADD_STOCK".equals(adjustmentType)) {
+            product.setQuantity(product.getQuantity() + amount);
+        } else if ("REMOVE_STOCK".equals(adjustmentType)) {
+            if (product.getQuantity() < amount) {
+                throw new InsufficientStockException(
+                        "Insufficient stock. Current quantity: " + product.getQuantity()
+                                + ", requested removal: " + amount);
+            }
+            product.setQuantity(product.getQuantity() - amount);
+        } else {
+            throw new IllegalArgumentException("Invalid adjustment type: " + adjustmentType);
+        }
+
+        Product updatedProduct = productRepository.save(product);
+
+        productAuditHelper.logAdjustment(beforeProduct, updatedProduct, request);
+
+        return productMapper.entityToDetailsDTO(updatedProduct);
     }
 
     public void restoreProduct(UUID id) {

@@ -3,6 +3,7 @@ package com.mmtorresoptical.OpticalClinicManagementSystem.controller;
 import com.mmtorresoptical.OpticalClinicManagementSystem.dto.product.CreateProductRequestDTO;
 import com.mmtorresoptical.OpticalClinicManagementSystem.dto.product.ProductDetailsDTO;
 import com.mmtorresoptical.OpticalClinicManagementSystem.dto.product.ProductResponseDTO;
+import com.mmtorresoptical.OpticalClinicManagementSystem.dto.product.StockAdjustmentRequestDTO;
 import com.mmtorresoptical.OpticalClinicManagementSystem.dto.product.UpdateProductRequestDTO;
 import com.mmtorresoptical.OpticalClinicManagementSystem.dto.transaction.TransactionListDTO;
 import com.mmtorresoptical.OpticalClinicManagementSystem.repository.ProductRepository;
@@ -141,6 +142,19 @@ public class ProductController {
 
         // 4. Return No Content (204)
         return ResponseEntity.noContent().build();
+    }
+
+    /**
+     * Adjust stock for a product (add or remove)
+     */
+    @PreAuthorize("hasRole('ADMIN')")
+    @PostMapping("/{id}/adjust-stock")
+    public ResponseEntity<ProductDetailsDTO> adjustStock(
+            @PathVariable UUID id,
+            @Valid @RequestBody StockAdjustmentRequestDTO request) {
+
+        ProductDetailsDTO result = productService.adjustStock(id, request);
+        return ResponseEntity.ok(result);
     }
 
     /**
