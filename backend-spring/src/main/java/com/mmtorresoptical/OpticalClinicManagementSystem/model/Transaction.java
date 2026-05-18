@@ -50,6 +50,9 @@ public class Transaction {
     @Column(name = "amount_paid", precision = 10, scale = 2)
     private BigDecimal amountPaid = BigDecimal.ZERO;
 
+    @Column(name = "total_refunded_cash", precision = 10, scale = 2)
+    private BigDecimal totalRefundedCash = BigDecimal.ZERO;
+
     @Column(name = "balance_due", precision = 10, scale = 2,
             insertable = false, updatable = false)
     private BigDecimal balanceDue;

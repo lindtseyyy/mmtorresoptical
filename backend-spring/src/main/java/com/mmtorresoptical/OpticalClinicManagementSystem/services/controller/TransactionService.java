@@ -194,7 +194,11 @@ public class TransactionService {
             throw new IllegalStateException("Cannot add payment to a fully refunded transaction");
         }
 
-        BigDecimal remaining = transaction.getTotalAmount().subtract(transaction.getAmountPaid());
+        BigDecimal refundedCash = transaction.getTotalRefundedCash() != null
+                ? transaction.getTotalRefundedCash() : BigDecimal.ZERO;
+        BigDecimal remaining = transaction.getTotalAmount()
+                .subtract(transaction.getAmountPaid())
+                .add(refundedCash);
         if (request.getAmount().compareTo(remaining) > 0) {
             throw new BadRequestException("Payment amount exceeds remaining balance of " + remaining);
         }
@@ -562,8 +566,10 @@ public class TransactionService {
             }
         }
 
-        // amountPaid already reflects previous cash returns, so it IS the max refundable
-        BigDecimal maxRefundable = transaction.getAmountPaid();
+        // Max refundable = amountPaid minus cash already returned via prior refunds
+        BigDecimal previousRefundedCash = transaction.getTotalRefundedCash() != null
+                ? transaction.getTotalRefundedCash() : BigDecimal.ZERO;
+        BigDecimal maxRefundable = transaction.getAmountPaid().subtract(previousRefundedCash);
         if (maxRefundable.compareTo(BigDecimal.ZERO) <= 0) {
             throw new IllegalArgumentException("Cannot refund: no paid amount available to refund.");
         }
@@ -593,16 +599,21 @@ public class TransactionService {
         if (amountPaid.compareTo(newOrderTotal) > 0) {
             // Cash back: clinic has collected more cash than the revised order total
             cashToReturn = amountPaid.subtract(newOrderTotal);
-            transaction.setAmountPaid(newOrderTotal);
-            if (previousStatus == TransactionStatus.COMPLETED) {
+            // Track cumulative cash returned; amountPaid stays immutable
+            BigDecimal newTotalRefundedCash = previousRefundedCash.add(cashToReturn);
+            transaction.setTotalRefundedCash(newTotalRefundedCash);
+            BigDecimal effectivePaid = amountPaid.subtract(newTotalRefundedCash);
+            if (effectivePaid.compareTo(transaction.getTotalAmount()) >= 0
+                    && previousStatus == TransactionStatus.COMPLETED) {
                 transaction.setTransactionStatus(TransactionStatus.COMPLETED);
             } else {
-                transaction.setTransactionStatus(TransactionStatus.PAID);
+                transaction.setTransactionStatus(computeStatus(newOrderTotal, effectivePaid));
             }
         } else {
             // Balance reduction: deposit covers less than or exactly the new total
             cashToReturn = BigDecimal.ZERO;
-            transaction.setTransactionStatus(computeStatus(newOrderTotal, amountPaid));
+            BigDecimal effectivePaid = amountPaid.subtract(previousRefundedCash);
+            transaction.setTransactionStatus(computeStatus(newOrderTotal, effectivePaid));
         }
 
         // When no cash leaves the drawer, this is a balance adjustment, not a cash refund
@@ -702,6 +713,7 @@ public class TransactionService {
         auditData.put("afterTotalAmount", newOrderTotal);
         auditData.put("beforeAmountPaid", amountPaid);
         auditData.put("afterAmountPaid", transaction.getAmountPaid());
+        auditData.put("totalRefundedCash", transaction.getTotalRefundedCash());
         auditData.put("cashReturnedToPatient", cashToReturn);
         auditData.put("beforeRefundStatus", previousRefundStatus != null
                 ? previousRefundStatus.name() : RefundStatus.NONE.name());
