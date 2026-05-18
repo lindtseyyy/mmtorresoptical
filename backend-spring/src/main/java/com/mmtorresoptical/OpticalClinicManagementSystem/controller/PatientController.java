@@ -5,6 +5,7 @@ import com.mmtorresoptical.OpticalClinicManagementSystem.dto.metrics.PatientProf
 import com.mmtorresoptical.OpticalClinicManagementSystem.dto.patient.PatientDetailsDTO;
 import com.mmtorresoptical.OpticalClinicManagementSystem.dto.patient.PatientRequestDTO;
 import com.mmtorresoptical.OpticalClinicManagementSystem.dto.patient.PatientResponseDTO;
+import com.mmtorresoptical.OpticalClinicManagementSystem.dto.patient.PatientSearchResultDTO;
 import com.mmtorresoptical.OpticalClinicManagementSystem.services.controller.PatientService;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
@@ -136,6 +137,26 @@ public class PatientController {
         PatientResponseDTO response = patientService.updatePatient(id, patientRequest);
 
         return ResponseEntity.ok(response);
+    }
+
+    /**
+     * Searches patients by keyword (name, contact number, or UUID).
+     * Accessible to both ADMIN and STAFF for POS patient association.
+     *
+     * @param keyword search term (name, contact number, or patient ID)
+     * @param page page number (default 0)
+     * @param size page size (default 20)
+     * @return paginated list of PatientSearchResultDTO
+     */
+    @PreAuthorize("hasAnyRole('ADMIN', 'STAFF')")
+    @GetMapping("/search")
+    public ResponseEntity<Page<PatientSearchResultDTO>> searchPatients(
+            @RequestParam(required = false) String keyword,
+            @RequestParam(defaultValue = "0") int page,
+            @RequestParam(defaultValue = "20") int size) {
+
+        Page<PatientSearchResultDTO> results = patientService.searchPatients(keyword, page, size);
+        return ResponseEntity.ok(results);
     }
 
     /**

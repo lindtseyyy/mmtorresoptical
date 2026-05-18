@@ -5,6 +5,7 @@ import com.mmtorresoptical.OpticalClinicManagementSystem.dto.metrics.PatientProf
 import com.mmtorresoptical.OpticalClinicManagementSystem.dto.patient.PatientDetailsDTO;
 import com.mmtorresoptical.OpticalClinicManagementSystem.dto.patient.PatientRequestDTO;
 import com.mmtorresoptical.OpticalClinicManagementSystem.dto.patient.PatientResponseDTO;
+import com.mmtorresoptical.OpticalClinicManagementSystem.dto.patient.PatientSearchResultDTO;
 import com.mmtorresoptical.OpticalClinicManagementSystem.enums.Gender;
 import com.mmtorresoptical.OpticalClinicManagementSystem.exception.custom.ConflictException;
 import com.mmtorresoptical.OpticalClinicManagementSystem.exception.custom.ResourceNotFoundException;
@@ -322,6 +323,29 @@ public class PatientService {
         return patientRepository.existsByEmailHash(
                 emailHash
         );
+    }
+
+    public Page<PatientSearchResultDTO> searchPatients(String keyword, int page, int size) {
+        Specification<Patient> spec = Specification.allOf();
+
+        if (keyword != null && !keyword.isBlank()) {
+            if (UUIDUtils.isUUID(keyword)) {
+                spec = spec.and(PatientSpecification.hasId(UUID.fromString(keyword)));
+            } else {
+                spec = spec.and(
+                        Specification.anyOf(
+                                PatientSpecification.nameContains(keyword),
+                                PatientSpecification.contactNumberContains(keyword)
+                        )
+                );
+            }
+        }
+
+        spec = spec.and(PatientSpecification.hasArchivedStatus("ACTIVE"));
+
+        Pageable pageable = PageRequest.of(page, size, Sort.by(Sort.Direction.ASC, "fullNameSortable"));
+        Page<Patient> patients = patientRepository.findAll(spec, pageable);
+        return patients.map(patientMapper::entityToSearchResultDTO);
     }
 
     public PatientMetricsDTO getPatientMetrics() {

@@ -29,6 +29,14 @@ public class PatientSpecification {
         };
     }
 
+    public static Specification<Patient> contactNumberContains(String keyword) {
+        return (root, query, cb) ->
+                cb.like(
+                        cb.lower(root.get("contactNumber")),
+                        "%" + keyword.toLowerCase() + "%"
+                );
+    }
+
     public static Specification<Patient> hasArchivedStatus(String status) {
         return (root, query, cb) -> {
 

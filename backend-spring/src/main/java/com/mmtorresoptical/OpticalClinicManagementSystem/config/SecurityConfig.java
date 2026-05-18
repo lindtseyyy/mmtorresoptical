@@ -77,6 +77,9 @@ public class SecurityConfig {
                         // Admin-only auth actions
                         .requestMatchers("/api/auth/admin/**").hasRole("ADMIN")
 
+                        // Admin + Staff — patient search for POS
+                        .requestMatchers("/api/admin/patients/search").hasAnyRole("ADMIN", "STAFF")
+
                         // Admin Only
                         .requestMatchers("/api/admin/**").hasRole("ADMIN")
 

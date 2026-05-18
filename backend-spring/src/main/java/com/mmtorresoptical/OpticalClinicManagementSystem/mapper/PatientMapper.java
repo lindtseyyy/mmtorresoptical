@@ -4,6 +4,7 @@ import com.mmtorresoptical.OpticalClinicManagementSystem.dto.audit.patient.Patie
 import com.mmtorresoptical.OpticalClinicManagementSystem.dto.patient.PatientDetailsDTO;
 import com.mmtorresoptical.OpticalClinicManagementSystem.dto.patient.PatientRequestDTO;
 import com.mmtorresoptical.OpticalClinicManagementSystem.dto.patient.PatientResponseDTO;
+import com.mmtorresoptical.OpticalClinicManagementSystem.dto.patient.PatientSearchResultDTO;
 import com.mmtorresoptical.OpticalClinicManagementSystem.dto.patient.PatientSummaryDTO;
 import com.mmtorresoptical.OpticalClinicManagementSystem.model.Patient;
 import org.mapstruct.*;
@@ -44,6 +45,12 @@ public interface PatientMapper {
 
     )
     PatientSummaryDTO entityToSummaryDTO(Patient patient);
+
+    @Mapping(
+            target = "fullName",
+            expression = "java(buildFullName(patient.getFirstName(), patient.getMiddleName(), patient.getLastName()))"
+    )
+    PatientSearchResultDTO entityToSearchResultDTO(Patient patient);
 
     default String buildFullName(
             String first,
