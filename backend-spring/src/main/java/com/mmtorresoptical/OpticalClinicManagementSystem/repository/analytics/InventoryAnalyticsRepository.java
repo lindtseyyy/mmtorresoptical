@@ -194,7 +194,7 @@ public interface InventoryAnalyticsRepository extends JpaRepository<Product, UUI
             ti.subtotal
             -
             COALESCE(
-                (SELECT SUM(r.refundAmount)
+                (SELECT SUM(r.itemCreditAmount)
                  FROM Refund r
                  WHERE r.transactionItem = ti),
                 0
@@ -216,7 +216,7 @@ public interface InventoryAnalyticsRepository extends JpaRepository<Product, UUI
         ti.subtotal
         -
         COALESCE(
-            (SELECT SUM(r.refundAmount)
+            (SELECT SUM(r.itemCreditAmount)
              FROM Refund r
              WHERE r.transactionItem = ti),
             0
@@ -245,7 +245,7 @@ public interface InventoryAnalyticsRepository extends JpaRepository<Product, UUI
             ti.subtotal
             -
             COALESCE(
-                (SELECT SUM(r.refundAmount)
+                (SELECT SUM(r.itemCreditAmount)
                  FROM Refund r
                  WHERE r.transactionItem = ti),
                 0
@@ -267,7 +267,7 @@ public interface InventoryAnalyticsRepository extends JpaRepository<Product, UUI
         ti.subtotal
         -
         COALESCE(
-            (SELECT SUM(r.refundAmount)
+            (SELECT SUM(r.itemCreditAmount)
              FROM Refund r
              WHERE r.transactionItem = ti),
             0
@@ -286,7 +286,7 @@ public interface InventoryAnalyticsRepository extends JpaRepository<Product, UUI
             ti.subtotal
             -
             COALESCE(
-                (SELECT SUM(r.refundAmount)
+                (SELECT SUM(r.itemCreditAmount)
                  FROM Refund r
                  WHERE r.transactionItem = ti),
                 0

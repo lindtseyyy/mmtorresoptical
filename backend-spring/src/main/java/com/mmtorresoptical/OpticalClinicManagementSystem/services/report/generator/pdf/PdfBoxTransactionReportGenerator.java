@@ -304,7 +304,7 @@ public class PdfBoxTransactionReportGenerator {
 
         state.y -= 8f;
 
-        if (entry.getRefundStatus() == RefundStatus.ADJUSTED) {
+        if (entry.getRefundStatus() == RefundStatus.PARTIAL) {
             List<TransactionItemEntry> refundedItems = new ArrayList<>();
             List<TransactionItemEntry> nonRefundedItems = new ArrayList<>();
 
@@ -333,7 +333,7 @@ public class PdfBoxTransactionReportGenerator {
                 state = writeItemsTable(document, state, refundedItems, indent, true);
             }
 
-        } else if (entry.getRefundStatus() == RefundStatus.RETURNED) {
+        } else if (entry.getRefundStatus() == RefundStatus.FULL) {
             state = ensureSpace(document, state, LINE_HEIGHT + ROW_HEIGHT * 2 + 10f);
             writeText(state.contentStream, "Refunded Items (All items refunded):",
                     indent, state.y, state.headerFont, SMALL_FONT_SIZE);

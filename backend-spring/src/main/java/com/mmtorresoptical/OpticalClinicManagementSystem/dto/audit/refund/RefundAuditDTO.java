@@ -13,7 +13,8 @@ public class RefundAuditDTO {
     private Integer refundQuantity;
     private String refundReason;
     private LocalDateTime refundedAt;
-    private BigDecimal refundAmount;
+    private BigDecimal itemCreditAmount;
+    private BigDecimal actualCashBack;
 
     private UUID refundedByUserId;
 }

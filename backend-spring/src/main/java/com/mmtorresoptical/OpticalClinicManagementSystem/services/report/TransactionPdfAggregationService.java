@@ -23,7 +23,7 @@ public class TransactionPdfAggregationService {
     private final TransactionService transactionService;
 
     private static final List<String> STATUS_ORDER = List.of(
-        "DEPOSIT", "PAID", "COMPLETED", "VOIDED"
+        "DEPOSIT", "PAID", "COMPLETED", "VOIDED", "REFUNDED"
     );
 
     public TransactionHierarchicalReportDataset buildTransactionReport(
@@ -147,8 +147,8 @@ public class TransactionPdfAggregationService {
 
         if (item.getRefunds() != null && !item.getRefunds().isEmpty()) {
             for (Refund refund : item.getRefunds()) {
-                if (refund.getRefundAmount() != null) {
-                    refundAmount = refundAmount.add(refund.getRefundAmount());
+                if (refund.getItemCreditAmount() != null) {
+                    refundAmount = refundAmount.add(refund.getItemCreditAmount());
                 }
                 if (refundReason == null && refund.getRefundReason() != null) {
                     refundReason = refund.getRefundReason();
@@ -195,8 +195,8 @@ public class TransactionPdfAggregationService {
                 }
             }
 
-            if (entry.getRefundStatus() == RefundStatus.ADJUSTED
-                    || entry.getRefundStatus() == RefundStatus.RETURNED) {
+            if (entry.getRefundStatus() == RefundStatus.PARTIAL
+                    || entry.getRefundStatus() == RefundStatus.FULL) {
                 refundedCount++;
                 refundedAmount = refundedAmount.add(amount);
             }

@@ -3,6 +3,7 @@ package com.mmtorresoptical.OpticalClinicManagementSystem.services.controller;
 import com.mmtorresoptical.OpticalClinicManagementSystem.dto.metrics.TransactionMetricsDTO;
 import com.mmtorresoptical.OpticalClinicManagementSystem.dto.payment.PaymentRequestDTO;
 import com.mmtorresoptical.OpticalClinicManagementSystem.dto.payment.PaymentResponseDTO;
+import com.mmtorresoptical.OpticalClinicManagementSystem.dto.refund.ItemRefundResponseDTO;
 import com.mmtorresoptical.OpticalClinicManagementSystem.dto.refund.RefundTransactionRequestDTO;
 import com.mmtorresoptical.OpticalClinicManagementSystem.dto.transaction.*;
 import com.mmtorresoptical.OpticalClinicManagementSystem.dto.refund.RefundItemDTO;
@@ -19,7 +20,9 @@ import com.mmtorresoptical.OpticalClinicManagementSystem.mapper.TransactionMappe
 import com.mmtorresoptical.OpticalClinicManagementSystem.model.*;
 import com.mmtorresoptical.OpticalClinicManagementSystem.repository.*;
 import com.mmtorresoptical.OpticalClinicManagementSystem.services.AuthenticatedUserService;
+import com.mmtorresoptical.OpticalClinicManagementSystem.services.auditlog.AuditLogService;
 import com.mmtorresoptical.OpticalClinicManagementSystem.services.auditlog.resources.TransactionAuditHelper;
+import com.mmtorresoptical.OpticalClinicManagementSystem.services.helper.JSONService;
 import com.mmtorresoptical.OpticalClinicManagementSystem.specification.TransactionSpecification;
 import com.mmtorresoptical.OpticalClinicManagementSystem.utils.UUIDUtils;
 import lombok.RequiredArgsConstructor;
@@ -37,10 +40,7 @@ import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
 import java.time.temporal.ChronoUnit;
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Optional;
-import java.util.UUID;
+import java.util.*;
 import java.util.stream.Collectors;
 
 @Service
@@ -55,9 +55,12 @@ public class TransactionService {
     private final ProductRepository productRepository;
     private final TransactionItemMapper transactionItemMapper;
     private final RefundRepository refundRepository;
+    private final RefundReceiptRepository refundReceiptRepository;
     private final PaymentRepository paymentRepository;
     private final TransactionAuditHelper transactionAuditHelper;
+    private final AuditLogService auditLogService;
     private final PasswordEncoder passwordEncoder;
+    private final JSONService jsonService;
 
     @Transactional
     public TransactionResponseDTO createTransaction(TransactionRequestDTO transactionRequestDTO) {
@@ -187,7 +190,7 @@ public class TransactionService {
             throw new IllegalStateException("Cannot add payment to a voided transaction");
         }
 
-        if (transaction.getRefundStatus() == RefundStatus.RETURNED) {
+        if (transaction.getRefundStatus() == RefundStatus.FULL) {
             throw new IllegalStateException("Cannot add payment to a fully refunded transaction");
         }
 
@@ -442,11 +445,15 @@ public class TransactionService {
             throw new IllegalStateException("Transaction already voided");
         }
 
-        if (transaction.getRefundStatus() == RefundStatus.RETURNED) {
+        if (transaction.getTransactionStatus() == TransactionStatus.REFUNDED) {
             throw new IllegalStateException("Cannot void a fully refunded transaction");
         }
 
-        if (transaction.getRefundStatus() == RefundStatus.ADJUSTED) {
+        if (transaction.getRefundStatus() == RefundStatus.FULL) {
+            throw new IllegalStateException("Cannot void a fully refunded transaction");
+        }
+
+        if (transaction.getRefundStatus() == RefundStatus.PARTIAL) {
             throw new IllegalStateException("Cannot void a partially refunded transaction");
         }
 
@@ -471,199 +478,301 @@ public class TransactionService {
     }
 
     @Transactional
-    public void refundTransaction(
+    public ItemRefundResponseDTO refundTransaction(
             RefundTransactionRequestDTO request
     ) {
+        if (request.getItems() == null || request.getItems().isEmpty()) {
+            throw new BadRequestException("At least one item is required for refund.");
+        }
 
-        // Phase 1: validate, restore stock, calculate full-value refund amounts
+        User currentUser = authenticatedUserService.getCurrentUser();
+
+        // ── Phase 1: Validate all items, calculate refund amounts, sum totalRefundValue ──
         List<Refund> pendingRefunds = new ArrayList<>();
         List<TransactionItem> refundItems = new ArrayList<>();
         Transaction transaction = null;
-        BigDecimal batchTotalFullAmount = BigDecimal.ZERO;
+        BigDecimal totalRefundValue = BigDecimal.ZERO;
 
         for (RefundItemDTO dto : request.getItems()) {
+            TransactionItem item = transactionItemRepository.findById(dto.getTransactionItemId())
+                    .orElseThrow(() -> new ResourceNotFoundException(
+                            "Transaction item not found: " + dto.getTransactionItemId()));
 
-            TransactionItem item =
-                    transactionItemRepository.findById(
-                            dto.getTransactionItemId()
-                    ).orElseThrow(() ->
-                            new ResourceNotFoundException(
-                                    "Transaction item not found: "
-                                            + dto.getTransactionItemId()
-                            )
-                    );
-            refundItems.add(item);
-            transaction = item.getTransaction();
-
-            // Block voided txn
-            if (transaction.getTransactionStatus() == TransactionStatus.VOIDED) {
-                throw new IllegalStateException(
-                        "Cannot refund voided transaction"
-                );
+            if (transaction == null) {
+                transaction = item.getTransaction();
+            } else if (!transaction.getTransactionId().equals(item.getTransaction().getTransactionId())) {
+                throw new BadRequestException("All refund items must belong to the same transaction.");
             }
 
-            int alreadyRefunded =
-                    item.getRefundedQuantity() == null
-                            ? 0
-                            : item.getRefundedQuantity();
+            refundItems.add(item);
 
+            if (transaction.getTransactionStatus() == TransactionStatus.VOIDED
+                    || transaction.getTransactionStatus() == TransactionStatus.REFUNDED) {
+                throw new IllegalStateException("Cannot refund a voided or fully refunded transaction.");
+            }
+
+            if (transaction.getRefundStatus() == RefundStatus.FULL) {
+                throw new IllegalStateException("Transaction is already fully refunded.");
+            }
+
+            int alreadyRefunded = item.getRefundedQuantity() == null ? 0 : item.getRefundedQuantity();
             int newRefundQty = dto.getRefundQuantity();
 
             if (alreadyRefunded + newRefundQty > item.getQuantity()) {
                 throw new IllegalArgumentException(
-                        "Refund exceeds purchased quantity"
-                );
+                        "Refund exceeds purchased quantity for: " + item.getProduct().getProductName());
             }
 
-            // Restore stock only for PHYSICAL products
-            Product product = item.getProduct();
-            if (product.getProductType() == ProductType.PHYSICAL) {
-                if ("Damaged".equalsIgnoreCase(dto.getRefundReason())) {
-                    product.setDamagedQuantity(
-                            product.getDamagedQuantity() + newRefundQty
-                    );
-                } else {
-                    product.setQuantity(
-                            product.getQuantity() + newRefundQty
-                    );
-                }
-                productRepository.save(product);
-            }
-
-            BigDecimal unitPrice = item.getUnitPrice();
-            BigDecimal refundAmount =
-                    unitPrice.multiply(
-                            BigDecimal.valueOf(dto.getRefundQuantity())
-                    );
-
+            // Calculate item credit amount (full invoice value, with pro-rated discount)
+            BigDecimal itemCredit = item.getUnitPrice().multiply(BigDecimal.valueOf(newRefundQty));
             if (item.getDiscountType() != null && item.getDiscountValue() != null) {
-
                 if (item.getDiscountType() == DiscountType.FIXED) {
-
-                    BigDecimal discountPerUnit =
-                            item.getDiscountValue()
-                                    .divide(
-                                            BigDecimal.valueOf(item.getQuantity()),
-                                            2,
-                                            RoundingMode.HALF_UP
-                                    );
-
-                    BigDecimal refundDiscount =
-                            discountPerUnit.multiply(
-                                    BigDecimal.valueOf(dto.getRefundQuantity())
-                            );
-
-                    refundAmount = refundAmount.subtract(refundDiscount);
-
+                    BigDecimal discountPerUnit = item.getDiscountValue()
+                            .divide(BigDecimal.valueOf(item.getQuantity()), 2, RoundingMode.HALF_UP);
+                    itemCredit = itemCredit.subtract(
+                            discountPerUnit.multiply(BigDecimal.valueOf(newRefundQty)));
                 } else if (item.getDiscountType() == DiscountType.PERCENT) {
-
-                    BigDecimal percent =
-                            item.getDiscountValue()
-                                    .divide(BigDecimal.valueOf(100), 4, RoundingMode.HALF_UP);
-
-                    BigDecimal discountPerUnit =
-                            item.getUnitPrice().multiply(percent);
-
-                    BigDecimal refundDiscount =
-                            discountPerUnit.multiply(
-                                    BigDecimal.valueOf(dto.getRefundQuantity())
-                            );
-
-                    refundAmount = refundAmount.subtract(refundDiscount);
+                    BigDecimal percent = item.getDiscountValue()
+                            .divide(BigDecimal.valueOf(100), 4, RoundingMode.HALF_UP);
+                    itemCredit = itemCredit.subtract(
+                            item.getUnitPrice().multiply(percent).multiply(BigDecimal.valueOf(newRefundQty)));
                 }
             }
 
-            batchTotalFullAmount = batchTotalFullAmount.add(refundAmount);
+            totalRefundValue = totalRefundValue.add(itemCredit);
 
             Refund refund = new Refund();
-            refund.setRefundAmount(refundAmount);
+            refund.setItemCreditAmount(itemCredit);
             refund.setTransactionItem(item);
             refund.setRefundQuantity(newRefundQty);
             refund.setRefundReason(dto.getRefundReason());
             refund.setRefundedAt(LocalDateTime.now());
             refund.setRefundMethod(request.getRefundMethod());
-            refund.setUser(authenticatedUserService.getCurrentUser());
-
+            refund.setUser(currentUser);
             pendingRefunds.add(refund);
         }
 
-        // Phase 2: calculate payment cap and scaling factor
-        BigDecimal totalAlreadyRefunded = BigDecimal.ZERO;
-        if (transaction != null) {
-            for (TransactionItem ti : transaction.getTransactionItems()) {
-                if (ti.getRefunds() != null) {
-                    for (Refund r : ti.getRefunds()) {
-                        totalAlreadyRefunded = totalAlreadyRefunded.add(r.getRefundAmount());
-                    }
+        // Sum previous item credits for revised total calculation
+        BigDecimal totalAllRefunded = BigDecimal.ZERO;
+        for (TransactionItem ti : transaction.getTransactionItems()) {
+            if (ti.getRefunds() != null) {
+                for (Refund r : ti.getRefunds()) {
+                    totalAllRefunded = totalAllRefunded.add(r.getItemCreditAmount());
                 }
             }
         }
 
-        BigDecimal maxRefundable = transaction.getAmountPaid().subtract(totalAlreadyRefunded);
-        BigDecimal scale = BigDecimal.ONE;
-        if (batchTotalFullAmount.compareTo(maxRefundable) > 0) {
-            if (maxRefundable.compareTo(BigDecimal.ZERO) <= 0) {
-                throw new IllegalArgumentException(
-                        "Cannot refund: the paid amount has already been fully refunded."
-                );
-            }
-            scale = maxRefundable.divide(batchTotalFullAmount, 4, RoundingMode.HALF_UP);
+        // amountPaid already reflects previous cash returns, so it IS the max refundable
+        BigDecimal maxRefundable = transaction.getAmountPaid();
+        if (maxRefundable.compareTo(BigDecimal.ZERO) <= 0) {
+            throw new IllegalArgumentException("Cannot refund: no paid amount available to refund.");
         }
 
-        // Phase 3: save refunds with scaled amounts
+        // Scale actual cash back proportionally if totalRefundValue exceeds payment cap
+        BigDecimal scale = BigDecimal.ONE;
+        if (totalRefundValue.compareTo(maxRefundable) > 0) {
+            scale = maxRefundable.divide(totalRefundValue, 4, RoundingMode.HALF_UP);
+        }
+
+        BigDecimal actualRefundValue;
         if (scale.compareTo(BigDecimal.ONE) < 0) {
-            BigDecimal remaining = maxRefundable;
+            actualRefundValue = maxRefundable;
+        } else {
+            actualRefundValue = totalRefundValue;
+        }
+
+        // ── Phase 2: Order-level accounting — cash-back vs. balance-reduction ──
+        BigDecimal originalTotal = transaction.getTotalAmount();
+        // Revised total accounts for ALL refunded items (past + current batch)
+        BigDecimal newOrderTotal = originalTotal.subtract(totalAllRefunded).subtract(actualRefundValue);
+        BigDecimal amountPaid = transaction.getAmountPaid();
+        BigDecimal cashToReturn;
+        TransactionStatus previousStatus = transaction.getTransactionStatus();
+        RefundStatus previousRefundStatus = transaction.getRefundStatus();
+
+        if (amountPaid.compareTo(newOrderTotal) > 0) {
+            // Cash back: clinic has collected more cash than the revised order total
+            cashToReturn = amountPaid.subtract(newOrderTotal);
+            transaction.setAmountPaid(newOrderTotal);
+            if (previousStatus == TransactionStatus.COMPLETED) {
+                transaction.setTransactionStatus(TransactionStatus.COMPLETED);
+            } else {
+                transaction.setTransactionStatus(TransactionStatus.PAID);
+            }
+        } else {
+            // Balance reduction: deposit covers less than or exactly the new total
+            cashToReturn = BigDecimal.ZERO;
+            transaction.setTransactionStatus(computeStatus(newOrderTotal, amountPaid));
+        }
+
+        // When no cash leaves the drawer, this is a balance adjustment, not a cash refund
+        if (cashToReturn.compareTo(BigDecimal.ZERO) == 0) {
+            for (Refund refund : pendingRefunds) {
+                refund.setRefundMethod("BALANCE_ADJUSTMENT");
+                refund.setActualCashBack(BigDecimal.ZERO);
+            }
+        } else {
+            // Distribute cashToReturn proportionally among pending refunds
+            BigDecimal remaining = cashToReturn;
             for (int i = 0; i < pendingRefunds.size(); i++) {
                 Refund refund = pendingRefunds.get(i);
-                TransactionItem item = refund.getTransactionItem();
-
-                BigDecimal scaledAmount;
                 if (i == pendingRefunds.size() - 1) {
-                    scaledAmount = remaining.max(BigDecimal.ZERO);
+                    refund.setActualCashBack(remaining.max(BigDecimal.ZERO));
                 } else {
-                    scaledAmount = refund.getRefundAmount()
-                            .multiply(scale).setScale(2, RoundingMode.HALF_UP);
-                    remaining = remaining.subtract(scaledAmount);
+                    BigDecimal share = cashToReturn
+                            .multiply(refund.getItemCreditAmount())
+                            .divide(totalRefundValue, 2, RoundingMode.HALF_UP);
+                    refund.setActualCashBack(share);
+                    remaining = remaining.subtract(share);
                 }
-                refund.setRefundAmount(scaledAmount);
-                refundRepository.save(refund);
-
-                int alreadyRefunded = item.getRefundedQuantity() == null
-                        ? 0 : item.getRefundedQuantity();
-                item.setRefundedQuantity(
-                        alreadyRefunded + refund.getRefundQuantity()
-                );
-            }
-        } else {
-            for (Refund refund : pendingRefunds) {
-                TransactionItem item = refund.getTransactionItem();
-                refundRepository.save(refund);
-
-                int alreadyRefunded = item.getRefundedQuantity() == null
-                        ? 0 : item.getRefundedQuantity();
-                item.setRefundedQuantity(
-                        alreadyRefunded + refund.getRefundQuantity()
-                );
             }
         }
 
-        updateTransactionRefundStatus(
-                request.getItems().get(0)
-                        .getTransactionItemId()
+        // totalAmount retains the original order total — revised totals are derived on the fly
+
+        // ── Phase 3: Status & inventory updates ──
+        boolean allItemsFullyRefunded = true;
+        for (TransactionItem ti : transaction.getTransactionItems()) {
+            int tiAlreadyRefunded = ti.getRefundedQuantity() == null ? 0 : ti.getRefundedQuantity();
+            int tiNewRefunded = tiAlreadyRefunded;
+            for (Refund pending : pendingRefunds) {
+                if (pending.getTransactionItem().getTransactionItemId().equals(ti.getTransactionItemId())) {
+                    tiNewRefunded += pending.getRefundQuantity();
+                }
+            }
+            if (tiNewRefunded < ti.getQuantity()) {
+                allItemsFullyRefunded = false;
+                break;
+            }
+        }
+
+        if (allItemsFullyRefunded) {
+            transaction.setRefundStatus(RefundStatus.FULL);
+            transaction.setTransactionStatus(TransactionStatus.REFUNDED);
+        } else {
+            transaction.setRefundStatus(RefundStatus.PARTIAL);
+        }
+
+        // Restore stock and save refunds
+        for (Refund refund : pendingRefunds) {
+            TransactionItem item = refund.getTransactionItem();
+            Product product = item.getProduct();
+
+            if (product.getProductType() == ProductType.PHYSICAL) {
+                if ("Damaged".equalsIgnoreCase(refund.getRefundReason())) {
+                    product.setDamagedQuantity(product.getDamagedQuantity() + refund.getRefundQuantity());
+                } else {
+                    product.setQuantity(product.getQuantity() + refund.getRefundQuantity());
+                }
+                productRepository.save(product);
+            }
+
+            refundRepository.save(refund);
+
+            int ar = item.getRefundedQuantity() == null ? 0 : item.getRefundedQuantity();
+            item.setRefundedQuantity(ar + refund.getRefundQuantity());
+        }
+
+        transactionRepository.save(transaction);
+
+        // ── Phase 4: Generate Refund Receipt ──
+        RefundReceipt receipt = new RefundReceipt();
+        receipt.setReceiptNumber(generateRefundReceiptNumber());
+        receipt.setTransactionId(transaction.getTransactionId());
+        receipt.setTransactionItemId(refundItems.get(0).getTransactionItemId());
+        receipt.setCashReturnedAmount(cashToReturn);
+        receipt.setDateIssued(LocalDateTime.now());
+        receipt.setIssuedBy(currentUser);
+        refundReceiptRepository.save(receipt);
+
+        // ── Audit logging with enhanced details ──
+        int itemCount = refundItems.size();
+        String productNames = refundItems.stream()
+                .map(i -> i.getProduct().getProductName())
+                .reduce((a, b) -> a + ", " + b).orElse("");
+
+        Map<String, Object> auditData = new LinkedHashMap<>();
+        auditData.put("transactionId", transaction.getTransactionId().toString());
+        auditData.put("transactionNumber", transaction.getTransactionNumber());
+        auditData.put("itemCount", itemCount);
+        auditData.put("products", productNames);
+        auditData.put("totalRefundValue", actualRefundValue);
+        auditData.put("refundMethod", request.getRefundMethod());
+        auditData.put("beforeTotalAmount", originalTotal);
+        auditData.put("afterTotalAmount", newOrderTotal);
+        auditData.put("beforeAmountPaid", amountPaid);
+        auditData.put("afterAmountPaid", transaction.getAmountPaid());
+        auditData.put("cashReturnedToPatient", cashToReturn);
+        auditData.put("beforeRefundStatus", previousRefundStatus != null
+                ? previousRefundStatus.name() : RefundStatus.NONE.name());
+        auditData.put("afterRefundStatus", transaction.getRefundStatus().name());
+        auditData.put("beforeTransactionStatus", previousStatus.name());
+        auditData.put("afterTransactionStatus", transaction.getTransactionStatus().name());
+
+        auditLogService.log(
+                com.mmtorresoptical.OpticalClinicManagementSystem.enums.ActionType.REFUND,
+                com.mmtorresoptical.OpticalClinicManagementSystem.enums.ResourceType.TRANSACTION,
+                transaction.getTransactionId(),
+                "Refund (" + itemCount + " item(s)): " + productNames
+                        + " | Total refund value: " + actualRefundValue
+                        + " | Cash returned: " + cashToReturn
+                        + " | New total: " + newOrderTotal,
+                jsonService.toJson(auditData)
         );
 
-        int count = request.getItems().size();
+        // ── Build response ──
+        // Use captured values to compute the effective amounts (avoids stale-state issues)
+        BigDecimal effectiveAmountPaid = amountPaid.subtract(cashToReturn);
+        BigDecimal newBalanceDue = newOrderTotal.subtract(effectiveAmountPaid).max(BigDecimal.ZERO);
 
-        if (count == 1) {
-            transactionAuditHelper.logRefund(refundItems.get(0));
+        ItemRefundResponseDTO.RefundedItemSummary itemSummary;
+        if (itemCount == 1) {
+            TransactionItem single = refundItems.get(0);
+            itemSummary = ItemRefundResponseDTO.RefundedItemSummary.builder()
+                    .productName(single.getProduct().getProductName())
+                    .unitPrice(single.getUnitPrice())
+                    .refundQuantity(pendingRefunds.get(0).getRefundQuantity())
+                    .build();
         } else {
-            transactionAuditHelper.logRefundBatch(refundItems);
+            itemSummary = ItemRefundResponseDTO.RefundedItemSummary.builder()
+                    .productName(itemCount + " items")
+                    .unitPrice(actualRefundValue)
+                    .refundQuantity(itemCount)
+                    .build();
         }
+
+        return ItemRefundResponseDTO.builder()
+                .originalTotal(originalTotal)
+                .newOrderTotal(newOrderTotal)
+                .amountPaid(effectiveAmountPaid)
+                .cashToReturn(cashToReturn)
+                .newRemainingDue(newBalanceDue)
+                .newTransactionStatus(transaction.getTransactionStatus().name())
+                .newRefundStatus(transaction.getRefundStatus().name())
+                .refundReceipt(ItemRefundResponseDTO.RefundReceiptData.builder()
+                        .refundReceiptId(receipt.getRefundReceiptId())
+                        .receiptNumber(receipt.getReceiptNumber())
+                        .cashReturnedAmount(receipt.getCashReturnedAmount())
+                        .dateIssued(receipt.getDateIssued())
+                        .issuedByFullName(currentUser.getFirstName() + " " + currentUser.getLastName())
+                        .build())
+                .refundedItem(itemSummary)
+                .build();
     }
 
     private String generateTransactionNumber() {
         String prefix = "TXN-" + LocalDate.now().format(DateTimeFormatter.ofPattern("yyyyMMdd")) + "-";
         String maxNumber = transactionRepository.findMaxTransactionNumberByPrefix(prefix);
+        if (maxNumber == null) {
+            return prefix + "0001";
+        }
+        int seq = Integer.parseInt(maxNumber.substring(maxNumber.lastIndexOf('-') + 1));
+        return prefix + String.format("%04d", seq + 1);
+    }
+
+    private String generateRefundReceiptNumber() {
+        String prefix = "REF-" + LocalDate.now().format(DateTimeFormatter.ofPattern("yyyyMMdd")) + "-";
+        String maxNumber = refundReceiptRepository.findMaxReceiptNumberByPrefix(prefix);
         if (maxNumber == null) {
             return prefix + "0001";
         }
@@ -698,11 +807,11 @@ public class TransactionService {
 
         if (allRefunded) {
             txn.setRefundStatus(
-                    RefundStatus.RETURNED
+                    RefundStatus.FULL
             );
         } else if (anyRefunded) {
             txn.setRefundStatus(
-                    RefundStatus.ADJUSTED
+                    RefundStatus.PARTIAL
             );
         }
     }

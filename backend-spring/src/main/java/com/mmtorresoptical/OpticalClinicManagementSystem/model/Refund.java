@@ -24,12 +24,17 @@ public class Refund {
 
     private LocalDateTime refundedAt;
 
-    private BigDecimal refundAmount;
+    @Column(name = "item_credit_amount", precision = 10, scale = 2)
+    private BigDecimal itemCreditAmount;
+
+    @Column(name = "actual_cash_back", precision = 10, scale = 2)
+    private BigDecimal actualCashBack = BigDecimal.ZERO;
 
     @Column(name = "refund_method", length = 20)
     private String refundMethod;
 
-    @ManyToOne@JoinColumn(name = "user_id", nullable = false)
+    @ManyToOne
+    @JoinColumn(name = "user_id", nullable = false)
     private User user;
 
     @ManyToOne

@@ -1,9 +1,6 @@
 package com.mmtorresoptical.OpticalClinicManagementSystem.dto.refund;
 
 import com.mmtorresoptical.OpticalClinicManagementSystem.dto.user.UserSummaryDTO;
-import com.mmtorresoptical.OpticalClinicManagementSystem.model.User;
-import jakarta.persistence.JoinColumn;
-import jakarta.persistence.ManyToOne;
 import lombok.Data;
 
 import java.math.BigDecimal;
@@ -17,7 +14,8 @@ public class RefundDetailsDTO {
     private Integer refundQuantity;
     private String refundReason;
     private LocalDateTime refundedAt;
-    private BigDecimal refundAmount;
+    private BigDecimal itemCreditAmount;
+    private BigDecimal actualCashBack;
     private String refundMethod;
 
     private UserSummaryDTO refundedBy;

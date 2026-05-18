@@ -204,14 +204,14 @@ public class ReportAggregationService {
 
         // Subtract refunds if any were issued
         RefundStatus refundStatus = t.getRefundStatus();
-        if (refundStatus == RefundStatus.ADJUSTED || refundStatus == RefundStatus.RETURNED) {
+        if (refundStatus == RefundStatus.PARTIAL || refundStatus == RefundStatus.FULL) {
             BigDecimal refundSum = BigDecimal.ZERO;
             if (t.getTransactionItems() != null) {
                 for (TransactionItem item : t.getTransactionItems()) {
                     if (item.getRefunds() != null) {
                         for (Refund refund : item.getRefunds()) {
-                            if (refund.getRefundAmount() != null) {
-                                refundSum = refundSum.add(refund.getRefundAmount());
+                            if (refund.getItemCreditAmount() != null) {
+                                refundSum = refundSum.add(refund.getItemCreditAmount());
                             }
                         }
                     }

@@ -11,10 +11,10 @@ import java.util.UUID;
 
 public interface RefundRepository extends JpaRepository<Refund, UUID> {
 
-    @Query("SELECT COALESCE(SUM(r.refundAmount), 0) FROM Refund r")
+    @Query("SELECT COALESCE(SUM(r.actualCashBack), 0) FROM Refund r")
     BigDecimal sumTotalRefundAmount();
 
-    @Query("SELECT COALESCE(SUM(r.refundAmount), 0) FROM Refund r WHERE r.refundedAt >= :start AND r.refundedAt < :end")
+    @Query("SELECT COALESCE(SUM(r.actualCashBack), 0) FROM Refund r WHERE r.refundedAt >= :start AND r.refundedAt < :end")
     BigDecimal sumRefundAmountByRefundedAtBetween(LocalDateTime start, LocalDateTime end);
 
 }

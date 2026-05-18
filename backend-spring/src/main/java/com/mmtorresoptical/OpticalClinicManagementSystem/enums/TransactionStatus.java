@@ -4,5 +4,6 @@ public enum TransactionStatus {
     DEPOSIT,
     PAID,
     COMPLETED,
-    VOIDED
+    VOIDED,
+    REFUNDED
 }

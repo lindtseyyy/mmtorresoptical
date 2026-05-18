@@ -4,6 +4,7 @@ import com.mmtorresoptical.OpticalClinicManagementSystem.dto.metrics.AgingReceiv
 import com.mmtorresoptical.OpticalClinicManagementSystem.dto.metrics.TransactionMetricsDTO;
 import com.mmtorresoptical.OpticalClinicManagementSystem.dto.payment.PaymentRequestDTO;
 import com.mmtorresoptical.OpticalClinicManagementSystem.dto.payment.PaymentResponseDTO;
+import com.mmtorresoptical.OpticalClinicManagementSystem.dto.refund.ItemRefundResponseDTO;
 import com.mmtorresoptical.OpticalClinicManagementSystem.dto.refund.RefundTransactionRequestDTO;
 import com.mmtorresoptical.OpticalClinicManagementSystem.dto.transaction.*;
 import com.mmtorresoptical.OpticalClinicManagementSystem.enums.RefundStatus;
@@ -105,11 +106,11 @@ public class TransactionController {
     }
 
     @PostMapping("/refund")
-    public ResponseEntity<Void> refundTransaction(
+    public ResponseEntity<ItemRefundResponseDTO> refundTransaction(
             @RequestBody RefundTransactionRequestDTO request
     ) {
-        transactionService.refundTransaction(request);
-        return ResponseEntity.ok().build();
+        ItemRefundResponseDTO response = transactionService.refundTransaction(request);
+        return ResponseEntity.ok(response);
     }
 
     @PostMapping("/{id}/payments")
