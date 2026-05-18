@@ -316,7 +316,7 @@ const ViewTransaction: React.FC = () => {
                   Mark Complete
                 </Button>
               )}
-              {(tx.transactionStatus === "PAID" || tx.transactionStatus === "DEPOSIT") && (
+              {(tx.transactionStatus === "PAID" || tx.transactionStatus === "DEPOSIT") && tx.refundStatus === "NONE" && (
                 <Button
                   size="sm"
                   variant="destructive"
