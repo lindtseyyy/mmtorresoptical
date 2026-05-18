@@ -25,8 +25,9 @@ import { Label } from "@/shared/components/ui/label";
 import { Dialog, DialogHeader, DialogTitle, DialogDescription } from "@/shared/components/ui/dialog";
 import { fetchTransaction, refundTransaction, voidTransaction, addPayment, completeTransaction } from "@/features/sales/services/transactionApi";
 import { toast } from "sonner";
-import type { TransactionItemResponse, RefundStateItem, RefundMethod, PaymentResponse } from "@/features/sales/types";
+import type { TransactionItemResponse, RefundStateItem, RefundMethod, PaymentResponse, ItemRefundResponse } from "@/features/sales/types";
 import RefundDrawer from "./RefundDrawer";
+import RefundReceipt from "./RefundReceipt";
 import AddPaymentDrawer from "./AddPaymentDrawer";
 
 const formatDateTime = (dateStr: string | null) => {
@@ -57,12 +58,14 @@ const ViewTransaction: React.FC = () => {
 
   const refundMutation = useMutation({
     mutationFn: refundTransaction,
-    onSuccess: () => {
+    onSuccess: (data: ItemRefundResponse) => {
       queryClient.invalidateQueries({ queryKey: ["transaction", transactionId] });
       queryClient.invalidateQueries({ queryKey: ["transactions"] });
       queryClient.invalidateQueries({ queryKey: ["products"] });
       queryClient.invalidateQueries({ queryKey: ["inventory-summary"] });
       toast.success("Refund processed successfully.");
+      // Store the response for receipt display
+      setLastRefundResponse(data);
     },
     onError: (error: Error) => {
       toast.error(error.message || "Refund failed.");
@@ -120,6 +123,10 @@ const ViewTransaction: React.FC = () => {
   const [selectedItems, setSelectedItems] = useState<Set<string>>(new Set());
   const [drawerOpen, setDrawerOpen] = useState(false);
   const [refundItems, setRefundItems] = useState<RefundStateItem[]>([]);
+
+  // ── Refund receipt state ──
+  const [receiptOpen, setReceiptOpen] = useState(false);
+  const [lastRefundResponse, setLastRefundResponse] = useState<ItemRefundResponse | null>(null);
 
   // ── Payment drawer state ──
   const [paymentDrawerOpen, setPaymentDrawerOpen] = useState(false);
@@ -197,41 +204,77 @@ const ViewTransaction: React.FC = () => {
   const handleCompleteRefund = (
     finalItems: RefundStateItem[],
     refundMethod: RefundMethod
-  ) => {
-    refundMutation.mutate(
-      {
-        items: finalItems.map((i) => ({
-          transactionItemId: i.transactionItemId,
-          refundQuantity: i.refundQuantity,
-          refundReason: i.refundReason,
-        })),
-        refundMethod,
-      },
-      {
-        onSuccess: () => {
-          setDrawerOpen(false);
-          cancelSelection();
+  ): Promise<ItemRefundResponse> => {
+    return new Promise((resolve, reject) => {
+      refundMutation.mutate(
+        {
+          items: finalItems.map((i) => ({
+            transactionItemId: i.transactionItemId,
+            refundQuantity: i.refundQuantity,
+            refundReason: i.refundReason,
+          })),
+          refundMethod,
         },
-      }
-    );
+        {
+          onSuccess: (data: ItemRefundResponse) => {
+            setDrawerOpen(false);
+            cancelSelection();
+            resolve(data);
+          },
+          onError: (error: Error) => {
+            reject(error);
+          },
+        }
+      );
+    });
   };
 
-  const totalAlreadyRefunded = tx
+  const handleRefundDrawerSuccess = (response: ItemRefundResponse) => {
+    setDrawerOpen(false);
+    cancelSelection();
+    if (response.refundReceipt) {
+      setReceiptOpen(true);
+    }
+  };
+
+  // Only CASH/GCASH refunds count toward the refundable cash pool
+  const totalCashRefunded = tx
+    ? tx.transactionItems.reduce((sum, item) => {
+        return (
+          sum +
+          (item.refundDetailsDTOList ?? [])
+            .filter((r) => r.refundMethod === "CASH" || r.refundMethod === "GCASH")
+            .reduce((s, r) => s + (r.actualCashBack ?? 0), 0)
+        );
+      }, 0)
+    : 0;
+
+  // All refunded item values, used for revised total computation
+  const totalAllRefunded = tx
     ? tx.transactionItems.reduce((sum, item) => {
         return (
           sum +
           (item.refundDetailsDTOList ?? []).reduce(
-            (s, r) => s + r.refundAmount,
+            (s, r) => s + (r.itemCreditAmount ?? 0),
             0
           )
         );
       }, 0)
     : 0;
 
+  const revisedTotal = tx
+    ? tx.totalAmount - totalAllRefunded
+    : 0;
+
+  const effectiveBalanceDue = tx
+    ? Math.max(0, revisedTotal - (tx.amountPaid ?? 0))
+    : 0;
+
   const canRefund =
     tx &&
     tx.transactionStatus !== "VOIDED" &&
-    tx.refundStatus !== "RETURNED" &&
+    tx.transactionStatus !== "REFUNDED" &&
+    tx.refundStatus !== "FULL" &&
     tx.transactionItems.some((i) => (i.refundedQuantity ?? 0) < i.quantity);
 
   if (isLoading) {
@@ -316,7 +359,7 @@ const ViewTransaction: React.FC = () => {
                   Mark Complete
                 </Button>
               )}
-              {(tx.transactionStatus === "PAID" || tx.transactionStatus === "DEPOSIT") && tx.refundStatus === "NONE" && (
+              {(tx.transactionStatus === "PAID" || tx.transactionStatus === "DEPOSIT") && tx.refundStatus === "NONE" && tx.transactionStatus !== "REFUNDED" && (
                 <Button
                   size="sm"
                   variant="destructive"
@@ -345,14 +388,20 @@ const ViewTransaction: React.FC = () => {
               <p className="text-xs text-muted-foreground">Total Amount</p>
               <p className="font-medium">{formatCurrency(tx.totalAmount)}</p>
             </div>
+            {tx.refundStatus !== "NONE" && (
+              <div>
+                <p className="text-xs text-muted-foreground">Revised Total Amount</p>
+                <p className="font-medium">{formatCurrency(revisedTotal)}</p>
+              </div>
+            )}
             <div>
               <p className="text-xs text-muted-foreground">Amount Paid</p>
               <p className="font-medium text-green-600">{formatCurrency(tx.amountPaid ?? 0)}</p>
             </div>
-            {(tx.balanceDue ?? 0) > 0 && (
+            {effectiveBalanceDue > 0 && (
               <div>
                 <p className="text-xs text-muted-foreground">Balance Due</p>
-                <p className="font-medium text-amber-600">{formatCurrency(tx.balanceDue ?? 0)}</p>
+                <p className="font-medium text-amber-600">{formatCurrency(effectiveBalanceDue)}</p>
               </div>
             )}
             {tx.transactionStatus === "COMPLETED" && tx.completedAt && (
@@ -421,14 +470,13 @@ const ViewTransaction: React.FC = () => {
                 </p>
               </div>
               <div>
-                <p className="text-xs text-muted-foreground">Refunded Amount</p>
+                <p className="text-xs text-muted-foreground">Cash Refunded</p>
                 <p className="font-medium text-red-600">
                   {formatCurrency(
                     tx.transactionItems.reduce((total, item) => {
-                      const itemTotal = (item.refundDetailsDTOList ?? []).reduce(
-                        (sum, r) => sum + r.refundAmount,
-                        0
-                      );
+                      const itemTotal = (item.refundDetailsDTOList ?? [])
+                        .filter((r) => r.refundMethod === "CASH" || r.refundMethod === "GCASH")
+                        .reduce((sum, r) => sum + (r.actualCashBack ?? 0), 0);
                       return total + itemTotal;
                     }, 0)
                   )}
@@ -577,14 +625,15 @@ const ViewTransaction: React.FC = () => {
                 <table className="w-full text-sm">
                   <thead>
                     <tr className="border-b text-left text-muted-foreground">
-                      <th className="py-3 pr-4 font-medium">Product</th>
-                      <th className="py-3 pr-4 text-center font-medium">Unit Price</th>
-                      <th className="py-3 pr-4 text-center font-medium">Qty</th>
-                      <th className="py-3 pr-4 text-right font-medium">Amount</th>
-                      <th className="py-3 pr-4 font-medium">Reason</th>
-                      <th className="py-3 pr-4 text-center font-medium">Refund Method</th>
-                      <th className="py-3 font-medium">Refund Date</th>
-                      <th className="py-3 font-medium">Refunded By</th>
+                      <th className="py-3 pr-2 font-medium text-xs">Product</th>
+                      <th className="py-3 pr-2 text-center font-medium text-xs">Unit Price</th>
+                      <th className="py-3 pr-2 text-center font-medium text-xs">Qty</th>
+                      <th className="py-3 pr-2 text-right font-medium text-xs">Item Credit</th>
+                      <th className="py-3 pr-2 text-center font-medium text-xs">Refund Method</th>
+                      <th className="py-3 pr-2 text-right font-medium text-xs">Actual Cash Back</th>
+                      <th className="py-3 pr-2 font-medium text-xs">Reason</th>
+                      <th className="py-3 pr-2 font-medium text-xs">Refund Date</th>
+                      <th className="py-3 font-medium text-xs">Refunded By</th>
                     </tr>
                   </thead>
                   <tbody>
@@ -594,26 +643,33 @@ const ViewTransaction: React.FC = () => {
                           key={refund.refundId}
                           className="border-b text-muted-foreground"
                         >
-                          <td className="py-3 pr-4">
-                            <p className="font-medium text-foreground">
+                          <td className="py-2.5 pr-2">
+                            <p className="font-medium text-foreground text-xs">
                               {item.product?.productName ?? "—"}
                             </p>
                           </td>
-                          <td className="py-3 pr-4 text-center">
+                          <td className="py-2.5 pr-2 text-center text-xs">
                             {formatCurrency(item.unitPrice)}
                           </td>
-                          <td className="py-3 pr-4 text-center">
+                          <td className="py-2.5 pr-2 text-center text-xs">
                             {refund.refundQuantity}
                           </td>
-                          <td className="py-3 pr-4 text-right text-red-600">
-                            {formatCurrency(refund.refundAmount)}
+                          <td className="py-2.5 pr-2 text-right text-red-600 text-xs">
+                            {formatCurrency(refund.itemCreditAmount ?? 0)}
                           </td>
-                          <td className="py-3 pr-4">{refund.refundReason}</td>
-                          <td className="py-3 pr-4 text-center capitalize">{refund.refundMethod}</td>
-                          <td className="py-3 whitespace-nowrap">
+                          <td className="py-2.5 pr-2 text-center capitalize text-xs">
+                            {refund.refundMethod === "BALANCE_ADJUSTMENT"
+                              ? "Adjustment"
+                              : refund.refundMethod}
+                          </td>
+                          <td className="py-2.5 pr-2 text-right text-xs">
+                            {formatCurrency(refund.actualCashBack ?? 0)}
+                          </td>
+                          <td className="py-2.5 pr-2 text-xs">{refund.refundReason}</td>
+                          <td className="py-2.5 pr-2 whitespace-nowrap text-xs">
                             {formatDateTime(refund.refundedAt)}
                           </td>
-                          <td className="py-3 whitespace-nowrap">
+                          <td className="py-2.5 whitespace-nowrap text-xs">
                             {refund.refundedBy?.fullName ?? "—"}
                           </td>
                         </tr>
@@ -730,9 +786,13 @@ const ViewTransaction: React.FC = () => {
         onOpenChange={setDrawerOpen}
         items={refundItems}
         onComplete={handleCompleteRefund}
+        onRefundSuccess={handleRefundDrawerSuccess}
         isPending={refundMutation.isPending}
         amountPaid={tx.amountPaid}
-        totalAlreadyRefunded={totalAlreadyRefunded}
+        totalAlreadyRefunded={totalCashRefunded}
+        totalAllRefunded={totalAllRefunded}
+        transactionTotal={tx.totalAmount}
+        transactionAmountPaid={tx.amountPaid ?? 0}
       />
 
       {/* Add Payment Drawer */}
@@ -742,9 +802,22 @@ const ViewTransaction: React.FC = () => {
           onClose={() => setPaymentDrawerOpen(false)}
           transactionNumber={tx.transactionNumber}
           totalAmount={tx.totalAmount}
-          balanceDue={tx.balanceDue ?? tx.totalAmount - (tx.amountPaid ?? 0)}
+          balanceDue={effectiveBalanceDue}
           onComplete={(data) => addPaymentMutation.mutate(data)}
           pending={addPaymentMutation.isPending}
+        />
+      )}
+
+      {/* Refund Receipt Dialog */}
+      {tx && lastRefundResponse && (
+        <RefundReceipt
+          open={receiptOpen}
+          onClose={() => {
+            setReceiptOpen(false);
+            setLastRefundResponse(null);
+          }}
+          refundData={lastRefundResponse}
+          transaction={tx}
         />
       )}
     </div>

@@ -35,8 +35,8 @@ const TransactionReport: React.FC<TransactionReportProps> = ({
     for (const group of Object.values(report.statusGroups)) {
       for (const entry of group) {
         if (
-          entry.refundStatus === "ADJUSTED" ||
-          entry.refundStatus === "RETURNED"
+          entry.refundStatus === "PARTIAL" ||
+          entry.refundStatus === "FULL"
         ) {
           // Avoid double-counting if already added as VOIDED
           if (!entries.some((e) => e.id === entry.id)) {

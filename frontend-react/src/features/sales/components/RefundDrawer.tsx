@@ -16,7 +16,7 @@ import {
   SheetHeader,
   SheetTitle,
 } from "@/shared/components/ui/sheet";
-import type { RefundStateItem, RefundMethod } from "@/features/sales/types";
+import type { RefundStateItem, RefundMethod, ItemRefundResponse } from "@/features/sales/types";
 
 const REFUND_REASONS = [
   "Damaged",
@@ -34,16 +34,20 @@ const REFUND_METHODS: { value: RefundMethod; label: string }[] = [
 ];
 
 const formatCurrency = (amount: number) =>
-  `₱ ${amount.toLocaleString("en-US", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
+  `₱${amount.toLocaleString("en-US", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
 
 interface Props {
   open: boolean;
   onOpenChange: (open: boolean) => void;
   items: RefundStateItem[];
-  onComplete: (items: RefundStateItem[], refundMethod: RefundMethod) => void;
+  onComplete: (items: RefundStateItem[], refundMethod: RefundMethod) => Promise<ItemRefundResponse>;
+  onRefundSuccess?: (response: ItemRefundResponse) => void;
   isPending: boolean;
   amountPaid?: number;
   totalAlreadyRefunded?: number;
+  totalAllRefunded?: number;
+  transactionTotal?: number;
+  transactionAmountPaid?: number;
 }
 
 const RefundDrawer: React.FC<Props> = ({
@@ -51,9 +55,13 @@ const RefundDrawer: React.FC<Props> = ({
   onOpenChange,
   items,
   onComplete,
+  onRefundSuccess,
   isPending,
   amountPaid,
   totalAlreadyRefunded,
+  totalAllRefunded,
+  transactionTotal,
+  transactionAmountPaid,
 }) => {
   const [reasons, setReasons] = useState<Record<string, string>>({});
   const [quantities, setQuantities] = useState<Record<string, number>>({});
@@ -111,8 +119,18 @@ const RefundDrawer: React.FC<Props> = ({
 
   const refundTotal = fullTotal * scaleFactor;
 
-  const getItemSubtotal = (item: RefundStateItem) =>
-    (fullSubtotals[item.transactionItemId] ?? 0) * scaleFactor;
+  // ── Order-level accounting preview ──
+  const accountingPreview = useMemo(() => {
+    if (transactionTotal == null || transactionAmountPaid == null) return null;
+    // Revised total accounts for ALL refunds: past (including balance adjustments) + current batch
+    const newOrderTotal = transactionTotal - (totalAllRefunded ?? 0) - fullTotal;
+    const cashToReturn = transactionAmountPaid > newOrderTotal
+      ? transactionAmountPaid - newOrderTotal
+      : 0;
+    const effectivePaid = cashToReturn > 0 ? newOrderTotal : transactionAmountPaid;
+    const newRemainingDue = Math.max(0, newOrderTotal - effectivePaid);
+    return { newOrderTotal, cashToReturn, newRemainingDue };
+  }, [transactionTotal, transactionAmountPaid, totalAllRefunded, fullTotal]);
 
   const handleApplyToAll = useCallback(
     (reason: string) => {
@@ -140,13 +158,20 @@ const RefundDrawer: React.FC<Props> = ({
     [items]
   );
 
-  const handleComplete = () => {
+  const handleComplete = async () => {
     const updatedItems = items.map((item) => ({
       ...item,
       refundReason: reasons[item.transactionItemId] ?? "",
       refundQuantity: quantities[item.transactionItemId] ?? item.refundQuantity,
     }));
-    onComplete(updatedItems, refundMethod);
+    try {
+      const response = await onComplete(updatedItems, refundMethod);
+      if (onRefundSuccess) {
+        onRefundSuccess(response);
+      }
+    } catch {
+      // Error toast is handled by the mutation
+    }
   };
 
   return (
@@ -259,81 +284,92 @@ const RefundDrawer: React.FC<Props> = ({
                 </Select>
               </div>
 
-              {/* Per-item subtotal */}
-              <div className="flex items-center justify-between border-t pt-2">
-                <span className="text-xs text-muted-foreground">
-                  Refund subtotal
-                </span>
-                <span className="text-sm font-medium text-red-600">
-                  {formatCurrency(getItemSubtotal(item))}
-                </span>
-              </div>
             </div>
           ))}
         </div>
 
         {/* Financial summary */}
-        <div className="mt-4 border-t pt-3">
-          <div className="flex items-center justify-between">
-            <span className="text-sm font-medium">Refund Total</span>
-            <span className="text-lg font-bold text-red-600">
-              {formatCurrency(refundTotal)}
-            </span>
+        {accountingPreview && transactionTotal != null && transactionAmountPaid != null && (
+          <div className="mt-4 bg-muted rounded-md overflow-hidden text-sm py-1">
+            <div className="flex items-center justify-between py-1.5 px-3 border-b border-gray-300 dark:border-gray-600">
+              <span className="text-muted-foreground">Original Total Amount:</span>
+              <span className="font-medium">{formatCurrency(transactionTotal)}</span>
+            </div>
+            <div className="flex items-center justify-between py-1.5 px-3 border-b border-gray-300 dark:border-gray-600">
+              <span className="text-muted-foreground">Total Amount Paid:</span>
+              <span className="font-medium">{formatCurrency(transactionAmountPaid)}</span>
+            </div>
+            <div className="flex items-center justify-between py-1.5 px-3 border-b border-gray-300 dark:border-gray-600">
+              <span className="text-muted-foreground">Revised Total Amount:</span>
+              <span className="font-medium">{formatCurrency(accountingPreview.newOrderTotal)}</span>
+            </div>
+            <div className="flex items-center justify-between py-1.5 px-3 border-b border-gray-300 dark:border-gray-600">
+              <span className="text-muted-foreground">Remaining Due:</span>
+              <span className="font-medium">{formatCurrency(accountingPreview.newRemainingDue)}</span>
+            </div>
+            <div className="flex items-center justify-between py-1.5 px-3">
+              <span className="text-red-600 font-medium text-[15px]">Cash to Return:</span>
+              <span className="font-bold text-red-600 text-[15px]">{formatCurrency(accountingPreview.cashToReturn)}</span>
+            </div>
           </div>
-        </div>
-
-        {/* Refund method */}
-        <div className="mt-3">
-          <label className="text-xs font-medium text-muted-foreground">
-            Refund Method
-          </label>
-          <div className="mt-1 flex gap-2">
-            {REFUND_METHODS.map((m) => (
-              <Button
-                key={m.value}
-                type="button"
-                variant={refundMethod === m.value ? "default" : "outline"}
-                size="sm"
-                className="flex-1 text-xs"
-                onClick={() => setRefundMethod(m.value)}
-              >
-                {m.label}
-              </Button>
-            ))}
+        )}
+        {!accountingPreview && (
+          <div className="mt-4 border-t pt-3">
+            <div className="flex items-center justify-between">
+              <span className="text-sm font-medium">Refund Total</span>
+              <span className="text-lg font-bold text-red-600">
+                {formatCurrency(refundTotal)}
+              </span>
+            </div>
           </div>
-        </div>
+        )}
 
-        {/* Confirmation text */}
-        <div className="mt-3 rounded-md bg-muted p-3">
-          <p className="text-sm text-muted-foreground">
-            You are refunding{" "}
-            {items.map((item, i) => {
-              const qty = quantities[item.transactionItemId] ?? item.refundQuantity;
-              return (
-                <span key={item.transactionItemId}>
-                  <strong>
-                    {qty}x {item.productName}
-                  </strong>
-                  {i < items.length - 1 && " and "}
-                </span>
-              );
-            })}
-            {" "}via{" "}
-            <strong>
-              {REFUND_METHODS.find((m) => m.value === refundMethod)?.label ?? refundMethod}
-            </strong>
-            {" "}with the total amount of{" "}
-            <strong className="underline">
-              {formatCurrency(refundTotal)}
-            </strong>
-            .
-          </p>
-        </div>
+        {/* Refund method — only when cash is leaving the drawer */}
+        {(!accountingPreview || accountingPreview.cashToReturn > 0) && (
+          <div className="mt-3">
+            <label className="text-xs font-medium text-muted-foreground">
+              Refund Method
+            </label>
+            <div className="mt-1 flex gap-2">
+              {REFUND_METHODS.map((m) => (
+                <Button
+                  key={m.value}
+                  type="button"
+                  variant={refundMethod === m.value ? "default" : "outline"}
+                  size="sm"
+                  className="flex-1 text-xs"
+                  onClick={() => setRefundMethod(m.value)}
+                >
+                  {m.label}
+                </Button>
+              ))}
+            </div>
+          </div>
+        )}
 
-        {/* Complete Refund button */}
+        {/* Confirmation text — only when cash is returned */}
+        {accountingPreview && accountingPreview.cashToReturn > 0 && (
+          <div className="mt-3 rounded-md bg-muted p-3">
+            <p className="text-sm text-muted-foreground">
+              You are refunding an amount of{" "}
+              <strong className="underline">
+                {formatCurrency(accountingPreview.cashToReturn)}
+              </strong>
+              {" "}using{" "}
+              <strong>
+                {REFUND_METHODS.find((m) => m.value === refundMethod)?.label ?? refundMethod}
+              </strong>
+              .
+            </p>
+          </div>
+        )}
+
+        {/* Complete Refund button — dynamic label based on cash flow */}
         <div className="mt-4">
           <Button
-            className="w-full"
+            className={`w-full ${accountingPreview && accountingPreview.cashToReturn > 0
+              ? "bg-red-600 hover:bg-red-700 text-white"
+              : "bg-indigo-600 hover:bg-indigo-700 text-white"}`}
             disabled={!allReasonsFilled || isPending}
             onClick={handleComplete}
           >
@@ -342,10 +378,15 @@ const RefundDrawer: React.FC<Props> = ({
                 <div className="mr-2 h-4 w-4 animate-spin rounded-full border-2 border-background border-t-transparent" />
                 Processing…
               </>
+            ) : accountingPreview && accountingPreview.cashToReturn > 0 ? (
+              <>
+                <RotateCcw className="mr-2 h-4 w-4" />
+                Process Refund &amp; Print
+              </>
             ) : (
               <>
                 <RotateCcw className="mr-2 h-4 w-4" />
-                Complete Refund
+                Confirm Balance Adjustment
               </>
             )}
           </Button>

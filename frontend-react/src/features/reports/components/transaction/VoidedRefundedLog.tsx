@@ -27,8 +27,8 @@ interface VoidedRefundedLogProps {
 }
 
 const refundedAmount = (entry: TransactionEntry): number => {
-  if (entry.refundStatus === "ADJUSTED" || entry.refundStatus === "RETURNED") {
-    return entry.items.reduce((sum, item) => sum + (item.refundAmount ?? 0), 0);
+  if (entry.refundStatus === "PARTIAL" || entry.refundStatus === "FULL") {
+    return entry.items.reduce((sum, item) => sum + (item.itemCreditAmount ?? 0), 0);
   }
   return entry.totalAmount;
 };

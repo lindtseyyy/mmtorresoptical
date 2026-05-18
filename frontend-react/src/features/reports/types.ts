@@ -98,7 +98,8 @@ export interface TransactionItemEntry {
   discountValue: number | null;
   refundedQuantity: number | null;
   refundReason: string | null;
-  refundAmount: number | null;
+  itemCreditAmount: number | null;
+  actualCashBack: number | null;
 }
 
 export interface PaymentMethodEntry {

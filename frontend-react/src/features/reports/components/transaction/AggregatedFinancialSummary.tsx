@@ -43,11 +43,11 @@ function refundDeductionAggregate(
   for (const entries of Object.values(statusGroups)) {
     for (const e of entries) {
       if (
-        e.refundStatus === "ADJUSTED" ||
-        e.refundStatus === "RETURNED"
+        e.refundStatus === "PARTIAL" ||
+        e.refundStatus === "FULL"
       ) {
         count++;
-        totalValue += e.items.reduce((sum, item) => sum + (item.refundAmount ?? 0), 0);
+        totalValue += e.items.reduce((sum, item) => sum + (item.itemCreditAmount ?? 0), 0);
       }
     }
   }

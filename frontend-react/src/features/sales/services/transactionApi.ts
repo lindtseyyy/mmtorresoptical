@@ -1,6 +1,6 @@
 import api from "@/shared/lib/axiosInstance";
 import type { PageResponse } from "@/shared/types";
-import type { TransactionRequest, TransactionResponse, TransactionListItem, PaymentResponse, PaymentRequest } from "@/features/sales/types";
+import type { TransactionRequest, TransactionResponse, TransactionListItem, PaymentResponse, PaymentRequest, ItemRefundResponse } from "@/features/sales/types";
 
 export interface AgingReceivable {
   transactionId: string;
@@ -110,8 +110,9 @@ const voidTransaction = async (id: string, reason: string, password: string): Pr
 const refundTransaction = async (data: {
   items: { transactionItemId: string; refundQuantity: number; refundReason: string }[];
   refundMethod: string;
-}): Promise<void> => {
-  await api.post("/transactions/refund", data);
+}): Promise<ItemRefundResponse> => {
+  const { data: response } = await api.post("/transactions/refund", data);
+  return response;
 };
 
 const addPayment = async (transactionId: string, data: PaymentRequest): Promise<PaymentResponse> => {

@@ -44,7 +44,8 @@ export interface RefundDetails {
   refundReason: string;
   refundMethod: string;
   refundedAt: string;
-  refundAmount: number;
+  itemCreditAmount: number;
+  actualCashBack: number;
   refundedBy: { userId: string; username: string; role: string; fullName: string } | null;
 }
 
@@ -82,7 +83,7 @@ export interface TransactionResponse {
   payments: PaymentResponse[];
 }
 
-export type RefundMethod = "CASH" | "GCASH";
+export type RefundMethod = "CASH" | "GCASH" | "BALANCE_ADJUSTMENT";
 
 export interface RefundStateItem {
   transactionItemId: string;
@@ -109,4 +110,28 @@ export interface TransactionListItem {
   refundStatus: string;
   createdBy: { userId: string; username: string; role: string; fullName: string };
   patient: { patientId: string; fullName: string } | null;
+}
+
+export interface RefundReceiptData {
+  refundReceiptId: string;
+  receiptNumber: string;
+  cashReturnedAmount: number;
+  dateIssued: string;
+  issuedByFullName: string;
+}
+
+export interface ItemRefundResponse {
+  originalTotal: number;
+  newOrderTotal: number;
+  amountPaid: number;
+  cashToReturn: number;
+  newRemainingDue: number;
+  newTransactionStatus: string;
+  newRefundStatus: string;
+  refundReceipt: RefundReceiptData;
+  refundedItem: {
+    productName: string;
+    unitPrice: number;
+    refundQuantity: number;
+  };
 }
