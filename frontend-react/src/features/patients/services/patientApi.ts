@@ -165,3 +165,28 @@ const fetchPatientHealthHistories = async (
 };
 
 export { fetchPatients, fetchPatient, addPatient, updatePatient, archivePatient, restorePatient, fetchPatientMetrics, fetchPatientProfileMetrics, fetchPatientPrescriptions, fetchPatientHealthHistories };
+
+export interface PatientSearchResult {
+  patientId: string;
+  fullName: string;
+  contactNumber: string;
+}
+
+const searchPatients = async (
+  keyword: string,
+  page = 0,
+  size = 20,
+): Promise<PageResponse<PatientSearchResult>> => {
+  const { data } = await api.get("/admin/patients/search", {
+    params: { keyword, page, size },
+  });
+  return {
+    content: data.content,
+    totalPages: data.page.totalPages,
+    totalElements: data.page.totalElements,
+    size: data.page.size,
+    number: data.page.number,
+  };
+};
+
+export { searchPatients };

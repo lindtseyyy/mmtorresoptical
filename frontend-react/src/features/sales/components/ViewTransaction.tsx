@@ -14,6 +14,7 @@ import {
   EyeOff,
   CreditCard,
   CheckCircle,
+  Printer,
 } from "lucide-react";
 import { Button } from "@/shared/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/shared/components/ui/card";
@@ -28,6 +29,7 @@ import { toast } from "sonner";
 import type { TransactionItemResponse, RefundStateItem, RefundMethod, PaymentResponse, ItemRefundResponse } from "@/features/sales/types";
 import RefundDrawer from "./RefundDrawer";
 import RefundReceipt from "./RefundReceipt";
+import ReceiptDialog from "./ReceiptDialog";
 import AddPaymentDrawer from "./AddPaymentDrawer";
 
 const formatDateTime = (dateStr: string | null) => {
@@ -133,6 +135,9 @@ const ViewTransaction: React.FC = () => {
 
   // ── Complete dialog state ──
   const [completeDialogOpen, setCompleteDialogOpen] = useState(false);
+
+  // ── Reprint receipt state ──
+  const [reprintReceiptOpen, setReprintReceiptOpen] = useState(false);
 
   // ── Void dialog state ──
   const [voidDialogOpen, setVoidDialogOpen] = useState(false);
@@ -333,10 +338,21 @@ const ViewTransaction: React.FC = () => {
       <Card>
         <CardHeader>
           <div className="flex items-center justify-between">
-            <CardTitle className="flex items-center gap-2">
-              <Banknote className="h-5 w-5" />
-              Payment Details
-            </CardTitle>
+            <div className="flex items-center gap-3">
+              <CardTitle className="flex items-center gap-2">
+                <Banknote className="h-5 w-5" />
+                Payment Details
+              </CardTitle>
+              <Button
+                size="sm"
+                variant="outline"
+                className="h-8 gap-1.5"
+                onClick={() => setReprintReceiptOpen(true)}
+              >
+                <Printer className="h-3.5 w-3.5" />
+                Reprint Receipt
+              </Button>
+            </div>
             <div className="flex items-center gap-2">
               {tx.transactionStatus === "DEPOSIT" && (
                 <Button
@@ -820,6 +836,12 @@ const ViewTransaction: React.FC = () => {
           transaction={tx}
         />
       )}
+
+      {/* Reprint Receipt Dialog */}
+      <ReceiptDialog
+        receipt={reprintReceiptOpen ? tx : null}
+        onClose={() => setReprintReceiptOpen(false)}
+      />
     </div>
   );
 };

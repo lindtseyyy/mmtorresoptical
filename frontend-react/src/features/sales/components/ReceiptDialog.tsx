@@ -1,5 +1,7 @@
+import { useRef } from "react";
 import { Dialog } from "@/shared/components/ui/dialog";
 import { Button } from "@/shared/components/ui/button";
+import { Printer } from "lucide-react";
 import type { TransactionResponse } from "@/features/sales/types";
 
 interface ReceiptDialogProps {
@@ -13,6 +15,12 @@ const BUSINESS_ADDRESS_LINE2 = "Metro Manila, Philippines";
 const BUSINESS_PHONE = "(02) 933 7725";
 
 const ReceiptDialog: React.FC<ReceiptDialogProps> = ({ receipt, onClose }) => {
+  const receiptRef = useRef<HTMLDivElement>(null);
+
+  const handlePrint = () => {
+    window.print();
+  };
+
   if (!receipt) return null;
 
   const date = new Date(receipt.transactionDate);
@@ -43,7 +51,7 @@ const ReceiptDialog: React.FC<ReceiptDialogProps> = ({ receipt, onClose }) => {
 
   return (
     <Dialog open={!!receipt} onOpenChange={onClose}>
-      <div className="font-mono text-xs leading-relaxed text-foreground max-h-[65vh] overflow-y-auto">
+      <div ref={receiptRef} className="font-mono text-xs leading-relaxed text-foreground max-h-[65vh] overflow-y-auto print:max-h-none print:overflow-visible">
 
         {/* ---- Header ---- */}
         <div className="text-center mb-4">
@@ -221,9 +229,15 @@ const ReceiptDialog: React.FC<ReceiptDialogProps> = ({ receipt, onClose }) => {
           </p>
         </div>
 
-        <Button className="w-full mt-4" onClick={onClose}>
-          Done
-        </Button>
+        <div className="flex gap-2 mt-4 print:hidden">
+          <Button className="flex-1" onClick={handlePrint}>
+            <Printer className="mr-2 h-4 w-4" />
+            Print Receipt
+          </Button>
+          <Button variant="outline" className="flex-1 border-2 border-gray-400 dark:border-gray-500" onClick={onClose}>
+            Close
+          </Button>
+        </div>
       </div>
     </Dialog>
   );

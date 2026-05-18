@@ -135,3 +135,9 @@ export interface ItemRefundResponse {
     refundQuantity: number;
   };
 }
+
+export interface SelectedPatient {
+  patientId: string;
+  fullName: string;
+  contactNumber: string;
+}

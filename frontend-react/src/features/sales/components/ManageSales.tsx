@@ -1,7 +1,7 @@
 import { useState, useCallback, useEffect, useMemo } from "react";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
-import { Loader2, Trash2 } from "lucide-react";
+import { Loader2, Trash2, UserRound, X } from "lucide-react";
 
 import { Button } from "@/shared/components/ui/button";
 import SegmentedControl from "@/shared/components/ui/segmented-control";
@@ -11,7 +11,8 @@ import ProductDisplay from "@/features/sales/components/ProductDisplay";
 import BillingSection from "@/features/sales/components/BillingSection";
 import PaymentDrawer from "@/features/sales/components/PaymentDrawer";
 import ReceiptDialog from "@/features/sales/components/ReceiptDialog";
-import type { CartItem, TransactionRequest, TransactionResponse } from "@/features/sales/types";
+import PatientPickerModal from "@/features/sales/components/PatientPickerModal";
+import type { CartItem, TransactionRequest, TransactionResponse, SelectedPatient } from "@/features/sales/types";
 import type { PaymentData } from "@/features/sales/components/PaymentSection";
 import type { Product } from "@/features/inventory/types";
 
@@ -37,6 +38,8 @@ const ManageSales: React.FC = () => {
   const [lastReceipt, setLastReceipt] = useState<TransactionResponse | null>(null);
   const [showDrawer, setShowDrawer] = useState(false);
   const [productTypeFilter, setProductTypeFilter] = useState<"PHYSICAL" | "SERVICE">("PHYSICAL");
+  const [selectedPatient, setSelectedPatient] = useState<SelectedPatient | null>(null);
+  const [isPatientModalOpen, setIsPatientModalOpen] = useState(false);
 
   const physicalCount = useMemo(
     () => products.filter((p) => p.productType === "PHYSICAL").length,
@@ -75,6 +78,7 @@ const ManageSales: React.FC = () => {
       setLastReceipt(data);
       sessionStorage.removeItem(STORAGE_KEY);
       setCart([]);
+      setSelectedPatient(null);
       setShowDrawer(false);
       setResetKey((k) => k + 1);
     },
@@ -177,6 +181,7 @@ const ManageSales: React.FC = () => {
         amountTendered: payment.amountTendered,
         paymentMethod: payment.paymentMethod,
         items,
+        ...(selectedPatient && { patientId: selectedPatient.patientId }),
         ...(payment.referenceNumber && {
           referenceNumber: payment.referenceNumber,
         }),
@@ -184,7 +189,7 @@ const ManageSales: React.FC = () => {
 
       transactionMutation.mutate(payload);
     },
-    [cart, transactionMutation]
+    [cart, selectedPatient, transactionMutation]
   );
 
   const grandTotal = cart.reduce((sum, item) => {
@@ -238,7 +243,45 @@ const ManageSales: React.FC = () => {
       </div>
 
       {/* Right column — Billing */}
-      <div className="flex w-2/5 flex-col min-h-0">
+      <div className="flex w-2/5 flex-col min-h-0 gap-3">
+        {/* Customer Context */}
+        <div className="rounded-lg border border-primary/30 bg-primary/5 p-3">
+          {selectedPatient ? (
+            <div className="flex items-center gap-3">
+              <div className="flex h-9 w-9 items-center justify-center rounded-full bg-primary/10 shrink-0">
+                <UserRound className="h-4 w-4 text-primary" />
+              </div>
+              <div className="min-w-0 flex-1">
+                <p className="text-sm font-medium truncate">
+                  {selectedPatient.fullName}
+                </p>
+                <p className="text-xs text-muted-foreground">
+                  ID: {selectedPatient.patientId.slice(0, 8)} &middot;{" "}
+                  {selectedPatient.contactNumber}
+                </p>
+              </div>
+              <Button
+                variant="ghost"
+                size="icon"
+                className="h-8 w-8 text-destructive hover:text-destructive shrink-0"
+                onClick={() => setSelectedPatient(null)}
+              >
+                <X className="h-4 w-4" />
+              </Button>
+            </div>
+          ) : (
+            <Button
+              variant="outline"
+              size="sm"
+              className="w-full gap-2"
+              onClick={() => setIsPatientModalOpen(true)}
+            >
+              <UserRound className="h-4 w-4" />
+              Associate Patient
+            </Button>
+          )}
+        </div>
+
         <div className="flex flex-1 flex-col rounded-lg border border-border bg-card p-4 min-h-0">
           <div className="mb-2 flex items-center justify-between">
             <h2 className="text-sm font-semibold text-card-foreground">
@@ -266,6 +309,12 @@ const ManageSales: React.FC = () => {
           />
         </div>
       </div>
+
+      <PatientPickerModal
+        open={isPatientModalOpen}
+        onOpenChange={setIsPatientModalOpen}
+        onSelect={setSelectedPatient}
+      />
 
       <PaymentDrawer
         key={resetKey}
