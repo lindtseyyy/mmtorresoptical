@@ -6,7 +6,6 @@ interface StatusBadgeProps {
 }
 
 const PAYMENT_STATUS_STYLES: Record<string, string> = {
-  PENDING: "bg-yellow-600 hover:bg-yellow-700 text-white",
   DEPOSIT: "bg-orange-600 hover:bg-orange-700 text-white",
   PAID: "bg-green-600 hover:bg-green-700 text-white",
   COMPLETED: "bg-blue-600 hover:bg-blue-700 text-white",

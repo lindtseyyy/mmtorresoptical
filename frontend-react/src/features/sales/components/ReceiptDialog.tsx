@@ -27,9 +27,6 @@ const ReceiptDialog: React.FC<ReceiptDialogProps> = ({ receipt, onClose }) => {
     second: "2-digit",
   });
 
-  const isPending = receipt.transactionStatus === "PENDING";
-  const documentTitle = isPending ? "INVOICE" : "OFFICIAL RECEIPT";
-
   const subtotal = receipt.transactionItems.reduce(
     (sum, i) => sum + i.unitPrice * i.quantity,
     0,
@@ -51,7 +48,7 @@ const ReceiptDialog: React.FC<ReceiptDialogProps> = ({ receipt, onClose }) => {
         {/* ---- Header ---- */}
         <div className="text-center mb-4">
           <h2 className="text-xs font-bold tracking-wide uppercase text-muted-foreground mb-1">
-            {documentTitle}
+            OFFICIAL RECEIPT
           </h2>
           <h2 className="text-sm font-bold tracking-wide uppercase">
             {BUSINESS_NAME}
@@ -80,7 +77,6 @@ const ReceiptDialog: React.FC<ReceiptDialogProps> = ({ receipt, onClose }) => {
             <span className={`text-[10px] font-bold px-2 py-0.5 rounded ${
               receipt.transactionStatus === "PAID" ? "bg-green-100 text-green-700 dark:bg-green-950 dark:text-green-300" :
               receipt.transactionStatus === "DEPOSIT" ? "bg-amber-100 text-amber-700 dark:bg-amber-950 dark:text-amber-300" :
-              receipt.transactionStatus === "PENDING" ? "bg-yellow-100 text-yellow-700 dark:bg-yellow-950 dark:text-yellow-300" :
               "bg-blue-100 text-blue-700 dark:bg-blue-950 dark:text-blue-300"
             }`}>{receipt.transactionStatus.replace(/_/g, " ")}</span>
           </div>
@@ -184,7 +180,6 @@ const ReceiptDialog: React.FC<ReceiptDialogProps> = ({ receipt, onClose }) => {
         </div>
 
         {/* ---- Payment Information ---- */}
-        {!isPending && (
           <div className="rounded-sm bg-muted/50 px-2 py-1.5 mb-3">
             <div className="flex justify-between font-semibold">
               <span>Amount Paid</span>
@@ -213,14 +208,6 @@ const ReceiptDialog: React.FC<ReceiptDialogProps> = ({ receipt, onClose }) => {
               </>
             )}
           </div>
-        )}
-
-        {/* For PENDING, show total due only */}
-        {isPending && (
-          <div className="rounded-sm bg-muted/50 px-2 py-1.5 mb-3 text-center text-muted-foreground text-[10px]">
-            No payment received yet. Balance due: ₱{format(receipt.totalAmount)}
-          </div>
-        )}
 
         {/* ---- Footer ---- */}
         <div className="text-center text-[10px] text-muted-foreground space-y-1">

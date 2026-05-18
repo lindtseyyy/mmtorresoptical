@@ -295,7 +295,7 @@ const ViewTransaction: React.FC = () => {
               Payment Details
             </CardTitle>
             <div className="flex items-center gap-2">
-              {(tx.transactionStatus === "DEPOSIT" || tx.transactionStatus === "PENDING") && (
+              {tx.transactionStatus === "DEPOSIT" && (
                 <Button
                   size="sm"
                   className="h-8"
@@ -316,7 +316,7 @@ const ViewTransaction: React.FC = () => {
                   Mark Complete
                 </Button>
               )}
-              {(tx.transactionStatus === "PAID" || tx.transactionStatus === "DEPOSIT" || tx.transactionStatus === "PENDING") && (
+              {(tx.transactionStatus === "PAID" || tx.transactionStatus === "DEPOSIT") && (
                 <Button
                   size="sm"
                   variant="destructive"

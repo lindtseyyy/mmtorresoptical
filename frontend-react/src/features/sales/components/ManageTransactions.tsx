@@ -245,7 +245,6 @@ const ManageTransactions: React.FC = () => {
                   </SelectTrigger>
                   <SelectContent>
                     <SelectItem value="all">All Statuses</SelectItem>
-                    <SelectItem value="PENDING">Pending</SelectItem>
                     <SelectItem value="DEPOSIT">Deposit</SelectItem>
                     <SelectItem value="PAID">Paid</SelectItem>
                     <SelectItem value="COMPLETED">Completed</SelectItem>

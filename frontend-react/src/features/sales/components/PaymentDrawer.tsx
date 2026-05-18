@@ -33,13 +33,13 @@ const PaymentDrawer: React.FC<PaymentDrawerProps> = ({
   const remainingBalance = Math.max(0, grandTotal - amountTendered);
   const isPartial = amountTendered > 0 && amountTendered < grandTotal;
   const isFullPayment = amountTendered >= grandTotal;
-  const isNoPayment = amountTendered === 0;
 
   const canComplete =
     items.length > 0 &&
+    amountTendered > 0 &&
     !pending &&
     (paymentMethod === "GCASH"
-      ? isNoPayment || referenceNumber.trim().length > 0
+      ? referenceNumber.trim().length > 0
       : true);
 
   const handleComplete = () => {
@@ -58,7 +58,6 @@ const PaymentDrawer: React.FC<PaymentDrawerProps> = ({
 
   const getButtonLabel = () => {
     if (pending) return "Processing...";
-    if (isNoPayment) return `Create Pending Order (₱${grandTotal.toFixed(2)})`;
     if (isPartial) return `Pay ₱${amountTendered.toFixed(2)} — ₱${remainingBalance.toFixed(2)} Remaining`;
     return `Pay in Full — ₱${grandTotal.toFixed(2)}`;
   };
@@ -254,7 +253,7 @@ const PaymentDrawer: React.FC<PaymentDrawerProps> = ({
               </div>
 
               {/* Live remaining balance */}
-              {!isNoPayment && (remainingBalance > 0 || (!isGcash && amountTendered > grandTotal)) && (
+              {amountTendered > 0 && (remainingBalance > 0 || (!isGcash && amountTendered > grandTotal)) && (
                 <div className={`flex justify-between rounded-md p-2 text-sm ${
                   isFullPayment && !isGcash
                     ? "bg-green-50 dark:bg-green-950"
@@ -285,13 +284,6 @@ const PaymentDrawer: React.FC<PaymentDrawerProps> = ({
                 <div className="flex items-center gap-1.5 text-xs text-amber-600">
                   <AlertTriangle className="h-3.5 w-3.5" />
                   Partial payment — ₱{remainingBalance.toFixed(2)} will remain as balance due.
-                </div>
-              )}
-
-              {isNoPayment && (
-                <div className="flex items-center gap-1.5 text-xs text-muted-foreground">
-                  <AlertTriangle className="h-3.5 w-3.5" />
-                  No payment now — order will be created as PENDING.
                 </div>
               )}
             </div>

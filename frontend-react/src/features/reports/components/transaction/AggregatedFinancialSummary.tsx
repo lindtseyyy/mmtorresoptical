@@ -77,32 +77,25 @@ const AggregatedFinancialSummary: React.FC<AggregatedFinancialSummaryProps> = ({
   const completed = aggregate(statusGroups, "COMPLETED");
   const paid = aggregate(statusGroups, "PAID");
   const partiallyPaid = paidAggregate(statusGroups, "DEPOSIT");
-  const pending = aggregate(statusGroups, "PENDING");
   const voided = aggregate(statusGroups, "VOIDED");
   const refunded = refundDeductionAggregate(statusGroups);
-
-  // Unrealized Pending Balance = same count & value as Pending, framed as a deduction
-  const unrealizedPending = pending;
 
   // Inflow subtotals
   const grossCount =
     completed.count +
     paid.count +
-    partiallyPaid.count +
-    pending.count;
+    partiallyPaid.count;
   const grossValue =
     completed.totalValue +
     paid.totalValue +
-    partiallyPaid.totalValue +
-    pending.totalValue;
+    partiallyPaid.totalValue;
 
   // Deduction subtotals
   const deductionCount =
-    voided.count + refunded.count + unrealizedPending.count;
+    voided.count + refunded.count;
   const deductionValue =
     voided.totalValue +
-    refunded.totalValue +
-    unrealizedPending.totalValue;
+    refunded.totalValue;
 
   // Bottom metrics
   const totalTransactions = grossCount + voided.count;
@@ -128,7 +121,6 @@ const AggregatedFinancialSummary: React.FC<AggregatedFinancialSummaryProps> = ({
             <InflowRow label="Completed" agg={completed} />
             <InflowRow label="Paid" agg={paid} />
             <InflowRow label="Deposit" agg={partiallyPaid} />
-            <InflowRow label="Pending" agg={pending} />
             <SubtotalRow label="Gross Total" agg={{ count: grossCount, totalValue: grossValue }} />
 
             {/* ═══ B. Spacer ═══ */}
@@ -142,10 +134,6 @@ const AggregatedFinancialSummary: React.FC<AggregatedFinancialSummaryProps> = ({
             </tr>
             <DeductionRow label="Voided" agg={voided} />
             <DeductionRow label="Refunded" agg={refunded} />
-            <DeductionRow
-              label="Unrealized Pending Balance"
-              agg={unrealizedPending}
-            />
             <SubtotalRow
               label="Total Deductions"
               agg={{ count: deductionCount, totalValue: deductionValue }}
