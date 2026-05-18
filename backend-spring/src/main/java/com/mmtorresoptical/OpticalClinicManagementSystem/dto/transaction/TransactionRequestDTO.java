@@ -13,8 +13,7 @@ public class TransactionRequestDTO {
 
     private UUID patientId;
 
-    // Optional — the amount the customer is paying now
-    // If null or less than total, creates a partial payment / pending order
+    // Required — the amount the customer is paying now. Must be > 0 (partial or full).
     private BigDecimal amountTendered;
 
     // Optional — payment method for the initial payment (only used if amountTendered > 0)

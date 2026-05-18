@@ -138,10 +138,12 @@ public class TransactionService {
         transaction.setTransactionItems(transactionItems);
         transaction.setTransactionNumber(generateTransactionNumber());
 
-        // Determine initial payment
         BigDecimal amountTendered = transactionRequestDTO.getAmountTendered();
         if (amountTendered == null) {
             amountTendered = BigDecimal.ZERO;
+        }
+        if (amountTendered.compareTo(BigDecimal.ZERO) <= 0) {
+            throw new BadRequestException("At least a deposit payment is required to create a transaction.");
         }
         if (amountTendered.compareTo(total) > 0) {
             amountTendered = total;
@@ -702,13 +704,10 @@ public class TransactionService {
     }
 
     private TransactionStatus computeStatus(BigDecimal totalAmount, BigDecimal amountPaid) {
-        if (amountPaid.compareTo(BigDecimal.ZERO) == 0) {
-            return TransactionStatus.PENDING;
-        } else if (amountPaid.compareTo(totalAmount) >= 0) {
+        if (amountPaid.compareTo(totalAmount) >= 0) {
             return TransactionStatus.PAID;
-        } else {
-            return TransactionStatus.DEPOSIT;
         }
+        return TransactionStatus.DEPOSIT;
     }
 
     private TransactionResponseDTO enrichWithPayments(TransactionResponseDTO dto) {

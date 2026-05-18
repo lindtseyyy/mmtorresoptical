@@ -14,10 +14,10 @@ public class TransactionPaymentValidator
                            ConstraintValidatorContext context) {
 
         BigDecimal tendered = dto.getAmountTendered();
-        if (tendered != null && tendered.compareTo(BigDecimal.ZERO) < 0) {
+        if (tendered == null || tendered.compareTo(BigDecimal.ZERO) <= 0) {
             context.disableDefaultConstraintViolation();
             context.buildConstraintViolationWithTemplate(
-                            "Amount tendered cannot be negative")
+                            "At least a partial payment is required.")
                     .addPropertyNode("amountTendered")
                     .addConstraintViolation();
             return false;
