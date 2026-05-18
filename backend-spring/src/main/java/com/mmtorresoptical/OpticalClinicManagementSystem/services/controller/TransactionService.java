@@ -446,6 +446,10 @@ public class TransactionService {
             throw new IllegalStateException("Cannot void a fully refunded transaction");
         }
 
+        if (transaction.getRefundStatus() == RefundStatus.ADJUSTED) {
+            throw new IllegalStateException("Cannot void a partially refunded transaction");
+        }
+
         // Restore stock only for PHYSICAL products
         for (TransactionItem item : transaction.getTransactionItems()) {
             Product product = item.getProduct();
