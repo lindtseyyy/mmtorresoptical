@@ -22,6 +22,7 @@ import {
 import { createAuditLogsQueryOptions } from "@/features/users/hooks/auditQuery";
 import type { AuditLogEntry } from "@/features/users/services/auditApi";
 import EmptyTableRows from "@/shared/components/EmptyTableRows";
+import JsonDetailsView from "@/shared/components/JsonDetailsView";
 
 const formatTimestamp = (iso: string) =>
   new Date(iso).toLocaleString("en-US", {
@@ -349,14 +350,28 @@ const AuditLogs: React.FC = () => {
               <Label className="text-xs text-muted-foreground">Details</Label>
               <p className="text-sm mt-1 rounded-lg border bg-muted/50 p-3">{viewingEntry.details}</p>
             </div>
-            {viewingEntry.detailsJson && (
-              <div>
-                <Label className="text-xs text-muted-foreground">Details (JSON)</Label>
-                <pre className="text-xs mt-1 rounded-lg border bg-muted/50 p-3 overflow-x-auto whitespace-pre-wrap">
-                  {JSON.stringify(JSON.parse(viewingEntry.detailsJson), null, 2)}
-                </pre>
-              </div>
-            )}
+            {viewingEntry.detailsJson && (() => {
+              try {
+                const parsed = JSON.parse(viewingEntry.detailsJson);
+                return (
+                  <div>
+                    <Label className="text-xs text-muted-foreground">Structured Details</Label>
+                    <div className="mt-1 rounded-lg border bg-muted/50 p-3">
+                      <JsonDetailsView data={parsed} />
+                    </div>
+                  </div>
+                );
+              } catch {
+                return (
+                  <div>
+                    <Label className="text-xs text-muted-foreground">Details (Raw)</Label>
+                    <pre className="text-xs mt-1 rounded-lg border bg-muted/50 p-3 overflow-x-auto whitespace-pre-wrap">
+                      {viewingEntry.detailsJson}
+                    </pre>
+                  </div>
+                );
+              }
+            })()}
           </div>
         )}
       </Dialog>
