@@ -9,6 +9,7 @@ import com.mmtorresoptical.OpticalClinicManagementSystem.model.User;
 import com.mmtorresoptical.OpticalClinicManagementSystem.repository.AuditLogRepository;
 import com.mmtorresoptical.OpticalClinicManagementSystem.services.AuthenticatedUserService;
 import com.mmtorresoptical.OpticalClinicManagementSystem.specification.AuditLogSpecification;
+import com.mmtorresoptical.OpticalClinicManagementSystem.services.helper.JSONService;
 import com.mmtorresoptical.OpticalClinicManagementSystem.utils.UUIDUtils;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.*;
@@ -27,6 +28,7 @@ public class AuditLogService {
     private final AuditLogRepository auditLogRepository;
     private final AuthenticatedUserService authenticatedUserService;
     private final AuditMapper auditMapper;
+    private final JSONService jsonService;
 
     public void log(ActionType actionType,
                     ResourceType resourceType,
@@ -87,8 +89,11 @@ public class AuditLogService {
                 return Page.empty();
             }
 
+            AuditDetailsDTO dto = auditMapper.entityToDetailsDTO(log.get());
+            dto.setDetailsJson(jsonService.sanitizeAuditDetailsJson(dto.getDetailsJson()));
+
             return new PageImpl<>(
-                    List.of(auditMapper.entityToDetailsDTO(log.get())),
+                    List.of(dto),
                     PageRequest.of(page, size),
                     1
             );
@@ -133,6 +138,10 @@ public class AuditLogService {
 
         Page<AuditLog> auditLogs = auditLogRepository.findAll(spec, pageable);
 
-        return auditLogs.map(auditMapper::entityToDetailsDTO);
+        return auditLogs.map(auditLog -> {
+            AuditDetailsDTO dto = auditMapper.entityToDetailsDTO(auditLog);
+            dto.setDetailsJson(jsonService.sanitizeAuditDetailsJson(dto.getDetailsJson()));
+            return dto;
+        });
     }
 }
