@@ -69,8 +69,8 @@ public class JSONService {
                 return sanitizeCreateTransactionAuditJson(node, performedBy);
             }
 
-            // ── CREATE / ARCHIVE Patient: remove internal IDs, strip sensitive PII ──
-            if (("CREATE".equals(actionType) || "ARCHIVE".equals(actionType))
+            // ── CREATE / ARCHIVE / RESTORE Patient: remove internal IDs, strip sensitive PII ──
+            if (("CREATE".equals(actionType) || "ARCHIVE".equals(actionType) || "RESTORE".equals(actionType))
                     && node.has("patientId") && node.has("firstName")) {
                 return sanitizePatientAuditJson(node);
             }
@@ -157,13 +157,13 @@ public class JSONService {
     private String sanitizePatientAuditJson(ObjectNode node) throws JsonProcessingException {
         ObjectNode clean = objectMapper.createObjectNode();
 
-        copyField(clean, node, "firstName");
-        copyMiddleName(clean, node);
-        copyField(clean, node, "lastName");
+        copyFullName(clean, node);
         copyField(clean, node, "email");
         copyField(clean, node, "contactNumber");
         copyField(clean, node, "gender");
         copyField(clean, node, "createdAt");
+
+        formatDisplayFields(clean);
 
         return objectMapper.writeValueAsString(clean);
     }
@@ -192,19 +192,59 @@ public class JSONService {
             }
         }
 
+        formatDisplayFields(filteredBefore);
+        formatDisplayFields(filteredAfter);
+
         ObjectNode result = objectMapper.createObjectNode();
         result.set("before", filteredBefore);
         result.set("after", filteredAfter);
         return objectMapper.writeValueAsString(result);
     }
 
-    private void copyMiddleName(ObjectNode target, ObjectNode source) {
-        if (source.has("middleName") && !source.get("middleName").isNull()) {
-            String value = source.get("middleName").asText();
-            target.put("middleName", value.isBlank() ? "—" : value);
-        } else {
-            target.put("middleName", "—");
+    private void formatDisplayFields(ObjectNode node) {
+        var it = node.fieldNames();
+        while (it.hasNext()) {
+            String field = it.next();
+            if ("birthDate".equals(field)) {
+                String raw = node.get(field).asText();
+                node.put(field, formatBirthDate(raw));
+            } else if ("gender".equals(field)) {
+                String raw = node.get(field).asText();
+                node.put(field, capitalizeWord(raw));
+            }
         }
+    }
+
+    private String formatBirthDate(String raw) {
+        try {
+            java.time.LocalDate date = java.time.LocalDate.parse(raw);
+            return date.format(java.time.format.DateTimeFormatter.ofPattern("MMM dd, yyyy"));
+        } catch (Exception e) {
+            return raw;
+        }
+    }
+
+    private String capitalizeWord(String raw) {
+        if (raw == null || raw.isEmpty()) return raw;
+        return raw.substring(0, 1).toUpperCase() + raw.substring(1).toLowerCase();
+    }
+
+    private void copyFullName(ObjectNode target, ObjectNode source) {
+        String first = source.has("firstName") && !source.get("firstName").isNull()
+                ? source.get("firstName").asText() : "";
+        String middle = source.has("middleName") && !source.get("middleName").isNull()
+                ? source.get("middleName").asText() : "";
+        String last = source.has("lastName") && !source.get("lastName").isNull()
+                ? source.get("lastName").asText() : "";
+
+        String fullName = first;
+        if (!middle.isBlank()) {
+            fullName += " " + middle;
+        }
+        if (!last.isBlank()) {
+            fullName += " " + last;
+        }
+        target.put("fullName", fullName.trim());
     }
 
     private String formatTransactionStatus(String status) {
