@@ -96,5 +96,9 @@ public interface TransactionMapper {
             target = "createdByUserId",
             source = "user.userId"
     )
+    @Mapping(
+            target = "transactionItemAuditDTOList",
+            source = "transactionItems"
+    )
     TransactionAuditDTO entityToAuditDTO(Transaction transaction);
 }

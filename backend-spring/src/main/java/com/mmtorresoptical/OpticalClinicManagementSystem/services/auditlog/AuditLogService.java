@@ -90,7 +90,8 @@ public class AuditLogService {
             }
 
             AuditDetailsDTO dto = auditMapper.entityToDetailsDTO(log.get());
-            dto.setDetailsJson(jsonService.sanitizeAuditDetailsJson(dto.getDetailsJson()));
+            dto.setDetailsJson(jsonService.sanitizeAuditDetailsJson(
+                    dto.getDetailsJson(), dto.getActionType(), dto.getUserName()));
 
             return new PageImpl<>(
                     List.of(dto),
@@ -140,7 +141,8 @@ public class AuditLogService {
 
         return auditLogs.map(auditLog -> {
             AuditDetailsDTO dto = auditMapper.entityToDetailsDTO(auditLog);
-            dto.setDetailsJson(jsonService.sanitizeAuditDetailsJson(dto.getDetailsJson()));
+            dto.setDetailsJson(jsonService.sanitizeAuditDetailsJson(
+                    dto.getDetailsJson(), dto.getActionType(), dto.getUserName()));
             return dto;
         });
     }

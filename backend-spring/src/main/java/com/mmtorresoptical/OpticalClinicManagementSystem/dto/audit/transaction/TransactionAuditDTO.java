@@ -12,6 +12,7 @@ import java.util.UUID;
 public class TransactionAuditDTO {
 
     private UUID transactionId;
+    private String transactionNumber;
     private LocalDateTime transactionDate;
     private BigDecimal totalAmount;
     private String paymentType;

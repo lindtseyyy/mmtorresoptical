@@ -5,10 +5,20 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.node.ObjectNode;
 import org.springframework.stereotype.Component;
 
+import java.util.Map;
+
 @Component
 public class JSONService {
 
     private final ObjectMapper objectMapper;
+
+    private static final Map<String, String> TRANSACTION_STATUS_LABELS = Map.of(
+            "DEPOSIT", "Partial Deposit Owed",
+            "PAID", "Paid",
+            "COMPLETED", "Completed",
+            "VOIDED", "Voided",
+            "REFUNDED", "Refunded"
+    );
 
     public JSONService(ObjectMapper objectMapper) {
         this.objectMapper = objectMapper;
@@ -23,7 +33,7 @@ public class JSONService {
         }
     }
 
-    public String sanitizeAuditDetailsJson(String detailsJson) {
+    public String sanitizeAuditDetailsJson(String detailsJson, String actionType, String performedBy) {
         if (detailsJson == null || detailsJson.isBlank()) {
             return detailsJson;
         }
@@ -52,6 +62,11 @@ public class JSONService {
                     && node.has("beforeTotalAmount")
                     && node.has("afterTotalAmount")) {
                 return sanitizeRefundAuditJson(node);
+            }
+
+            // ── CREATE Transaction: hide UUIDs, humanize statuses ──
+            if ("CREATE".equals(actionType) && node.has("transactionItemAuditDTOList")) {
+                return sanitizeCreateTransactionAuditJson(node, performedBy);
             }
 
             return objectMapper.writeValueAsString(node);
@@ -100,6 +115,33 @@ public class JSONService {
 
     private String formatPeso(double amount) {
         return String.format("₱%.2f", amount);
+    }
+
+    private String sanitizeCreateTransactionAuditJson(ObjectNode node, String performedBy) throws JsonProcessingException {
+        node.remove("transactionId");
+        node.remove("createdByUserId");
+
+        if (performedBy != null && !performedBy.isBlank()) {
+            node.put("createdBy", performedBy);
+        }
+
+        if (node.has("transactionStatus")) {
+            String raw = node.get("transactionStatus").asText();
+            node.put("transactionStatus", formatTransactionStatus(raw));
+        }
+
+        if (node.has("refundStatus")) {
+            String refundStatus = node.get("refundStatus").asText();
+            if ("NONE".equalsIgnoreCase(refundStatus)) {
+                node.remove("refundStatus");
+            }
+        }
+
+        return objectMapper.writeValueAsString(node);
+    }
+
+    private String formatTransactionStatus(String status) {
+        return TRANSACTION_STATUS_LABELS.getOrDefault(status, status);
     }
 
     private String formatFileSize(long bytes) {
