@@ -18,6 +18,7 @@ import {
   FileText,
 } from "lucide-react";
 import { Button } from "@/shared/components/ui/button";
+import { isAdmin } from "@/shared/lib/auth";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/shared/components/ui/card";
 import StatusBadge from "@/shared/components/ui/StatusBadge";
 import { Badge } from "@/shared/components/ui/badge";
@@ -365,7 +366,7 @@ const ViewTransaction: React.FC = () => {
               </Button>
             </div>
             <div className="flex items-center gap-2">
-              {tx.transactionStatus === "DEPOSIT" && (
+              {isAdmin() && tx.transactionStatus === "DEPOSIT" && (
                 <Button
                   size="sm"
                   className="h-8"
@@ -375,7 +376,7 @@ const ViewTransaction: React.FC = () => {
                   Add Payment
                 </Button>
               )}
-              {tx.transactionStatus === "PAID" && (
+              {isAdmin() && tx.transactionStatus === "PAID" && (
                 <Button
                   size="sm"
                   className="h-8 bg-blue-600 hover:bg-blue-700 text-white"
@@ -386,7 +387,7 @@ const ViewTransaction: React.FC = () => {
                   Mark Complete
                 </Button>
               )}
-              {(tx.transactionStatus === "PAID" || tx.transactionStatus === "DEPOSIT") && tx.refundStatus === "NONE" && tx.transactionStatus !== "REFUNDED" && (
+              {isAdmin() && (tx.transactionStatus === "PAID" || tx.transactionStatus === "DEPOSIT") && tx.refundStatus === "NONE" && tx.transactionStatus !== "REFUNDED" && (
                 <Button
                   size="sm"
                   variant="destructive"
@@ -529,7 +530,7 @@ const ViewTransaction: React.FC = () => {
               </CardDescription>
             </div>
 
-            {!selectionMode && canRefund && (
+            {isAdmin() && !selectionMode && canRefund && (
               <Button
                 size="sm"
                 className="h-8 bg-amber-600 text-white hover:bg-amber-700"
