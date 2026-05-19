@@ -34,13 +34,7 @@ import { Textarea } from "@/shared/components/ui/textarea";
 import { toast } from "sonner";
 import {
   fetchPrescription,
-  updatePrescription,
-  updatePrescriptionItem,
-  archivePrescriptionItem,
-  createPrescriptionItems,
-  type UpdatePrescriptionInput,
-  type UpdatePrescriptionItemInput,
-  type PrescriptionItemInput,
+  clonePrescription,
 } from "@/features/patients/services/prescriptionApi";
 
 const prescriptionItemSchema = z.object({
@@ -59,16 +53,14 @@ const prescriptionItemSchema = z.object({
   lensMaterialCl: z.string().optional(),
   baseCurve: z.string().optional(),
   diameter: z.string().optional(),
-  followUpRequired: z.boolean().default(false),
-  followUpDate: z.string().optional(),
-  followUpReason: z.string().optional(),
-  followUpStatus: z.string().optional(),
   notes: z.string().optional(),
 });
 
 const prescriptionFormSchema = z.object({
   examDate: z.string().min(1, "Exam date is required"),
   notes: z.string().optional(),
+  followUpRequired: z.boolean().default(false),
+  followUpReason: z.string().optional(),
   items: z.array(prescriptionItemSchema).min(1, "Add at least one prescription item"),
 });
 
@@ -90,10 +82,6 @@ const emptyItem = {
   lensMaterialCl: "",
   baseCurve: "",
   diameter: "",
-  followUpRequired: false,
-  followUpDate: "",
-  followUpReason: "",
-  followUpStatus: "",
   notes: "",
 };
 
@@ -115,6 +103,8 @@ const EditPrescription: React.FC = () => {
     defaultValues: {
       examDate: "",
       notes: "",
+      followUpRequired: false,
+      followUpReason: "",
       items: [{ ...emptyItem }],
     },
   });
@@ -139,6 +129,8 @@ const EditPrescription: React.FC = () => {
       form.reset({
         examDate: prescription.examDate,
         notes: prescription.notes ?? "",
+        followUpRequired: false,
+        followUpReason: "",
         items: prescription.prescriptionItems.map((item) => ({
           correctionType: item.correctionType,
           eyeSide: item.eyeSide,
@@ -155,10 +147,6 @@ const EditPrescription: React.FC = () => {
           lensMaterialCl: item.lensMaterialCl ?? "",
           baseCurve: numStr(item.baseCurve),
           diameter: numStr(item.diameter),
-          followUpRequired: item.followUpRequired,
-          followUpDate: item.followUpDate ?? "",
-          followUpReason: item.followUpReason ?? "",
-          followUpStatus: item.followUpStatus ?? "",
           notes: item.notes ?? "",
         })),
       });
@@ -184,98 +172,28 @@ const EditPrescription: React.FC = () => {
     });
   };
 
+  const handleSubmit: SubmitHandler<PrescriptionFormValues> = async () => {
+    toast.error("Editing Disabled", {
+      description: "Prescriptions are immutable medical records. Use Clone & Re-issue to create a corrected version.",
+    });
+  };
+
   const mutation = useMutation({
-    mutationFn: async (data: PrescriptionFormValues) => {
-      // Update prescription-level fields
-      const prescriptionUpdate: UpdatePrescriptionInput = {
-        examDate: data.examDate,
-        notes: data.notes || undefined,
-      };
-      await updatePrescription(prescriptionId, prescriptionUpdate);
-
-      const formItemIds = originalItemIds.current;
-      const submittedCount = data.items.length;
-
-      // Update existing items and create new ones
-      for (let i = 0; i < submittedCount; i++) {
-        const item = data.items[i];
-        if (i < formItemIds.length) {
-          // Existing item — update
-          const itemUpdate: UpdatePrescriptionItemInput = {
-            correctionType: item.correctionType,
-            eyeSide: item.eyeSide,
-            sph: item.sph ? Number(item.sph) : undefined,
-            cyl: item.cyl ? Number(item.cyl) : undefined,
-            axis: item.axis ? Number(item.axis) : undefined,
-            addPower: item.addPower ? Number(item.addPower) : undefined,
-            pd: item.pd ? Number(item.pd) : undefined,
-            lensType: item.lensType || undefined,
-            frameTypePreference: item.frameTypePreference || undefined,
-            lensCoatings: item.lensCoatings || undefined,
-            lensMaterial: item.lensMaterial || undefined,
-            lensWearType: item.lensWearType || undefined,
-            lensMaterialCl: item.lensMaterialCl || undefined,
-            baseCurve: item.baseCurve ? Number(item.baseCurve) : undefined,
-            diameter: item.diameter ? Number(item.diameter) : undefined,
-            followUpRequired: item.followUpRequired,
-            followUpDate: item.followUpDate || undefined,
-            followUpReason: item.followUpReason || undefined,
-            followUpStatus: item.followUpStatus || undefined,
-            notes: item.notes || undefined,
-          };
-          await updatePrescriptionItem(formItemIds[i], itemUpdate);
-        } else {
-          // New item — create
-          const newItem: PrescriptionItemInput = {
-            correctionType: item.correctionType,
-            eyeSide: item.eyeSide,
-            sph: item.sph ? Number(item.sph) : undefined,
-            cyl: item.cyl ? Number(item.cyl) : undefined,
-            axis: item.axis ? Number(item.axis) : undefined,
-            addPower: item.addPower ? Number(item.addPower) : undefined,
-            pd: item.pd ? Number(item.pd) : undefined,
-            lensType: item.lensType || undefined,
-            frameTypePreference: item.frameTypePreference || undefined,
-            lensCoatings: item.lensCoatings || undefined,
-            lensMaterial: item.lensMaterial || undefined,
-            lensWearType: item.lensWearType || undefined,
-            lensMaterialCl: item.lensMaterialCl || undefined,
-            baseCurve: item.baseCurve ? Number(item.baseCurve) : undefined,
-            diameter: item.diameter ? Number(item.diameter) : undefined,
-            followUpRequired: item.followUpRequired,
-            followUpDate: item.followUpDate || undefined,
-            followUpReason: item.followUpReason || undefined,
-            followUpStatus: item.followUpStatus || undefined,
-            notes: item.notes || undefined,
-            isArchived: false,
-          };
-          await createPrescriptionItems(prescriptionId, [newItem]);
-        }
-      }
-
-      // Archive removed items
-      for (let i = submittedCount; i < formItemIds.length; i++) {
-        await archivePrescriptionItem(formItemIds[i]);
-      }
-    },
+    mutationFn: () => clonePrescription(prescriptionId),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["patient-prescriptions", patientId] });
-      toast.success("Prescription Updated", {
-        description: "The prescription has been successfully updated.",
+      toast.success("Prescription Cloned", {
+        description: "The prescription has been cloned. You can edit the new version.",
       });
       navigate(`/patients/view/${patientId}`);
     },
     onError: (error: any) => {
       toast.error("Error", {
-        description: "Failed to update prescription. Please try again.",
+        description: "Failed to clone prescription. Please try again.",
       });
       console.error(error);
     },
   });
-
-  const handleSubmit: SubmitHandler<PrescriptionFormValues> = async (data) => {
-    mutation.mutate(data);
-  };
 
   const formatEnum = (value: string) =>
     value
@@ -310,6 +228,10 @@ const EditPrescription: React.FC = () => {
 
       <Form {...form}>
         <form onSubmit={form.handleSubmit(handleSubmit)} className="space-y-6">
+          <div className="rounded-lg border border-amber-200 bg-amber-50 p-4 text-sm text-amber-800">
+            Prescriptions are immutable medical records. Editing is disabled. Use Clone & Re-issue to create a corrected version.
+          </div>
+          <fieldset disabled className="space-y-6">
           <Card className="bg-primary/10 border-b-2 border-b-primary/30 rounded-b-none">
             <CardHeader>
               <CardTitle>Prescription Details</CardTitle>
@@ -644,64 +566,6 @@ const EditPrescription: React.FC = () => {
                       </div>
                     )}
 
-                    <div className="border-t pt-4">
-                      <FormField
-                        control={form.control}
-                        name={`items.${index}.followUpRequired`}
-                        render={({ field }) => (
-                          <FormItem className="flex flex-row items-center space-x-2 space-y-0">
-                            <FormControl>
-                              <Switch
-                                checked={field.value}
-                                onCheckedChange={(v) => {
-                                  field.onChange(v);
-                                  if (v) {
-                                    form.setValue(`items.${index}.followUpStatus`, "PENDING");
-                                  } else {
-                                    form.setValue(`items.${index}.followUpStatus`, "");
-                                    form.setValue(`items.${index}.followUpDate`, "");
-                                    form.setValue(`items.${index}.followUpReason`, "");
-                                  }
-                                }}
-                              />
-                            </FormControl>
-                            <FormLabel className="text-sm font-normal">
-                              Follow-up Required
-                            </FormLabel>
-                          </FormItem>
-                        )}
-                      />
-                      {form.watch(`items.${index}.followUpRequired`) && (
-                        <div className="grid gap-4 md:grid-cols-2 mt-4">
-                          <FormField
-                            control={form.control}
-                            name={`items.${index}.followUpDate`}
-                            render={({ field }) => (
-                              <FormItem>
-                                <FormLabel>Follow-up Date</FormLabel>
-                                <FormControl>
-                                  <Input type="date" {...field} />
-                                </FormControl>
-                                <FormMessage />
-                              </FormItem>
-                            )}
-                          />
-                          <FormField
-                            control={form.control}
-                            name={`items.${index}.followUpReason`}
-                            render={({ field }) => (
-                              <FormItem>
-                                <FormLabel>Follow-up Reason</FormLabel>
-                                <FormControl>
-                                  <Input placeholder="Reason..." {...field} />
-                                </FormControl>
-                                <FormMessage />
-                              </FormItem>
-                            )}
-                          />
-                        </div>
-                      )}
-                    </div>
 
                     <FormField
                       control={form.control}
@@ -731,10 +595,15 @@ const EditPrescription: React.FC = () => {
             <Plus className="mr-2 h-4 w-4" />
             Add Another Prescription Item
           </Button>
+          </fieldset>
 
           <div className="flex justify-end gap-2 pt-6">
-            <Button type="submit" disabled={mutation.isPending}>
-              {mutation.isPending ? "Saving..." : "Save Changes"}
+            <Button
+              type="button"
+              disabled={mutation.isPending}
+              onClick={() => mutation.mutate()}
+            >
+              {mutation.isPending ? "Cloning..." : "Clone & Re-issue"}
             </Button>
             <Button
               type="button"

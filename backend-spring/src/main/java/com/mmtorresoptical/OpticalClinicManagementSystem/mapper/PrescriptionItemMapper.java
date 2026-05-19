@@ -32,10 +32,6 @@ public interface PrescriptionItemMapper {
             expression = "java(item.getLensType() != null ? item.getLensType().name() : null)"
     )
     @Mapping(
-            target = "followUpStatus",
-            expression = "java(item.getFollowUpStatus() != null ? item.getFollowUpStatus().name() : null)"
-    )
-    @Mapping(
             target = "createdBy",
             source = "user"
     )
@@ -52,10 +48,6 @@ public interface PrescriptionItemMapper {
     @Mapping(
             target = "lensType",
             expression = "java(item.getLensType() != null ? item.getLensType().name() : null)"
-    )
-    @Mapping(
-            target = "followUpStatus",
-            expression = "java(item.getFollowUpStatus() != null ? item.getFollowUpStatus().name() : null)"
     )
     @Mapping(
             target = "createdBy",
@@ -76,10 +68,6 @@ public interface PrescriptionItemMapper {
             expression = "java(item.getLensType() != null ? item.getLensType().name() : null)"
     )
     @Mapping(
-            target = "followUpStatus",
-            expression = "java(item.getFollowUpStatus() != null ? item.getFollowUpStatus().name() : null)"
-    )
-    @Mapping(
             target = "createdByUserId",
             source = "user.userId"
     )
@@ -96,10 +84,6 @@ public interface PrescriptionItemMapper {
     @Mapping(
             target = "lensType",
             expression = "java(item.getLensType() != null ? item.getLensType().name() : null)"
-    )
-    @Mapping(
-            target = "followUpStatus",
-            expression = "java(item.getFollowUpStatus() != null ? item.getFollowUpStatus().name() : null)"
     )
     @Mapping(
             target = "createdByUserId",

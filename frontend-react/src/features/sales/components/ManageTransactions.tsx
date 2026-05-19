@@ -269,8 +269,9 @@ const ManageTransactions: React.FC = () => {
                       <th className="w-[12%] py-3 pr-4 text-center font-medium">Total Amount</th>
                       <th className="w-[11%] py-3 pr-4 text-center font-medium">Payment</th>
                       <th className="w-[10%] py-3 pr-4 text-center font-medium">Refund</th>
-                      <th className="w-[13%] py-3 pr-4 text-center font-medium">Transaction Date</th>
-                      <th className="w-[14%] py-3 pr-4 font-medium">Processed By</th>
+                      <th className="w-[11%] py-3 pr-4 text-center font-medium">Transaction Date</th>
+                      <th className="w-[10%] py-3 pr-4 text-center font-medium">Pickup By</th>
+                      <th className="w-[12%] py-3 pr-4 font-medium">Processed By</th>
                       <th className="w-[8%] py-3 text-center font-medium">Action</th>
                     </tr>
                   </thead>
@@ -303,6 +304,9 @@ const ManageTransactions: React.FC = () => {
                         <td className="py-3 pr-4 text-center text-muted-foreground">
                           <span className="block truncate">{formatDateTime(tx.transactionDate)}</span>
                         </td>
+                        <td className="py-3 pr-4 text-center text-muted-foreground">
+                          {tx.estimatedReadyDate ? formatDate(tx.estimatedReadyDate) : "—"}
+                        </td>
                         <td className="py-3 pr-4 text-muted-foreground">
                           <span className="block truncate">{tx.createdBy.fullName}</span>
                         </td>
@@ -322,7 +326,7 @@ const ManageTransactions: React.FC = () => {
                     ))}
                     <EmptyTableRows
                       count={PAGE_SIZE - (transactions?.length ?? 0)}
-                      colSpan={6}
+                      colSpan={7}
                       className="h-[57px]"
                     />
                   </tbody>

@@ -10,6 +10,7 @@ import lombok.Setter;
 import org.hibernate.annotations.CreationTimestamp;
 
 import java.math.BigDecimal;
+import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.util.List;
 import java.util.UUID;
@@ -66,8 +67,8 @@ public class Transaction {
     @Column(name = "void_reason", columnDefinition = "TEXT")
     private String voidReason;
 
-
-    // Relationship
+    @Column(name = "estimated_ready_date")
+    private LocalDate estimatedReadyDate;
     // Foreign Key — user (user_id)
     @ManyToOne
     @JoinColumn(name = "voided_by_user_id")

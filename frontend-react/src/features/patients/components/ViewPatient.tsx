@@ -1,7 +1,7 @@
 import { useState } from "react";
 import { useParams, Link, useNavigate } from "react-router-dom";
 import { useQuery, useMutation, useQueryClient, keepPreviousData } from "@tanstack/react-query";
-import { ArrowLeft, ShoppingCart, Calendar, FileText, Activity, ClipboardList, Stethoscope, ChevronLeft, ChevronRight, MoreHorizontal, Pencil, Archive, Clock, Plus, Undo2 } from "lucide-react";
+import { ArrowLeft, ShoppingCart, Calendar, FileText, Activity, Stethoscope, ChevronLeft, ChevronRight, MoreHorizontal, Pencil, Archive, Clock, Plus, Undo2, Ban, Copy, CheckCircle, UserX, XCircle, Eye } from "lucide-react";
 import { Button } from "@/shared/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/shared/components/ui/card";
 import { MetricCard } from "@/shared/components/MetricCard";
@@ -19,18 +19,22 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/shared/components/ui/select";
+import { Dialog, DialogHeader, DialogTitle, DialogDescription } from "@/shared/components/ui/dialog";
 import { toast } from "sonner";
 import { restorePatient } from "@/features/patients/services/patientApi";
 import {
   fetchPatient,
   fetchPatientProfileMetrics,
   fetchPatientPrescriptions,
-  fetchPatientHealthHistories,
+  fetchPatientEyeExams,
   type PatientProfileMetrics,
   type PrescriptionListItem,
-  type HealthHistoryItem,
+  type EyeExamListItem,
 } from "@/features/patients/services/patientApi";
 import { createArchivePatientMutationOptions } from "@/features/patients/hooks/patientQuery";
+import { voidPrescription, clonePrescription, fetchPrescription, type PrescriptionResponse } from "@/features/patients/services/prescriptionApi";
+import { fetchFollowUpsByPatient, updateFollowUpStatus } from "@/features/patients/services/followUpApi";
+import type { PatientFollowUp } from "@/features/patients/services/followUpApi";
 import api from "@/shared/lib/axiosInstance";
 
 const formatDate = (dateStr: string | null) => {
@@ -78,13 +82,24 @@ const ViewPatient: React.FC = () => {
     enabled: !!patientId,
   });
 
-  const [hhPage, setHhPage] = useState(0);
-  const [hhFilter, setHhFilter] = useState("ACTIVE");
-  const { data: hhData } = useQuery({
-    queryKey: ["patient-health-histories", patientId, hhPage, hhFilter],
-    queryFn: () => fetchPatientHealthHistories(patientId, hhPage, 5, hhFilter),
+  const [eePage, setEePage] = useState(0);
+  const [eeFilter, setEeFilter] = useState("ACTIVE");
+  const { data: eeData } = useQuery({
+    queryKey: ["patient-eye-exams", patientId, eePage, eeFilter],
+    queryFn: () => fetchPatientEyeExams(patientId, eePage, 5, eeFilter),
     placeholderData: keepPreviousData,
     enabled: !!patientId,
+  });
+
+  const [voidRxDialog, setVoidRxDialog] = useState<PrescriptionListItem | null>(null);
+  const [voidReason, setVoidReason] = useState("");
+  const [voiding, setVoiding] = useState(false);
+
+  const [viewRxId, setViewRxId] = useState<string | null>(null);
+  const { data: viewRxData, isLoading: viewRxLoading } = useQuery({
+    queryKey: ["prescription", viewRxId],
+    queryFn: () => fetchPrescription(viewRxId!),
+    enabled: !!viewRxId,
   });
 
   const archiveRxMutation = useMutation({
@@ -96,13 +111,13 @@ const ViewPatient: React.FC = () => {
     onError: () => toast.error("Failed to archive prescription"),
   });
 
-  const archiveHhMutation = useMutation({
-    mutationFn: (hhId: string) => api.delete(`/admin/health-histories/${hhId}`),
+  const archiveEeMutation = useMutation({
+    mutationFn: (eeId: string) => api.delete(`/admin/eye-exams/${eeId}`),
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["patient-health-histories", patientId] });
-      toast.success("Health history archived");
+      queryClient.invalidateQueries({ queryKey: ["patient-eye-exams", patientId] });
+      toast.success("Eye exam archived");
     },
-    onError: () => toast.error("Failed to archive health history"),
+    onError: () => toast.error("Failed to archive eye exam"),
   });
 
   const archivePatientMutation = useMutation(
@@ -123,6 +138,31 @@ const ViewPatient: React.FC = () => {
       toast.error("Error", { description: "Failed to restore patient." });
     },
   });
+
+  const { data: followUps, isLoading: followUpsLoading } = useQuery({
+    queryKey: ["patient-follow-ups", patientId],
+    queryFn: () => fetchFollowUpsByPatient(patientId),
+    enabled: !!patientId,
+  });
+
+  const updateFollowUpMutation = useMutation({
+    mutationFn: ({ followUpId, status }: { followUpId: string; status: string }) =>
+      updateFollowUpStatus(followUpId, status),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["patient-follow-ups", patientId] });
+    },
+    onError: (err: any) => toast.error(err?.response?.data || "Failed to update follow-up"),
+  });
+
+  const handleClone = async (prescriptionId: string) => {
+    try {
+      await clonePrescription(prescriptionId);
+      toast.success("Prescription cloned successfully");
+      queryClient.invalidateQueries({ queryKey: ["patient-prescriptions"] });
+    } catch (err: any) {
+      toast.error(err?.response?.data || "Failed to clone prescription");
+    }
+  };
 
   if (patientLoading) {
     return (
@@ -267,6 +307,91 @@ const ViewPatient: React.FC = () => {
         </CardContent>
       </Card>
 
+      {/* Follow-Ups */}
+      <Card>
+        <CardHeader>
+          <div className="flex items-center justify-between">
+            <div>
+              <CardTitle className="flex items-center gap-2">
+                <Calendar className="h-5 w-5" />
+                Follow-Ups
+              </CardTitle>
+              <CardDescription>
+                Scheduled follow-up visits
+              </CardDescription>
+            </div>
+          </div>
+        </CardHeader>
+        <CardContent>
+          {followUpsLoading ? (
+            <p className="py-4 text-center text-sm text-muted-foreground">Loading follow-ups...</p>
+          ) : !followUps || followUps.length === 0 ? (
+            <p className="py-4 text-center text-sm text-muted-foreground">No follow-ups scheduled.</p>
+          ) : (
+            <div className="space-y-3">
+              {followUps.map((fu: PatientFollowUp) => (
+                <div
+                  key={fu.followUpId}
+                  className="rounded-lg border p-4 transition-colors bg-muted/60 hover:bg-muted"
+                >
+                  <div className="flex items-start justify-between">
+                    <div className="space-y-1 flex-1 min-w-0">
+                      <div className="flex items-center gap-2">
+                        <span className="font-medium">
+                          {formatDate(fu.scheduledDate)}
+                        </span>
+                        <Badge
+                          variant={fu.status === "COMPLETED" ? "default" : fu.status === "CANCELLED" ? "destructive" : "secondary"}
+                        >
+                          {fu.status}
+                        </Badge>
+                      </div>
+                      {fu.followUpReason && (
+                        <p className="text-sm text-muted-foreground">{fu.followUpReason}</p>
+                      )}
+                    </div>
+                    {fu.status !== "COMPLETED" && fu.status !== "CANCELLED" && (
+                      <div className="flex items-center gap-1 shrink-0 ml-2">
+                        <Button
+                          size="sm"
+                          variant="outline"
+                          className="text-green-600 border-green-300 hover:bg-green-50"
+                          onClick={() => updateFollowUpMutation.mutate({ followUpId: fu.followUpId, status: "COMPLETED" })}
+                          disabled={updateFollowUpMutation.isPending}
+                        >
+                          <CheckCircle className="h-4 w-4 mr-1" />
+                          Complete
+                        </Button>
+                        <Button
+                          size="sm"
+                          variant="outline"
+                          className="text-amber-600 border-amber-300 hover:bg-amber-50"
+                          onClick={() => updateFollowUpMutation.mutate({ followUpId: fu.followUpId, status: "NO_SHOW" })}
+                          disabled={updateFollowUpMutation.isPending}
+                        >
+                          <UserX className="h-4 w-4 mr-1" />
+                          No Show
+                        </Button>
+                        <Button
+                          size="sm"
+                          variant="outline"
+                          className="text-red-600 border-red-300 hover:bg-red-50"
+                          onClick={() => updateFollowUpMutation.mutate({ followUpId: fu.followUpId, status: "CANCELLED" })}
+                          disabled={updateFollowUpMutation.isPending}
+                        >
+                          <XCircle className="h-4 w-4 mr-1" />
+                          Cancel
+                        </Button>
+                      </div>
+                    )}
+                  </div>
+                </div>
+              ))}
+            </div>
+          )}
+        </CardContent>
+      </Card>
+
       {/* Prescriptions */}
       <Card>
         <CardHeader>
@@ -313,7 +438,7 @@ const ViewPatient: React.FC = () => {
               {rxData.content.map((rx: PrescriptionListItem) => (
                 <div
                   key={rx.prescriptionId}
-                  className="rounded-lg border p-4 transition-colors bg-muted/60 hover:bg-muted"
+                  className={`rounded-lg border p-4 transition-colors bg-muted/60 hover:bg-muted${rx.status === "VOIDED" ? " opacity-60" : ""}`}
                 >
                   <div className="flex items-start justify-between">
                     <div className="space-y-1 flex-1 min-w-0">
@@ -327,6 +452,9 @@ const ViewPatient: React.FC = () => {
                         >
                           {rx.isArchived ? "Archived" : "Active"}
                         </Badge>
+                        {rx.status === "VOIDED" && (
+                          <Badge variant="destructive" className="ml-2">VOIDED</Badge>
+                        )}
                       </div>
                       {rx.notes && (
                         <p className="text-sm text-muted-foreground">{rx.notes}</p>
@@ -343,21 +471,25 @@ const ViewPatient: React.FC = () => {
                         </Button>
                       </DropdownMenuTrigger>
                       <DropdownMenuContent align="end" className="bg-gray-100 dark:bg-gray-800 border-gray-300 dark:border-gray-700">
-                        <DropdownMenuItem
-                          onClick={() =>
-                            navigate(`/patients/edit/prescription?prescriptionId=${rx.prescriptionId}&patientId=${patientId}&patientName=${encodeURIComponent(fullName)}`)
-                          }
-                        >
-                          <Pencil className="mr-2 h-4 w-4" />
-                          Edit
+                        <DropdownMenuItem onClick={() => setViewRxId(rx.prescriptionId)}>
+                          <Eye className="mr-2 h-4 w-4" />
+                          View Details
                         </DropdownMenuItem>
-                        <DropdownMenuItem
-                          onClick={() => archiveRxMutation.mutate(rx.prescriptionId)}
-                          disabled={archiveRxMutation.isPending || rx.isArchived}
-                        >
-                          <Archive className="mr-2 h-4 w-4" />
-                          Archive
-                        </DropdownMenuItem>
+                        {!rx.isArchived && (
+                          <DropdownMenuItem
+                            onClick={() => setVoidRxDialog(rx)}
+                            className="text-red-600"
+                          >
+                            <Ban className="mr-2 h-4 w-4" />
+                            Void
+                          </DropdownMenuItem>
+                        )}
+                        {rx.status === "VOIDED" && (
+                          <DropdownMenuItem onClick={() => handleClone(rx.prescriptionId)}>
+                            <Copy className="mr-2 h-4 w-4" />
+                            Clone & Re-issue
+                          </DropdownMenuItem>
+                        )}
                       </DropdownMenuContent>
                     </DropdownMenu>
                   </div>
@@ -395,23 +527,23 @@ const ViewPatient: React.FC = () => {
         </CardContent>
       </Card>
 
-      {/* Health Histories */}
+      {/* Eye Exams */}
       <Card>
         <CardHeader>
           <div className="flex items-center justify-between">
             <div>
               <CardTitle className="flex items-center gap-2">
-                <ClipboardList className="h-5 w-5" />
-                Medical History
+                <Stethoscope className="h-5 w-5" />
+                Eye Exams
               </CardTitle>
               <CardDescription>
-                {hhData?.totalElements ?? 0} total record(s)
+                {eeData?.totalElements ?? 0} total exam(s)
               </CardDescription>
             </div>
             <div className="flex items-center gap-3">
               <div className="flex items-center gap-2">
                 <span className="text-sm text-muted-foreground">Status:</span>
-                <Select value={hhFilter} onValueChange={(v) => { setHhFilter(v); setHhPage(0); }}>
+                <Select value={eeFilter} onValueChange={(v) => { setEeFilter(v); setEePage(0); }}>
                   <SelectTrigger className="w-[130px]">
                     <SelectValue />
                   </SelectTrigger>
@@ -423,89 +555,56 @@ const ViewPatient: React.FC = () => {
                 </Select>
               </div>
               <Button asChild>
-                <Link to={`/patients/add/health-history?patientId=${patientId}&patientName=${encodeURIComponent(fullName)}`}>
+                <Link to={`/patients/add/eye-exam?patientId=${patientId}&patientName=${encodeURIComponent(fullName)}`}>
                   <Plus className="mr-1 h-4 w-4" />
-                  Add Medical History
+                  Add Eye Exam
                 </Link>
               </Button>
             </div>
           </div>
         </CardHeader>
         <CardContent>
-          {!hhData || hhData.content.length === 0 ? (
+          {!eeData || eeData.content.length === 0 ? (
             <p className="py-4 text-center text-sm text-muted-foreground">
-              No medical history recorded.
+              No eye exams recorded.
             </p>
           ) : (
             <div className="space-y-3">
-              {hhData.content.map((hh: HealthHistoryItem) => (
+              {eeData.content.map((ee: EyeExamListItem) => (
                 <div
-                  key={hh.historyId}
+                  key={ee.eyeExamId}
                   className="rounded-lg border p-4 transition-colors bg-muted/60 hover:bg-muted"
                 >
                   <div className="flex items-start justify-between">
                     <div className="space-y-2 flex-1 min-w-0">
                       <div className="flex items-center gap-2">
                         <span className="font-medium">
-                          Exam: {formatDate(hh.examDate)}
+                          Exam: {formatDateTime(ee.createdAt)}
                         </span>
                         <Badge
                           variant="secondary"
-                          className={hh.isArchived ? "bg-gray-500 text-white" : "bg-green-100 text-green-700"}
+                          className={ee.isArchived ? "bg-gray-500 text-white" : "bg-green-100 text-green-700"}
                         >
-                          {hh.isArchived ? "Archived" : "Active"}
+                          {ee.isArchived ? "Archived" : "Active"}
                         </Badge>
                       </div>
 
-                      <div className="grid grid-cols-1 gap-2 sm:grid-cols-2">
-                        {hh.eyeConditions && (
-                          <div>
-                            <p className="text-xs text-muted-foreground">Eye Conditions</p>
-                            <p className="text-sm">{hh.eyeConditions}</p>
-                          </div>
-                        )}
-                        {hh.systemicConditions && (
-                          <div>
-                            <p className="text-xs text-muted-foreground">Systemic Conditions</p>
-                            <p className="text-sm">{hh.systemicConditions}</p>
-                          </div>
-                        )}
-                        {hh.medications && (
-                          <div>
-                            <p className="text-xs text-muted-foreground">Medications</p>
-                            <p className="text-sm">{hh.medications}</p>
-                          </div>
-                        )}
-                        {hh.allergies && (
-                          <div>
-                            <p className="text-xs text-muted-foreground">Allergies</p>
-                            <p className="text-sm">{hh.allergies}</p>
-                          </div>
-                        )}
-                        {hh.visualAcuityRight && (
-                          <div>
-                            <p className="text-xs text-muted-foreground">Visual Acuity (Right)</p>
-                            <p className="text-sm">{hh.visualAcuityRight}</p>
-                          </div>
-                        )}
-                        {hh.visualAcuityLeft && (
-                          <div>
-                            <p className="text-xs text-muted-foreground">Visual Acuity (Left)</p>
-                            <p className="text-sm">{hh.visualAcuityLeft}</p>
-                          </div>
-                        )}
-                      </div>
-
-                      {hh.notes && (
+                      {ee.chiefComplaint && (
                         <div>
-                          <p className="text-xs text-muted-foreground">Notes</p>
-                          <p className="text-sm">{hh.notes}</p>
+                          <p className="text-xs text-muted-foreground">Chief Complaint</p>
+                          <p className="text-sm">{ee.chiefComplaint}</p>
+                        </div>
+                      )}
+                      {ee.clinicalImpression && (
+                        <div>
+                          <p className="text-xs text-muted-foreground">Clinical Impression</p>
+                          <p className="text-sm">{ee.clinicalImpression}</p>
                         </div>
                       )}
 
                       <p className="text-xs text-muted-foreground">
-                        Recorded {formatDateTime(hh.createdAt)}
-                        {hh.createdBy ? ` by ${hh.createdBy.fullName}` : ""}
+                        Performed {formatDateTime(ee.createdAt)}
+                        {ee.performedBy ? ` by ${ee.performedBy.fullName}` : ""}
                       </p>
                     </div>
                     <DropdownMenu>
@@ -516,16 +615,8 @@ const ViewPatient: React.FC = () => {
                       </DropdownMenuTrigger>
                       <DropdownMenuContent align="end" className="bg-gray-100 dark:bg-gray-800 border-gray-300 dark:border-gray-700">
                         <DropdownMenuItem
-                          onClick={() =>
-                            navigate(`/patients/edit/health-history?historyId=${hh.historyId}&patientId=${patientId}&patientName=${encodeURIComponent(fullName)}`)
-                          }
-                        >
-                          <Pencil className="mr-2 h-4 w-4" />
-                          Edit
-                        </DropdownMenuItem>
-                        <DropdownMenuItem
-                          onClick={() => archiveHhMutation.mutate(hh.historyId)}
-                          disabled={archiveHhMutation.isPending || hh.isArchived}
+                          onClick={() => archiveEeMutation.mutate(ee.eyeExamId)}
+                          disabled={archiveEeMutation.isPending || ee.isArchived}
                         >
                           <Archive className="mr-2 h-4 w-4" />
                           Archive
@@ -535,17 +626,17 @@ const ViewPatient: React.FC = () => {
                   </div>
                 </div>
               ))}
-              {hhData.totalPages > 1 && (
+              {eeData.totalPages > 1 && (
                 <div className="flex items-center justify-between pt-2">
                   <p className="text-xs text-muted-foreground">
-                    Page {hhPage + 1} of {hhData.totalPages}
+                    Page {eePage + 1} of {eeData.totalPages}
                   </p>
                   <div className="flex gap-1">
                     <Button
                       variant="outline"
                       size="sm"
-                      onClick={() => setHhPage((p) => p - 1)}
-                      disabled={hhPage === 0}
+                      onClick={() => setEePage((p) => p - 1)}
+                      disabled={eePage === 0}
                     >
                       <ChevronLeft className="h-4 w-4" />
                       Previous
@@ -553,8 +644,8 @@ const ViewPatient: React.FC = () => {
                     <Button
                       variant="outline"
                       size="sm"
-                      onClick={() => setHhPage((p) => p + 1)}
-                      disabled={hhPage >= hhData.totalPages - 1}
+                      onClick={() => setEePage((p) => p + 1)}
+                      disabled={eePage >= eeData.totalPages - 1}
                     >
                       Next
                       <ChevronRight className="h-4 w-4" />
@@ -566,6 +657,150 @@ const ViewPatient: React.FC = () => {
           )}
         </CardContent>
       </Card>
+
+      {/* Void Prescription Confirmation Dialog */}
+      <Dialog open={voidRxDialog !== null} onOpenChange={(open) => { if (!open) { setVoidRxDialog(null); setVoidReason(""); } }}>
+        <DialogHeader>
+          <DialogTitle>Void Prescription</DialogTitle>
+          <DialogDescription>
+            Are you sure you want to void the prescription from {voidRxDialog ? formatDate(voidRxDialog.examDate) : ""}? This action cannot be undone.
+          </DialogDescription>
+        </DialogHeader>
+        <div className="space-y-4">
+          <div>
+            <label className="text-sm font-medium">Reason for voiding</label>
+            <textarea
+              className="w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 mt-1"
+              placeholder="Enter reason (at least 10 characters)..."
+              rows={3}
+              value={voidReason}
+              onChange={(e) => setVoidReason(e.target.value)}
+            />
+          </div>
+          <div className="flex justify-end gap-2">
+            <Button variant="outline" onClick={() => { setVoidRxDialog(null); setVoidReason(""); }}>
+              Cancel
+            </Button>
+            <Button
+              variant="destructive"
+              disabled={voidReason.length < 10 || voiding}
+              onClick={async () => {
+                if (!voidRxDialog) return;
+                setVoiding(true);
+                try {
+                  await voidPrescription(voidRxDialog.prescriptionId, voidReason);
+                  toast.success("Prescription voided successfully");
+                  setVoidRxDialog(null);
+                  setVoidReason("");
+                  queryClient.invalidateQueries({ queryKey: ["patient-prescriptions"] });
+                } catch (err: any) {
+                  toast.error(err?.response?.data || "Failed to void prescription");
+                } finally {
+                  setVoiding(false);
+                }
+              }}
+            >
+              {voiding ? "Voiding..." : "Confirm Void"}
+            </Button>
+          </div>
+        </div>
+      </Dialog>
+
+      {/* View Prescription Dialog */}
+      <Dialog open={viewRxId !== null} onOpenChange={(open) => { if (!open) setViewRxId(null); }}>
+        {viewRxLoading ? (
+          <div className="flex items-center justify-center py-16">
+            <div className="h-8 w-8 animate-spin rounded-full border-4 border-primary border-t-transparent" />
+          </div>
+        ) : !viewRxData ? (
+          <div className="py-16 text-center text-muted-foreground">Failed to load prescription.</div>
+        ) : (
+          <>
+            <DialogHeader>
+              <DialogTitle>Prescription Details</DialogTitle>
+              <DialogDescription>
+                Exam Date: {formatDate(viewRxData.examDate)}
+              </DialogDescription>
+            </DialogHeader>
+            <div className="space-y-4">
+              {/* Status badges */}
+              <div className="flex items-center gap-2">
+                <Badge className={viewRxData.isArchived ? "bg-gray-500 text-white" : "bg-green-100 text-green-700"}>
+                  {viewRxData.isArchived ? "Archived" : "Active"}
+                </Badge>
+                {viewRxData.status === "VOIDED" && (
+                  <Badge variant="destructive">VOIDED</Badge>
+                )}
+              </div>
+
+              {/* Notes */}
+              {viewRxData.notes && (
+                <div>
+                  <p className="text-xs font-medium text-muted-foreground">Notes</p>
+                  <p className="text-sm">{viewRxData.notes}</p>
+                </div>
+              )}
+
+              {/* Meta */}
+              <div>
+                <p className="text-xs text-muted-foreground">
+                  Created {formatDateTime(viewRxData.createdAt)}
+                  {viewRxData.createdBy ? ` by ${viewRxData.createdBy.fullName}` : ""}
+                </p>
+              </div>
+
+              {/* Prescription Items */}
+              <div>
+                <h4 className="text-sm font-semibold mb-2">
+                  Prescription Items ({viewRxData.prescriptionItems.length})
+                </h4>
+                {viewRxData.prescriptionItems.length === 0 ? (
+                  <p className="text-sm text-muted-foreground">No items.</p>
+                ) : (
+                  <div className="space-y-3">
+                    {viewRxData.prescriptionItems.map((item, idx) => (
+                      <div key={item.prescriptionItemId} className="rounded-lg border p-3 bg-muted/40">
+                        <div className="flex items-center gap-2 mb-2">
+                          <span className="text-sm font-medium">Item {idx + 1}</span>
+                          <Badge variant="outline" className="text-xs">
+                            {item.correctionType.replace(/_/g, " ")}
+                          </Badge>
+                          <Badge variant="outline" className="text-xs">
+                            {item.eyeSide}
+                          </Badge>
+                        </div>
+                        <div className="grid grid-cols-3 gap-x-4 gap-y-2 text-sm">
+                          {item.sph != null && <div><span className="text-muted-foreground">SPH:</span> {item.sph}</div>}
+                          {item.cyl != null && <div><span className="text-muted-foreground">CYL:</span> {item.cyl}</div>}
+                          {item.axis != null && <div><span className="text-muted-foreground">Axis:</span> {item.axis}</div>}
+                          {item.addPower != null && <div><span className="text-muted-foreground">Add:</span> {item.addPower}</div>}
+                          {item.pd != null && <div><span className="text-muted-foreground">PD:</span> {item.pd}</div>}
+                          {item.lensType && <div><span className="text-muted-foreground">Lens:</span> {item.lensType.replace(/_/g, " ")}</div>}
+                          {item.frameTypePreference && <div className="col-span-2"><span className="text-muted-foreground">Frame:</span> {item.frameTypePreference}</div>}
+                          {item.lensMaterial && <div><span className="text-muted-foreground">Material:</span> {item.lensMaterial}</div>}
+                          {item.lensCoatings && <div><span className="text-muted-foreground">Coatings:</span> {item.lensCoatings}</div>}
+                          {item.lensWearType && <div><span className="text-muted-foreground">Wear:</span> {item.lensWearType}</div>}
+                          {item.lensMaterialCl && <div><span className="text-muted-foreground">CL Material:</span> {item.lensMaterialCl}</div>}
+                          {item.baseCurve != null && <div><span className="text-muted-foreground">Base Curve:</span> {item.baseCurve}</div>}
+                          {item.diameter != null && <div><span className="text-muted-foreground">Diameter:</span> {item.diameter}</div>}
+                        </div>
+                        {item.notes && (
+                          <p className="text-xs text-muted-foreground mt-2">Notes: {item.notes}</p>
+                        )}
+                      </div>
+                    ))}
+                  </div>
+                )}
+              </div>
+            </div>
+            <div className="flex justify-end pt-4">
+              <Button variant="outline" onClick={() => setViewRxId(null)}>
+                Close
+              </Button>
+            </div>
+          </>
+        )}
+      </Dialog>
     </div>
   );
 };

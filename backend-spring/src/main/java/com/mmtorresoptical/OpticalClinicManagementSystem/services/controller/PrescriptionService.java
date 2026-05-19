@@ -1,15 +1,21 @@
 package com.mmtorresoptical.OpticalClinicManagementSystem.services.controller;
 
 import com.mmtorresoptical.OpticalClinicManagementSystem.dto.prescription.*;
+import com.mmtorresoptical.OpticalClinicManagementSystem.dto.prescriptionitems.PrescriptionItemResponseDTO;
 import com.mmtorresoptical.OpticalClinicManagementSystem.dto.prescriptionitems.CreatePrescriptionItemRequestDTO;
 import com.mmtorresoptical.OpticalClinicManagementSystem.dto.prescriptionitems.PrescriptionItemDetailsDTO;
 import com.mmtorresoptical.OpticalClinicManagementSystem.exception.custom.ResourceNotFoundException;
+import com.mmtorresoptical.OpticalClinicManagementSystem.enums.FollowUpStatus;
+import com.mmtorresoptical.OpticalClinicManagementSystem.enums.PrescriptionStatus;
+import com.mmtorresoptical.OpticalClinicManagementSystem.exception.custom.MethodNotAllowedException;
 import com.mmtorresoptical.OpticalClinicManagementSystem.mapper.PrescriptionItemMapper;
 import com.mmtorresoptical.OpticalClinicManagementSystem.mapper.PrescriptionMapper;
 import com.mmtorresoptical.OpticalClinicManagementSystem.model.*;
 import com.mmtorresoptical.OpticalClinicManagementSystem.repository.PatientRepository;
 import com.mmtorresoptical.OpticalClinicManagementSystem.repository.PrescriptionItemsRepository;
 import com.mmtorresoptical.OpticalClinicManagementSystem.repository.PrescriptionRepository;
+import com.mmtorresoptical.OpticalClinicManagementSystem.repository.EyeExamRepository;
+import com.mmtorresoptical.OpticalClinicManagementSystem.repository.PatientFollowUpRepository;
 import com.mmtorresoptical.OpticalClinicManagementSystem.services.AuthenticatedUserService;
 import com.mmtorresoptical.OpticalClinicManagementSystem.services.auditlog.resources.PrescriptionAuditHelper;
 import com.mmtorresoptical.OpticalClinicManagementSystem.services.auditlog.resources.PrescriptionItemAuditHelper;
@@ -23,6 +29,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDate;
+import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
@@ -39,6 +46,8 @@ public class PrescriptionService {
     private final PrescriptionItemsRepository prescriptionItemsRepository;
     private final PrescriptionAuditHelper prescriptionAuditHelper;
     private final PrescriptionItemAuditHelper prescriptionItemAuditHelper;
+    private final PatientFollowUpRepository patientFollowUpRepository;
+    private final EyeExamRepository eyeExamRepository;
 
     public PrescriptionResponseDTO createPrescription(UUID id, CreatePrescriptionRequestDTO prescriptionRequest) {
         // Retrieve patient or throw exception if not found
@@ -59,6 +68,14 @@ public class PrescriptionService {
         prescription.setPatient(retrievedPatient);
         prescription.setUser(authenticatedUser);
 
+        // Link to eye exam if provided
+        if (prescriptionRequest.getEyeExamId() != null) {
+            EyeExam eyeExam = eyeExamRepository.findById(prescriptionRequest.getEyeExamId())
+                    .orElseThrow(() -> new ResourceNotFoundException(
+                            "Eye exam not found with id: " + prescriptionRequest.getEyeExamId()));
+            prescription.setEyeExam(eyeExam);
+        }
+
         // Map prescription items
         List<PrescriptionItem> items = prescriptionRequest
                 .getItemsRequestDTOList()
@@ -77,6 +94,18 @@ public class PrescriptionService {
 
         // Save the prescription
         Prescription savedPrescription = prescriptionRepository.save(prescription);
+
+        // Auto-create follow-up if requested (transient field from request DTO)
+        if (Boolean.TRUE.equals(prescriptionRequest.getFollowUpRequired())) {
+            PatientFollowUp followUp = new PatientFollowUp();
+            followUp.setPrescription(savedPrescription);
+            followUp.setPatient(retrievedPatient);
+            followUp.setScheduledDate(LocalDate.now().plusWeeks(2));
+            followUp.setFollowUpReason(prescriptionRequest.getFollowUpReason());
+            followUp.setStatus(FollowUpStatus.PENDING);
+            followUp.setCreatedBy(authenticatedUser);
+            patientFollowUpRepository.save(followUp);
+        }
 
         // Audit Logging
         prescriptionAuditHelper.logCreate(savedPrescription);
@@ -161,41 +190,11 @@ public class PrescriptionService {
     }
 
     public PrescriptionDetailsDTO updatePrescription(UUID id, UpdatePrescriptionRequestDTO updatePrescriptionRequestDTO) {
-        // Retrieve prescription or throw exception if not found
-        Prescription retrievedPrescription = prescriptionRepository.findById(id)
-                .orElseThrow(() -> new ResourceNotFoundException("Prescription not found with id: " + id));
-
-        // Create a copy for logging (BEFORE snapshot)
-        Prescription beforeUpdate = new Prescription();
-        BeanUtils.copyProperties(retrievedPrescription, beforeUpdate);
-
-        // Update the fields
-        retrievedPrescription.setExamDate(updatePrescriptionRequestDTO.getExamDate());
-        retrievedPrescription.setNotes(updatePrescriptionRequestDTO.getNotes());
-
-        // Persist the update prescription
-        Prescription updatedPrescription = prescriptionRepository.save(retrievedPrescription);
-
-        // Audit Logging
-        prescriptionAuditHelper.logUpdate(beforeUpdate, updatedPrescription);
-
-        // Map the prescription entity to prescription details DTO
-        return prescriptionMapper.entityToDetailsDTO(updatedPrescription);
+        throw new MethodNotAllowedException("PUT is disabled on prescriptions. Medical records are immutable. Use POST /api/admin/prescriptions/{id}/void to void, or POST /api/admin/prescriptions/{id}/clone to create a new version.");
     }
 
     public void archivePrescription(UUID id) {
-        // Retrieve prescription or throw exception if not found
-        Prescription retrievedPrescription = prescriptionRepository.findById(id)
-                .orElseThrow(() -> new ResourceNotFoundException("Prescription not found with id: " + id));
-
-        // Update the isArchived field
-        retrievedPrescription.setIsArchived(true);
-
-        // Persist the updated prescription
-        prescriptionRepository.save(retrievedPrescription);
-
-        // Audit Logging
-        prescriptionAuditHelper.logArchive(retrievedPrescription);
+        throw new MethodNotAllowedException("DELETE is disabled on prescriptions. Medical records are immutable. Use POST /api/admin/prescriptions/{id}/void to void this record.");
     }
 
     public void restorePrescription(UUID id) {
@@ -211,6 +210,59 @@ public class PrescriptionService {
 
         // Audit Logging
         prescriptionAuditHelper.logRestore(retrievedPrescription);
+    }
+
+    @Transactional
+    public void voidPrescription(UUID id, VoidPrescriptionRequestDTO request) {
+        Prescription prescription = prescriptionRepository.findById(id)
+                .orElseThrow(() -> new ResourceNotFoundException("Prescription not found with id: " + id));
+
+        if (prescription.getStatus() == PrescriptionStatus.VOIDED) {
+            throw new IllegalStateException("Prescription is already voided");
+        }
+
+        User authenticatedUser = authenticatedUserService.getCurrentUser();
+
+        prescription.setStatus(PrescriptionStatus.VOIDED);
+        prescription.setVoidReason(request.getVoidReason());
+        prescription.setVoidedAt(LocalDateTime.now());
+        prescription.setVoidedBy(authenticatedUser);
+
+        prescriptionRepository.save(prescription);
+
+        prescriptionAuditHelper.logVoid(prescription);
+    }
+
+    @Transactional
+    public PrescriptionResponseDTO clonePrescription(UUID id) {
+        Prescription source = prescriptionRepository.findById(id)
+                .orElseThrow(() -> new ResourceNotFoundException("Prescription not found with id: " + id));
+
+        User authenticatedUser = authenticatedUserService.getCurrentUser();
+
+        Prescription clone = new Prescription();
+        clone.setExamDate(LocalDate.now());
+        clone.setNotes(source.getNotes());
+        clone.setIsArchived(false);
+        clone.setStatus(PrescriptionStatus.ACTIVE);
+        clone.setPatient(source.getPatient());
+        clone.setUser(authenticatedUser);
+        clone.setEyeExam(source.getEyeExam());
+
+        List<PrescriptionItem> clonedItems = source.getPrescriptionItems().stream()
+                .map(item -> {
+                    PrescriptionItem newItem = new PrescriptionItem();
+                    BeanUtils.copyProperties(item, newItem, "prescriptionItemId", "prescription", "user", "createdAt", "isArchived");
+                    newItem.setPrescription(clone);
+                    newItem.setUser(authenticatedUser);
+                    newItem.setIsArchived(false);
+                    return newItem;
+                }).toList();
+        clone.setPrescriptionItems(clonedItems);
+
+        Prescription saved = prescriptionRepository.save(clone);
+        prescriptionAuditHelper.logCreate(saved);
+        return prescriptionMapper.entityToResponseDTO(saved);
     }
 
     @Transactional

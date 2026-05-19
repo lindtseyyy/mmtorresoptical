@@ -85,9 +85,6 @@ public class User {
     private Set<PrescriptionItem> prescriptionItems;
 
     @OneToMany(mappedBy = "user")
-    private Set<HealthHistory> healthHistory;
-
-    @OneToMany(mappedBy = "user")
     private List<AuditLog> auditLogs;
 
     @OneToMany(mappedBy = "voidedBy")

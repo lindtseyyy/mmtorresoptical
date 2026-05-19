@@ -1,10 +1,12 @@
 package com.mmtorresoptical.OpticalClinicManagementSystem.model;
 
 import com.mmtorresoptical.OpticalClinicManagementSystem.converter.AesEncryptionConverter;
+import com.mmtorresoptical.OpticalClinicManagementSystem.enums.PrescriptionStatus;
 import jakarta.persistence.*;
 import jakarta.validation.constraints.NotNull;
 import lombok.Getter;
 import lombok.Setter;
+import org.hibernate.annotations.ColumnDefault;
 import org.hibernate.annotations.CreationTimestamp;
 
 import java.time.LocalDate;
@@ -38,7 +40,22 @@ public class Prescription {
     @Column(name = "is_archived", nullable = false)
     private Boolean isArchived = false;
 
+    @Enumerated(EnumType.STRING)
+    @ColumnDefault("'ACTIVE'")
+    @Column(name = "status", nullable = false)
+    private PrescriptionStatus status = PrescriptionStatus.ACTIVE;
+
+    @Column(name = "voided_at")
+    private LocalDateTime voidedAt;
+
+    @Column(name = "void_reason", columnDefinition = "TEXT")
+    private String voidReason;
+
     // Relationships
+    @ManyToOne
+    @JoinColumn(name = "voided_by_user_id")
+    private User voidedBy;
+
     @ManyToOne
     @JoinColumn(name = "created_by", nullable = false)
     private User user;
@@ -46,6 +63,10 @@ public class Prescription {
     @ManyToOne
     @JoinColumn(name = "patient_id", nullable = false)
     private Patient patient;
+
+    @ManyToOne
+    @JoinColumn(name = "eye_exam_id")
+    private EyeExam eyeExam;
 
     @OneToMany(
             mappedBy = "prescription",

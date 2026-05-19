@@ -34,8 +34,7 @@ import AddPatient from "@/features/patients/components/AddPatient";
 import EditPatient from "@/features/patients/components/EditPatient";
 import AddPrescription from "@/features/patients/components/AddPrescription";
 import EditPrescription from "@/features/patients/components/EditPrescription";
-import AddHealthHistory from "@/features/patients/components/AddHealthHistory";
-import EditHealthHistory from "@/features/patients/components/EditHealthHistory";
+import AddEyeExam from "@/features/patients/components/AddEyeExam";
 import ViewPatient from "@/features/patients/components/ViewPatient";
 
 // --- Sales ---
@@ -111,8 +110,7 @@ const router = createBrowserRouter([
           { path: "add", element: <AddPatient /> },
           { path: "add/prescription", element: <AddPrescription /> },
           { path: "edit/prescription", element: <EditPrescription /> },
-          { path: "add/health-history", element: <AddHealthHistory /> },
-          { path: "edit/health-history", element: <EditHealthHistory /> },
+          { path: "add/eye-exam", element: <AddEyeExam /> },
           { path: "view/:id", element: <ViewPatient /> },
           { path: "edit/:id", element: <EditPatient /> },
         ],

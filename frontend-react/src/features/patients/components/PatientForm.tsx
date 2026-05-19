@@ -4,6 +4,7 @@ import { patientSchema, type PatientFormData } from "@/features/patients/types";
 import { Button } from "@/shared/components/ui/button";
 import { Input } from "@/shared/components/ui/input";
 import { Switch } from "@/shared/components/ui/switch";
+import { Textarea } from "@/shared/components/ui/textarea";
 import {
   Select,
   SelectContent,
@@ -63,6 +64,7 @@ export const PatientForm: React.FC<PatientFormProps> = ({
       email: "",
       contactNumber: "",
       address: "",
+      medicalHistory: "",
       isArchived: false,
     },
   });
@@ -77,6 +79,7 @@ export const PatientForm: React.FC<PatientFormProps> = ({
       email: data.email ?? "",
       contactNumber: data.contactNumber ?? "",
       address: data.address ?? "",
+      medicalHistory: data.medicalHistory ?? "",
       isArchived: data.isArchived ?? false,
     };
 
@@ -229,6 +232,31 @@ export const PatientForm: React.FC<PatientFormProps> = ({
                   <FormLabel>Address *</FormLabel>
                   <FormControl>
                     <Input placeholder="Enter address" {...field} />
+                  </FormControl>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+          </CardContent>
+        </Card>
+
+        <Card>
+          <CardHeader>
+            <CardTitle>Medical History</CardTitle>
+            <CardDescription>Systemic diseases, allergies, chronic conditions</CardDescription>
+          </CardHeader>
+          <CardContent>
+            <FormField
+              control={form.control}
+              name="medicalHistory"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>Medical History</FormLabel>
+                  <FormControl>
+                    <Textarea
+                      placeholder="e.g. Diabetes, Hypertension, Penicillin allergy, prior eye surgeries..."
+                      {...field}
+                    />
                   </FormControl>
                   <FormMessage />
                 </FormItem>

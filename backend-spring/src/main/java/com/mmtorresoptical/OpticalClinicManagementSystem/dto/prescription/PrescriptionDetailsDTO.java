@@ -17,6 +17,11 @@ public class PrescriptionDetailsDTO {
     private String notes;
     private LocalDateTime createdAt;
     private Boolean isArchived;
+    private String status;
+    private UUID eyeExamId;
+    private String voidReason;
+    private LocalDateTime voidedAt;
+    private UserSummaryDTO voidedBy;
     private UserSummaryDTO createdBy;
     private List<PrescriptionItemResponseDTO> prescriptionItems;
 

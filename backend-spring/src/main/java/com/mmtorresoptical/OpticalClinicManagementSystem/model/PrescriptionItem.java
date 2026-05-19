@@ -1,9 +1,13 @@
 package com.mmtorresoptical.OpticalClinicManagementSystem.model;
 
-import com.mmtorresoptical.OpticalClinicManagementSystem.converter.*;
+import com.mmtorresoptical.OpticalClinicManagementSystem.converter.AesBigDecimalConverter;
+import com.mmtorresoptical.OpticalClinicManagementSystem.converter.AesCorrectionTypeConverter;
+import com.mmtorresoptical.OpticalClinicManagementSystem.converter.AesEncryptionConverter;
+import com.mmtorresoptical.OpticalClinicManagementSystem.converter.AesEyeSideConverter;
+import com.mmtorresoptical.OpticalClinicManagementSystem.converter.AesIntegerConverter;
+import com.mmtorresoptical.OpticalClinicManagementSystem.converter.AesLensTypeConverter;
 import com.mmtorresoptical.OpticalClinicManagementSystem.enums.CorrectionType;
 import com.mmtorresoptical.OpticalClinicManagementSystem.enums.EyeSide;
-import com.mmtorresoptical.OpticalClinicManagementSystem.enums.FollowUpStatus;
 import com.mmtorresoptical.OpticalClinicManagementSystem.enums.LensType;
 import jakarta.persistence.*;
 import jakarta.validation.constraints.NotNull;
@@ -12,7 +16,6 @@ import lombok.Setter;
 import org.hibernate.annotations.CreationTimestamp;
 
 import java.math.BigDecimal;
-import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.util.UUID;
 
@@ -90,21 +93,6 @@ public class PrescriptionItem {
     @Convert(converter = AesBigDecimalConverter.class)
     @Column(name = "diameter", columnDefinition = "TEXT")
     private BigDecimal diameter;
-
-    // Follow-up tracking (optional)
-    @Column(name = "follow_up_required")
-    private Boolean followUpRequired = false;
-
-    @Column(name = "follow_up_date")
-    private LocalDate followUpDate;
-
-    @Convert(converter = AesEncryptionConverter.class)
-    @Column(name = "follow_up_reason", columnDefinition = "TEXT")
-    private String followUpReason;
-
-    @Convert(converter = AesFollowUpStatusConverter.class)
-    @Column(name = "follow_up_status", columnDefinition = "TEXT")
-    private FollowUpStatus followUpStatus;
 
     // Notes
     @Convert(converter = AesEncryptionConverter.class)

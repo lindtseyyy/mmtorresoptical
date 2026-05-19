@@ -34,6 +34,15 @@ import RefundReceipt from "./RefundReceipt";
 import PrintableReceipt from "./PrintableReceipt";
 import AddPaymentDrawer from "./AddPaymentDrawer";
 
+const formatDate = (dateStr: string | null) => {
+  if (!dateStr) return "—";
+  return new Date(dateStr).toLocaleDateString("en-US", {
+    year: "numeric",
+    month: "short",
+    day: "numeric",
+  });
+};
+
 const formatDateTime = (dateStr: string | null) => {
   if (!dateStr) return "—";
   return new Date(dateStr).toLocaleString("en-US", {
@@ -444,6 +453,12 @@ const ViewTransaction: React.FC = () => {
               <div>
                 <p className="text-xs text-muted-foreground">Patient</p>
                 <p className="font-medium">{tx.patient.fullName}</p>
+              </div>
+            )}
+            {tx.estimatedReadyDate && (
+              <div>
+                <p className="text-xs text-muted-foreground">Estimated Pickup</p>
+                <p className="font-medium">{formatDate(tx.estimatedReadyDate)}</p>
               </div>
             )}
           </div>

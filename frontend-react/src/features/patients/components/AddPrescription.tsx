@@ -1,6 +1,6 @@
 import { useState, useLayoutEffect } from "react";
 import { useNavigate, useSearchParams, Link } from "react-router-dom";
-import { useMutation, useQueryClient } from "@tanstack/react-query";
+import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useForm, useFieldArray, type SubmitHandler } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
@@ -33,6 +33,7 @@ import { Switch } from "@/shared/components/ui/switch";
 import { Textarea } from "@/shared/components/ui/textarea";
 import { toast } from "sonner";
 import { createPrescription, type CreatePrescriptionInput } from "@/features/patients/services/prescriptionApi";
+import { fetchPatientEyeExams, type EyeExamListItem } from "@/features/patients/services/patientApi";
 
 const prescriptionItemSchema = z.object({
   correctionType: z.string().min(1, "Required"),
@@ -50,16 +51,16 @@ const prescriptionItemSchema = z.object({
   lensMaterialCl: z.string().optional(),
   baseCurve: z.string().optional(),
   diameter: z.string().optional(),
-  followUpRequired: z.boolean().default(false),
-  followUpDate: z.string().optional(),
-  followUpReason: z.string().optional(),
-  followUpStatus: z.string().optional(),
   notes: z.string().optional(),
 });
 
 const prescriptionFormSchema = z.object({
   examDate: z.string().min(1, "Exam date is required"),
   notes: z.string().optional(),
+  followUpRequired: z.boolean().default(false),
+  followUpReason: z.string().optional(),
+  prescriptionSource: z.enum(["internal", "outside"]).default("internal"),
+  eyeExamId: z.string().optional(),
   items: z.array(prescriptionItemSchema).min(1, "Add at least one prescription item"),
 });
 
@@ -81,10 +82,6 @@ const emptyItem = {
   lensMaterialCl: "",
   baseCurve: "",
   diameter: "",
-  followUpRequired: false,
-  followUpDate: "",
-  followUpReason: "",
-  followUpStatus: "",
   notes: "",
 };
 
@@ -110,6 +107,10 @@ const AddPrescription: React.FC = () => {
     defaultValues: {
       examDate: "",
       notes: "",
+      followUpRequired: false,
+      followUpReason: "",
+      prescriptionSource: "internal",
+      eyeExamId: "",
       items: [{ ...emptyItem }],
     },
   });
@@ -140,12 +141,21 @@ const AddPrescription: React.FC = () => {
     });
   };
 
+  const { data: eyeExamsData } = useQuery({
+    queryKey: ["patient-eye-exams", patientId, "ACTIVE"],
+    queryFn: () => fetchPatientEyeExams(patientId, 0, 100, "ACTIVE"),
+    enabled: !!patientId && form.watch("prescriptionSource") === "internal",
+  });
+
   const mutation = useMutation({
     mutationFn: (data: PrescriptionFormValues) => {
       const payload: CreatePrescriptionInput = {
         examDate: data.examDate,
         notes: data.notes || undefined,
         isArchived: false,
+        followUpRequired: data.followUpRequired,
+        followUpReason: data.followUpReason || undefined,
+        eyeExamId: data.prescriptionSource === "internal" && data.eyeExamId ? data.eyeExamId : undefined,
         itemsRequestDTOList: data.items.map((item) => ({
           correctionType: item.correctionType,
           eyeSide: item.eyeSide,
@@ -163,10 +173,6 @@ const AddPrescription: React.FC = () => {
           baseCurve: item.baseCurve ? Number(item.baseCurve) : undefined,
           diameter: item.diameter ? Number(item.diameter) : undefined,
           isArchived: false,
-          followUpRequired: item.followUpRequired,
-          followUpDate: item.followUpDate || undefined,
-          followUpReason: item.followUpReason || undefined,
-          followUpStatus: item.followUpStatus || undefined,
           notes: item.notes || undefined,
         })),
       };
@@ -201,7 +207,9 @@ const AddPrescription: React.FC = () => {
     <div className="mx-auto max-w-4xl space-y-6">
       <div className="flex items-start justify-between">
         <div>
-          <h2 className="text-3xl font-bold">Add Prescription</h2>
+          <h2 className="text-3xl font-bold">
+            {form.watch("prescriptionSource") === "outside" ? "Add Prescription — Manual Intake (Outside Rx)" : "Add Prescription"}
+          </h2>
           <p className="text-muted-foreground">
             For {patientName || "patient"}
           </p>
@@ -250,6 +258,117 @@ const AddPrescription: React.FC = () => {
                   </FormItem>
                 )}
               />
+
+              {/* Follow-up Section */}
+              <div className="space-y-4 border-t pt-4">
+                <h3 className="text-sm font-medium">Follow-up Required</h3>
+                <FormField
+                  control={form.control}
+                  name="followUpRequired"
+                  render={({ field }) => (
+                    <FormItem className="flex flex-row items-center space-x-2 space-y-0">
+                      <FormControl>
+                        <Switch
+                          checked={field.value}
+                          onCheckedChange={field.onChange}
+                        />
+                      </FormControl>
+                      <FormLabel className="text-sm font-normal">
+                        Follow-up Required
+                      </FormLabel>
+                    </FormItem>
+                  )}
+                />
+                {form.watch("followUpRequired") && (
+                  <FormField
+                    control={form.control}
+                    name="followUpReason"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>Follow-up Reason</FormLabel>
+                        <FormControl>
+                          <Input placeholder="e.g. Routine check-up" {...field} />
+                        </FormControl>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+                )}
+              </div>
+            </CardContent>
+          </Card>
+
+          {/* Prescription Source */}
+          <Card>
+            <CardHeader>
+              <CardTitle>Prescription Source</CardTitle>
+              <CardDescription>Select whether this prescription is from an internal eye exam or an outside source</CardDescription>
+            </CardHeader>
+            <CardContent className="space-y-4">
+              <FormField
+                control={form.control}
+                name="prescriptionSource"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Source Type</FormLabel>
+                    <Select
+                      onValueChange={(v) => {
+                        field.onChange(v);
+                        if (v === "outside") form.setValue("eyeExamId", "");
+                      }}
+                      defaultValue={field.value}
+                    >
+                      <FormControl>
+                        <SelectTrigger>
+                          <SelectValue placeholder="Select source" />
+                        </SelectTrigger>
+                      </FormControl>
+                      <SelectContent>
+                        <SelectItem value="internal">Internal Exam</SelectItem>
+                        <SelectItem value="outside">Outside Prescription</SelectItem>
+                      </SelectContent>
+                    </Select>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+              {form.watch("prescriptionSource") === "internal" && (
+                <FormField
+                  control={form.control}
+                  name="eyeExamId"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Link to Eye Exam</FormLabel>
+                      <Select
+                        onValueChange={field.onChange}
+                        defaultValue={field.value}
+                      >
+                        <FormControl>
+                          <SelectTrigger>
+                            <SelectValue placeholder="Select an eye exam (optional)" />
+                          </SelectTrigger>
+                        </FormControl>
+                        <SelectContent>
+                          {eyeExamsData?.content.map((exam: EyeExamListItem) => (
+                            <SelectItem key={exam.eyeExamId} value={exam.eyeExamId}>
+                              {new Date(exam.createdAt).toLocaleDateString("en-US", {
+                                year: "numeric", month: "short", day: "numeric",
+                              })}
+                              {exam.chiefComplaint ? ` — ${exam.chiefComplaint.substring(0, 60)}${exam.chiefComplaint.length > 60 ? "..." : ""}` : ""}
+                            </SelectItem>
+                          ))}
+                        </SelectContent>
+                      </Select>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+              )}
+              {form.watch("prescriptionSource") === "outside" && (
+                <p className="text-sm text-muted-foreground italic">
+                  Outside prescription — no eye exam will be linked to this record.
+                </p>
+              )}
             </CardContent>
           </Card>
 
@@ -560,67 +679,6 @@ const AddPrescription: React.FC = () => {
                   />
                 </div>
 
-                <div className="border-t pt-4">
-                  <FormField
-                    control={form.control}
-                    name={`items.${index}.followUpRequired`}
-                    render={({ field }) => (
-                      <FormItem className="flex flex-row items-center space-x-2 space-y-0">
-                        <FormControl>
-                          <Switch
-                            checked={field.value}
-                            onCheckedChange={(checked) => {
-                              field.onChange(checked);
-                              if (checked) {
-                                form.setValue(
-                                  `items.${index}.followUpStatus`,
-                                  "PENDING",
-                                );
-                              } else {
-                                form.setValue(`items.${index}.followUpStatus`, "");
-                                form.setValue(`items.${index}.followUpDate`, "");
-                                form.setValue(`items.${index}.followUpReason`, "");
-                              }
-                            }}
-                          />
-                        </FormControl>
-                        <FormLabel className="text-sm font-normal">
-                          Follow-up Required
-                        </FormLabel>
-                      </FormItem>
-                    )}
-                  />
-                  {form.watch(`items.${index}.followUpRequired`) && (
-                    <div className="grid gap-4 md:grid-cols-2 mt-4">
-                      <FormField
-                        control={form.control}
-                        name={`items.${index}.followUpDate`}
-                        render={({ field }) => (
-                          <FormItem>
-                            <FormLabel>Follow-up Date</FormLabel>
-                            <FormControl>
-                              <Input type="date" {...field} />
-                            </FormControl>
-                            <FormMessage />
-                          </FormItem>
-                        )}
-                      />
-                      <FormField
-                        control={form.control}
-                        name={`items.${index}.followUpReason`}
-                        render={({ field }) => (
-                          <FormItem>
-                            <FormLabel>Reason</FormLabel>
-                            <FormControl>
-                              <Input placeholder="e.g. Routine check-up" {...field} />
-                            </FormControl>
-                            <FormMessage />
-                          </FormItem>
-                        )}
-                      />
-                    </div>
-                  )}
-                </div>
 
                 <FormField
                   control={form.control}

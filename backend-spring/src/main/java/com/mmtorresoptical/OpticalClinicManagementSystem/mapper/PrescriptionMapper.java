@@ -14,27 +14,27 @@ import org.mapstruct.Mapping;
 )
 public interface PrescriptionMapper {
 
-    @Mapping(
-            target = "createdBy",
-            source = "user"
-    )
+    @Mapping(target = "createdBy", source = "user")
+    @Mapping(target = "eyeExamId", source = "eyeExam.eyeExamId")
+    @Mapping(target = "status",
+            expression = "java(prescription.getStatus() != null ? prescription.getStatus().name() : null)")
     PrescriptionResponseDTO entityToResponseDTO(Prescription prescription);
 
-    @Mapping(
-            target = "createdByUserId",
-            source = "user.userId"
-    )
+    @Mapping(target = "createdByUserId", source = "user.userId")
+    @Mapping(target = "eyeExamId", source = "eyeExam.eyeExamId")
+    @Mapping(target = "status",
+            expression = "java(prescription.getStatus() != null ? prescription.getStatus().name() : null)")
     PrescriptionAuditDTO entityToAuditDTO(Prescription prescription);
 
-    @Mapping(
-            target = "createdBy",
-            source = "user"
-    )
+    @Mapping(target = "createdBy", source = "user")
+    @Mapping(target = "eyeExamId", source = "eyeExam.eyeExamId")
+    @Mapping(target = "status",
+            expression = "java(prescription.getStatus() != null ? prescription.getStatus().name() : null)")
     PrescriptionDetailsDTO entityToDetailsDTO(Prescription prescription);
 
-    @Mapping(
-            target = "createdBy",
-            source = "user"
-    )
+    @Mapping(target = "createdBy", source = "user")
+    @Mapping(target = "eyeExamId", source = "eyeExam.eyeExamId")
+    @Mapping(target = "status",
+            expression = "java(prescription.getStatus() != null ? prescription.getStatus().name() : null)")
     PrescriptionListDTO entityToListDTO(Prescription prescription);
 }

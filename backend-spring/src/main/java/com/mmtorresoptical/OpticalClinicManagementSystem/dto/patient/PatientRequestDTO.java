@@ -38,6 +38,8 @@ public class PatientRequestDTO {
     @Size(max = 255)
     private String address;
 
+    private String medicalHistory;
+
     private Boolean isArchived = false;
 }
 

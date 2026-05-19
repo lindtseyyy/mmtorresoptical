@@ -98,12 +98,13 @@ public class Patient {
     @Column(name = "full_name_sortable", nullable = false, updatable = false)
     private String fullNameSortable;
 
+    @Convert(converter = AesEncryptionConverter.class)
+    @Column(name = "medical_history", columnDefinition = "TEXT")
+    private String medicalHistory;
+
     // Relationships
     @OneToMany(mappedBy = "patient")
     private Set<Prescription> prescriptions;
-
-    @OneToMany(mappedBy = "patient")
-    private Set<HealthHistory> healthHistory;
 
     @OneToMany(mappedBy = "patient")
     private List<Transaction> transactions;

@@ -104,22 +104,17 @@ export interface PrescriptionListItem {
   notes: string | null;
   createdAt: string;
   isArchived: boolean;
+  status: string;
   createdBy: { userId: string; fullName: string } | null;
 }
 
-export interface HealthHistoryItem {
-  historyId: string;
-  examDate: string;
-  eyeConditions: string | null;
-  systemicConditions: string | null;
-  medications: string | null;
-  allergies: string | null;
-  visualAcuityRight: string | null;
-  visualAcuityLeft: string | null;
-  notes: string | null;
+export interface EyeExamListItem {
+  eyeExamId: string;
   createdAt: string;
+  chiefComplaint: string | null;
+  clinicalImpression: string | null;
   isArchived: boolean;
-  createdBy: { userId: string; fullName: string } | null;
+  performedBy: { userId: string; fullName: string } | null;
 }
 
 const fetchPatientMetrics = async (): Promise<PatientMetrics> => {
@@ -148,14 +143,14 @@ const fetchPatientPrescriptions = async (
   };
 };
 
-const fetchPatientHealthHistories = async (
+const fetchPatientEyeExams = async (
   patientId: string,
   page = 0,
   size = 5,
   archivedStatus = "ALL",
-): Promise<{ content: HealthHistoryItem[]; totalPages: number; totalElements: number }> => {
-  const { data } = await api.get(`/admin/patients/${patientId}/health-histories`, {
-    params: { page, size, sortBy: "examDate", sortOrder: "desc", archivedStatus },
+): Promise<{ content: EyeExamListItem[]; totalPages: number; totalElements: number }> => {
+  const { data } = await api.get(`/admin/patients/${patientId}/eye-exams`, {
+    params: { page, size, sortBy: "createdAt", sortOrder: "desc", archivedStatus },
   });
   return {
     content: data.content,
@@ -164,7 +159,7 @@ const fetchPatientHealthHistories = async (
   };
 };
 
-export { fetchPatients, fetchPatient, addPatient, updatePatient, archivePatient, restorePatient, fetchPatientMetrics, fetchPatientProfileMetrics, fetchPatientPrescriptions, fetchPatientHealthHistories };
+export { fetchPatients, fetchPatient, addPatient, updatePatient, archivePatient, restorePatient, fetchPatientMetrics, fetchPatientProfileMetrics, fetchPatientPrescriptions, fetchPatientEyeExams };
 
 export interface PatientSearchResult {
   patientId: string;

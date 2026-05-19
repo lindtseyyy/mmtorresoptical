@@ -1,6 +1,5 @@
 package com.mmtorresoptical.OpticalClinicManagementSystem.dto.patient;
 
-import com.mmtorresoptical.OpticalClinicManagementSystem.dto.healthhistory.HealthHistoryDetailsDTO;
 import com.mmtorresoptical.OpticalClinicManagementSystem.model.Prescription;
 import com.mmtorresoptical.OpticalClinicManagementSystem.model.Transaction;
 import lombok.Data;
@@ -22,6 +21,7 @@ public class PatientDetailsDTO {
     private String email;
     private LocalDate birthDate;
     private String address;
+    private String medicalHistory;
     private Boolean isArchived;
     private LocalDateTime createdAt;
 }

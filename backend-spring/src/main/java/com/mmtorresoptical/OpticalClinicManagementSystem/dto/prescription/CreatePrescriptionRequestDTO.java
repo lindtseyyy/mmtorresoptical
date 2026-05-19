@@ -6,6 +6,7 @@ import lombok.Data;
 
 import java.time.LocalDate;
 import java.util.List;
+import java.util.UUID;
 
 @Data
 public class CreatePrescriptionRequestDTO {
@@ -14,6 +15,10 @@ public class CreatePrescriptionRequestDTO {
     private LocalDate examDate;
     private String notes;
     private Boolean isArchived = false;
+    private Boolean followUpRequired = false;
+    private String followUpReason;
+
+    private UUID eyeExamId;
 
     List<CreatePrescriptionItemRequestDTO> itemsRequestDTOList;
 }

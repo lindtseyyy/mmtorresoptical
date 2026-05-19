@@ -9,6 +9,7 @@ export const patientSchema = z.object({
   email: z.string().email("Invalid email address"),
   contactNumber: z.string().min(10, "Must be at least 10 digits"),
   address: z.string().min(1, "Address is required").max(255),
+  medicalHistory: z.string().optional(),
   isArchived: z.boolean().default(false),
 });
 
@@ -24,6 +25,7 @@ export interface Patient {
   email: string;
   birthDate: string;
   address: string;
+  medicalHistory?: string | null;
   isArchived: boolean;
   createdAt: string;
 }

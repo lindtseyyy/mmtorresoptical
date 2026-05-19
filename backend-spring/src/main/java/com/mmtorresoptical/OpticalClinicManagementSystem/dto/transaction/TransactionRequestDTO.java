@@ -5,6 +5,7 @@ import com.mmtorresoptical.OpticalClinicManagementSystem.enums.PaymentMethod;
 import lombok.Data;
 
 import java.math.BigDecimal;
+import java.time.LocalDate;
 import java.util.List;
 import java.util.UUID;
 
@@ -23,4 +24,6 @@ public class TransactionRequestDTO {
     private String referenceNumber;
 
     List<TransactionItemsRequestDTO> items;
+
+    private LocalDate estimatedReadyDate;
 }

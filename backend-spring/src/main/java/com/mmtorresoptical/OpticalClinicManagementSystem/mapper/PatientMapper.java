@@ -9,10 +9,7 @@ import com.mmtorresoptical.OpticalClinicManagementSystem.dto.patient.PatientSumm
 import com.mmtorresoptical.OpticalClinicManagementSystem.model.Patient;
 import org.mapstruct.*;
 
-@Mapper(
-        componentModel = "spring",
-        uses = HealthHistoryMapper.class
-)
+@Mapper(componentModel = "spring")
 public interface PatientMapper {
 
     @Mapping(

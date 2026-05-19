@@ -2,6 +2,7 @@ package com.mmtorresoptical.OpticalClinicManagementSystem.services.controller;
 
 import com.mmtorresoptical.OpticalClinicManagementSystem.dto.prescriptionitems.PrescriptionItemDetailsDTO;
 import com.mmtorresoptical.OpticalClinicManagementSystem.dto.prescriptionitems.UpdatePrescriptionItemRequestDTO;
+import com.mmtorresoptical.OpticalClinicManagementSystem.exception.custom.MethodNotAllowedException;
 import com.mmtorresoptical.OpticalClinicManagementSystem.exception.custom.ResourceNotFoundException;
 import com.mmtorresoptical.OpticalClinicManagementSystem.mapper.PrescriptionItemMapper;
 import com.mmtorresoptical.OpticalClinicManagementSystem.model.PrescriptionItem;
@@ -104,48 +105,15 @@ public class PrescriptionItemsService {
     }
 
     public PrescriptionItemDetailsDTO updatePrescriptionItem(UUID id, UpdatePrescriptionItemRequestDTO updatePrescriptionItemRequestDTO) {
-        // Retrieve prescription or throw exception if not found
-        PrescriptionItem retrievedPrescriptionItem = prescriptionItemsRepository.findById(id)
-                .orElseThrow(() -> new ResourceNotFoundException("Prescription Item not found with id: " + id));
-
-        // Create a copy for logging (BEFORE snapshot)
-        PrescriptionItem beforeUpdate = new PrescriptionItem();
-        BeanUtils.copyProperties(retrievedPrescriptionItem, beforeUpdate);
-
-        prescriptionItemMapper.updatePrescriptionItemFromDTO(updatePrescriptionItemRequestDTO, retrievedPrescriptionItem);
-
-        PrescriptionItem updatedPrescriptionItem = prescriptionItemsRepository.save(retrievedPrescriptionItem);
-
-        // Audit Logging
-        prescriptionItemAuditHelper.logUpdate(beforeUpdate, updatedPrescriptionItem);
-
-        return prescriptionItemMapper.entityToDetailsDTO(updatedPrescriptionItem);
+        throw new MethodNotAllowedException("PUT is disabled on prescription items. Clinical eye data is immutable.");
     }
 
     public void archivePrescriptionItem(UUID id) {
-        // Retrieve prescription or throw exception if not found
-        PrescriptionItem retrievedPrescriptionItem = prescriptionItemsRepository.findById(id)
-                .orElseThrow(() -> new ResourceNotFoundException("Prescription Item not found with id: " + id));
-
-        retrievedPrescriptionItem.setIsArchived(true);
-
-        prescriptionItemsRepository.save(retrievedPrescriptionItem);
-
-        // Audit Logging
-        prescriptionItemAuditHelper.logArchive(retrievedPrescriptionItem);
+        throw new MethodNotAllowedException("DELETE is disabled on prescription items. Clinical eye data is immutable.");
     }
 
     public void restorePrescriptionItem(UUID id) {
-        // Retrieve prescription or throw exception if not found
-        PrescriptionItem retrievedPrescriptionItem = prescriptionItemsRepository.findById(id)
-                .orElseThrow(() -> new ResourceNotFoundException("Prescription Item not found with id: " + id));
-
-        retrievedPrescriptionItem.setIsArchived(false);
-
-        prescriptionItemsRepository.save(retrievedPrescriptionItem);
-
-        // Audit Logging
-        prescriptionItemAuditHelper.logRestore(retrievedPrescriptionItem);
+        throw new MethodNotAllowedException("PUT is disabled on prescription items. Clinical eye data is immutable.");
     }
 
 }

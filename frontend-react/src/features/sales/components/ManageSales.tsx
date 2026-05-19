@@ -39,6 +39,7 @@ const ManageSales: React.FC = () => {
   const [showDrawer, setShowDrawer] = useState(false);
   const [productTypeFilter, setProductTypeFilter] = useState<"PHYSICAL" | "SERVICE">("PHYSICAL");
   const [selectedPatient, setSelectedPatient] = useState<SelectedPatient | null>(null);
+  const [estimatedReadyDate, setEstimatedReadyDate] = useState("");
   const [isPatientModalOpen, setIsPatientModalOpen] = useState(false);
 
   const physicalCount = useMemo(
@@ -79,6 +80,7 @@ const ManageSales: React.FC = () => {
       sessionStorage.removeItem(STORAGE_KEY);
       setCart([]);
       setSelectedPatient(null);
+      setEstimatedReadyDate("");
       setShowDrawer(false);
       setResetKey((k) => k + 1);
     },
@@ -135,6 +137,7 @@ const ManageSales: React.FC = () => {
 
   const clearAll = useCallback(() => {
     setCart([]);
+    setEstimatedReadyDate("");
   }, []);
 
   const applyDiscount = useCallback(
@@ -182,6 +185,7 @@ const ManageSales: React.FC = () => {
         paymentMethod: payment.paymentMethod,
         items,
         ...(selectedPatient && { patientId: selectedPatient.patientId }),
+        ...(selectedPatient && estimatedReadyDate && { estimatedReadyDate }),
         ...(payment.referenceNumber && {
           referenceNumber: payment.referenceNumber,
         }),
@@ -279,6 +283,24 @@ const ManageSales: React.FC = () => {
               <UserRound className="h-4 w-4" />
               Associate Patient
             </Button>
+          )}
+
+          {selectedPatient && (
+            <div className="mt-3">
+              <label className="text-xs font-medium text-muted-foreground">
+                Estimated Pickup Date
+              </label>
+              <input
+                type="date"
+                value={estimatedReadyDate}
+                onChange={(e) => setEstimatedReadyDate(e.target.value)}
+                min={new Date().toISOString().split("T")[0]}
+                className="mt-1 flex h-9 w-full rounded-md border border-input bg-transparent px-3 py-1 text-sm shadow-sm transition-colors placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring"
+              />
+              <p className="text-xs text-muted-foreground mt-1">
+                Defaults to 3 days from today if left empty.
+              </p>
+            </div>
           )}
         </div>
 

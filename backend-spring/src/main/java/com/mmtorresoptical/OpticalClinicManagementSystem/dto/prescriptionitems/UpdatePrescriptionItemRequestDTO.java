@@ -28,9 +28,5 @@ public class UpdatePrescriptionItemRequestDTO {
     private String lensMaterialCl;
     private BigDecimal baseCurve;
     private BigDecimal diameter;
-    private Boolean followUpRequired = false;
-    private LocalDate followUpDate;
-    private String followUpReason;
-    private String followUpStatus;
     private String notes;
 }

@@ -72,6 +72,14 @@ public class TransactionService {
             UUID patientId = transactionRequestDTO.getPatientId();
             patient = patientRepository.findById(patientId)
                     .orElseThrow(() -> new ResourceNotFoundException("Patient not found with id: " + patientId));
+
+            // Default estimated ready date for patient-associated orders
+            if (transactionRequestDTO.getEstimatedReadyDate() == null) {
+                transactionRequestDTO.setEstimatedReadyDate(LocalDate.now().plusDays(3));
+            }
+        } else {
+            // Walk-in retail: force estimated ready date to null
+            transactionRequestDTO.setEstimatedReadyDate(null);
         }
 
         Transaction transaction = transactionMapper.requestDTOtoEntity(transactionRequestDTO);

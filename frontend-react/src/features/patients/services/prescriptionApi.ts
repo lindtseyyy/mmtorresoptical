@@ -16,10 +16,6 @@ export interface PrescriptionItemInput {
   lensMaterialCl?: string;
   baseCurve?: number;
   diameter?: number;
-  followUpRequired?: boolean;
-  followUpDate?: string;
-  followUpReason?: string;
-  followUpStatus?: string;
   notes?: string;
   isArchived?: boolean;
 }
@@ -28,6 +24,9 @@ export interface CreatePrescriptionInput {
   examDate: string;
   notes?: string;
   isArchived?: boolean;
+  followUpRequired?: boolean;
+  followUpReason?: string;
+  eyeExamId?: string;
   itemsRequestDTOList: PrescriptionItemInput[];
 }
 
@@ -48,10 +47,6 @@ export interface PrescriptionItemResponse {
   lensMaterialCl: string | null;
   baseCurve: number | null;
   diameter: number | null;
-  followUpRequired: boolean;
-  followUpDate: string | null;
-  followUpReason: string | null;
-  followUpStatus: string | null;
   notes: string | null;
   isArchived: boolean;
   createdAt: string;
@@ -62,6 +57,8 @@ export interface PrescriptionResponse {
   prescriptionId: string;
   examDate: string;
   notes: string | null;
+  status: string;
+  eyeExamId?: string | null;
   createdAt: string;
   isArchived: boolean;
   createdBy: { userId: string; fullName: string } | null;
@@ -89,11 +86,11 @@ export interface UpdatePrescriptionItemInput {
   lensMaterialCl?: string;
   baseCurve?: number;
   diameter?: number;
-  followUpRequired?: boolean;
-  followUpDate?: string;
-  followUpReason?: string;
-  followUpStatus?: string;
   notes?: string;
+}
+
+export interface VoidPrescriptionRequest {
+  voidReason: string;
 }
 
 const createPrescription = async (
@@ -124,4 +121,13 @@ const createPrescriptionItems = async (prescriptionId: string, items: Prescripti
   return await api.post(`/admin/prescriptions/${prescriptionId}/prescription-items`, items);
 };
 
-export { createPrescription, fetchPrescription, updatePrescription, updatePrescriptionItem, archivePrescriptionItem, createPrescriptionItems };
+const voidPrescription = async (id: string, voidReason: string) => {
+  return await api.post(`/admin/prescriptions/${id}/void`, { voidReason });
+};
+
+const clonePrescription = async (id: string): Promise<PrescriptionResponse> => {
+  const { data } = await api.post(`/admin/prescriptions/${id}/clone`);
+  return data;
+};
+
+export { createPrescription, fetchPrescription, updatePrescription, updatePrescriptionItem, archivePrescriptionItem, createPrescriptionItems, voidPrescription, clonePrescription };

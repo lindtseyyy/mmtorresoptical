@@ -163,4 +163,19 @@ public class PrescriptionController {
 
         return ResponseEntity.noContent().build();
     }
+
+    @PreAuthorize("hasRole('ADMIN')")
+    @PostMapping("/api/admin/prescriptions/{id}/void")
+    public ResponseEntity<Void> voidPrescription(@PathVariable UUID id,
+                                                  @Valid @RequestBody VoidPrescriptionRequestDTO request) {
+        prescriptionService.voidPrescription(id, request);
+        return ResponseEntity.ok().build();
+    }
+
+    @PreAuthorize("hasRole('ADMIN')")
+    @PostMapping("/api/admin/prescriptions/{id}/clone")
+    public ResponseEntity<PrescriptionResponseDTO> clonePrescription(@PathVariable UUID id) {
+        PrescriptionResponseDTO response = prescriptionService.clonePrescription(id);
+        return ResponseEntity.ok(response);
+    }
 }

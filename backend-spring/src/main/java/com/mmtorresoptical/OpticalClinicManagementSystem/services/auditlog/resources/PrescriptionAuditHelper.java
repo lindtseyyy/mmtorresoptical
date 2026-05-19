@@ -83,6 +83,16 @@ public class PrescriptionAuditHelper implements AuditLogHelper<Prescription> {
         );
     }
 
+    public void logVoid(Prescription prescription) {
+        String detailsJson = buildDetailsJson(prescription);
+        auditLogService.log(ActionType.VOID,
+                ResourceType.PRESCRIPTION,
+                prescription.getPrescriptionId(),
+                "Voided prescription record",
+                detailsJson
+        );
+    }
+
     private String buildDetailsJson(Prescription prescription) {
         PrescriptionAuditDTO auditDTO = prescriptionMapper.entityToAuditDTO(prescription);
         List<PrescriptionItemAuditDTO> itemDTOs =
