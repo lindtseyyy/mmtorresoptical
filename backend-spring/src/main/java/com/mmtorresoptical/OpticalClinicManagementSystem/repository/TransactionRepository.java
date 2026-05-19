@@ -24,7 +24,6 @@ public interface TransactionRepository extends JpaRepository<Transaction, UUID>,
     @EntityGraph(attributePaths = {
             "transactionItems",
             "transactionItems.product",
-            "transactionItems.refunds",
             "user",
             "patient",
             "voidedBy"
