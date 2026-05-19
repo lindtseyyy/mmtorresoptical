@@ -34,6 +34,7 @@ interface PatientFormProps {
   onFormSubmit: (data: PatientFormData) => Promise<any>;
   isLoading: boolean;
   isEditMode: boolean;
+  patientId?: string;
 }
 
 export const PatientForm: React.FC<PatientFormProps> = ({
@@ -41,6 +42,7 @@ export const PatientForm: React.FC<PatientFormProps> = ({
   defaultValues,
   isLoading,
   isEditMode,
+  patientId,
 }) => {
   const navigate = useNavigate();
 
@@ -236,7 +238,7 @@ export const PatientForm: React.FC<PatientFormProps> = ({
         </Card>
 
         <div className="flex justify-end gap-2 pt-4">
-          <Button type="submit" disabled={isLoading}>
+          <Button type="submit" disabled={isLoading || (isEditMode && !form.formState.isDirty)}>
             {isLoading
               ? isEditMode
                 ? "Saving..."
@@ -248,7 +250,7 @@ export const PatientForm: React.FC<PatientFormProps> = ({
           <Button
             type="button"
             variant="outline"
-            onClick={() => navigate("/patients")}
+            onClick={() => navigate(isEditMode && patientId ? `/patients/view/${patientId}` : "/patients")}
           >
             Cancel
           </Button>

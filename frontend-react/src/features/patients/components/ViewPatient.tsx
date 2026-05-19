@@ -219,43 +219,14 @@ const ViewPatient: React.FC = () => {
               <CardTitle>Overview</CardTitle>
               <CardDescription>Patient profile information</CardDescription>
             </div>
-            <DropdownMenu>
-              <DropdownMenuTrigger asChild>
-                <Button variant="ghost" className="h-10 w-10 shrink-0 p-0 [&_svg]:size-auto focus-visible:ring-0">
-                  <MoreHorizontal className="h-8 w-8" />
-                </Button>
-              </DropdownMenuTrigger>
-              <DropdownMenuContent align="end" className="bg-gray-100 dark:bg-gray-800 border-gray-300 dark:border-gray-700">
-                <DropdownMenuItem
-                  onClick={() =>
-                    navigate(`/patients/edit/${patientId}`)
-                  }
-                >
-                  <Pencil className="mr-2 h-4 w-4" />
-                  Edit
-                </DropdownMenuItem>
-                <DropdownMenuItem
-                  onClick={() =>
-                    patient?.isArchived
-                      ? restorePatientMutation.mutate(patientId)
-                      : archivePatientMutation.mutate(patientId)
-                  }
-                  disabled={archivePatientMutation.isPending || restorePatientMutation.isPending}
-                >
-                  {patient?.isArchived ? (
-                    <>
-                      <Undo2 className="mr-2 h-4 w-4" />
-                      Unarchive
-                    </>
-                  ) : (
-                    <>
-                      <Archive className="mr-2 h-4 w-4" />
-                      Archive
-                    </>
-                  )}
-                </DropdownMenuItem>
-              </DropdownMenuContent>
-            </DropdownMenu>
+            <Button
+              className="bg-blue-600 text-white hover:bg-blue-700"
+              size="sm"
+              onClick={() => navigate(`/patients/edit/${patientId}`)}
+            >
+              <Pencil className="mr-1.5 h-4 w-4" />
+              Edit Patient
+            </Button>
           </div>
         </CardHeader>
         <CardContent>
