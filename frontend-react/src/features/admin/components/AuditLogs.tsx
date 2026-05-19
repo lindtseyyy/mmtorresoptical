@@ -1,8 +1,10 @@
 import { useState, useEffect } from "react";
+import { useNavigate } from "react-router-dom";
 import { useQuery, keepPreviousData } from "@tanstack/react-query";
 import {
   Eye,
   Search,
+  ExternalLink,
   ChevronLeft,
   ChevronRight,
 } from "lucide-react";
@@ -49,7 +51,21 @@ const actionBadgeClass: Record<string, string> = {
   ADJUSTMENT: "bg-violet-600 hover:bg-violet-600 text-white",
 };
 
+const RESOURCE_VIEW_ROUTES: Record<string, string> = {
+  PATIENT: "/patients/view/",
+  USER: "/users/view/",
+  PRODUCT: "/inventory/view/",
+  TRANSACTION: "/transactions/",
+};
+
+const getResourceViewUrl = (resourceType: string, resourceId: string | null): string | null => {
+  const base = RESOURCE_VIEW_ROUTES[resourceType];
+  if (!base || !resourceId) return null;
+  return base + resourceId;
+};
+
 const AuditLogs: React.FC = () => {
+  const navigate = useNavigate();
   const [auditSearch, setAuditSearch] = useState("");
   const [debouncedAuditSearch, setDebouncedAuditSearch] = useState("");
   const [auditActionFilter, setAuditActionFilter] = useState("all");
@@ -305,10 +321,27 @@ const AuditLogs: React.FC = () => {
       {/* Audit Log View Dialog */}
       <Dialog open={!!viewingEntry} onOpenChange={(open) => !open && setViewingEntry(null)}>
         <DialogHeader>
-          <DialogTitle>Audit Log Details</DialogTitle>
-          <DialogDescription>
-            Full details of the selected audit log entry.
-          </DialogDescription>
+          <div className="flex items-start justify-between">
+            <div>
+              <DialogTitle>Audit Log Details</DialogTitle>
+              <DialogDescription>
+                Full details of the selected audit log entry.
+              </DialogDescription>
+            </div>
+            {viewingEntry && getResourceViewUrl(viewingEntry.resourceType, viewingEntry.resourceId) && (
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={() => {
+                  const url = getResourceViewUrl(viewingEntry.resourceType, viewingEntry.resourceId);
+                  if (url) navigate(url);
+                }}
+              >
+                <ExternalLink className="mr-1.5 h-4 w-4" />
+                View Resource
+              </Button>
+            )}
+          </div>
         </DialogHeader>
         {viewingEntry && (
           <div className="space-y-4 mt-4">
