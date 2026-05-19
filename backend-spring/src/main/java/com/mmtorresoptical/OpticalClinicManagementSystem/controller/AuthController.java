@@ -147,6 +147,14 @@ public class AuthController {
         return ResponseEntity.ok(new MessageResponseDTO("Security answer verified"));
     }
 
+    @PostMapping("/logout")
+    public ResponseEntity<MessageResponseDTO> logout() {
+        User user = authenticatedUserService.getCurrentUser();
+        auditLogService.log(ActionType.LOGOUT, ResourceType.USER, user.getUserId(),
+                "User \"" + user.getUsername() + "\" logged out", "{}");
+        return ResponseEntity.ok(new MessageResponseDTO("Logged out successfully"));
+    }
+
     @PostMapping("/forgot-password/reset")
     public ResponseEntity<MessageResponseDTO> resetPassword(@Valid @RequestBody PasswordResetRequestDTO request) {
         User user = userRepository.findByEmail(request.getEmail())

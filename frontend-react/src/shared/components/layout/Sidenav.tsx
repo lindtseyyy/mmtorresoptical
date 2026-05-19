@@ -5,6 +5,7 @@ import { Button, buttonVariants } from "@/shared/components/ui/button";
 import { cn } from "@/shared/lib/utils";
 import { toast } from "sonner";
 import { isAdmin, type Role } from "@/shared/lib/auth";
+import api from "@/shared/lib/axiosInstance";
 
 interface MenuItem {
   title: string;
@@ -87,7 +88,12 @@ const Sidenav: React.FC = () => {
   const user = getUserFromToken();
   const visibleItems = menuItems.filter((item) => isAdmin() || item.roles.includes("STAFF"));
 
-  const handleLogout = () => {
+  const handleLogout = async () => {
+    try {
+      await api.post("/auth/logout");
+    } catch {
+      // Proceed with local logout even if the API call fails
+    }
     localStorage.removeItem("authToken");
     toast.success("Logged Out", {
       description: "You have been successfully logged out.",
