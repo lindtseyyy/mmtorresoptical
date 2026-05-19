@@ -91,5 +91,10 @@ public class Transaction {
             cascade = CascadeType.ALL,
             orphanRemoval = true)
     private List<Payment> payments;
+
+    @OneToMany(mappedBy = "transaction",
+            cascade = CascadeType.ALL,
+            orphanRemoval = true)
+    private List<RefundReceipt> refundReceipts;
 }
 

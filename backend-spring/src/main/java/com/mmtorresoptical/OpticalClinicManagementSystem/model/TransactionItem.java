@@ -8,8 +8,6 @@ import lombok.Getter;
 import lombok.Setter;
 
 import java.math.BigDecimal;
-import java.util.HashSet;
-import java.util.Set;
 import java.util.UUID;
 
 @Getter
@@ -59,12 +57,5 @@ public class TransactionItem {
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "product_id", nullable = false)
     private Product product;
-
-    @OneToMany(
-            mappedBy = "transactionItem",
-            cascade = CascadeType.ALL,
-            orphanRemoval = true
-    )
-    private Set<Refund> refunds = new HashSet<>();
 
 }

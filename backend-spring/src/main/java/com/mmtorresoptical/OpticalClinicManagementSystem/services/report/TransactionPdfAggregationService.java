@@ -107,7 +107,7 @@ public class TransactionPdfAggregationService {
                             LinkedHashMap::new
                     ))
                     .values().stream()
-                    .map(this::mapItemToEntry)
+                    .map(item -> mapItemToEntry(item, transaction))
                     .toList();
         }
 
@@ -141,17 +141,23 @@ public class TransactionPdfAggregationService {
                 .build();
     }
 
-    private TransactionItemEntry mapItemToEntry(TransactionItem item) {
+    private TransactionItemEntry mapItemToEntry(TransactionItem item, Transaction transaction) {
         BigDecimal refundAmount = BigDecimal.ZERO;
         String refundReason = null;
 
-        if (item.getRefunds() != null && !item.getRefunds().isEmpty()) {
-            for (Refund refund : item.getRefunds()) {
-                if (refund.getItemCreditAmount() != null) {
-                    refundAmount = refundAmount.add(refund.getItemCreditAmount());
-                }
-                if (refundReason == null && refund.getRefundReason() != null) {
-                    refundReason = refund.getRefundReason();
+        if (transaction.getRefundReceipts() != null) {
+            for (RefundReceipt receipt : transaction.getRefundReceipts()) {
+                if (receipt.getRefundItems() != null) {
+                    for (RefundItem refundItem : receipt.getRefundItems()) {
+                        if (refundItem.getTransactionItem().getTransactionItemId().equals(item.getTransactionItemId())) {
+                            if (refundItem.getItemCreditAmount() != null) {
+                                refundAmount = refundAmount.add(refundItem.getItemCreditAmount());
+                            }
+                            if (refundReason == null && refundItem.getRefundReason() != null) {
+                                refundReason = refundItem.getRefundReason();
+                            }
+                        }
+                    }
                 }
             }
         }

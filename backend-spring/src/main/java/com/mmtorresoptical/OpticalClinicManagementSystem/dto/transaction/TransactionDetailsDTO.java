@@ -1,8 +1,8 @@
 package com.mmtorresoptical.OpticalClinicManagementSystem.dto.transaction;
 
 import com.mmtorresoptical.OpticalClinicManagementSystem.dto.patient.PatientSummaryDTO;
+import com.mmtorresoptical.OpticalClinicManagementSystem.dto.refund.RefundReceiptDTO;
 import com.mmtorresoptical.OpticalClinicManagementSystem.dto.transactionitem.TransactionItemDetailsDTO;
-import com.mmtorresoptical.OpticalClinicManagementSystem.dto.transactionitem.TransactionItemResponseDTO;
 import com.mmtorresoptical.OpticalClinicManagementSystem.dto.user.UserSummaryDTO;
 import lombok.Data;
 
@@ -33,4 +33,5 @@ public class TransactionDetailsDTO {
 
     private List<TransactionItemDetailsDTO> transactionItems;
     private List<com.mmtorresoptical.OpticalClinicManagementSystem.dto.payment.PaymentResponseDTO> payments;
+    private List<RefundReceiptDTO> refundReceipts;
 }

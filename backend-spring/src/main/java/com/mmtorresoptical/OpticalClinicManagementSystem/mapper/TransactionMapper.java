@@ -10,7 +10,7 @@ import org.mapstruct.Mapper;
 import org.mapstruct.Mapping;
 
 @Mapper(componentModel = "spring",
-        uses = {UserMapper.class, PatientMapper.class, TransactionItemMapper.class})
+        uses = {UserMapper.class, PatientMapper.class, TransactionItemMapper.class, RefundReceiptMapper.class})
 public interface TransactionMapper {
 
     @Mapping(target = "transactionId", ignore = true)

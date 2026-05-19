@@ -7,7 +7,8 @@ import com.mmtorresoptical.OpticalClinicManagementSystem.enums.RefundStatus;
 import com.mmtorresoptical.OpticalClinicManagementSystem.enums.ReportType;
 import com.mmtorresoptical.OpticalClinicManagementSystem.enums.TransactionStatus;
 import com.mmtorresoptical.OpticalClinicManagementSystem.model.Patient;
-import com.mmtorresoptical.OpticalClinicManagementSystem.model.Refund;
+import com.mmtorresoptical.OpticalClinicManagementSystem.model.RefundItem;
+import com.mmtorresoptical.OpticalClinicManagementSystem.model.RefundReceipt;
 import com.mmtorresoptical.OpticalClinicManagementSystem.model.Transaction;
 import com.mmtorresoptical.OpticalClinicManagementSystem.model.TransactionItem;
 import com.mmtorresoptical.OpticalClinicManagementSystem.objects.TopSellingProductDTO;
@@ -206,12 +207,12 @@ public class ReportAggregationService {
         RefundStatus refundStatus = t.getRefundStatus();
         if (refundStatus == RefundStatus.PARTIAL || refundStatus == RefundStatus.FULL) {
             BigDecimal refundSum = BigDecimal.ZERO;
-            if (t.getTransactionItems() != null) {
-                for (TransactionItem item : t.getTransactionItems()) {
-                    if (item.getRefunds() != null) {
-                        for (Refund refund : item.getRefunds()) {
-                            if (refund.getItemCreditAmount() != null) {
-                                refundSum = refundSum.add(refund.getItemCreditAmount());
+            if (t.getRefundReceipts() != null) {
+                for (RefundReceipt receipt : t.getRefundReceipts()) {
+                    if (receipt.getRefundItems() != null) {
+                        for (RefundItem refundItem : receipt.getRefundItems()) {
+                            if (refundItem.getItemCreditAmount() != null) {
+                                refundSum = refundSum.add(refundItem.getItemCreditAmount());
                             }
                         }
                     }

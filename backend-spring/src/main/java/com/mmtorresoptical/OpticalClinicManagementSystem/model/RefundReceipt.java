@@ -6,6 +6,8 @@ import lombok.Setter;
 
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
+import java.util.ArrayList;
+import java.util.List;
 import java.util.UUID;
 
 @Getter
@@ -22,19 +24,23 @@ public class RefundReceipt {
     @Column(name = "receipt_number", length = 20, unique = true)
     private String receiptNumber;
 
-    @Column(name = "transaction_id", nullable = false)
-    private UUID transactionId;
+    @Column(name = "actual_cashback", precision = 10, scale = 2)
+    private BigDecimal actualCashback = BigDecimal.ZERO;
 
-    @Column(name = "transaction_item_id", nullable = false)
-    private UUID transactionItemId;
+    @Column(name = "refund_method", length = 20)
+    private String refundMethod;
 
-    @Column(name = "cash_returned_amount", precision = 10, scale = 2)
-    private BigDecimal cashReturnedAmount;
+    @Column(name = "created_at", nullable = false)
+    private LocalDateTime createdAt;
 
-    @Column(name = "date_issued", nullable = false)
-    private LocalDateTime dateIssued;
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "transaction_id", nullable = false)
+    private Transaction transaction;
 
-    @ManyToOne
+    @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "issued_by_user_id", nullable = false)
     private User issuedBy;
+
+    @OneToMany(mappedBy = "refundReceipt", cascade = CascadeType.ALL, orphanRemoval = true)
+    private List<RefundItem> refundItems = new ArrayList<>();
 }

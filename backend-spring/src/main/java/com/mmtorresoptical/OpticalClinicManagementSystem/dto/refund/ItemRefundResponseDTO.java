@@ -5,6 +5,7 @@ import lombok.Data;
 
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
+import java.util.List;
 import java.util.UUID;
 
 @Data
@@ -20,7 +21,7 @@ public class ItemRefundResponseDTO {
     private String newRefundStatus;
 
     private RefundReceiptData refundReceipt;
-    private RefundedItemSummary refundedItem;
+    private List<RefundedItemSummary> refundedItems;
 
     @Data
     @Builder

@@ -194,9 +194,9 @@ public interface InventoryAnalyticsRepository extends JpaRepository<Product, UUI
             ti.subtotal
             -
             COALESCE(
-                (SELECT SUM(r.itemCreditAmount)
-                 FROM Refund r
-                 WHERE r.transactionItem = ti),
+                (SELECT SUM(ri.itemCreditAmount)
+                 FROM RefundItem ri
+                 WHERE ri.transactionItem = ti),
                 0
             )
         )
@@ -216,9 +216,9 @@ public interface InventoryAnalyticsRepository extends JpaRepository<Product, UUI
         ti.subtotal
         -
         COALESCE(
-            (SELECT SUM(r.itemCreditAmount)
-             FROM Refund r
-             WHERE r.transactionItem = ti),
+            (SELECT SUM(ri.itemCreditAmount)
+             FROM RefundItem ri
+             WHERE ri.transactionItem = ti),
             0
         )
     ) DESC
@@ -245,9 +245,9 @@ public interface InventoryAnalyticsRepository extends JpaRepository<Product, UUI
             ti.subtotal
             -
             COALESCE(
-                (SELECT SUM(r.itemCreditAmount)
-                 FROM Refund r
-                 WHERE r.transactionItem = ti),
+                (SELECT SUM(ri.itemCreditAmount)
+                 FROM RefundItem ri
+                 WHERE ri.transactionItem = ti),
                 0
             )
         )
@@ -267,9 +267,9 @@ public interface InventoryAnalyticsRepository extends JpaRepository<Product, UUI
         ti.subtotal
         -
         COALESCE(
-            (SELECT SUM(r.itemCreditAmount)
-             FROM Refund r
-             WHERE r.transactionItem = ti),
+            (SELECT SUM(ri.itemCreditAmount)
+             FROM RefundItem ri
+             WHERE ri.transactionItem = ti),
             0
         )
     ) DESC
@@ -286,9 +286,9 @@ public interface InventoryAnalyticsRepository extends JpaRepository<Product, UUI
             ti.subtotal
             -
             COALESCE(
-                (SELECT SUM(r.itemCreditAmount)
-                 FROM Refund r
-                 WHERE r.transactionItem = ti),
+                (SELECT SUM(ri.itemCreditAmount)
+                 FROM RefundItem ri
+                 WHERE ri.transactionItem = ti),
                 0
             )
         ),

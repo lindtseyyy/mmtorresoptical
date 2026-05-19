@@ -1,11 +1,9 @@
 package com.mmtorresoptical.OpticalClinicManagementSystem.dto.transactionitem;
 
 import com.mmtorresoptical.OpticalClinicManagementSystem.dto.product.ProductSummaryDTO;
-import com.mmtorresoptical.OpticalClinicManagementSystem.dto.refund.RefundDetailsDTO;
 import lombok.Data;
 
 import java.math.BigDecimal;
-import java.util.List;
 import java.util.UUID;
 
 @Data
@@ -24,5 +22,4 @@ public class TransactionItemDetailsDTO {
     private Integer refundedQuantity;
     private String refundReason;
 
-    private List<RefundDetailsDTO> refundDetailsDTOList;
 }

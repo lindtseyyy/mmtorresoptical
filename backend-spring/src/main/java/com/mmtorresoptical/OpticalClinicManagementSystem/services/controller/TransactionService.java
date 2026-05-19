@@ -54,7 +54,7 @@ public class TransactionService {
     private final PatientRepository patientRepository;
     private final ProductRepository productRepository;
     private final TransactionItemMapper transactionItemMapper;
-    private final RefundRepository refundRepository;
+    private final RefundItemRepository refundItemRepository;
     private final RefundReceiptRepository refundReceiptRepository;
     private final PaymentRepository paymentRepository;
     private final TransactionAuditHelper transactionAuditHelper;
@@ -362,7 +362,7 @@ public class TransactionService {
         long totalTransactions = transactionRepository.countByTransactionStatusNot(TransactionStatus.VOIDED);
 
         BigDecimal grossRevenue = transactionRepository.sumTotalAmountExcludingStatus(TransactionStatus.VOIDED);
-        BigDecimal totalRefundedAmount = refundRepository.sumTotalRefundAmount();
+        BigDecimal totalRefundedAmount = refundReceiptRepository.sumTotalRefundAmount();
         BigDecimal totalRevenue = grossRevenue.subtract(totalRefundedAmount);
 
         LocalDateTime startOfToday = LocalDate.now().atStartOfDay();
@@ -371,7 +371,7 @@ public class TransactionService {
         long todayTransactions = transactionRepository.countByTransactionStatusNotAndTransactionDateBetween(TransactionStatus.VOIDED, startOfToday, startOfTomorrow);
 
         BigDecimal todayGrossRevenue = transactionRepository.sumTotalAmountByTransactionDateBetweenExcludingStatus(startOfToday, startOfTomorrow, TransactionStatus.VOIDED);
-        BigDecimal todayTotalRefundedAmount = refundRepository.sumRefundAmountByRefundedAtBetween(startOfToday, startOfTomorrow);
+        BigDecimal todayTotalRefundedAmount = refundReceiptRepository.sumRefundAmountByCreatedAtBetween(startOfToday, startOfTomorrow);
         BigDecimal todayRevenue = todayGrossRevenue.subtract(todayTotalRefundedAmount);
 
         BigDecimal averageTransactionValue = totalTransactions > 0
@@ -384,7 +384,7 @@ public class TransactionService {
 
         long totalTransactionsThisMonth = transactionRepository.countByTransactionStatusNotAndTransactionDateBetween(TransactionStatus.VOIDED, startOfMonth, startOfNextMonth);
 
-        BigDecimal totalRefundedAmountThisMonth = refundRepository.sumRefundAmountByRefundedAtBetween(startOfMonth, startOfNextMonth);
+        BigDecimal totalRefundedAmountThisMonth = refundReceiptRepository.sumRefundAmountByCreatedAtBetween(startOfMonth, startOfNextMonth);
 
         BigDecimal todayTotalVoidedAmount = transactionRepository.sumVoidedAmountByTransactionDateBetween(startOfToday, startOfTomorrow);
 
@@ -492,7 +492,7 @@ public class TransactionService {
         User currentUser = authenticatedUserService.getCurrentUser();
 
         // ── Phase 1: Validate all items, calculate refund amounts, sum totalRefundValue ──
-        List<Refund> pendingRefunds = new ArrayList<>();
+        List<RefundItem> pendingItems = new ArrayList<>();
         List<TransactionItem> refundItems = new ArrayList<>();
         Transaction transaction = null;
         BigDecimal totalRefundValue = BigDecimal.ZERO;
@@ -545,23 +545,22 @@ public class TransactionService {
 
             totalRefundValue = totalRefundValue.add(itemCredit);
 
-            Refund refund = new Refund();
-            refund.setItemCreditAmount(itemCredit);
-            refund.setTransactionItem(item);
-            refund.setRefundQuantity(newRefundQty);
-            refund.setRefundReason(dto.getRefundReason());
-            refund.setRefundedAt(LocalDateTime.now());
-            refund.setRefundMethod(request.getRefundMethod());
-            refund.setUser(currentUser);
-            pendingRefunds.add(refund);
+            RefundItem refundItem = new RefundItem();
+            refundItem.setItemCreditAmount(itemCredit);
+            refundItem.setTransactionItem(item);
+            refundItem.setQuantityRefunded(newRefundQty);
+            refundItem.setRefundReason(dto.getRefundReason());
+            pendingItems.add(refundItem);
         }
 
         // Sum previous item credits for revised total calculation
         BigDecimal totalAllRefunded = BigDecimal.ZERO;
-        for (TransactionItem ti : transaction.getTransactionItems()) {
-            if (ti.getRefunds() != null) {
-                for (Refund r : ti.getRefunds()) {
-                    totalAllRefunded = totalAllRefunded.add(r.getItemCreditAmount());
+        if (transaction.getRefundReceipts() != null) {
+            for (RefundReceipt receipt : transaction.getRefundReceipts()) {
+                if (receipt.getRefundItems() != null) {
+                    for (RefundItem ri : receipt.getRefundItems()) {
+                        totalAllRefunded = totalAllRefunded.add(ri.getItemCreditAmount());
+                    }
                 }
             }
         }
@@ -589,7 +588,6 @@ public class TransactionService {
 
         // ── Phase 2: Order-level accounting — cash-back vs. balance-reduction ──
         BigDecimal originalTotal = transaction.getTotalAmount();
-        // Revised total accounts for ALL refunded items (past + current batch)
         BigDecimal newOrderTotal = originalTotal.subtract(totalAllRefunded).subtract(actualRefundValue);
         BigDecimal amountPaid = transaction.getAmountPaid();
         BigDecimal cashToReturn;
@@ -597,9 +595,7 @@ public class TransactionService {
         RefundStatus previousRefundStatus = transaction.getRefundStatus();
 
         if (amountPaid.compareTo(newOrderTotal) > 0) {
-            // Cash back: clinic has collected more cash than the revised order total
-            cashToReturn = amountPaid.subtract(newOrderTotal);
-            // Track cumulative cash returned; amountPaid stays immutable
+            cashToReturn = amountPaid.subtract(newOrderTotal).min(maxRefundable);
             BigDecimal newTotalRefundedCash = previousRefundedCash.add(cashToReturn);
             transaction.setTotalRefundedCash(newTotalRefundedCash);
             BigDecimal effectivePaid = amountPaid.subtract(newTotalRefundedCash);
@@ -610,45 +606,30 @@ public class TransactionService {
                 transaction.setTransactionStatus(computeStatus(newOrderTotal, effectivePaid));
             }
         } else {
-            // Balance reduction: deposit covers less than or exactly the new total
             cashToReturn = BigDecimal.ZERO;
             BigDecimal effectivePaid = amountPaid.subtract(previousRefundedCash);
             transaction.setTransactionStatus(computeStatus(newOrderTotal, effectivePaid));
         }
 
-        // When no cash leaves the drawer, this is a balance adjustment, not a cash refund
+        // Determine batch-level refund method and actual cashback
+        String batchRefundMethod;
+        BigDecimal batchActualCashback;
         if (cashToReturn.compareTo(BigDecimal.ZERO) == 0) {
-            for (Refund refund : pendingRefunds) {
-                refund.setRefundMethod("BALANCE_ADJUSTMENT");
-                refund.setActualCashBack(BigDecimal.ZERO);
-            }
+            batchRefundMethod = "BALANCE_ADJUSTMENT";
+            batchActualCashback = BigDecimal.ZERO;
         } else {
-            // Distribute cashToReturn proportionally among pending refunds
-            BigDecimal remaining = cashToReturn;
-            for (int i = 0; i < pendingRefunds.size(); i++) {
-                Refund refund = pendingRefunds.get(i);
-                if (i == pendingRefunds.size() - 1) {
-                    refund.setActualCashBack(remaining.max(BigDecimal.ZERO));
-                } else {
-                    BigDecimal share = cashToReturn
-                            .multiply(refund.getItemCreditAmount())
-                            .divide(totalRefundValue, 2, RoundingMode.HALF_UP);
-                    refund.setActualCashBack(share);
-                    remaining = remaining.subtract(share);
-                }
-            }
+            batchRefundMethod = request.getRefundMethod();
+            batchActualCashback = cashToReturn;
         }
-
-        // totalAmount retains the original order total — revised totals are derived on the fly
 
         // ── Phase 3: Status & inventory updates ──
         boolean allItemsFullyRefunded = true;
         for (TransactionItem ti : transaction.getTransactionItems()) {
             int tiAlreadyRefunded = ti.getRefundedQuantity() == null ? 0 : ti.getRefundedQuantity();
             int tiNewRefunded = tiAlreadyRefunded;
-            for (Refund pending : pendingRefunds) {
+            for (RefundItem pending : pendingItems) {
                 if (pending.getTransactionItem().getTransactionItemId().equals(ti.getTransactionItemId())) {
-                    tiNewRefunded += pending.getRefundQuantity();
+                    tiNewRefunded += pending.getQuantityRefunded();
                 }
             }
             if (tiNewRefunded < ti.getQuantity()) {
@@ -664,39 +645,47 @@ public class TransactionService {
             transaction.setRefundStatus(RefundStatus.PARTIAL);
         }
 
-        // Restore stock and save refunds
-        for (Refund refund : pendingRefunds) {
-            TransactionItem item = refund.getTransactionItem();
+        // Create the RefundReceipt header
+        RefundReceipt receipt = new RefundReceipt();
+        receipt.setReceiptNumber(generateRefundReceiptNumber());
+        receipt.setTransaction(transaction);
+        receipt.setActualCashback(batchActualCashback);
+        receipt.setRefundMethod(batchRefundMethod);
+        receipt.setCreatedAt(LocalDateTime.now());
+        receipt.setIssuedBy(currentUser);
+
+        // Restore stock and build refund items linked to the receipt
+        List<ItemRefundResponseDTO.RefundedItemSummary> itemSummaries = new ArrayList<>();
+        for (RefundItem refundItem : pendingItems) {
+            TransactionItem item = refundItem.getTransactionItem();
             Product product = item.getProduct();
 
             if (product.getProductType() == ProductType.PHYSICAL) {
-                if ("Damaged".equalsIgnoreCase(refund.getRefundReason())) {
-                    product.setDamagedQuantity(product.getDamagedQuantity() + refund.getRefundQuantity());
+                if ("Damaged".equalsIgnoreCase(refundItem.getRefundReason())) {
+                    product.setDamagedQuantity(product.getDamagedQuantity() + refundItem.getQuantityRefunded());
                 } else {
-                    product.setQuantity(product.getQuantity() + refund.getRefundQuantity());
+                    product.setQuantity(product.getQuantity() + refundItem.getQuantityRefunded());
                 }
                 productRepository.save(product);
             }
 
-            refundRepository.save(refund);
+            refundItem.setRefundReceipt(receipt);
+            receipt.getRefundItems().add(refundItem);
 
             int ar = item.getRefundedQuantity() == null ? 0 : item.getRefundedQuantity();
-            item.setRefundedQuantity(ar + refund.getRefundQuantity());
+            item.setRefundedQuantity(ar + refundItem.getQuantityRefunded());
+
+            itemSummaries.add(ItemRefundResponseDTO.RefundedItemSummary.builder()
+                    .productName(product.getProductName())
+                    .unitPrice(item.getUnitPrice())
+                    .refundQuantity(refundItem.getQuantityRefunded())
+                    .build());
         }
 
+        refundReceiptRepository.save(receipt);
         transactionRepository.save(transaction);
 
-        // ── Phase 4: Generate Refund Receipt ──
-        RefundReceipt receipt = new RefundReceipt();
-        receipt.setReceiptNumber(generateRefundReceiptNumber());
-        receipt.setTransactionId(transaction.getTransactionId());
-        receipt.setTransactionItemId(refundItems.get(0).getTransactionItemId());
-        receipt.setCashReturnedAmount(cashToReturn);
-        receipt.setDateIssued(LocalDateTime.now());
-        receipt.setIssuedBy(currentUser);
-        refundReceiptRepository.save(receipt);
-
-        // ── Audit logging with enhanced details ──
+        // ── Audit logging ──
         int itemCount = refundItems.size();
         String productNames = refundItems.stream()
                 .map(i -> i.getProduct().getProductName())
@@ -705,10 +694,11 @@ public class TransactionService {
         Map<String, Object> auditData = new LinkedHashMap<>();
         auditData.put("transactionId", transaction.getTransactionId().toString());
         auditData.put("transactionNumber", transaction.getTransactionNumber());
+        auditData.put("refundReceiptNumber", receipt.getReceiptNumber());
         auditData.put("itemCount", itemCount);
         auditData.put("products", productNames);
         auditData.put("totalRefundValue", actualRefundValue);
-        auditData.put("refundMethod", request.getRefundMethod());
+        auditData.put("refundMethod", batchRefundMethod);
         auditData.put("beforeTotalAmount", originalTotal);
         auditData.put("afterTotalAmount", newOrderTotal);
         auditData.put("beforeAmountPaid", amountPaid);
@@ -733,25 +723,8 @@ public class TransactionService {
         );
 
         // ── Build response ──
-        // Use captured values to compute the effective amounts (avoids stale-state issues)
         BigDecimal effectiveAmountPaid = amountPaid.subtract(cashToReturn);
         BigDecimal newBalanceDue = newOrderTotal.subtract(effectiveAmountPaid).max(BigDecimal.ZERO);
-
-        ItemRefundResponseDTO.RefundedItemSummary itemSummary;
-        if (itemCount == 1) {
-            TransactionItem single = refundItems.get(0);
-            itemSummary = ItemRefundResponseDTO.RefundedItemSummary.builder()
-                    .productName(single.getProduct().getProductName())
-                    .unitPrice(single.getUnitPrice())
-                    .refundQuantity(pendingRefunds.get(0).getRefundQuantity())
-                    .build();
-        } else {
-            itemSummary = ItemRefundResponseDTO.RefundedItemSummary.builder()
-                    .productName(itemCount + " items")
-                    .unitPrice(actualRefundValue)
-                    .refundQuantity(itemCount)
-                    .build();
-        }
 
         return ItemRefundResponseDTO.builder()
                 .originalTotal(originalTotal)
@@ -764,11 +737,11 @@ public class TransactionService {
                 .refundReceipt(ItemRefundResponseDTO.RefundReceiptData.builder()
                         .refundReceiptId(receipt.getRefundReceiptId())
                         .receiptNumber(receipt.getReceiptNumber())
-                        .cashReturnedAmount(receipt.getCashReturnedAmount())
-                        .dateIssued(receipt.getDateIssued())
+                        .cashReturnedAmount(receipt.getActualCashback())
+                        .dateIssued(receipt.getCreatedAt())
                         .issuedByFullName(currentUser.getFirstName() + " " + currentUser.getLastName())
                         .build())
-                .refundedItem(itemSummary)
+                .refundedItems(itemSummaries)
                 .build();
     }
 

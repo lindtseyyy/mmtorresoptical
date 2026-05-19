@@ -4,16 +4,13 @@ import com.mmtorresoptical.OpticalClinicManagementSystem.dto.audit.transactionit
 import com.mmtorresoptical.OpticalClinicManagementSystem.dto.transactionitem.TransactionItemDetailsDTO;
 import com.mmtorresoptical.OpticalClinicManagementSystem.dto.transactionitem.TransactionItemResponseDTO;
 import com.mmtorresoptical.OpticalClinicManagementSystem.dto.transactionitem.TransactionItemsRequestDTO;
-import com.mmtorresoptical.OpticalClinicManagementSystem.model.Transaction;
 import com.mmtorresoptical.OpticalClinicManagementSystem.model.TransactionItem;
 import org.mapstruct.Mapper;
 import org.mapstruct.Mapping;
 
-import java.math.BigDecimal;
 import java.util.List;
 
-@Mapper(componentModel = "spring",
-uses = {RefundMapper.class})
+@Mapper(componentModel = "spring")
 public interface TransactionItemMapper {
 
     TransactionItem requestDTOtoEntity(TransactionItemsRequestDTO transactionItemsRequestDTO);
@@ -39,10 +36,6 @@ public interface TransactionItemMapper {
     @Mapping(
             target = "isDiscounted",
             expression = "java(transactionItem.getDiscountType() != null)"
-    )
-    @Mapping(
-            target = "refundDetailsDTOList",
-            source = "refunds"
     )
     TransactionItemDetailsDTO entityToDetailsDTO(TransactionItem transactionItem);
 
