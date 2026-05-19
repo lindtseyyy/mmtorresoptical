@@ -78,7 +78,7 @@ const RefundReceipt: React.FC<RefundReceiptProps> = ({ open, onClose, refundData
 
         <hr className="border-dashed border-border mb-3" />
 
-        {/* ---- Refunded Item ---- */}
+        {/* ---- Refunded Items ---- */}
         <table className="w-full mb-3">
           <thead>
             <tr className="border-b border-border">
@@ -88,13 +88,15 @@ const RefundReceipt: React.FC<RefundReceiptProps> = ({ open, onClose, refundData
             </tr>
           </thead>
           <tbody>
-            <tr className="border-b border-border/30">
-              <td className="py-1">{r.refundedItem.productName}</td>
-              <td className="py-1 text-center">{r.refundedItem.refundQuantity}</td>
-              <td className="py-1 text-right text-red-600 tabular-nums">
-                -₱{formatCurrency(r.refundedItem.unitPrice * r.refundedItem.refundQuantity)}
-              </td>
-            </tr>
+            {(r.refundedItems ?? []).map((item, idx) => (
+              <tr key={idx} className="border-b border-border/30">
+                <td className="py-1">{item.productName}</td>
+                <td className="py-1 text-center">{item.refundQuantity}</td>
+                <td className="py-1 text-right text-red-600 tabular-nums">
+                  -₱{formatCurrency(item.unitPrice * item.refundQuantity)}
+                </td>
+              </tr>
+            ))}
           </tbody>
         </table>
 

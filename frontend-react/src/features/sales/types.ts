@@ -38,15 +38,23 @@ export interface PaymentRequest {
   gcashPaymentImg?: string;
 }
 
-export interface RefundDetails {
-  refundId: string;
-  refundQuantity: number;
+export interface RefundItemData {
+  refundItemId: string;
+  productName: string;
+  unitPrice: number;
+  quantityRefunded: number;
   refundReason: string;
-  refundMethod: string;
-  refundedAt: string;
   itemCreditAmount: number;
-  actualCashBack: number;
-  refundedBy: { userId: string; username: string; role: string; fullName: string } | null;
+}
+
+export interface RefundReceiptData {
+  refundReceiptId: string;
+  receiptNumber: string;
+  actualCashback: number;
+  refundMethod: string;
+  createdAt: string;
+  issuedByFullName: string;
+  refundItems: RefundItemData[];
 }
 
 export interface TransactionItemResponse {
@@ -61,7 +69,6 @@ export interface TransactionItemResponse {
   refundedQuantity: number;
   refundNotes: string;
   refundReason?: string;
-  refundDetailsDTOList?: RefundDetails[];
 }
 
 export interface TransactionResponse {
@@ -81,6 +88,7 @@ export interface TransactionResponse {
   voidReason?: string;
   transactionItems: TransactionItemResponse[];
   payments: PaymentResponse[];
+  refundReceipts: RefundReceiptData[];
 }
 
 export type RefundMethod = "CASH" | "GCASH" | "BALANCE_ADJUSTMENT";
@@ -112,12 +120,18 @@ export interface TransactionListItem {
   patient: { patientId: string; fullName: string } | null;
 }
 
-export interface RefundReceiptData {
+export interface RefundReceiptSummary {
   refundReceiptId: string;
   receiptNumber: string;
   cashReturnedAmount: number;
   dateIssued: string;
   issuedByFullName: string;
+}
+
+export interface RefundedItemSummary {
+  productName: string;
+  unitPrice: number;
+  refundQuantity: number;
 }
 
 export interface ItemRefundResponse {
@@ -128,12 +142,8 @@ export interface ItemRefundResponse {
   newRemainingDue: number;
   newTransactionStatus: string;
   newRefundStatus: string;
-  refundReceipt: RefundReceiptData;
-  refundedItem: {
-    productName: string;
-    unitPrice: number;
-    refundQuantity: number;
-  };
+  refundReceipt: RefundReceiptSummary;
+  refundedItems: RefundedItemSummary[];
 }
 
 export interface SelectedPatient {

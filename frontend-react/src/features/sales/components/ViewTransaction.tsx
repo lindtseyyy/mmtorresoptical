@@ -28,7 +28,7 @@ import { Label } from "@/shared/components/ui/label";
 import { Dialog, DialogHeader, DialogTitle, DialogDescription } from "@/shared/components/ui/dialog";
 import { fetchTransaction, refundTransaction, voidTransaction, addPayment, completeTransaction } from "@/features/sales/services/transactionApi";
 import { toast } from "sonner";
-import type { TransactionItemResponse, RefundStateItem, RefundMethod, PaymentResponse, ItemRefundResponse } from "@/features/sales/types";
+import type { TransactionItemResponse, RefundStateItem, RefundMethod, PaymentResponse, ItemRefundResponse, RefundReceiptData } from "@/features/sales/types";
 import RefundDrawer from "./RefundDrawer";
 import RefundReceipt from "./RefundReceipt";
 import PrintableReceipt from "./PrintableReceipt";
@@ -247,23 +247,21 @@ const ViewTransaction: React.FC = () => {
 
   // Only CASH/GCASH refunds count toward the refundable cash pool
   const totalCashRefunded = tx
-    ? tx.transactionItems.reduce((sum, item) => {
-        return (
-          sum +
-          (item.refundDetailsDTOList ?? [])
-            .filter((r) => r.refundMethod === "CASH" || r.refundMethod === "GCASH")
-            .reduce((s, r) => s + (r.actualCashBack ?? 0), 0)
-        );
+    ? (tx.refundReceipts ?? []).reduce((sum, receipt) => {
+        if (receipt.refundMethod === "CASH" || receipt.refundMethod === "GCASH") {
+          return sum + (receipt.actualCashback ?? 0);
+        }
+        return sum;
       }, 0)
     : 0;
 
   // All refunded item values, used for revised total computation
   const totalAllRefunded = tx
-    ? tx.transactionItems.reduce((sum, item) => {
+    ? (tx.refundReceipts ?? []).reduce((sum, receipt) => {
         return (
           sum +
-          (item.refundDetailsDTOList ?? []).reduce(
-            (s, r) => s + (r.itemCreditAmount ?? 0),
+          (receipt.refundItems ?? []).reduce(
+            (s, item) => s + (item.itemCreditAmount ?? 0),
             0
           )
         );
@@ -275,7 +273,7 @@ const ViewTransaction: React.FC = () => {
     : 0;
 
   const effectiveBalanceDue = tx
-    ? Math.max(0, revisedTotal - (tx.amountPaid ?? 0))
+    ? Math.max(0, revisedTotal - ((tx.amountPaid ?? 0) - totalCashRefunded))
     : 0;
 
   const canRefund =
@@ -483,29 +481,21 @@ const ViewTransaction: React.FC = () => {
             </div>
           )}
 
-          {tx.transactionItems.some(
-            (item) => (item.refundDetailsDTOList?.length ?? 0) > 0
-          ) && (
+          {(tx.refundReceipts?.length ?? 0) > 0 && (
             <div className="mt-4 grid grid-cols-2 gap-x-8 gap-y-3 border-t pt-4 sm:grid-cols-3">
               <div>
-                <p className="text-xs text-muted-foreground">Refunded Items</p>
-                <p className="font-medium">
-                  {tx.transactionItems.reduce(
-                    (count, item) =>
-                      count + (item.refundDetailsDTOList?.length ?? 0),
-                    0
-                  )}
-                </p>
+                <p className="text-xs text-muted-foreground">Refund Events</p>
+                <p className="font-medium">{tx.refundReceipts.length}</p>
               </div>
               <div>
                 <p className="text-xs text-muted-foreground">Cash Refunded</p>
                 <p className="font-medium text-red-600">
                   {formatCurrency(
-                    tx.transactionItems.reduce((total, item) => {
-                      const itemTotal = (item.refundDetailsDTOList ?? [])
-                        .filter((r) => r.refundMethod === "CASH" || r.refundMethod === "GCASH")
-                        .reduce((sum, r) => sum + (r.actualCashBack ?? 0), 0);
-                      return total + itemTotal;
+                    tx.refundReceipts.reduce((total, receipt) => {
+                      if (receipt.refundMethod === "CASH" || receipt.refundMethod === "GCASH") {
+                        return total + (receipt.actualCashback ?? 0);
+                      }
+                      return total;
                     }, 0)
                   )}
                 </p>
@@ -638,73 +628,94 @@ const ViewTransaction: React.FC = () => {
             </table>
           </div>
 
-          {/* Refunded Items */}
-          {tx.transactionItems.some(
-            (item) => (item.refundDetailsDTOList?.length ?? 0) > 0
-          ) && (
+          {/* Refunded Items — grouped by refund event */}
+          {(tx.refundReceipts?.length ?? 0) > 0 && (
             <>
               <div className="mt-6 flex items-center gap-2 border-t pt-4">
                 <RotateCcw className="h-5 w-5 text-muted-foreground" />
                 <h3 className="text-sm font-semibold">
-                  Refunded Items ({tx.transactionItems.reduce((sum, item) => sum + (item.refundDetailsDTOList?.length ?? 0), 0)})
+                  Refund History ({tx.refundReceipts.length} event{tx.refundReceipts.length !== 1 ? "s" : ""})
                 </h3>
               </div>
-              <div className="mt-2 overflow-x-auto rounded-md bg-muted/50 p-3">
-                <table className="w-full text-sm">
-                  <thead>
-                    <tr className="border-b text-left text-muted-foreground">
-                      <th className="py-3 pr-2 font-medium text-xs">Product</th>
-                      <th className="py-3 pr-2 text-center font-medium text-xs">Unit Price</th>
-                      <th className="py-3 pr-2 text-center font-medium text-xs">Qty</th>
-                      <th className="py-3 pr-2 text-center font-medium text-xs">Item Credit</th>
-                      <th className="py-3 pr-2 text-center font-medium text-xs">Refund Method</th>
-                      <th className="py-3 pr-2 text-center font-medium text-xs">Actual Cash Back</th>
-                      <th className="py-3 pr-2 font-medium text-xs">Reason</th>
-                      <th className="py-3 pr-2 font-medium text-xs">Refund Date</th>
-                      <th className="py-3 font-medium text-xs">Refunded By</th>
-                    </tr>
-                  </thead>
-                  <tbody>
-                    {tx.transactionItems.flatMap((item) =>
-                      (item.refundDetailsDTOList ?? []).map((refund) => (
-                        <tr
-                          key={refund.refundId}
-                          className="border-b text-muted-foreground"
-                        >
-                          <td className="py-2.5 pr-2">
-                            <p className="font-medium text-foreground text-xs">
-                              {item.product?.productName ?? "—"}
-                            </p>
-                          </td>
-                          <td className="py-2.5 pr-2 text-center text-xs">
-                            {formatCurrency(item.unitPrice)}
-                          </td>
-                          <td className="py-2.5 pr-2 text-center text-xs">
-                            {refund.refundQuantity}
-                          </td>
-                          <td className="py-2.5 pr-2 text-center text-red-600 text-xs">
-                            {formatCurrency(refund.itemCreditAmount ?? 0)}
-                          </td>
-                          <td className="py-2.5 pr-2 text-center capitalize text-xs">
-                            {refund.refundMethod === "BALANCE_ADJUSTMENT"
-                              ? "Adjustment"
-                              : refund.refundMethod}
-                          </td>
-                          <td className="py-2.5 pr-2 text-center text-xs">
-                            {formatCurrency(refund.actualCashBack ?? 0)}
-                          </td>
-                          <td className="py-2.5 pr-2 text-xs">{refund.refundReason}</td>
-                          <td className="py-2.5 pr-2 whitespace-nowrap text-xs">
-                            {formatDateTime(refund.refundedAt)}
-                          </td>
-                          <td className="py-2.5 whitespace-nowrap text-xs">
-                            {refund.refundedBy?.fullName ?? "—"}
-                          </td>
-                        </tr>
-                      ))
-                    )}
-                  </tbody>
-                </table>
+              <div className="mt-2 space-y-4">
+                {tx.refundReceipts.map((receipt: RefundReceiptData) => (
+                  <div
+                    key={receipt.refundReceiptId}
+                    className="rounded-lg border border-border bg-muted/30 p-4"
+                  >
+                    {/* Event Header */}
+                    <div className="flex items-center justify-between mb-3">
+                      <div>
+                        <p className="text-sm font-semibold text-foreground">
+                          {receipt.receiptNumber}
+                        </p>
+                        <p className="text-xs text-muted-foreground">
+                          {formatDateTime(receipt.createdAt)}
+                        </p>
+                      </div>
+                      <div className="text-xs text-muted-foreground">
+                        {receipt.issuedByFullName}
+                      </div>
+                    </div>
+
+                    {/* Items Table */}
+                    <div className="overflow-x-auto rounded-md bg-background/50 p-2">
+                      <table className="w-full text-sm">
+                        <thead>
+                          <tr className="border-b text-left text-muted-foreground">
+                            <th className="py-2 pr-2 font-medium text-xs">Product</th>
+                            <th className="py-2 pr-2 text-center font-medium text-xs">Unit Price</th>
+                            <th className="py-2 pr-2 text-center font-medium text-xs">Qty</th>
+                            <th className="py-2 pr-2 text-center font-medium text-xs">Item Credit</th>
+                            <th className="py-2 font-medium text-xs">Reason</th>
+                          </tr>
+                        </thead>
+                        <tbody>
+                          {(receipt.refundItems ?? []).map((item) => (
+                            <tr key={item.refundItemId} className="border-b text-muted-foreground">
+                              <td className="py-2 pr-2">
+                                <p className="font-medium text-foreground text-xs">
+                                  {item.productName}
+                                </p>
+                              </td>
+                              <td className="py-2 pr-2 text-center text-xs">
+                                {formatCurrency(item.unitPrice)}
+                              </td>
+                              <td className="py-2 pr-2 text-center text-xs">
+                                {item.quantityRefunded}
+                              </td>
+                              <td className="py-2 pr-2 text-center text-red-600 text-xs">
+                                {formatCurrency(item.itemCreditAmount ?? 0)}
+                              </td>
+                              <td className="py-2 text-xs">{item.refundReason || "—"}</td>
+                            </tr>
+                          ))}
+                        </tbody>
+                      </table>
+                    </div>
+
+                    {/* Event Footer */}
+                    <div className="mt-3 flex items-center justify-between border-t border-border pt-2">
+                      <div className="text-xs text-muted-foreground">
+                        <span className="font-medium">Method:</span>{" "}
+                        {receipt.refundMethod === "BALANCE_ADJUSTMENT"
+                          ? "Balance Adjustment"
+                          : receipt.refundMethod}
+                      </div>
+                      <div className="text-sm font-semibold">
+                        {receipt.actualCashback > 0 ? (
+                          <span className="text-red-600">
+                            Cash Returned: {formatCurrency(receipt.actualCashback)}
+                          </span>
+                        ) : (
+                          <span className="text-muted-foreground">
+                            Balance Adjustment
+                          </span>
+                        )}
+                      </div>
+                    </div>
+                  </div>
+                ))}
               </div>
             </>
           )}

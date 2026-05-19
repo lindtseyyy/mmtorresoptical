@@ -2,7 +2,7 @@ import { Printer } from "lucide-react";
 
 import { Dialog } from "@/shared/components/ui/dialog";
 import { Button } from "@/shared/components/ui/button";
-import type { TransactionResponse, TransactionItemResponse, RefundDetails } from "@/features/sales/types";
+import type { TransactionResponse, TransactionItemResponse, RefundReceiptData } from "@/features/sales/types";
 
 const BUSINESS_NAME = "MM Torres Optical Clinic";
 const BUSINESS_ADDRESS = "259 Shoe Avenue, Sto. Nino, Marikina City, 1806";
@@ -240,16 +240,30 @@ const UpdatedStatement: React.FC<{ transaction: TransactionResponse }> = ({ tran
     activeUnitPrice: number;
   })[];
 
-  // Flatten all refund records across items
-  const allRefunds: (RefundDetails & { productName: string })[] = [];
-  for (const item of tx.transactionItems) {
-    for (const r of item.refundDetailsDTOList ?? []) {
-      allRefunds.push({ ...r, productName: item.product.productName });
-    }
-  }
+  // Flatten all refund records from refundReceipts
+  const allRefunds = (tx.refundReceipts ?? []).flatMap((receipt) =>
+    (receipt.refundItems ?? []).map((item) => ({
+      ...item,
+      receiptNumber: receipt.receiptNumber,
+      refundMethod: receipt.refundMethod,
+      actualCashback: receipt.actualCashback,
+      createdAt: receipt.createdAt,
+    }))
+  );
 
   const totalDeductions = allRefunds.reduce((sum, r) => sum + (r.itemCreditAmount ?? 0), 0);
   const revisedTotal = tx.totalAmount - totalDeductions;
+
+  // Cash actually refunded (not balance adjustments)
+  const totalCashRefunded = (tx.refundReceipts ?? []).reduce((sum, receipt) => {
+    if (receipt.refundMethod === "CASH" || receipt.refundMethod === "GCASH") {
+      return sum + (receipt.actualCashback ?? 0);
+    }
+    return sum;
+  }, 0);
+
+  // Effective balance due = revised total minus net cash position
+  const effectiveBalanceDue = Math.max(0, revisedTotal - ((tx.amountPaid ?? 0) - totalCashRefunded));
 
   return (
     <div className="font-mono text-xs leading-relaxed text-foreground max-h-[65vh] overflow-y-auto print:max-h-none print:overflow-visible">
@@ -337,36 +351,51 @@ const UpdatedStatement: React.FC<{ transaction: TransactionResponse }> = ({ tran
         </>
       )}
 
-      {/* Returns & Adjustments */}
+      {/* Returns & Adjustments — grouped by refund receipt */}
       {allRefunds.length > 0 && (
         <>
           <hr className="border-dashed border-border mb-3" />
           <h3 className="text-xs font-semibold mb-2 uppercase">Returns &amp; Adjustments</h3>
-          <table className="w-full mb-3">
-            <thead>
-              <tr className="border-b border-border">
-                <th className="text-left font-semibold pb-1">Item</th>
-                <th className="text-center font-semibold pb-1 w-10">Qty</th>
-                <th className="text-right font-semibold pb-1 w-20">Value</th>
-              </tr>
-            </thead>
-            <tbody>
-              {allRefunds.map((r) => (
-                <tr key={r.refundId} className="border-b border-border/30">
-                  <td className="py-1 align-top">
-                    <span>{r.productName}</span>
-                    <div className="text-[10px] text-muted-foreground">
-                      {formatDateTime(r.refundedAt)} &middot; {r.refundMethod.replace(/_/g, " ")}
-                    </div>
-                  </td>
-                  <td className="py-1 text-center align-top text-red-600">-{r.refundQuantity}</td>
-                  <td className="py-1 text-right align-top tabular-nums text-red-600">
-                    -₱{format2(r.itemCreditAmount ?? 0)}
-                  </td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
+          {(tx.refundReceipts ?? []).map((receipt: RefundReceiptData) => (
+            <div key={receipt.refundReceiptId} className="mb-3">
+              <div className="flex justify-between text-[10px] text-muted-foreground mb-1 px-0.5">
+                <span className="font-semibold text-foreground">{receipt.receiptNumber}</span>
+                <span>{formatDateTime(receipt.createdAt)}</span>
+              </div>
+              <table className="w-full mb-1">
+                <thead>
+                  <tr className="border-b border-border/30">
+                    <th className="text-left font-medium pb-0.5 text-[10px]">Item</th>
+                    <th className="text-center font-medium pb-0.5 w-8 text-[10px]">Qty</th>
+                    <th className="text-right font-medium pb-0.5 w-16 text-[10px]">Value</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {(receipt.refundItems ?? []).map((item, idx) => (
+                    <tr key={idx} className="border-b border-border/30">
+                      <td className="py-0.5 text-[10px]">{item.productName}</td>
+                      <td className="py-0.5 text-center text-red-600 text-[10px]">-{item.quantityRefunded}</td>
+                      <td className="py-0.5 text-right tabular-nums text-red-600 text-[10px]">
+                        -₱{format2(item.itemCreditAmount ?? 0)}
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+              <div className="flex justify-between text-[10px] text-muted-foreground px-0.5">
+                <span>
+                  {receipt.refundMethod === "BALANCE_ADJUSTMENT"
+                    ? "Balance Adjustment"
+                    : receipt.refundMethod}
+                </span>
+                {receipt.actualCashback > 0 ? (
+                  <span className="text-red-600">Cash back: ₱{format2(receipt.actualCashback)}</span>
+                ) : (
+                  <span>Balance adjustment</span>
+                )}
+              </div>
+            </div>
+          ))}
         </>
       )}
 
@@ -394,7 +423,7 @@ const UpdatedStatement: React.FC<{ transaction: TransactionResponse }> = ({ tran
         </div>
         <div className="flex justify-between font-bold">
           <span>CURRENT BALANCE DUE:</span>
-          <span className="tabular-nums">₱{format2(tx.balanceDue ?? 0)}</span>
+          <span className="tabular-nums">₱{format2(effectiveBalanceDue)}</span>
         </div>
       </div>
 

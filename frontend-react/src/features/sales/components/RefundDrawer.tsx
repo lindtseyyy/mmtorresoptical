@@ -124,13 +124,12 @@ const RefundDrawer: React.FC<Props> = ({
     if (transactionTotal == null || transactionAmountPaid == null) return null;
     // Revised total accounts for ALL refunds: past (including balance adjustments) + current batch
     const newOrderTotal = transactionTotal - (totalAllRefunded ?? 0) - fullTotal;
-    const cashToReturn = transactionAmountPaid > newOrderTotal
-      ? transactionAmountPaid - newOrderTotal
-      : 0;
-    const effectivePaid = cashToReturn > 0 ? newOrderTotal : transactionAmountPaid;
+    // Cash available to return = amount paid minus cash already refunded
+    const effectivePaid = transactionAmountPaid - (totalAlreadyRefunded ?? 0);
+    const cashToReturn = Math.max(0, effectivePaid - Math.max(0, newOrderTotal));
     const newRemainingDue = Math.max(0, newOrderTotal - effectivePaid);
     return { newOrderTotal, cashToReturn, newRemainingDue };
-  }, [transactionTotal, transactionAmountPaid, totalAllRefunded, fullTotal]);
+  }, [transactionTotal, transactionAmountPaid, totalAllRefunded, totalAlreadyRefunded, fullTotal]);
 
   const handleApplyToAll = useCallback(
     (reason: string) => {
