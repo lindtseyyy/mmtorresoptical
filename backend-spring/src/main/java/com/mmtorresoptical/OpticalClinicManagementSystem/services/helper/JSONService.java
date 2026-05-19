@@ -20,6 +20,11 @@ public class JSONService {
             "REFUNDED", "Refunded"
     );
 
+    private static final Map<String, String> ROLE_LABELS = Map.of(
+            "ADMIN", "Administrator",
+            "STAFF", "Staff"
+    );
+
     public JSONService(ObjectMapper objectMapper) {
         this.objectMapper = objectMapper;
     }
@@ -67,6 +72,12 @@ public class JSONService {
             // ── CREATE Transaction: hide UUIDs, humanize statuses ──
             if ("CREATE".equals(actionType) && node.has("transactionItemAuditDTOList")) {
                 return sanitizeCreateTransactionAuditJson(node, performedBy);
+            }
+
+            // ── CREATE / ARCHIVE / RESTORE User: remove internal IDs, format role / birthDate / gender ──
+            if (("CREATE".equals(actionType) || "ARCHIVE".equals(actionType) || "RESTORE".equals(actionType))
+                    && node.has("userId") && node.has("username")) {
+                return sanitizeUserAuditJson(node);
             }
 
             // ── CREATE / ARCHIVE / RESTORE Patient: remove internal IDs, strip sensitive PII ──
@@ -152,6 +163,25 @@ public class JSONService {
         }
 
         return objectMapper.writeValueAsString(node);
+    }
+
+    private String sanitizeUserAuditJson(ObjectNode node) throws JsonProcessingException {
+        ObjectNode clean = objectMapper.createObjectNode();
+
+        String rawRole = node.has("role") && !node.get("role").isNull()
+                ? node.get("role").asText() : "";
+
+        copyFullName(clean, node);
+        clean.put("role", formatRole(rawRole));
+        copyField(clean, node, "username");
+        copyField(clean, node, "email");
+        copyField(clean, node, "contactNumber");
+        copyField(clean, node, "gender");
+        copyField(clean, node, "birthDate");
+
+        formatDisplayFields(clean);
+
+        return objectMapper.writeValueAsString(clean);
     }
 
     private String sanitizePatientAuditJson(ObjectNode node) throws JsonProcessingException {
@@ -249,6 +279,10 @@ public class JSONService {
 
     private String formatTransactionStatus(String status) {
         return TRANSACTION_STATUS_LABELS.getOrDefault(status, status);
+    }
+
+    private String formatRole(String role) {
+        return ROLE_LABELS.getOrDefault(role, capitalizeWord(role));
     }
 
     private String formatFileSize(long bytes) {

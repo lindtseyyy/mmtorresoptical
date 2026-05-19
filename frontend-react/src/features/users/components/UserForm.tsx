@@ -123,6 +123,9 @@ export const UserForm: React.FC<UserFormProps> = ({
       role: "Staff",
     },
   });
+
+  const { isDirty } = form.formState;
+
   // 👇 Add handleFormSubmit here
   const handleFormSubmit: SubmitHandler<FormSchemaType> = async (data) => {
     const { confirmPassword, ...rest } = data;
@@ -433,7 +436,7 @@ export const UserForm: React.FC<UserFormProps> = ({
         )}
 
         <div className="flex justify-end gap-2 pt-4">
-          <Button type="submit" disabled={isLoading}>
+          <Button type="submit" disabled={isLoading || (isEditMode && !isDirty)}>
             {isLoading
               ? isEditMode
                 ? "Saving..."
