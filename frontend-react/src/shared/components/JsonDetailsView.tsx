@@ -9,15 +9,20 @@ const ACRONYMS: Record<string, string> = {
   dto: "",
 };
 
+const LOWERCASE_WORDS = new Set([
+  "a", "an", "the", "and", "but", "or", "for", "nor", "on", "at", "to", "by", "of", "in", "with", "from",
+]);
+
 const formatFieldName = (key: string): string => {
   return key
     .replace(/([a-z])([A-Z])/g, "$1 $2")
     .replace(/([A-Z]+)([A-Z][a-z])/g, "$1 $2")
     .toLowerCase()
     .split(" ")
-    .map((word) => {
+    .map((word, i) => {
       const a = ACRONYMS[word];
       if (a !== undefined) return a;
+      if (i > 0 && LOWERCASE_WORDS.has(word)) return word;
       return word.charAt(0).toUpperCase() + word.slice(1);
     })
     .join(" ")

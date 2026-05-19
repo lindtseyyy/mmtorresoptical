@@ -31,12 +31,14 @@ public class JSONService {
         try {
             ObjectNode node = (ObjectNode) objectMapper.readTree(detailsJson);
 
+            // ── Backup: raw bytes → human-readable ──
             if (node.has("fileSizeBytes") && node.get("fileSizeBytes").isNumber()) {
                 long bytes = node.get("fileSizeBytes").asLong();
                 node.put("fileSize", formatFileSize(bytes));
                 node.remove("fileSizeBytes");
             }
 
+            // ── Backup: suppress duplicate timestamp ──
             if (node.has("backupTimestamp") && node.has("timestamp")) {
                 String backupTs = node.get("backupTimestamp").asText();
                 String ts = node.get("timestamp").asText();
@@ -45,10 +47,59 @@ public class JSONService {
                 }
             }
 
+            // ── Refund: collapse before/after pairs into human-readable rows ──
+            if (node.has("refundReceiptNumber")
+                    && node.has("beforeTotalAmount")
+                    && node.has("afterTotalAmount")) {
+                return sanitizeRefundAuditJson(node);
+            }
+
             return objectMapper.writeValueAsString(node);
         } catch (JsonProcessingException e) {
             return detailsJson;
         }
+    }
+
+    private String sanitizeRefundAuditJson(ObjectNode node) throws JsonProcessingException {
+        ObjectNode clean = objectMapper.createObjectNode();
+
+        String[] keep = {
+            "transactionNumber", "refundReceiptNumber", "products",
+            "itemCount", "refundMethod", "cashReturnedToPatient"
+        };
+        for (String field : keep) {
+            if (node.has(field)) {
+                clean.set(field, node.get(field));
+            }
+        }
+
+        if (node.has("beforeTotalAmount") && node.has("afterTotalAmount")) {
+            String before = formatPeso(node.get("beforeTotalAmount").asDouble());
+            String after = formatPeso(node.get("afterTotalAmount").asDouble());
+            clean.put("orderTotal", "Changed from " + before + " to " + after);
+        }
+
+        if (node.has("beforeTransactionStatus") && node.has("afterTransactionStatus")) {
+            String before = node.get("beforeTransactionStatus").asText();
+            String after = node.get("afterTransactionStatus").asText();
+            clean.put("transactionStatus", "Updated from " + before + " to " + after);
+        }
+
+        if (node.has("beforeRefundStatus") && node.has("afterRefundStatus")) {
+            String before = node.get("beforeRefundStatus").asText();
+            String after = node.get("afterRefundStatus").asText();
+            clean.put("refundStatus", "Updated from " + before + " to " + after);
+        }
+
+        if (node.has("totalRefundValue")) {
+            clean.set("valueOfReturnedItems", node.get("totalRefundValue"));
+        }
+
+        return objectMapper.writeValueAsString(clean);
+    }
+
+    private String formatPeso(double amount) {
+        return String.format("₱%.2f", amount);
     }
 
     private String formatFileSize(long bytes) {
