@@ -74,6 +74,14 @@ public class JSONService {
                 return sanitizeCreatePatientAuditJson(node);
             }
 
+            // ── UPDATE Patient: only return fields that actually changed ──
+            if ("UPDATE".equals(actionType) && node.has("before") && node.has("after")) {
+                ObjectNode after = (ObjectNode) node.get("after");
+                if (after.has("firstName")) {
+                    return sanitizeUpdatePatientAuditJson(node);
+                }
+            }
+
             return objectMapper.writeValueAsString(node);
         } catch (JsonProcessingException e) {
             return detailsJson;
@@ -163,6 +171,30 @@ public class JSONService {
         if (source.has(field) && !source.get(field).isNull()) {
             target.set(field, source.get(field));
         }
+    }
+
+    private String sanitizeUpdatePatientAuditJson(ObjectNode node) throws JsonProcessingException {
+        ObjectNode before = (ObjectNode) node.get("before");
+        ObjectNode after = (ObjectNode) node.get("after");
+
+        ObjectNode filteredBefore = objectMapper.createObjectNode();
+        ObjectNode filteredAfter = objectMapper.createObjectNode();
+
+        var it = after.fieldNames();
+        while (it.hasNext()) {
+            String field = it.next();
+            String beforeVal = before.has(field) ? before.get(field).toString() : "";
+            String afterVal = after.get(field).toString();
+            if (!beforeVal.equals(afterVal)) {
+                filteredBefore.set(field, before.get(field));
+                filteredAfter.set(field, after.get(field));
+            }
+        }
+
+        ObjectNode result = objectMapper.createObjectNode();
+        result.set("before", filteredBefore);
+        result.set("after", filteredAfter);
+        return objectMapper.writeValueAsString(result);
     }
 
     private void copyMiddleName(ObjectNode target, ObjectNode source) {

@@ -169,7 +169,7 @@ const JsonDetailsView: React.FC<JsonDetailsViewProps> = ({ data }) => {
       <div className="overflow-x-auto">
         <table className="w-full text-xs">
           <thead>
-            <tr className="border-b text-left text-muted-foreground">
+            <tr className="border-b text-left">
               <th className="py-1.5 pr-3 font-medium w-[25%]">Field</th>
               <th className="py-1.5 pr-3 font-medium w-[37.5%]">Before</th>
               <th className="py-1.5 font-medium w-[37.5%]">After</th>
@@ -182,33 +182,20 @@ const JsonDetailsView: React.FC<JsonDetailsViewProps> = ({ data }) => {
               const changed =
                 JSON.stringify(beforeVal) !== JSON.stringify(afterVal);
               return (
-                <tr
-                  key={key}
-                  className={
-                    changed
-                      ? "border-b bg-amber-500/5 dark:bg-amber-500/10"
-                      : "border-b"
-                  }
-                >
+                <tr key={key} className="border-b">
                   <td className="py-1.5 pr-3 font-medium text-muted-foreground align-top">
                     {formatFieldName(key)}
                   </td>
                   <td
                     className={`py-1.5 pr-3 align-top ${
                       changed
-                        ? "text-red-600 dark:text-red-400"
+                        ? "text-red-900 dark:text-red-600"
                         : "text-muted-foreground"
                     }`}
                   >
                     <JsonValue value={beforeVal} />
                   </td>
-                  <td
-                    className={`py-1.5 align-top ${
-                      changed
-                        ? "text-emerald-600 dark:text-emerald-400"
-                        : "text-muted-foreground"
-                    }`}
-                  >
+                  <td className="py-1.5 align-top text-emerald-600 dark:text-emerald-400">
                     <JsonValue value={afterVal} />
                   </td>
                 </tr>
