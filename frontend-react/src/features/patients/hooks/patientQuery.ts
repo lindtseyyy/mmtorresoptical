@@ -80,7 +80,7 @@ function createEditPatientMutationOptions(
       toast.success("Patient Updated", {
         description: "Successfully updated.",
       });
-      navigate("/patients");
+      navigate(`/patients/view/${id}`);
     },
     onError: () => {
       toast.error("Error", { description: "Failed to update patient." });
