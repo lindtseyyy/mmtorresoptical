@@ -69,9 +69,10 @@ public class JSONService {
                 return sanitizeCreateTransactionAuditJson(node, performedBy);
             }
 
-            // ── CREATE Patient: remove internal IDs, strip sensitive PII ──
-            if ("CREATE".equals(actionType) && node.has("patientId") && node.has("firstName")) {
-                return sanitizeCreatePatientAuditJson(node);
+            // ── CREATE / ARCHIVE Patient: remove internal IDs, strip sensitive PII ──
+            if (("CREATE".equals(actionType) || "ARCHIVE".equals(actionType))
+                    && node.has("patientId") && node.has("firstName")) {
+                return sanitizePatientAuditJson(node);
             }
 
             // ── UPDATE Patient: only return fields that actually changed ──
@@ -153,7 +154,7 @@ public class JSONService {
         return objectMapper.writeValueAsString(node);
     }
 
-    private String sanitizeCreatePatientAuditJson(ObjectNode node) throws JsonProcessingException {
+    private String sanitizePatientAuditJson(ObjectNode node) throws JsonProcessingException {
         ObjectNode clean = objectMapper.createObjectNode();
 
         copyField(clean, node, "firstName");
