@@ -10,8 +10,11 @@ import com.mmtorresoptical.OpticalClinicManagementSystem.repository.AuditLogRepo
 import com.mmtorresoptical.OpticalClinicManagementSystem.services.AuthenticatedUserService;
 import com.mmtorresoptical.OpticalClinicManagementSystem.specification.AuditLogSpecification;
 import com.mmtorresoptical.OpticalClinicManagementSystem.services.helper.JSONService;
+import com.mmtorresoptical.OpticalClinicManagementSystem.security.AesEncryptionService;
 import com.mmtorresoptical.OpticalClinicManagementSystem.utils.UUIDUtils;
 import lombok.RequiredArgsConstructor;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.data.domain.*;
 import org.springframework.data.jpa.domain.Specification;
 import org.springframework.stereotype.Service;
@@ -25,10 +28,14 @@ import java.util.UUID;
 @RequiredArgsConstructor
 public class AuditLogService {
 
+    private static final Logger log = LoggerFactory.getLogger(AuditLogService.class);
+    private static final String ENC_PREFIX = "ENC:";
+
     private final AuditLogRepository auditLogRepository;
     private final AuthenticatedUserService authenticatedUserService;
     private final AuditMapper auditMapper;
     private final JSONService jsonService;
+    private final AesEncryptionService aesEncryptionService;
 
     public void log(ActionType actionType,
                     ResourceType resourceType,
@@ -44,7 +51,7 @@ public class AuditLogService {
         log.setResourceType(resourceType);
         log.setResourceId(resourceId);
         log.setDetails(details);
-        log.setDetailsJson(detailsJSON);
+        log.setDetailsJson(ENC_PREFIX + aesEncryptionService.encrypt(detailsJSON));
 
         auditLogRepository.save(log);
     }
@@ -62,9 +69,17 @@ public class AuditLogService {
         log.setResourceType(resourceType);
         log.setResourceId(resourceId);
         log.setDetails(details);
-        log.setDetailsJson(detailsJSON);
+        log.setDetailsJson(ENC_PREFIX + aesEncryptionService.encrypt(detailsJSON));
 
         auditLogRepository.save(log);
+    }
+
+    private String decryptIfNeeded(String detailsJson, String userName) {
+        if (detailsJson != null && detailsJson.startsWith(ENC_PREFIX)) {
+            log.info("Admin user '{}' viewed encrypted audit data", userName);
+            return aesEncryptionService.decrypt(detailsJson.substring(ENC_PREFIX.length()));
+        }
+        return detailsJson;
     }
 
     public Page<AuditDetailsDTO> getAllAuditLogs(String keyword,
@@ -90,8 +105,9 @@ public class AuditLogService {
             }
 
             AuditDetailsDTO dto = auditMapper.entityToDetailsDTO(log.get());
+            String raw = decryptIfNeeded(dto.getDetailsJson(), dto.getUserName());
             dto.setDetailsJson(jsonService.sanitizeAuditDetailsJson(
-                    dto.getDetailsJson(), dto.getActionType(), dto.getUserName()));
+                    raw, dto.getActionType(), dto.getUserName()));
 
             return new PageImpl<>(
                     List.of(dto),
@@ -141,8 +157,9 @@ public class AuditLogService {
 
         return auditLogs.map(auditLog -> {
             AuditDetailsDTO dto = auditMapper.entityToDetailsDTO(auditLog);
+            String raw = decryptIfNeeded(dto.getDetailsJson(), dto.getUserName());
             dto.setDetailsJson(jsonService.sanitizeAuditDetailsJson(
-                    dto.getDetailsJson(), dto.getActionType(), dto.getUserName()));
+                    raw, dto.getActionType(), dto.getUserName()));
             return dto;
         });
     }

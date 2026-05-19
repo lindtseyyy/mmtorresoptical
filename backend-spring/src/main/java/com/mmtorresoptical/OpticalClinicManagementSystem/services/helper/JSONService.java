@@ -69,6 +69,11 @@ public class JSONService {
                 return sanitizeCreateTransactionAuditJson(node, performedBy);
             }
 
+            // ── CREATE Patient: remove internal IDs, strip sensitive PII ──
+            if ("CREATE".equals(actionType) && node.has("patientId") && node.has("firstName")) {
+                return sanitizeCreatePatientAuditJson(node);
+            }
+
             return objectMapper.writeValueAsString(node);
         } catch (JsonProcessingException e) {
             return detailsJson;
@@ -138,6 +143,35 @@ public class JSONService {
         }
 
         return objectMapper.writeValueAsString(node);
+    }
+
+    private String sanitizeCreatePatientAuditJson(ObjectNode node) throws JsonProcessingException {
+        ObjectNode clean = objectMapper.createObjectNode();
+
+        copyField(clean, node, "firstName");
+        copyMiddleName(clean, node);
+        copyField(clean, node, "lastName");
+        copyField(clean, node, "email");
+        copyField(clean, node, "contactNumber");
+        copyField(clean, node, "gender");
+        copyField(clean, node, "createdAt");
+
+        return objectMapper.writeValueAsString(clean);
+    }
+
+    private void copyField(ObjectNode target, ObjectNode source, String field) {
+        if (source.has(field) && !source.get(field).isNull()) {
+            target.set(field, source.get(field));
+        }
+    }
+
+    private void copyMiddleName(ObjectNode target, ObjectNode source) {
+        if (source.has("middleName") && !source.get("middleName").isNull()) {
+            String value = source.get("middleName").asText();
+            target.put("middleName", value.isBlank() ? "—" : value);
+        } else {
+            target.put("middleName", "—");
+        }
     }
 
     private String formatTransactionStatus(String status) {

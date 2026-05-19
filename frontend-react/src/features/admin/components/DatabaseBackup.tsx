@@ -613,12 +613,6 @@ const DatabaseBackup: React.FC = () => {
                 <Label className="text-xs text-muted-foreground">Resource Type</Label>
                 <p className="text-sm">{viewingEntry.resourceType}</p>
               </div>
-              {viewingEntry.resourceId && (
-                <div>
-                  <Label className="text-xs text-muted-foreground">Resource ID</Label>
-                  <p className="text-sm font-mono">{viewingEntry.resourceId}</p>
-                </div>
-              )}
               <div>
                 <Label className="text-xs text-muted-foreground">User ID</Label>
                 <p className="text-sm font-mono">{viewingEntry.userId}</p>

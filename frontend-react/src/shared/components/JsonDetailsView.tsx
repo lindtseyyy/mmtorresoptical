@@ -60,7 +60,7 @@ const JsonValue: React.FC<{ value: unknown }> = ({ value }) => {
     return <span>{value ? "Yes" : "No"}</span>;
   }
   if (typeof value === "number") {
-    return <span className="font-mono text-xs">{String(value)}</span>;
+    return <span className="text-xs">{String(value)}</span>;
   }
   if (looksLikeDate(value)) {
     return <span>{formatValue(value)}</span>;
@@ -109,13 +109,13 @@ const JsonObjectView: React.FC<{ obj: Record<string, unknown> }> = ({ obj }) => 
   }
 
   return (
-    <div className="grid grid-cols-[auto_1fr] gap-x-4 gap-y-1.5">
+    <div className="grid grid-cols-[auto_1fr] gap-x-3 gap-y-1.5">
       {entries.map(([key, value]) => (
         <React.Fragment key={key}>
           <span className="text-xs text-muted-foreground font-medium whitespace-nowrap self-start">
-            {formatFieldName(key)}
+            {formatFieldName(key)}:
           </span>
-          <span className="text-xs min-w-0">
+          <span className="text-xs min-w-0 font-medium">
             <JsonValue value={value} />
           </span>
         </React.Fragment>
