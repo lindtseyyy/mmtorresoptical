@@ -16,6 +16,7 @@ import {
 import { fetchProductTransactions } from "@/features/sales/services/transactionApi";
 import type { TransactionListItem } from "@/features/sales/types";
 import { CATEGORY_LABELS, type Category } from "@/features/inventory/types";
+import { isAdmin } from "@/shared/lib/auth";
 
 const formatDate = (dateStr: string | null) => {
   if (!dateStr) return "—";
@@ -215,13 +216,15 @@ const ViewProduct: React.FC = () => {
                   Adjust Stock
                 </Button>
               )}
-              <Button
-                variant="default"
-                size="sm"
-                onClick={() => navigate(`/inventory/edit/${productId}`)}
-              >
-                Edit Product
-              </Button>
+              {isAdmin() && (
+                <Button
+                  variant="default"
+                  size="sm"
+                  onClick={() => navigate(`/inventory/edit/${productId}`)}
+                >
+                  Edit Product
+                </Button>
+              )}
             </div>
           </div>
         </CardHeader>

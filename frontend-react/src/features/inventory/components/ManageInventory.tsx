@@ -12,6 +12,7 @@ import {
 import { Badge } from "@/shared/components/ui/badge";
 import { Plus, Search, Eye, Archive, ChevronLeft, ChevronRight, Glasses, Package, Layers, Banknote, ArrowUp, ArrowDown } from "lucide-react";
 import { useNavigate } from "react-router-dom";
+import { isAdmin } from "@/shared/lib/auth";
 import { Card, CardContent } from "@/shared/components/ui/card";
 import EmptyTableRows from "@/shared/components/EmptyTableRows";
 import type { Product, Category } from "@/features/inventory/types";
@@ -87,14 +88,16 @@ const ManageInventory: React.FC = () => {
           </p>
         </div>
         {/* Updated Button to navigate */}
-        <Button onClick={() => navigate("/inventory/add")}>
-          <Plus className="mr-2 h-4 w-4" />
-          Add Item to Catalog
-        </Button>
+        {isAdmin() && (
+          <Button onClick={() => navigate("/inventory/add")}>
+            <Plus className="mr-2 h-4 w-4" />
+            Add Item to Catalog
+          </Button>
+        )}
       </div>
 
       {/* Summary Cards */}
-      <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4">
+      <div className={`grid grid-cols-1 gap-4 sm:grid-cols-2 ${isAdmin() ? "lg:grid-cols-4" : "lg:grid-cols-3"}`}>
         <Card>
           <CardContent className="flex items-center gap-4 p-5">
             <div className="flex h-11 w-11 items-center justify-center rounded-full bg-primary/10">
@@ -133,17 +136,19 @@ const ManageInventory: React.FC = () => {
           </CardContent>
         </Card>
 
-        <Card className="border-gray-300">
-          <CardContent className="flex items-center gap-4 p-5">
-            <div className="flex h-11 w-11 items-center justify-center rounded-full bg-muted">
-              <Archive className="h-5 w-5 text-muted-foreground" />
-            </div>
-            <div>
-              <p className="text-2xl font-bold">{summary?.countArchivedProducts ?? "—"}</p>
-              <p className="text-sm text-muted-foreground">Archived Products</p>
-            </div>
-          </CardContent>
-        </Card>
+        {isAdmin() && (
+          <Card className="border-gray-300">
+            <CardContent className="flex items-center gap-4 p-5">
+              <div className="flex h-11 w-11 items-center justify-center rounded-full bg-muted">
+                <Archive className="h-5 w-5 text-muted-foreground" />
+              </div>
+              <div>
+                <p className="text-2xl font-bold">{summary?.countArchivedProducts ?? "—"}</p>
+                <p className="text-sm text-muted-foreground">Archived Products</p>
+              </div>
+            </CardContent>
+          </Card>
+        )}
       </div>
 
       <Card>

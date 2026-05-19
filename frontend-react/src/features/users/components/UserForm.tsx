@@ -28,7 +28,7 @@ import {
   CardTitle,
 } from "@/shared/components/ui/card";
 import { useNavigate } from "react-router-dom";
-import { Eye, EyeOff, KeyRound } from "lucide-react";
+import { Eye, EyeOff, Info, KeyRound } from "lucide-react";
 import { z } from "zod";
 import { resetPassword } from "@/features/users/services/userApi";
 import { toast } from "sonner";
@@ -384,6 +384,15 @@ export const UserForm: React.FC<UserFormProps> = ({
                     </FormItem>
                   )}
                 />
+              </div>
+            )}
+            {!isEditMode && (
+              <div className="flex items-start gap-2 rounded-md border bg-blue-50/50 p-3 text-sm text-blue-800/80 dark:bg-blue-950/30 dark:text-blue-300/70">
+                <Info className="mt-0.5 h-4 w-4 shrink-0" />
+                <p>
+                  The user will be required to change their password at their
+                  first login.
+                </p>
               </div>
             )}
           </CardContent>
