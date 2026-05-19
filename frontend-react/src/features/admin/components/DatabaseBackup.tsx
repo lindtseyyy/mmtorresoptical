@@ -491,7 +491,7 @@ const DatabaseBackup: React.FC = () => {
                         <th className="w-[12%] py-3 pr-4 font-medium text-center">Action</th>
                         <th className="w-[14%] py-3 pr-4 font-medium">Resource</th>
                         <th className="w-[34%] py-3 pr-4 font-medium">Details</th>
-                        <th className="w-[16%] py-3 pr-4 font-medium">User</th>
+                        <th className="w-[16%] py-3 pr-4 font-medium">Performed by</th>
                         <th className="w-[6%] py-3 pl-4 font-medium"></th>
                       </tr>
                     </thead>
@@ -592,15 +592,15 @@ const DatabaseBackup: React.FC = () => {
         </DialogHeader>
         {viewingEntry && (
           <div className="space-y-4 mt-4">
+            <div>
+              <Label className="text-xs text-muted-foreground">Log ID</Label>
+              <p className="text-sm font-mono">{viewingEntry.logId}</p>
+            </div>
+            <div>
+              <Label className="text-xs text-muted-foreground">Date & Time</Label>
+              <p className="text-sm">{formatTimestamp(viewingEntry.loggedAt)}</p>
+            </div>
             <div className="grid grid-cols-2 gap-4">
-              <div>
-                <Label className="text-xs text-muted-foreground">Log ID</Label>
-                <p className="text-sm font-mono">{viewingEntry.logId}</p>
-              </div>
-              <div>
-                <Label className="text-xs text-muted-foreground">Date & Time</Label>
-                <p className="text-sm">{formatTimestamp(viewingEntry.loggedAt)}</p>
-              </div>
               <div>
                 <Label className="text-xs text-muted-foreground">Action</Label>
                 <p className="text-sm">
@@ -614,7 +614,7 @@ const DatabaseBackup: React.FC = () => {
                 <p className="text-sm">{viewingEntry.resourceType}</p>
               </div>
               <div>
-                <Label className="text-xs text-muted-foreground">User ID</Label>
+                <Label className="text-xs text-muted-foreground">Performed by</Label>
                 <p className="text-sm font-mono">{viewingEntry.userId}</p>
               </div>
             </div>
