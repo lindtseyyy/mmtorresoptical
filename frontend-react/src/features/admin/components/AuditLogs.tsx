@@ -38,7 +38,6 @@ const AUDIT_PAGE_SIZE = 10;
 const actionBadgeClass: Record<string, string> = {
   CREATE: "bg-emerald-600 hover:bg-emerald-600 text-white",
   UPDATE: "bg-blue-600 hover:bg-blue-600 text-white",
-  DELETE: "bg-red-600 hover:bg-red-600 text-white",
   ARCHIVE: "bg-amber-600 hover:bg-amber-600 text-white",
   RESTORE: "bg-teal-600 hover:bg-teal-600 text-white",
   LOGIN: "bg-purple-600 hover:bg-purple-600 text-white",
@@ -167,7 +166,6 @@ const AuditLogs: React.FC = () => {
                     <SelectItem value="all">All Actions</SelectItem>
                     <SelectItem value="CREATE">Create</SelectItem>
                     <SelectItem value="UPDATE">Update</SelectItem>
-                    <SelectItem value="DELETE">Delete</SelectItem>
                     <SelectItem value="ARCHIVE">Archive</SelectItem>
                     <SelectItem value="RESTORE">Restore</SelectItem>
                     <SelectItem value="LOGIN">Login</SelectItem>
