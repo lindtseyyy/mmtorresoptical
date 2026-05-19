@@ -23,16 +23,18 @@ public class ProductRequestValidator
             valid = false;
         }
 
-        if (dto.getQuantity() == null) {
-            context.buildConstraintViolationWithTemplate("Quantity is required")
-                    .addPropertyNode("quantity")
-                    .addConstraintViolation();
-            valid = false;
-        } else if (dto.getQuantity() < 0) {
-            context.buildConstraintViolationWithTemplate("Quantity cannot be negative")
-                    .addPropertyNode("quantity")
-                    .addConstraintViolation();
-            valid = false;
+        if (dto instanceof com.mmtorresoptical.OpticalClinicManagementSystem.dto.product.CreateProductRequestDTO createDTO) {
+            if (createDTO.getQuantity() == null) {
+                context.buildConstraintViolationWithTemplate("Quantity is required")
+                        .addPropertyNode("quantity")
+                        .addConstraintViolation();
+                valid = false;
+            } else if (createDTO.getQuantity() < 0) {
+                context.buildConstraintViolationWithTemplate("Quantity cannot be negative")
+                        .addPropertyNode("quantity")
+                        .addConstraintViolation();
+                valid = false;
+            }
         }
 
         if (dto.getLowLevelThreshold() == null) {

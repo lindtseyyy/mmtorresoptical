@@ -125,6 +125,10 @@ export const ProductForm: React.FC<ProductFormProps> = ({
       values.lowLevelThreshold = "";
       values.overstockedThreshold = "";
     }
+    // Preserve quantity from original data when editing (field is not shown in edit mode)
+    if (isEditMode && !isService) {
+      values.quantity = String(passedDefaultValues?.quantity ?? "");
+    }
     const payload = productSchema.parse(values);
     await onFormSubmit(payload);
   });
@@ -265,7 +269,7 @@ export const ProductForm: React.FC<ProductFormProps> = ({
                 )}
               />
 
-              {!isService && (
+              {!isService && !isEditMode && (
                 <FormField
                   control={form.control}
                   name="quantity"
