@@ -86,6 +86,13 @@ public class JSONService {
                 return sanitizePatientAuditJson(node);
             }
 
+            // ── CREATE / ARCHIVE / RESTORE Prescription: group items by eye side, hide UUIDs ──
+            if (("CREATE".equals(actionType) || "ARCHIVE".equals(actionType) || "RESTORE".equals(actionType))
+                    && node.has("prescriptionId") && node.has("examDate")
+                    && (node.has("rightEye") || node.has("leftEye") || node.has("bothEyes"))) {
+                return sanitizePrescriptionAuditJson(node);
+            }
+
             // ── UPDATE Patient: only return fields that actually changed ──
             if ("UPDATE".equals(actionType) && node.has("before") && node.has("after")) {
                 ObjectNode after = (ObjectNode) node.get("after");
@@ -275,6 +282,146 @@ public class JSONService {
             fullName += " " + last;
         }
         target.put("fullName", fullName.trim());
+    }
+
+    private String sanitizePrescriptionAuditJson(ObjectNode node) throws JsonProcessingException {
+        ObjectNode clean = objectMapper.createObjectNode();
+
+        if (node.has("examDate") && !node.get("examDate").isNull()) {
+            clean.put("examDate", formatBirthDate(node.get("examDate").asText()));
+        }
+        if (node.has("createdAt") && !node.get("createdAt").isNull()) {
+            clean.put("createdAt", formatCreatedAt(node.get("createdAt").asText()));
+        }
+        if (node.has("notes")) {
+            clean.put("notes", dashIfBlank(node.get("notes").asText(), "Notes"));
+        }
+
+        sanitizeEyeGroup(clean, node, "rightEye");
+        sanitizeEyeGroup(clean, node, "leftEye");
+        sanitizeEyeGroup(clean, node, "bothEyes");
+
+        return objectMapper.writeValueAsString(clean);
+    }
+
+    private void sanitizeEyeGroup(ObjectNode target, ObjectNode source, String groupKey) {
+        if (source.has(groupKey) && source.get(groupKey).isArray()) {
+            var items = source.get(groupKey);
+            var cleanItems = objectMapper.createArrayNode();
+            for (var item : items) {
+                if (item.isObject()) {
+                    cleanItems.add(sanitizePrescriptionItemJson((ObjectNode) item));
+                }
+            }
+            if (cleanItems.size() > 0) {
+                target.set(groupKey, cleanItems);
+            }
+        }
+    }
+
+    private ObjectNode sanitizePrescriptionItemJson(ObjectNode node) {
+        ObjectNode clean = objectMapper.createObjectNode();
+
+        copyField(clean, node, "correctionType");
+        copyField(clean, node, "sph");
+        copyField(clean, node, "cyl");
+        copyField(clean, node, "axis");
+        copyField(clean, node, "addPower");
+        copyField(clean, node, "pd");
+        copyField(clean, node, "baseCurve");
+        copyField(clean, node, "diameter");
+        copyField(clean, node, "lensWearType");
+        copyField(clean, node, "frameTypePreference");
+
+        if (clean.has("correctionType")) {
+            clean.put("correctionType", capitalizeWord(clean.get("correctionType").asText()));
+        }
+
+        if (node.has("eyeSide") && !node.get("eyeSide").isNull()) {
+            clean.put("eyeSide", formatEyeSide(node.get("eyeSide").asText()));
+        }
+
+        String lensCustomizations = buildLensCustomizations(node);
+        if (!lensCustomizations.isEmpty()) {
+            clean.put("lensCustomizations", lensCustomizations);
+        }
+
+        if (node.has("followUpRequired") && node.get("followUpRequired").isBoolean()) {
+            if (node.get("followUpRequired").asBoolean()) {
+                String followUp = buildScheduledFollowUp(node);
+                if (!followUp.isEmpty()) {
+                    clean.put("scheduledFollowUp", followUp);
+                }
+            }
+        }
+
+        if (node.has("notes")) {
+            clean.put("notes", dashIfBlank(node.get("notes").asText(), "Notes"));
+        }
+
+        return clean;
+    }
+
+    private String formatEyeSide(String raw) {
+        return switch (raw.toUpperCase()) {
+            case "LEFT" -> "Left Eye (OS)";
+            case "RIGHT" -> "Right Eye (OD)";
+            case "BOTH" -> "Both (OU)";
+            default -> capitalizeWord(raw);
+        };
+    }
+
+    private String buildLensCustomizations(ObjectNode node) {
+        var parts = new java.util.ArrayList<String>();
+        if (node.has("lensType") && !node.get("lensType").isNull()) {
+            String val = node.get("lensType").asText();
+            if (!val.isBlank()) parts.add(capitalizeWord(val));
+        }
+        if (node.has("lensMaterial") && !node.get("lensMaterial").isNull()) {
+            String val = node.get("lensMaterial").asText();
+            if (!val.isBlank()) parts.add(val);
+        }
+        if (node.has("lensCoatings") && !node.get("lensCoatings").isNull()) {
+            String val = node.get("lensCoatings").asText();
+            if (!val.isBlank()) parts.add(val);
+        }
+        if (node.has("lensMaterialCl") && !node.get("lensMaterialCl").isNull()) {
+            String val = node.get("lensMaterialCl").asText();
+            if (!val.isBlank()) parts.add("CL: " + val);
+        }
+        return String.join(", ", parts);
+    }
+
+    private String buildScheduledFollowUp(ObjectNode node) {
+        var parts = new java.util.ArrayList<String>();
+        if (node.has("followUpDate") && !node.get("followUpDate").isNull()) {
+            parts.add(formatBirthDate(node.get("followUpDate").asText()));
+        }
+        if (node.has("followUpReason") && !node.get("followUpReason").isNull()) {
+            String val = node.get("followUpReason").asText();
+            if (!val.isBlank()) parts.add(val);
+        }
+        if (node.has("followUpStatus") && !node.get("followUpStatus").isNull()) {
+            String val = node.get("followUpStatus").asText();
+            if (!val.isBlank()) parts.add(capitalizeWord(val));
+        }
+        return String.join(" — ", parts);
+    }
+
+    private String formatCreatedAt(String raw) {
+        try {
+            java.time.LocalDateTime dateTime = java.time.LocalDateTime.parse(raw);
+            return dateTime.format(java.time.format.DateTimeFormatter.ofPattern("MMM dd, yyyy, hh:mm a"));
+        } catch (Exception e) {
+            return raw;
+        }
+    }
+
+    private String dashIfBlank(String value, String placeholder) {
+        if (value == null || value.isBlank() || value.equalsIgnoreCase(placeholder)) {
+            return "—";
+        }
+        return value;
     }
 
     private String formatTransactionStatus(String status) {

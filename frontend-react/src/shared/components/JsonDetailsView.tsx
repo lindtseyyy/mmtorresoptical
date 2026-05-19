@@ -131,6 +131,77 @@ const isUpdateEvent = (
 ): obj is { before: Record<string, unknown>; after: Record<string, unknown> } =>
   Object.keys(obj).length === 2 && "before" in obj && "after" in obj;
 
+const EYE_GROUP_KEYS = ["rightEye", "leftEye", "bothEyes"];
+
+const isPrescriptionEvent = (obj: Record<string, unknown>): boolean =>
+  "examDate" in obj && EYE_GROUP_KEYS.some((k) => k in obj);
+
+// ── Prescription event view ──
+
+const PrescriptionEventView: React.FC<{ obj: Record<string, unknown> }> = ({ obj }) => {
+  const mainFields = Object.entries(obj).filter(
+    ([key]) => !EYE_GROUP_KEYS.includes(key),
+  );
+  const eyeGroups = EYE_GROUP_KEYS.filter(
+    (key) => Array.isArray(obj[key]) && (obj[key] as unknown[]).length > 0,
+  );
+
+  return (
+    <div className="space-y-4">
+      <div className="grid grid-cols-[auto_1fr] gap-x-3 gap-y-1.5">
+        {mainFields.map(([key, value]) => (
+          <React.Fragment key={key}>
+            <span className="text-xs text-muted-foreground font-medium whitespace-nowrap self-start">
+              {formatFieldName(key)}:
+            </span>
+            <span className="text-xs min-w-0 font-medium">
+              <JsonValue value={value} />
+            </span>
+          </React.Fragment>
+        ))}
+      </div>
+
+      {eyeGroups.map((groupKey) => {
+        const items = obj[groupKey] as Record<string, unknown>[];
+        if (items.length === 0) return null;
+        const columns = Object.keys(items[0]);
+
+        return (
+          <div key={groupKey}>
+            <h4 className="text-xs font-semibold text-muted-foreground mb-1.5">
+              {formatFieldName(groupKey)}
+            </h4>
+            <div className="overflow-x-auto rounded border">
+              <table className="w-full text-xs">
+                <thead>
+                  <tr className="border-b bg-muted/50 text-left">
+                    {columns.map((col) => (
+                      <th key={col} className="py-1.5 px-2 font-medium whitespace-nowrap">
+                        {formatFieldName(col)}
+                      </th>
+                    ))}
+                  </tr>
+                </thead>
+                <tbody>
+                  {items.map((item, idx) => (
+                    <tr key={idx} className="border-b last:border-b-0">
+                      {columns.map((col) => (
+                        <td key={col} className="py-1.5 px-2 align-top">
+                          <JsonValue value={item[col]} />
+                        </td>
+                      ))}
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          </div>
+        );
+      })}
+    </div>
+  );
+};
+
 // ── Main export ──
 
 interface JsonDetailsViewProps {
@@ -205,6 +276,11 @@ const JsonDetailsView: React.FC<JsonDetailsViewProps> = ({ data }) => {
         </table>
       </div>
     );
+  }
+
+  // Prescription event → main fields grid + eye group tables
+  if (isPrescriptionEvent(obj)) {
+    return <PrescriptionEventView obj={obj} />;
   }
 
   // Flat object

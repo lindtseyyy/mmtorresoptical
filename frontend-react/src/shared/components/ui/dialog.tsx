@@ -15,7 +15,7 @@ const Dialog: React.FC<DialogProps> = ({ open, onOpenChange, children, hideClose
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center">
       <div className="fixed inset-0 bg-black/50" />
-      <div className="relative z-50 w-full max-w-lg rounded-lg border bg-background p-6 shadow-lg">
+      <div className="relative z-50 w-full max-w-lg max-h-[85vh] overflow-y-auto rounded-lg border bg-background p-6 shadow-lg">
         {!hideCloseButton && (
           <Button
             variant="ghost"
