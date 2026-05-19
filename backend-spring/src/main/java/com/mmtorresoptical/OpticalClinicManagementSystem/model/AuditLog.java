@@ -8,8 +8,6 @@ import jakarta.validation.constraints.NotNull;
 import lombok.Getter;
 import lombok.Setter;
 import org.hibernate.annotations.CreationTimestamp;
-import org.hibernate.annotations.JdbcTypeCode;
-import org.hibernate.type.SqlTypes;
 
 import java.time.LocalDateTime;
 import java.util.UUID;
@@ -43,8 +41,7 @@ public class AuditLog {
     private String details;
 
     @NotBlank
-    @JdbcTypeCode(SqlTypes.JSON)
-    @Column(name = "details_json", columnDefinition = "jsonb")
+    @Column(name = "details_json", columnDefinition = "TEXT")
     private String detailsJson;
 
     @CreationTimestamp
