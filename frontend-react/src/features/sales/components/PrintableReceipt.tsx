@@ -95,6 +95,12 @@ const OriginalReceipt: React.FC<{
           <span className="text-muted-foreground">Cashier</span>
           <span>{tx.createdBy.fullName}</span>
         </div>
+        <div className="flex justify-between">
+          <span className="text-muted-foreground">Payment Status</span>
+          <span className={`font-semibold rounded-sm px-1.5 py-0.5 text-xs text-white leading-none inline-flex items-center ${(tx.amountPaid ?? 0) >= tx.totalAmount ? "bg-green-600" : "bg-orange-600"}`}>
+            {(tx.amountPaid ?? 0) >= tx.totalAmount ? "PAID" : "DEPOSIT"}
+          </span>
+        </div>
       </div>
 
       {tx.patient && (
@@ -200,6 +206,25 @@ const OriginalReceipt: React.FC<{
   );
 };
 
+const paymentStatusColor = (status: string) => {
+  switch (status) {
+    case "DEPOSIT": return "bg-orange-600";
+    case "PAID": return "bg-green-600";
+    case "COMPLETED": return "bg-blue-600";
+    case "VOIDED": return "bg-red-700";
+    case "REFUNDED": return "bg-gray-700";
+    default: return "bg-gray-500";
+  }
+};
+
+const refundStatusColor = (status: string) => {
+  switch (status) {
+    case "PARTIAL": return "bg-purple-600";
+    case "FULL": return "bg-gray-600";
+    default: return "bg-gray-500";
+  }
+};
+
 // ────────────────────────────────────────────────────────────
 // UPDATED Statement of Account
 // ────────────────────────────────────────────────────────────
@@ -300,6 +325,20 @@ const UpdatedStatement: React.FC<{ transaction: TransactionResponse }> = ({ tran
           <span className="text-muted-foreground">Cashier</span>
           <span>{tx.createdBy.fullName}</span>
         </div>
+        <div className="flex justify-between">
+          <span className="text-muted-foreground">Payment Status</span>
+          <span className={`font-semibold rounded-sm px-1.5 py-0.5 text-xs text-white leading-none inline-flex items-center ${paymentStatusColor(tx.transactionStatus)}`}>
+            {tx.transactionStatus}
+          </span>
+        </div>
+        {tx.refundStatus && tx.refundStatus !== "NONE" && (
+          <div className="flex justify-between">
+            <span className="text-muted-foreground">Refund Status</span>
+            <span className={`font-semibold rounded-sm px-1.5 py-0.5 text-xs text-white leading-none inline-flex items-center ${refundStatusColor(tx.refundStatus)}`}>
+              {tx.refundStatus}
+            </span>
+          </div>
+        )}
       </div>
 
       {tx.patient && (
