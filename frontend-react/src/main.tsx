@@ -98,7 +98,7 @@ const router = createBrowserRouter([
       { path: "sales", element: <ManageSales /> },
       { path: "transactions", element: <ManageTransactions /> },
       { path: "transactions/:id", element: <ViewTransaction /> },
-      { path: "reports", element: <Reports /> },
+      { path: "reports", element: <AdminGuard><Reports /></AdminGuard> },
       { path: "inventory", element: <ManageInventory /> },
       { path: "inventory/add", element: <AddProduct /> },
       { path: "inventory/edit/:id", element: <EditProduct /> },

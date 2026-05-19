@@ -33,7 +33,7 @@ const menuItems: MenuItem[] = [
       { title: "Audit Trail", href: "/admin/audit-logs" },
     ],
   },
-  { title: "Reports", href: "/reports", icon: FileText, roles: ["ADMIN", "STAFF"] as Role[] },
+  { title: "Reports", href: "/reports", icon: FileText, roles: ["ADMIN"] as Role[] },
   { title: "Help", href: "/help", icon: CircleHelp, roles: ["ADMIN", "STAFF"] as Role[] },
   { title: "About", href: "/about", icon: Info, roles: ["ADMIN", "STAFF"] as Role[] },
 ];
