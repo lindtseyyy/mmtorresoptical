@@ -656,9 +656,9 @@ const ViewTransaction: React.FC = () => {
                       <th className="py-3 pr-2 font-medium text-xs">Product</th>
                       <th className="py-3 pr-2 text-center font-medium text-xs">Unit Price</th>
                       <th className="py-3 pr-2 text-center font-medium text-xs">Qty</th>
-                      <th className="py-3 pr-2 text-right font-medium text-xs">Item Credit</th>
+                      <th className="py-3 pr-2 text-center font-medium text-xs">Item Credit</th>
                       <th className="py-3 pr-2 text-center font-medium text-xs">Refund Method</th>
-                      <th className="py-3 pr-2 text-right font-medium text-xs">Actual Cash Back</th>
+                      <th className="py-3 pr-2 text-center font-medium text-xs">Actual Cash Back</th>
                       <th className="py-3 pr-2 font-medium text-xs">Reason</th>
                       <th className="py-3 pr-2 font-medium text-xs">Refund Date</th>
                       <th className="py-3 font-medium text-xs">Refunded By</th>
@@ -682,7 +682,7 @@ const ViewTransaction: React.FC = () => {
                           <td className="py-2.5 pr-2 text-center text-xs">
                             {refund.refundQuantity}
                           </td>
-                          <td className="py-2.5 pr-2 text-right text-red-600 text-xs">
+                          <td className="py-2.5 pr-2 text-center text-red-600 text-xs">
                             {formatCurrency(refund.itemCreditAmount ?? 0)}
                           </td>
                           <td className="py-2.5 pr-2 text-center capitalize text-xs">
@@ -690,7 +690,7 @@ const ViewTransaction: React.FC = () => {
                               ? "Adjustment"
                               : refund.refundMethod}
                           </td>
-                          <td className="py-2.5 pr-2 text-right text-xs">
+                          <td className="py-2.5 pr-2 text-center text-xs">
                             {formatCurrency(refund.actualCashBack ?? 0)}
                           </td>
                           <td className="py-2.5 pr-2 text-xs">{refund.refundReason}</td>
