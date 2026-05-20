@@ -3,6 +3,8 @@ package com.mmtorresoptical.OpticalClinicManagementSystem.controller;
 import com.mmtorresoptical.OpticalClinicManagementSystem.dto.eyeexam.CreateEyeExamRequestDTO;
 import com.mmtorresoptical.OpticalClinicManagementSystem.dto.eyeexam.EyeExamDetailsDTO;
 import com.mmtorresoptical.OpticalClinicManagementSystem.dto.eyeexam.EyeExamResponseDTO;
+import com.mmtorresoptical.OpticalClinicManagementSystem.dto.eyeexam.VoidEyeExamRequestDTO;
+import jakarta.validation.Valid;
 import com.mmtorresoptical.OpticalClinicManagementSystem.services.controller.EyeExamService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
@@ -41,9 +43,9 @@ public class EyeExamController {
             @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate maxDate,
             @RequestParam(defaultValue = "createdAt") String sortBy,
             @RequestParam(defaultValue = "desc") String sortOrder,
-            @RequestParam(defaultValue = "ACTIVE") String archivedStatus) {
+            @RequestParam(defaultValue = "ACTIVE") String status) {
         Page<EyeExamDetailsDTO> response = eyeExamService.getAllEyeExams(
-                id, keyword, minDate, maxDate, page, size, sortBy, sortOrder, archivedStatus);
+                id, keyword, minDate, maxDate, page, size, sortBy, sortOrder, status);
         return ResponseEntity.ok(response);
     }
 
@@ -53,15 +55,10 @@ public class EyeExamController {
         return ResponseEntity.ok(response);
     }
 
-    @DeleteMapping("/eye-exams/{id}")
-    public ResponseEntity<Void> archiveEyeExam(@PathVariable UUID id) {
-        eyeExamService.archiveEyeExam(id);
-        return ResponseEntity.noContent().build();
-    }
-
-    @PutMapping("/eye-exams/{id}/restore")
-    public ResponseEntity<Void> restoreEyeExam(@PathVariable UUID id) {
-        eyeExamService.restoreEyeExam(id);
-        return ResponseEntity.noContent().build();
+    @PostMapping("/eye-exams/{id}/void")
+    public ResponseEntity<Void> voidEyeExam(@PathVariable UUID id,
+                                             @Valid @RequestBody VoidEyeExamRequestDTO request) {
+        eyeExamService.voidEyeExam(id, request);
+        return ResponseEntity.ok().build();
     }
 }

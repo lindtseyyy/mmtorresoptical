@@ -1,5 +1,6 @@
 package com.mmtorresoptical.OpticalClinicManagementSystem.specification;
 
+import com.mmtorresoptical.OpticalClinicManagementSystem.enums.PrescriptionStatus;
 import com.mmtorresoptical.OpticalClinicManagementSystem.model.Prescription;
 import com.mmtorresoptical.OpticalClinicManagementSystem.model.PrescriptionItem;
 import org.springframework.data.jpa.domain.Specification;
@@ -15,19 +16,18 @@ public class PrescriptionSpecification {
                 cb.equal(root.get("patient").get("patientId"), patientId);
     }
 
-    public static Specification<Prescription> hasArchivedStatus(String status) {
+    public static Specification<Prescription> hasStatus(String status) {
         return (root, query, cb) -> {
-
             if (status == null || status.equalsIgnoreCase("ALL")) {
-                return cb.conjunction(); // no filtering
+                return cb.conjunction();
             }
-
-            if (status.equalsIgnoreCase("ARCHIVED")) {
-                return cb.isTrue(root.get("isArchived"));
+            PrescriptionStatus statusEnum;
+            try {
+                statusEnum = PrescriptionStatus.valueOf(status.toUpperCase());
+            } catch (IllegalArgumentException e) {
+                return cb.conjunction();
             }
-
-            // default ACTIVE
-            return cb.isFalse(root.get("isArchived"));
+            return cb.equal(root.get("status"), statusEnum);
         };
     }
 

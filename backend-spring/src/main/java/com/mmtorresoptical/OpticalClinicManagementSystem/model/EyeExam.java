@@ -1,6 +1,7 @@
 package com.mmtorresoptical.OpticalClinicManagementSystem.model;
 
 import com.mmtorresoptical.OpticalClinicManagementSystem.converter.AesEncryptionConverter;
+import com.mmtorresoptical.OpticalClinicManagementSystem.enums.EyeExamStatus;
 import jakarta.persistence.*;
 import lombok.Getter;
 import lombok.Setter;
@@ -85,4 +86,18 @@ public class EyeExam {
 
     @Column(name = "is_archived", nullable = false)
     private Boolean isArchived = false;
+
+    @Enumerated(EnumType.STRING)
+    @Column(name = "status", nullable = false)
+    private EyeExamStatus status = EyeExamStatus.ACTIVE;
+
+    @Column(name = "void_reason", columnDefinition = "TEXT")
+    private String voidReason;
+
+    @Column(name = "voided_at")
+    private LocalDateTime voidedAt;
+
+    @ManyToOne
+    @JoinColumn(name = "voided_by_user_id")
+    private User voidedBy;
 }

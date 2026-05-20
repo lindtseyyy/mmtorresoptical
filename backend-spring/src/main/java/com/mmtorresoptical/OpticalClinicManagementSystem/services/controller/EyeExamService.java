@@ -3,6 +3,8 @@ package com.mmtorresoptical.OpticalClinicManagementSystem.services.controller;
 import com.mmtorresoptical.OpticalClinicManagementSystem.dto.eyeexam.CreateEyeExamRequestDTO;
 import com.mmtorresoptical.OpticalClinicManagementSystem.dto.eyeexam.EyeExamDetailsDTO;
 import com.mmtorresoptical.OpticalClinicManagementSystem.dto.eyeexam.EyeExamResponseDTO;
+import com.mmtorresoptical.OpticalClinicManagementSystem.dto.eyeexam.VoidEyeExamRequestDTO;
+import com.mmtorresoptical.OpticalClinicManagementSystem.enums.EyeExamStatus;
 import com.mmtorresoptical.OpticalClinicManagementSystem.exception.custom.ResourceNotFoundException;
 import com.mmtorresoptical.OpticalClinicManagementSystem.mapper.EyeExamMapper;
 import com.mmtorresoptical.OpticalClinicManagementSystem.model.EyeExam;
@@ -21,6 +23,7 @@ import org.springframework.data.jpa.domain.Specification;
 import org.springframework.stereotype.Service;
 
 import java.time.LocalDate;
+import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
@@ -64,7 +67,7 @@ public class EyeExamService {
                                                    int size,
                                                    String sortBy,
                                                    String sortOrder,
-                                                   String archivedStatus) {
+                                                   String status) {
 
         Specification<EyeExam> spec = Specification.allOf();
 
@@ -84,7 +87,7 @@ public class EyeExamService {
             spec = spec.and(EyeExamSpecification.dateBetween(minDate, maxDate));
         }
 
-        spec = spec.and(EyeExamSpecification.hasArchivedStatus(archivedStatus));
+        spec = spec.and(EyeExamSpecification.hasStatus(status));
         spec = spec.and(EyeExamSpecification.hasPatientId(patientId));
 
         Sort.Direction direction;
@@ -94,7 +97,7 @@ public class EyeExamService {
             direction = Sort.Direction.DESC;
         }
 
-        Sort sort = Sort.by(Sort.Direction.ASC, "isArchived")
+        Sort sort = Sort.by(Sort.Direction.ASC, "status")
                 .and(Sort.by(direction, sortBy));
         Pageable pageable = PageRequest.of(page, size, sort);
 
@@ -109,23 +112,23 @@ public class EyeExamService {
         return eyeExamMapper.entityToDetailsDTO(eyeExam);
     }
 
-    public void archiveEyeExam(UUID id) {
+    public void voidEyeExam(UUID id, VoidEyeExamRequestDTO request) {
         EyeExam eyeExam = eyeExamRepository.findById(id)
                 .orElseThrow(() -> new ResourceNotFoundException("Eye exam not found with id: " + id));
 
-        eyeExam.setIsArchived(true);
+        if (eyeExam.getStatus() == EyeExamStatus.VOIDED) {
+            throw new IllegalStateException("Eye exam is already voided");
+        }
+
+        User authenticatedUser = authenticatedUserService.getCurrentUser();
+
+        eyeExam.setStatus(EyeExamStatus.VOIDED);
+        eyeExam.setVoidReason(request.getVoidReason());
+        eyeExam.setVoidedAt(LocalDateTime.now());
+        eyeExam.setVoidedBy(authenticatedUser);
+
         eyeExamRepository.save(eyeExam);
 
-        eyeExamAuditHelper.logArchive(eyeExam);
-    }
-
-    public void restoreEyeExam(UUID id) {
-        EyeExam eyeExam = eyeExamRepository.findById(id)
-                .orElseThrow(() -> new ResourceNotFoundException("Eye exam not found with id: " + id));
-
-        eyeExam.setIsArchived(false);
-        eyeExamRepository.save(eyeExam);
-
-        eyeExamAuditHelper.logRestore(eyeExam);
+        eyeExamAuditHelper.logVoid(eyeExam);
     }
 }

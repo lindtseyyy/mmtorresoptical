@@ -64,4 +64,15 @@ public class EyeExamAuditHelper {
                 detailsJson
         );
     }
+
+    public void logVoid(EyeExam eyeExam) {
+        EyeExamAuditDTO auditDTO = eyeExamMapper.entityToAuditDTO(eyeExam);
+        String detailsJson = jsonService.toJson(auditDTO);
+        auditLogService.log(ActionType.VOID,
+                ResourceType.EYE_EXAM,
+                eyeExam.getEyeExamId(),
+                "Voided eye exam record",
+                detailsJson
+        );
+    }
 }

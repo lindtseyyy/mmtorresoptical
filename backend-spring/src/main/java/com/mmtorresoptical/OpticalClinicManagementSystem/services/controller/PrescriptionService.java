@@ -125,7 +125,7 @@ public class PrescriptionService {
                                                                 int size,
                                                                 String sortBy,
                                                                 String sortOrder,
-                                                                String archivedStatus) {
+                                                                String status) {
 
 
         Specification<Prescription> spec = Specification.allOf();
@@ -153,7 +153,7 @@ public class PrescriptionService {
         }
 
         spec = spec.and(
-                PrescriptionSpecification.hasArchivedStatus(archivedStatus)
+                PrescriptionSpecification.hasStatus(status)
         );
 
         spec = spec.and(
@@ -172,7 +172,7 @@ public class PrescriptionService {
 
         // Create pageable configuration with sorting
         // Always sort active before archived, then by the requested field
-        Sort sort = Sort.by(Sort.Direction.ASC, "isArchived")
+        Sort sort = Sort.by(Sort.Direction.ASC, "status")
                 .and(Sort.by(direction, sortBy));
         Pageable pageable = PageRequest.of(page, size, sort);
 

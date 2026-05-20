@@ -17,14 +17,21 @@ import java.util.List;
 public interface EyeExamMapper {
 
     @Mapping(target = "performedBy", source = "performedBy")
+    @Mapping(target = "status",
+            expression = "java(eyeExam.getStatus() != null ? eyeExam.getStatus().name() : null)")
     EyeExamResponseDTO entityToResponseDTO(EyeExam eyeExam);
 
     EyeExam createDTOToEntity(CreateEyeExamRequestDTO dto);
 
     @Mapping(target = "performedBy", source = "performedBy")
+    @Mapping(target = "voidedBy", source = "voidedBy")
+    @Mapping(target = "status",
+            expression = "java(eyeExam.getStatus() != null ? eyeExam.getStatus().name() : null)")
     EyeExamDetailsDTO entityToDetailsDTO(EyeExam eyeExam);
 
     @Mapping(target = "performedByUserId", source = "performedBy.userId")
+    @Mapping(target = "status",
+            expression = "java(eyeExam.getStatus() != null ? eyeExam.getStatus().name() : null)")
     EyeExamAuditDTO entityToAuditDTO(EyeExam eyeExam);
 
     List<EyeExamAuditDTO> entityListToAuditDTOList(List<EyeExam> eyeExams);

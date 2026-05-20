@@ -25,5 +25,9 @@ public class EyeExamDetailsDTO {
     private String clinicalImpression;
     private String planNotes;
     private Boolean isArchived;
+    private String status;
+    private String voidReason;
+    private LocalDateTime voidedAt;
+    private UserSummaryDTO voidedBy;
     private UserSummaryDTO performedBy;
 }

@@ -57,8 +57,8 @@ public class PrescriptionController {
      * @param size the number of records per page (default = 10)
      * @param sortBy the field used for sorting (default = issueDate)
      * @param sortOrder the sorting direction: ascending or descending (default = descending)
-     * @param archivedStatus filter for prescription records:
-     *                       ACTIVE, ARCHIVED, or ALL (default = ACTIVE)
+     * @param status filter for prescription records:
+     *                       ACTIVE, VOIDED, or ALL (default = ACTIVE)
      * @return ResponseEntity containing a page of PrescriptionListDTO
      */
     @PreAuthorize("hasRole('ADMIN')")
@@ -71,9 +71,9 @@ public class PrescriptionController {
                                                                               @RequestParam(defaultValue = "10") int size,
                                                                               @RequestParam(defaultValue = "issueDate") String sortBy,
                                                                               @RequestParam(defaultValue = "desc") String sortOrder,
-                                                                              @RequestParam(defaultValue = "ACTIVE") String archivedStatus) {
+                                                                              @RequestParam(defaultValue = "ACTIVE") String status) {
 
-        Page<PrescriptionListDTO> prescriptionListDTOPage = prescriptionService.getAllPatientPrescriptions(id, keyword, minDate, maxDate, page, size, sortBy, sortOrder, archivedStatus);
+        Page<PrescriptionListDTO> prescriptionListDTOPage = prescriptionService.getAllPatientPrescriptions(id, keyword, minDate, maxDate, page, size, sortBy, sortOrder, status);
 
         return ResponseEntity.ok(prescriptionListDTOPage);
     }

@@ -24,5 +24,6 @@ public class EyeExamAuditDTO {
     private String clinicalImpression;
     private String planNotes;
     private Boolean isArchived;
+    private String status;
     private UUID performedByUserId;
 }

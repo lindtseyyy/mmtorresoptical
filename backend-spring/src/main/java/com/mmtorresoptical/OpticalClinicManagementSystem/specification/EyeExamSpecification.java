@@ -1,5 +1,6 @@
 package com.mmtorresoptical.OpticalClinicManagementSystem.specification;
 
+import com.mmtorresoptical.OpticalClinicManagementSystem.enums.EyeExamStatus;
 import com.mmtorresoptical.OpticalClinicManagementSystem.model.EyeExam;
 import com.mmtorresoptical.OpticalClinicManagementSystem.model.Patient;
 import jakarta.persistence.criteria.*;
@@ -26,6 +27,21 @@ public class EyeExamSpecification {
             }
             boolean isArchived = archivedStatus.equalsIgnoreCase("ARCHIVED");
             return cb.equal(root.get("isArchived"), isArchived);
+        };
+    }
+
+    public static Specification<EyeExam> hasStatus(String status) {
+        return (Root<EyeExam> root, CriteriaQuery<?> query, CriteriaBuilder cb) -> {
+            if (status == null || status.equalsIgnoreCase("ALL")) {
+                return cb.conjunction();
+            }
+            EyeExamStatus statusEnum;
+            try {
+                statusEnum = EyeExamStatus.valueOf(status.toUpperCase());
+            } catch (IllegalArgumentException e) {
+                return cb.conjunction();
+            }
+            return cb.equal(root.get("status"), statusEnum);
         };
     }
 
