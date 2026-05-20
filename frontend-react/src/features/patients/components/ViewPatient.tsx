@@ -424,29 +424,43 @@ const ViewPatient: React.FC = () => {
                   className={`rounded-lg border p-4 transition-colors bg-muted/60 hover:bg-muted${fu.isArchived ? " opacity-60" : ""}`}
                 >
                   <div className="flex items-start justify-between">
-                    <div className="space-y-1 flex-1 min-w-0">
-                      <div className="flex items-center gap-2">
-                        <span className="font-medium">
-                          {formatDate(fu.scheduledDate)}
-                        </span>
-                        <Badge className={
-                          fu.status === "COMPLETED" ? "bg-green-700 text-white hover:bg-green-700" :
-                          fu.status === "CANCELLED" ? "bg-red-600 text-white hover:bg-red-600" :
-                          fu.status === "NO_SHOW" ? "bg-gray-600 text-white hover:bg-gray-600" :
-                          "bg-amber-600 text-white hover:bg-amber-600"
-                        }>
-                          {fu.status === "NO_SHOW" ? "No Show" : fu.status.charAt(0) + fu.status.slice(1).toLowerCase()}
-                        </Badge>
-                        {fu.isArchived && (
-                          <Badge className="bg-gray-600 text-white">Archived</Badge>
+                    <div className="flex items-start gap-2 flex-1 min-w-0">
+                      <Badge className={
+                        fu.status === "COMPLETED" ? "bg-green-700 text-white hover:bg-green-700 w-[90px] justify-center shrink-0" :
+                        fu.status === "CANCELLED" ? "bg-red-600 text-white hover:bg-red-600 w-[90px] justify-center shrink-0" :
+                        fu.status === "NO_SHOW" ? "bg-gray-600 text-white hover:bg-gray-600 w-[90px] justify-center shrink-0" :
+                        "bg-amber-600 text-white hover:bg-amber-600 w-[90px] justify-center shrink-0"
+                      }>
+                        {fu.status === "NO_SHOW" ? "No Show" : fu.status.charAt(0) + fu.status.slice(1).toLowerCase()}
+                      </Badge>
+                      <div className="min-w-0">
+                        <div className="flex items-center gap-2">
+                          <span className="font-medium">
+                            {formatDate(fu.scheduledDate)}
+                          </span>
+                          {fu.isArchived && (
+                            <Badge className="bg-gray-600 text-white">Archived</Badge>
+                          )}
+                        </div>
+                        {fu.followUpReason ? (
+                          <p className="text-sm text-muted-foreground">{fu.followUpReason}</p>
+                        ) : (
+                          <p className="text-sm text-muted-foreground italic">No reason provided.</p>
                         )}
                       </div>
-                      {fu.followUpReason && (
-                        <p className="text-sm text-muted-foreground">{fu.followUpReason}</p>
-                      )}
                     </div>
-                    <div className="flex items-center gap-1 shrink-0 ml-2">
-                      {!fu.isArchived && fu.status !== "COMPLETED" && fu.status !== "CANCELLED" && (
+                    <div className="flex items-center gap-2 shrink-0 ml-2">
+                      {fu.isArchived ? (
+                        <Button
+                          size="sm"
+                          variant="outline"
+                          onClick={() => restoreFuMutation.mutate(fu.followUpId)}
+                          disabled={restoreFuMutation.isPending}
+                        >
+                          <Undo2 className="mr-1 h-4 w-4" />
+                          Restore
+                        </Button>
+                      ) : fu.status === "PENDING" ? (
                         <Button
                           size="sm"
                           className="bg-green-700 text-white hover:bg-green-800"
@@ -456,47 +470,54 @@ const ViewPatient: React.FC = () => {
                           <CheckCircle className="mr-1 h-4 w-4" />
                           Complete
                         </Button>
+                      ) : (fu.status === "NO_SHOW" || fu.status === "CANCELLED") && (
+                        <Button
+                          size="sm"
+                          variant="outline"
+                          onClick={() => openEditFuModal(fu)}
+                        >
+                          <Calendar className="mr-1 h-4 w-4" />
+                          Reschedule
+                        </Button>
                       )}
-                      <DropdownMenu>
-                        <DropdownMenuTrigger asChild>
-                          <Button variant="outline" size="icon" className="h-8 w-8 shrink-0">
-                            <MoreHorizontal className="h-4 w-4" />
-                          </Button>
-                        </DropdownMenuTrigger>
-                        <DropdownMenuContent align="end" className="bg-gray-100 dark:bg-gray-800 border-gray-300 dark:border-gray-700">
-                          {fu.isArchived ? (
-                            <DropdownMenuItem
-                              onClick={() => restoreFuMutation.mutate(fu.followUpId)}
-                              disabled={restoreFuMutation.isPending}
-                            >
-                              <Undo2 className="mr-2 h-4 w-4" />
-                              Restore
-                            </DropdownMenuItem>
-                          ) : (
-                            <>
-                              {fu.status !== "COMPLETED" && fu.status !== "CANCELLED" && (
-                                <>
-                                  <DropdownMenuItem
-                                    onClick={() => updateFollowUpMutation.mutate({ followUpId: fu.followUpId, status: "NO_SHOW" })}
-                                    disabled={updateFollowUpMutation.isPending}
-                                  >
-                                    <UserX className="mr-2 h-4 w-4" />
-                                    Mark No Show
-                                  </DropdownMenuItem>
-                                  <DropdownMenuItem
-                                    onClick={() => updateFollowUpMutation.mutate({ followUpId: fu.followUpId, status: "CANCELLED" })}
-                                    disabled={updateFollowUpMutation.isPending}
-                                  >
-                                    <XCircle className="mr-2 h-4 w-4" />
-                                    Mark Cancelled
-                                  </DropdownMenuItem>
-                                  <DropdownMenuSeparator />
-                                  <DropdownMenuItem onClick={() => openEditFuModal(fu)}>
-                                    <Pencil className="mr-2 h-4 w-4" />
-                                    Edit
-                                  </DropdownMenuItem>
-                                </>
-                              )}
+                      {fu.status !== "COMPLETED" && !fu.isArchived && (
+                        <DropdownMenu>
+                          <DropdownMenuTrigger asChild>
+                            <Button variant="ghost" className="h-12 w-12 shrink-0 hover:bg-muted p-0 [&_svg]:size-auto focus-visible:ring-0">
+                              <MoreHorizontal className="h-10 w-10" />
+                            </Button>
+                          </DropdownMenuTrigger>
+                          <DropdownMenuContent align="end" className="bg-gray-100 dark:bg-gray-800 border-gray-300 dark:border-gray-700">
+                            {fu.status === "PENDING" ? (
+                              <>
+                                <DropdownMenuItem
+                                  onClick={() => updateFollowUpMutation.mutate({ followUpId: fu.followUpId, status: "NO_SHOW" })}
+                                  disabled={updateFollowUpMutation.isPending}
+                                >
+                                  <UserX className="mr-2 h-4 w-4" />
+                                  Mark No Show
+                                </DropdownMenuItem>
+                                <DropdownMenuItem
+                                  onClick={() => updateFollowUpMutation.mutate({ followUpId: fu.followUpId, status: "CANCELLED" })}
+                                  disabled={updateFollowUpMutation.isPending}
+                                >
+                                  <XCircle className="mr-2 h-4 w-4" />
+                                  Mark Cancelled
+                                </DropdownMenuItem>
+                                <DropdownMenuSeparator />
+                                <DropdownMenuItem onClick={() => openEditFuModal(fu)}>
+                                  <Pencil className="mr-2 h-4 w-4" />
+                                  Edit
+                                </DropdownMenuItem>
+                                <DropdownMenuItem
+                                  onClick={() => archiveFuMutation.mutate(fu.followUpId)}
+                                  disabled={archiveFuMutation.isPending}
+                                >
+                                  <Archive className="mr-2 h-4 w-4" />
+                                  Archive
+                                </DropdownMenuItem>
+                              </>
+                            ) : (
                               <DropdownMenuItem
                                 onClick={() => archiveFuMutation.mutate(fu.followUpId)}
                                 disabled={archiveFuMutation.isPending}
@@ -504,10 +525,10 @@ const ViewPatient: React.FC = () => {
                                 <Archive className="mr-2 h-4 w-4" />
                                 Archive
                               </DropdownMenuItem>
-                            </>
-                          )}
-                        </DropdownMenuContent>
-                      </DropdownMenu>
+                            )}
+                          </DropdownMenuContent>
+                        </DropdownMenu>
+                      )}
                     </div>
                   </div>
                 </div>
@@ -844,7 +865,7 @@ const ViewPatient: React.FC = () => {
             <label className="text-sm font-medium">Target Date *</label>
             <input
               type="date"
-              className="w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background mt-1"
+              className="w-full rounded-md border border-gray-300 bg-background px-3 py-2 text-sm ring-offset-background mt-1 focus:border-gray-400 focus:outline-none"
               value={fuForm.scheduledDate}
               onChange={(e) => setFuForm((f) => ({ ...f, scheduledDate: e.target.value }))}
             />
@@ -852,7 +873,7 @@ const ViewPatient: React.FC = () => {
           <div>
             <label className="text-sm font-medium">Follow-up Reason</label>
             <textarea
-              className="w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background mt-1"
+              className="w-full rounded-md border border-gray-300 bg-background px-3 py-2 text-sm ring-offset-background mt-1 focus:border-gray-400 focus:outline-none"
               placeholder="e.g. Routine check-up, monitor progress..."
               rows={3}
               value={fuForm.followUpReason}
@@ -862,7 +883,7 @@ const ViewPatient: React.FC = () => {
           <div>
             <label className="text-sm font-medium">Link to Prescription (Optional)</label>
             <select
-              className="w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background mt-1"
+              className="w-full rounded-md border border-gray-300 bg-background px-3 py-2 text-sm ring-offset-background mt-1 focus:border-gray-400 focus:outline-none"
               value={fuForm.prescriptionId}
               onChange={(e) => setFuForm((f) => ({ ...f, prescriptionId: e.target.value }))}
             >
@@ -877,7 +898,7 @@ const ViewPatient: React.FC = () => {
           <div>
             <label className="text-sm font-medium">Link to Eye Exam (Optional)</label>
             <select
-              className="w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background mt-1"
+              className="w-full rounded-md border border-gray-300 bg-background px-3 py-2 text-sm ring-offset-background mt-1 focus:border-gray-400 focus:outline-none"
               value={fuForm.eyeExamId}
               onChange={(e) => setFuForm((f) => ({ ...f, eyeExamId: e.target.value }))}
             >

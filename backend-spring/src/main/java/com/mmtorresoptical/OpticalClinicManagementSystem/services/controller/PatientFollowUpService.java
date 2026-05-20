@@ -75,6 +75,9 @@ public class PatientFollowUpService {
 
         if (request.getScheduledDate() != null) {
             followUp.setScheduledDate(request.getScheduledDate());
+            if (followUp.getStatus() == FollowUpStatus.NO_SHOW || followUp.getStatus() == FollowUpStatus.CANCELLED) {
+                followUp.setStatus(FollowUpStatus.PENDING);
+            }
         }
         if (request.getFollowUpReason() != null) {
             followUp.setFollowUpReason(request.getFollowUpReason());
@@ -130,11 +133,9 @@ public class PatientFollowUpService {
                     .findByPatientPatientIdOrderByScheduledDateDesc(patientId);
         }
 
-        if (!includeArchived) {
-            followUps = followUps.stream()
-                    .filter(fu -> !Boolean.TRUE.equals(fu.getIsArchived()))
-                    .toList();
-        }
+        followUps = followUps.stream()
+                .filter(fu -> includeArchived == Boolean.TRUE.equals(fu.getIsArchived()))
+                .toList();
 
         return followUps.stream().map(this::toDTO).toList();
     }
@@ -162,6 +163,9 @@ public class PatientFollowUpService {
                 .orElseThrow(() -> new ResourceNotFoundException("Follow-up not found: " + followUpId));
 
         followUp.setScheduledDate(request.getScheduledDate());
+        if (followUp.getStatus() == FollowUpStatus.NO_SHOW || followUp.getStatus() == FollowUpStatus.CANCELLED) {
+            followUp.setStatus(FollowUpStatus.PENDING);
+        }
         followUp.setUpdatedBy(authenticatedUserService.getCurrentUser());
         PatientFollowUp saved = patientFollowUpRepository.save(followUp);
         return toDTO(saved);
