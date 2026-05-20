@@ -36,7 +36,7 @@ const looksLikeDate = (value: unknown): value is string =>
   typeof value === "string" && /^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}/.test(value);
 
 const formatValue = (value: unknown): string => {
-  if (value === null || value === undefined) return "—";
+  if (value === null || value === undefined || value === "" || value === "null") return "—";
   if (typeof value === "boolean") return value ? "Yes" : "No";
   if (looksLikeDate(value)) {
     return new Date(value).toLocaleString("en-US", {
@@ -53,7 +53,7 @@ const formatValue = (value: unknown): string => {
 // ── Sub-components ──
 
 const JsonValue: React.FC<{ value: unknown }> = ({ value }) => {
-  if (value === null || value === undefined) {
+  if (value === null || value === undefined || value === "" || value === "null") {
     return <span className="text-muted-foreground italic">—</span>;
   }
   if (typeof value === "boolean") {
@@ -164,7 +164,10 @@ const PrescriptionEventView: React.FC<{ obj: Record<string, unknown> }> = ({ obj
       {eyeGroups.map((groupKey) => {
         const items = obj[groupKey] as Record<string, unknown>[];
         if (items.length === 0) return null;
-        const columns = Object.keys(items[0]);
+        const columns = Object.keys(items[0]).filter(
+          (col) => col !== "eyeSide" && col !== "notes",
+        );
+        const hasNotes = "notes" in items[0];
 
         return (
           <div key={groupKey}>
@@ -184,13 +187,27 @@ const PrescriptionEventView: React.FC<{ obj: Record<string, unknown> }> = ({ obj
                 </thead>
                 <tbody>
                   {items.map((item, idx) => (
-                    <tr key={idx} className="border-b last:border-b-0">
-                      {columns.map((col) => (
-                        <td key={col} className="py-1.5 px-2 align-top">
-                          <JsonValue value={item[col]} />
-                        </td>
-                      ))}
-                    </tr>
+                    <React.Fragment key={idx}>
+                      <tr className="border-b last:border-b-0">
+                        {columns.map((col) => (
+                          <td key={col} className="py-1.5 px-2 align-top max-w-[200px] whitespace-pre-wrap break-words">
+                            <JsonValue value={item[col]} />
+                          </td>
+                        ))}
+                      </tr>
+                      {hasNotes && (
+                        <tr className="border-b last:border-b-0 bg-muted/30">
+                          <td colSpan={columns.length} className="py-1.5 px-2 align-top">
+                            <span className="text-xs text-muted-foreground font-medium">
+                              Notes:{" "}
+                            </span>
+                            <span className="text-xs whitespace-pre-wrap break-words">
+                              <JsonValue value={item.notes} />
+                            </span>
+                          </td>
+                        </tr>
+                      )}
+                    </React.Fragment>
                   ))}
                 </tbody>
               </table>
