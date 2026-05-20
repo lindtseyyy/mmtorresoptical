@@ -19,6 +19,9 @@ import com.mmtorresoptical.OpticalClinicManagementSystem.repository.EyeExamRepos
 import com.mmtorresoptical.OpticalClinicManagementSystem.services.AuthenticatedUserService;
 import com.mmtorresoptical.OpticalClinicManagementSystem.services.auditlog.resources.PatientFollowUpAuditHelper;
 import lombok.RequiredArgsConstructor;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.jpa.domain.Specification;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -122,22 +125,20 @@ public class PatientFollowUpService {
                 .toList();
     }
 
-    public List<PatientFollowUpDTO> getFollowUpsByPatient(UUID patientId, String statusFilter, boolean includeArchived) {
-        List<PatientFollowUp> followUps;
+    public Page<PatientFollowUpDTO> getFollowUpsByPatient(UUID patientId, String statusFilter, boolean includeArchived, Pageable pageable) {
+        Specification<PatientFollowUp> spec = (root, query, cb) ->
+                cb.equal(root.get("patient").get("patientId"), patientId);
+
         if (statusFilter != null && !statusFilter.isEmpty()) {
-            FollowUpStatus status = FollowUpStatus.valueOf(statusFilter);
-            followUps = patientFollowUpRepository
-                    .findByPatientPatientIdAndStatusOrderByScheduledDateDesc(patientId, status);
-        } else {
-            followUps = patientFollowUpRepository
-                    .findByPatientPatientIdOrderByScheduledDateDesc(patientId);
+            FollowUpStatus status = FollowUpStatus.valueOf(statusFilter.toUpperCase());
+            spec = spec.and((root, query, cb) -> cb.equal(root.get("status"), status));
         }
 
-        followUps = followUps.stream()
-                .filter(fu -> includeArchived == Boolean.TRUE.equals(fu.getIsArchived()))
-                .toList();
+        if (!includeArchived) {
+            spec = spec.and((root, query, cb) -> cb.isFalse(root.get("isArchived")));
+        }
 
-        return followUps.stream().map(this::toDTO).toList();
+        return patientFollowUpRepository.findAll(spec, pageable).map(this::toDTO);
     }
 
     @Transactional

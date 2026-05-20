@@ -16,6 +16,7 @@ public interface PrescriptionMapper {
 
     @Mapping(target = "createdBy", source = "user")
     @Mapping(target = "eyeExamId", source = "eyeExam.eyeExamId")
+    @Mapping(target = "eyeExamNumber", source = "eyeExam.examNumber")
     @Mapping(target = "status",
             expression = "java(prescription.getStatus() != null ? prescription.getStatus().name() : null)")
     PrescriptionResponseDTO entityToResponseDTO(Prescription prescription);
@@ -28,12 +29,14 @@ public interface PrescriptionMapper {
 
     @Mapping(target = "createdBy", source = "user")
     @Mapping(target = "eyeExamId", source = "eyeExam.eyeExamId")
+    @Mapping(target = "eyeExamNumber", source = "eyeExam.examNumber")
     @Mapping(target = "status",
             expression = "java(prescription.getStatus() != null ? prescription.getStatus().name() : null)")
     PrescriptionDetailsDTO entityToDetailsDTO(Prescription prescription);
 
     @Mapping(target = "createdBy", source = "user")
     @Mapping(target = "eyeExamId", source = "eyeExam.eyeExamId")
+    @Mapping(target = "eyeExamNumber", source = "eyeExam.examNumber")
     @Mapping(target = "status",
             expression = "java(prescription.getStatus() != null ? prescription.getStatus().name() : null)")
     PrescriptionListDTO entityToListDTO(Prescription prescription);

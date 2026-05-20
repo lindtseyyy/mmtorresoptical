@@ -8,6 +8,8 @@ import com.mmtorresoptical.OpticalClinicManagementSystem.dto.followup.UpdateFoll
 import com.mmtorresoptical.OpticalClinicManagementSystem.services.controller.PatientFollowUpService;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
@@ -51,10 +53,11 @@ public class FollowUpController {
     }
 
     @GetMapping("/patient/{patientId}")
-    public ResponseEntity<List<PatientFollowUpDTO>> getByPatient(@PathVariable UUID patientId,
+    public ResponseEntity<Page<PatientFollowUpDTO>> getByPatient(@PathVariable UUID patientId,
                                                                   @RequestParam(required = false) String status,
-                                                                  @RequestParam(defaultValue = "false") boolean includeArchived) {
-        return ResponseEntity.ok(patientFollowUpService.getFollowUpsByPatient(patientId, status, includeArchived));
+                                                                  @RequestParam(defaultValue = "false") boolean includeArchived,
+                                                                  Pageable pageable) {
+        return ResponseEntity.ok(patientFollowUpService.getFollowUpsByPatient(patientId, status, includeArchived, pageable));
     }
 
     @PatchMapping("/{id}/status")

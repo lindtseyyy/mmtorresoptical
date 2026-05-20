@@ -20,6 +20,7 @@ public class PrescriptionResponseDTO {
     private Boolean isArchived;
     private String status;
     private UUID eyeExamId;
+    private String eyeExamNumber;
     private UserSummaryDTO createdBy;
 
     private List<PrescriptionItemResponseDTO> prescriptionItems;

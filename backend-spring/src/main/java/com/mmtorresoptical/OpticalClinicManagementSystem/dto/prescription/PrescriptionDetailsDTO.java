@@ -20,6 +20,7 @@ public class PrescriptionDetailsDTO {
     private Boolean isArchived;
     private String status;
     private UUID eyeExamId;
+    private String eyeExamNumber;
     private String voidReason;
     private LocalDateTime voidedAt;
     private UserSummaryDTO voidedBy;
