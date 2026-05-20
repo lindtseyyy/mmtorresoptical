@@ -176,7 +176,11 @@ public class TransactionService {
                     : PaymentMethod.CASH
             );
             payment.setReferenceNumber(transactionRequestDTO.getReferenceNumber());
-            paymentRepository.save(payment);
+            Payment savedPayment = paymentRepository.save(payment);
+            if (savedTransaction.getPayments() == null) {
+                savedTransaction.setPayments(new java.util.ArrayList<>());
+            }
+            savedTransaction.getPayments().add(savedPayment);
         }
 
         // Audit Logging

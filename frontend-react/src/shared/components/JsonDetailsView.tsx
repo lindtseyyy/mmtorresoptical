@@ -136,6 +136,90 @@ const EYE_GROUP_KEYS = ["rightEye", "leftEye", "bothEyes"];
 const isPrescriptionEvent = (obj: Record<string, unknown>): boolean =>
   "issueDate" in obj && EYE_GROUP_KEYS.some((k) => k in obj);
 
+const TRANSACTION_ITEM_LIST_KEY = "transactionItemAuditDTOList";
+
+const isCreateTransactionEvent = (obj: Record<string, unknown>): boolean =>
+  "transactionNumber" in obj && TRANSACTION_ITEM_LIST_KEY in obj && !("before" in obj);
+
+// ── Create transaction event view ──
+
+const CreateTransactionView: React.FC<{ obj: Record<string, unknown> }> = ({ obj }) => {
+  const transactionItems = obj[TRANSACTION_ITEM_LIST_KEY];
+  const itemsArray = Array.isArray(transactionItems) ? transactionItems : [];
+
+  const preferredOrder = [
+    "transactionNumber", "createdBy", "transactionDate", "totalAmount",
+    "paymentMethod", "paymentReferenceNumber",
+    "transactionStatus", "amountPaid", "totalRefundedCash", "balanceDue",
+    "completedAt", "estimatedReadyDate",
+  ];
+
+  const mainFields = preferredOrder
+    .filter((key) => obj[key] !== undefined && obj[key] !== null)
+    .map((key) => [key, obj[key]] as [string, unknown]);
+
+  const remainingKeys = Object.keys(obj).filter(
+    (k) => !preferredOrder.includes(k) && k !== TRANSACTION_ITEM_LIST_KEY,
+  );
+  for (const key of remainingKeys) {
+    if (obj[key] !== undefined && obj[key] !== null) {
+      mainFields.push([key, obj[key]]);
+    }
+  }
+
+  return (
+    <div className="space-y-4">
+      <div className="grid grid-cols-[auto_1fr] gap-x-3 gap-y-1.5">
+        {mainFields.map(([key, value]) => (
+          <React.Fragment key={key}>
+            <span className="text-xs text-muted-foreground font-medium whitespace-nowrap self-start">
+              {formatFieldName(key)}:
+            </span>
+            <span className="text-xs min-w-0 font-medium">
+              <JsonValue value={value} />
+            </span>
+          </React.Fragment>
+        ))}
+      </div>
+
+      {itemsArray.length > 0 && (
+        <div>
+          <h4 className="text-xs font-semibold text-muted-foreground mb-1.5">
+            Transaction Item List
+          </h4>
+          <div className="space-y-1.5">
+            {itemsArray.map((item, idx) => {
+              if (typeof item !== "object" || item === null) return null;
+              const itemObj = item as Record<string, unknown>;
+              const itemKeys = Object.keys(itemObj);
+
+              return (
+                <div
+                  key={idx}
+                  className="rounded border bg-background/50 px-2.5 py-1.5 text-xs"
+                >
+                  <div className="grid grid-cols-[auto_1fr] gap-x-3 gap-y-1.5">
+                    {itemKeys.map((key) => (
+                      <React.Fragment key={key}>
+                        <span className="text-xs text-muted-foreground font-medium whitespace-nowrap self-start">
+                          {formatFieldName(key)}:
+                        </span>
+                        <span className="text-xs min-w-0 font-medium">
+                          <JsonValue value={itemObj[key]} />
+                        </span>
+                      </React.Fragment>
+                    ))}
+                  </div>
+                </div>
+              );
+            })}
+          </div>
+        </div>
+      )}
+    </div>
+  );
+};
+
 // ── Prescription event view ──
 
 const PrescriptionEventView: React.FC<{ obj: Record<string, unknown> }> = ({ obj }) => {
@@ -293,6 +377,11 @@ const JsonDetailsView: React.FC<JsonDetailsViewProps> = ({ data }) => {
         </table>
       </div>
     );
+  }
+
+  // Create transaction event → reordered fields + separate item list section
+  if (isCreateTransactionEvent(obj)) {
+    return <CreateTransactionView obj={obj} />;
   }
 
   // Prescription event → main fields grid + eye group tables

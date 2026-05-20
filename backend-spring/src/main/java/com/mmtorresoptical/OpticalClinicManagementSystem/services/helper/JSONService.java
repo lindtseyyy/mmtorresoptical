@@ -244,12 +244,40 @@ public class JSONService {
         return String.format("₱%.2f", amount);
     }
 
+    private void formatPesoField(ObjectNode node, String field) {
+        if (node.has(field) && node.get(field).isNumber()) {
+            node.put(field, formatPeso(node.get(field).asDouble()));
+        }
+    }
+
     private String sanitizeCreateTransactionAuditJson(ObjectNode node, String performedBy) throws JsonProcessingException {
         node.remove("transactionId");
         node.remove("createdByUserId");
 
         if (performedBy != null && !performedBy.isBlank()) {
             node.put("createdBy", performedBy);
+        }
+
+        formatPesoField(node, "totalAmount");
+        formatPesoField(node, "amountPaid");
+        formatPesoField(node, "totalRefundedCash");
+        formatPesoField(node, "balanceDue");
+
+        if (node.has("paymentMethod") && !node.get("paymentMethod").isNull()
+                && !node.get("paymentMethod").asText().isBlank()) {
+            String method = capitalizeWord(node.get("paymentMethod").asText());
+            node.put("paymentMethod", method);
+            if ("Gcash".equalsIgnoreCase(node.get("paymentMethod").asText())
+                    && node.has("paymentReferenceNumber")
+                    && !node.get("paymentReferenceNumber").isNull()
+                    && !node.get("paymentReferenceNumber").asText().isBlank()) {
+                node.put("paymentReferenceNumber", node.get("paymentReferenceNumber").asText());
+            } else {
+                node.remove("paymentReferenceNumber");
+            }
+        } else {
+            node.remove("paymentMethod");
+            node.remove("paymentReferenceNumber");
         }
 
         if (node.has("transactionStatus")) {
@@ -264,7 +292,71 @@ public class JSONService {
             }
         }
 
+        if (node.has("transactionDate") && !node.get("transactionDate").isNull()) {
+            node.put("transactionDate", formatCreatedAt(node.get("transactionDate").asText()));
+        }
+        if (node.has("completedAt") && !node.get("completedAt").isNull()) {
+            node.put("completedAt", formatCreatedAt(node.get("completedAt").asText()));
+        }
+        if (node.has("voidedAt") && !node.get("voidedAt").isNull()) {
+            node.put("voidedAt", formatCreatedAt(node.get("voidedAt").asText()));
+        }
+        if (node.has("estimatedReadyDate") && !node.get("estimatedReadyDate").isNull()) {
+            node.put("estimatedReadyDate", formatBirthDate(node.get("estimatedReadyDate").asText()));
+        }
+
+        if (node.has("transactionItemAuditDTOList") && node.get("transactionItemAuditDTOList").isArray()) {
+            var cleanItems = objectMapper.createArrayNode();
+            for (var item : node.get("transactionItemAuditDTOList")) {
+                if (item.isObject()) {
+                    cleanItems.add(sanitizeTransactionItemAuditJson((ObjectNode) item));
+                }
+            }
+            node.set("transactionItemAuditDTOList", cleanItems);
+        }
+
         return objectMapper.writeValueAsString(node);
+    }
+
+    private ObjectNode sanitizeTransactionItemAuditJson(ObjectNode item) {
+        ObjectNode clean = objectMapper.createObjectNode();
+
+        copyField(clean, item, "productName");
+        copyField(clean, item, "quantity");
+
+        if (item.has("unitPrice") && item.get("unitPrice").isNumber()) {
+            clean.put("unitPrice", formatPeso(item.get("unitPrice").asDouble()));
+        }
+        if (item.has("subtotal") && item.get("subtotal").isNumber()) {
+            clean.put("subtotal", formatPeso(item.get("subtotal").asDouble()));
+        }
+
+        if (item.has("refundedQuantity") && !item.get("refundedQuantity").isNull()) {
+            clean.put("refundedQuantity", item.get("refundedQuantity").asInt());
+        }
+        if (item.has("refundReason") && !item.get("refundReason").isNull()
+                && !item.get("refundReason").asText().isBlank()) {
+            clean.put("refundReason", item.get("refundReason").asText());
+        }
+
+        if (item.has("isDiscounted") && !item.get("isDiscounted").isNull()
+                && item.get("isDiscounted").asBoolean()
+                && item.has("discountType") && !item.get("discountType").isNull()
+                && item.has("discountValue") && !item.get("discountValue").isNull()) {
+            String discountType = item.get("discountType").asText();
+            var discountValue = item.get("discountValue");
+            String badge;
+            if ("PERCENT".equalsIgnoreCase(discountType)) {
+                badge = "-" + discountValue.asText() + "%";
+            } else if ("FIXED".equalsIgnoreCase(discountType)) {
+                badge = "-" + formatPeso(discountValue.asDouble());
+            } else {
+                badge = "-" + discountValue.asText();
+            }
+            clean.put("discountBadge", badge);
+        }
+
+        return clean;
     }
 
     private String sanitizeUserAuditJson(ObjectNode node) throws JsonProcessingException {

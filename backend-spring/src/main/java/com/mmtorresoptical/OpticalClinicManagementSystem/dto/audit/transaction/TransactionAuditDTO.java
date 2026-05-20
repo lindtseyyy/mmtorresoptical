@@ -4,6 +4,7 @@ import com.mmtorresoptical.OpticalClinicManagementSystem.dto.audit.transactionit
 import lombok.Data;
 
 import java.math.BigDecimal;
+import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.util.List;
 import java.util.UUID;
@@ -15,11 +16,8 @@ public class TransactionAuditDTO {
     private String transactionNumber;
     private LocalDateTime transactionDate;
     private BigDecimal totalAmount;
-    private String paymentType;
-    private String referenceNumber;
-    private String paymentProofUrl;
-    private BigDecimal cashTender;
-    private BigDecimal change;
+    private String paymentMethod;
+    private String paymentReferenceNumber;
     private String transactionStatus;
     private String refundStatus;
 
@@ -29,6 +27,12 @@ public class TransactionAuditDTO {
 
     private UUID patientId;
     private UUID createdByUserId;
+
+    private BigDecimal amountPaid;
+    private BigDecimal totalRefundedCash;
+    private BigDecimal balanceDue;
+    private LocalDateTime completedAt;
+    private LocalDate estimatedReadyDate;
 
     private List<TransactionItemAuditDTO> transactionItemAuditDTOList;
 }

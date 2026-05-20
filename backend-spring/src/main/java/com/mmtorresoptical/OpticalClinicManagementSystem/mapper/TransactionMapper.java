@@ -5,6 +5,7 @@ import com.mmtorresoptical.OpticalClinicManagementSystem.dto.transaction.Transac
 import com.mmtorresoptical.OpticalClinicManagementSystem.dto.transaction.TransactionListDTO;
 import com.mmtorresoptical.OpticalClinicManagementSystem.dto.transaction.TransactionRequestDTO;
 import com.mmtorresoptical.OpticalClinicManagementSystem.dto.transaction.TransactionResponseDTO;
+import com.mmtorresoptical.OpticalClinicManagementSystem.model.Payment;
 import com.mmtorresoptical.OpticalClinicManagementSystem.model.Transaction;
 import org.mapstruct.Mapper;
 import org.mapstruct.Mapping;
@@ -100,5 +101,27 @@ public interface TransactionMapper {
             target = "transactionItemAuditDTOList",
             source = "transactionItems"
     )
+    @Mapping(
+            target = "paymentMethod",
+            expression = "java(mapPaymentMethod(transaction))"
+    )
+    @Mapping(
+            target = "paymentReferenceNumber",
+            expression = "java(mapPaymentReferenceNumber(transaction))"
+    )
     TransactionAuditDTO entityToAuditDTO(Transaction transaction);
+
+    default String mapPaymentMethod(Transaction transaction) {
+        if (transaction.getPayments() != null && !transaction.getPayments().isEmpty()) {
+            return transaction.getPayments().get(0).getPaymentMethod().name();
+        }
+        return null;
+    }
+
+    default String mapPaymentReferenceNumber(Transaction transaction) {
+        if (transaction.getPayments() != null && !transaction.getPayments().isEmpty()) {
+            return transaction.getPayments().get(0).getReferenceNumber();
+        }
+        return null;
+    }
 }

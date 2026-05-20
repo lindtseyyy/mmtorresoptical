@@ -44,11 +44,35 @@ public interface TransactionItemMapper {
             target = "productId",
             source = "product.productId"
     )
+    @Mapping(
+            target = "productName",
+            source = "product.productName"
+    )
+    @Mapping(
+            target = "isDiscounted",
+            expression = "java(transactionItem.getDiscountType() != null)"
+    )
+    @Mapping(
+            target = "discountType",
+            expression = "java(transactionItem.getDiscountType() != null ? transactionItem.getDiscountType().name() : null)"
+    )
     TransactionItemAuditDTO entityToAuditDTO(TransactionItem transactionItem);
 
     @Mapping(
             target = "productId",
             source = "product.productId"
+    )
+    @Mapping(
+            target = "productName",
+            source = "product.productName"
+    )
+    @Mapping(
+            target = "isDiscounted",
+            expression = "java(transactionItem.getDiscountType() != null)"
+    )
+    @Mapping(
+            target = "discountType",
+            expression = "java(transactionItem.getDiscountType() != null ? transactionItem.getDiscountType().name() : null)"
     )
     List<TransactionItemAuditDTO> entityListToAuditDTOList(List<TransactionItem> transactionItem);
 }
