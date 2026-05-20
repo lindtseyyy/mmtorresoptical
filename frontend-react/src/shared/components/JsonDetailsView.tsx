@@ -134,7 +134,7 @@ const isUpdateEvent = (
 const EYE_GROUP_KEYS = ["rightEye", "leftEye", "bothEyes"];
 
 const isPrescriptionEvent = (obj: Record<string, unknown>): boolean =>
-  "examDate" in obj && EYE_GROUP_KEYS.some((k) => k in obj);
+  "issueDate" in obj && EYE_GROUP_KEYS.some((k) => k in obj);
 
 // ── Prescription event view ──
 

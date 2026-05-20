@@ -590,14 +590,11 @@ const ViewPatient: React.FC = () => {
                     <div className="space-y-1 flex-1 min-w-0">
                       <div className="flex items-center gap-2">
                         <span className="font-medium">
-                          Exam: {formatDate(rx.examDate)}
+                          {rx.rxNumber}
                         </span>
-                        <Badge
-                          variant="secondary"
-                          className={rx.isArchived ? "bg-gray-500 text-white" : "bg-green-100 text-green-700"}
-                        >
-                          {rx.isArchived ? "Archived" : "Active"}
-                        </Badge>
+                        {rx.isArchived && (
+                          <Badge variant="secondary" className="bg-gray-500 text-white">Archived</Badge>
+                        )}
                         {rx.status === "VOIDED" && (
                           <Badge variant="destructive" className="ml-2">VOIDED</Badge>
                         )}
@@ -606,8 +603,9 @@ const ViewPatient: React.FC = () => {
                         <p className="text-sm text-muted-foreground">{rx.notes}</p>
                       )}
                       <p className="text-xs text-muted-foreground">
-                        Created {formatDateTime(rx.createdAt)}
-                        {rx.createdBy ? ` by ${rx.createdBy.fullName}` : ""}
+                        Date Issued: {formatDate(rx.issueDate)}
+                        {rx.eyeExamId ? " · Internal Rx" : " · Outside Rx"}
+                        {rx.createdBy ? ` — by ${rx.createdBy.fullName}` : ""}
                       </p>
                     </div>
                     <DropdownMenu>
@@ -725,11 +723,11 @@ const ViewPatient: React.FC = () => {
                     <div className="space-y-2 flex-1 min-w-0">
                       <div className="flex items-center gap-2">
                         <span className="font-medium">
-                          Exam: {formatDateTime(ee.createdAt)}
+                          {ee.examNumber} — {formatDate(ee.createdAt)}
                         </span>
                         <Badge
                           variant="secondary"
-                          className={ee.isArchived ? "bg-gray-500 text-white" : "bg-green-100 text-green-700"}
+                          className={ee.isArchived ? "bg-gray-500 text-white" : "bg-green-700 text-white"}
                         >
                           {ee.isArchived ? "Archived" : "Active"}
                         </Badge>
@@ -809,7 +807,7 @@ const ViewPatient: React.FC = () => {
         <DialogHeader>
           <DialogTitle>Void Prescription</DialogTitle>
           <DialogDescription>
-            Are you sure you want to void the prescription from {voidRxDialog ? formatDate(voidRxDialog.examDate) : ""}? This action cannot be undone.
+            Are you sure you want to void the prescription from {voidRxDialog ? formatDate(voidRxDialog.issueDate) : ""}? This action cannot be undone.
           </DialogDescription>
         </DialogHeader>
         <div className="space-y-4">
@@ -890,7 +888,7 @@ const ViewPatient: React.FC = () => {
               <option value="">None</option>
               {rxData?.content.map((rx: PrescriptionListItem) => (
                 <option key={rx.prescriptionId} value={rx.prescriptionId}>
-                  {formatDate(rx.examDate)} {rx.notes ? `— ${rx.notes.substring(0, 40)}` : ""}
+                  {formatDate(rx.issueDate)} {rx.notes ? `— ${rx.notes.substring(0, 40)}` : ""}
                 </option>
               ))}
             </select>
@@ -943,15 +941,15 @@ const ViewPatient: React.FC = () => {
         ) : (
           <>
             <DialogHeader>
-              <DialogTitle>Prescription Details</DialogTitle>
+              <DialogTitle>Prescription Details — {viewRxData.rxNumber}</DialogTitle>
               <DialogDescription>
-                Exam Date: {formatDate(viewRxData.examDate)}
+                Date Issued: {formatDate(viewRxData.issueDate)}
               </DialogDescription>
             </DialogHeader>
             <div className="space-y-4">
               {/* Status badges */}
               <div className="flex items-center gap-2">
-                <Badge className={viewRxData.isArchived ? "bg-gray-500 text-white" : "bg-green-100 text-green-700"}>
+                <Badge className={viewRxData.isArchived ? "bg-gray-500 text-white" : "bg-green-700 text-white"}>
                   {viewRxData.isArchived ? "Archived" : "Active"}
                 </Badge>
                 {viewRxData.status === "VOIDED" && (

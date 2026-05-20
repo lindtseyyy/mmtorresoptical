@@ -21,7 +21,7 @@ export interface PrescriptionItemInput {
 }
 
 export interface CreatePrescriptionInput {
-  examDate: string;
+  issueDate: string;
   notes?: string;
   isArchived?: boolean;
   followUpRequired?: boolean;
@@ -56,7 +56,8 @@ export interface PrescriptionItemResponse {
 
 export interface PrescriptionResponse {
   prescriptionId: string;
-  examDate: string;
+  rxNumber: string;
+  issueDate: string;
   notes: string | null;
   status: string;
   eyeExamId?: string | null;
@@ -67,7 +68,7 @@ export interface PrescriptionResponse {
 }
 
 export interface UpdatePrescriptionInput {
-  examDate: string;
+  issueDate: string;
   notes?: string;
 }
 

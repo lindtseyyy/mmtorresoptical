@@ -57,7 +57,7 @@ const prescriptionItemSchema = z.object({
 });
 
 const prescriptionFormSchema = z.object({
-  examDate: z.string().min(1, "Exam date is required"),
+  issueDate: z.string().min(1, "Issue date is required"),
   notes: z.string().optional(),
   followUpRequired: z.boolean().default(false),
   followUpReason: z.string().optional(),
@@ -101,7 +101,7 @@ const EditPrescription: React.FC = () => {
   const form = useForm<PrescriptionFormValues>({
     resolver: zodResolver(prescriptionFormSchema),
     defaultValues: {
-      examDate: "",
+      issueDate: "",
       notes: "",
       followUpRequired: false,
       followUpReason: "",
@@ -127,7 +127,7 @@ const EditPrescription: React.FC = () => {
     if (prescription && !dataLoaded) {
       originalItemIds.current = prescription.prescriptionItems.map((item) => item.prescriptionItemId);
       form.reset({
-        examDate: prescription.examDate,
+        issueDate: prescription.issueDate,
         notes: prescription.notes ?? "",
         followUpRequired: false,
         followUpReason: "",
@@ -235,16 +235,16 @@ const EditPrescription: React.FC = () => {
           <Card className="bg-primary/10 border-b-2 border-b-primary/30 rounded-b-none">
             <CardHeader>
               <CardTitle>Prescription Details</CardTitle>
-              <CardDescription>Edit the exam date and notes</CardDescription>
+              <CardDescription>Edit the issue date and notes</CardDescription>
             </CardHeader>
             <CardContent className="space-y-4">
               <div className="grid gap-4 md:grid-cols-2">
                 <FormField
                   control={form.control}
-                  name="examDate"
+                  name="issueDate"
                   render={({ field }) => (
                     <FormItem>
-                      <FormLabel>Exam Date *</FormLabel>
+                      <FormLabel>Date Issued *</FormLabel>
                       <FormControl>
                         <Input type="date" {...field} />
                       </FormControl>

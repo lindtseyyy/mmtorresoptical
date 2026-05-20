@@ -16,6 +16,7 @@ export interface CreateEyeExamInput {
 
 export interface EyeExamResponse {
   eyeExamId: string;
+  examNumber: string;
   createdAt: string;
   chiefComplaint: string | null;
   medicalHistorySnapshot: string | null;

@@ -100,16 +100,19 @@ export interface PatientProfileMetrics {
 
 export interface PrescriptionListItem {
   prescriptionId: string;
-  examDate: string;
+  rxNumber: string;
+  issueDate: string;
   notes: string | null;
   createdAt: string;
   isArchived: boolean;
   status: string;
+  eyeExamId: string | null;
   createdBy: { userId: string; fullName: string } | null;
 }
 
 export interface EyeExamListItem {
   eyeExamId: string;
+  examNumber: string;
   createdAt: string;
   chiefComplaint: string | null;
   clinicalImpression: string | null;
@@ -134,7 +137,7 @@ const fetchPatientPrescriptions = async (
   archivedStatus = "ALL",
 ): Promise<{ content: PrescriptionListItem[]; totalPages: number; totalElements: number }> => {
   const { data } = await api.get(`/admin/patient/${patientId}/prescriptions`, {
-    params: { page, size, sortBy: "examDate", sortOrder: "desc", archivedStatus },
+    params: { page, size, sortBy: "issueDate", sortOrder: "desc", archivedStatus },
   });
   return {
     content: data.content,
