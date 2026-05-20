@@ -10,6 +10,7 @@ import {
   DropdownMenu,
   DropdownMenuContent,
   DropdownMenuItem,
+  DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "@/shared/components/ui/dropdown-menu";
 import {
@@ -382,7 +383,7 @@ const ViewPatient: React.FC = () => {
                   </SelectContent>
                 </Select>
               </div>
-              <Button variant="outline" size="sm" onClick={openCreateFuModal}>
+              <Button size="sm" onClick={openCreateFuModal}>
                 <Plus className="mr-1 h-4 w-4" />
                 Add Follow-Up
               </Button>
@@ -409,13 +410,16 @@ const ViewPatient: React.FC = () => {
                         <span className="font-medium">
                           {formatDate(fu.scheduledDate)}
                         </span>
-                        <Badge
-                          variant={fu.status === "COMPLETED" ? "default" : fu.status === "CANCELLED" ? "destructive" : "secondary"}
-                        >
-                          {fu.status}
+                        <Badge className={
+                          fu.status === "COMPLETED" ? "bg-green-700 text-white hover:bg-green-700" :
+                          fu.status === "CANCELLED" ? "bg-red-600 text-white hover:bg-red-600" :
+                          fu.status === "NO_SHOW" ? "bg-gray-600 text-white hover:bg-gray-600" :
+                          "bg-amber-600 text-white hover:bg-amber-600"
+                        }>
+                          {fu.status === "NO_SHOW" ? "No Show" : fu.status.charAt(0) + fu.status.slice(1).toLowerCase()}
                         </Badge>
                         {fu.isArchived && (
-                          <Badge className="bg-gray-500 text-white">Archived</Badge>
+                          <Badge className="bg-gray-600 text-white">Archived</Badge>
                         )}
                       </div>
                       {fu.followUpReason && (
@@ -423,72 +427,68 @@ const ViewPatient: React.FC = () => {
                       )}
                     </div>
                     <div className="flex items-center gap-1 shrink-0 ml-2">
-                      {fu.isArchived ? (
+                      {!fu.isArchived && fu.status !== "COMPLETED" && fu.status !== "CANCELLED" && (
                         <Button
                           size="sm"
-                          variant="outline"
-                          onClick={() => restoreFuMutation.mutate(fu.followUpId)}
-                          disabled={restoreFuMutation.isPending}
+                          className="bg-green-700 text-white hover:bg-green-800"
+                          onClick={() => updateFollowUpMutation.mutate({ followUpId: fu.followUpId, status: "COMPLETED" })}
+                          disabled={updateFollowUpMutation.isPending}
                         >
-                          <Undo2 className="h-4 w-4 mr-1" />
-                          Restore
+                          <CheckCircle className="mr-1 h-4 w-4" />
+                          Complete
                         </Button>
-                      ) : (
-                        <>
-                          {fu.status !== "COMPLETED" && fu.status !== "CANCELLED" && (
+                      )}
+                      <DropdownMenu>
+                        <DropdownMenuTrigger asChild>
+                          <Button variant="outline" size="icon" className="h-8 w-8 shrink-0">
+                            <MoreHorizontal className="h-4 w-4" />
+                          </Button>
+                        </DropdownMenuTrigger>
+                        <DropdownMenuContent align="end" className="bg-gray-100 dark:bg-gray-800 border-gray-300 dark:border-gray-700">
+                          {fu.isArchived ? (
+                            <DropdownMenuItem
+                              onClick={() => restoreFuMutation.mutate(fu.followUpId)}
+                              disabled={restoreFuMutation.isPending}
+                            >
+                              <Undo2 className="mr-2 h-4 w-4" />
+                              Restore
+                            </DropdownMenuItem>
+                          ) : (
                             <>
-                              <Button
-                                size="sm"
-                                variant="outline"
-                                className="text-green-600 border-green-300 hover:bg-green-50"
-                                onClick={() => updateFollowUpMutation.mutate({ followUpId: fu.followUpId, status: "COMPLETED" })}
-                                disabled={updateFollowUpMutation.isPending}
+                              {fu.status !== "COMPLETED" && fu.status !== "CANCELLED" && (
+                                <>
+                                  <DropdownMenuItem
+                                    onClick={() => updateFollowUpMutation.mutate({ followUpId: fu.followUpId, status: "NO_SHOW" })}
+                                    disabled={updateFollowUpMutation.isPending}
+                                  >
+                                    <UserX className="mr-2 h-4 w-4" />
+                                    Mark No Show
+                                  </DropdownMenuItem>
+                                  <DropdownMenuItem
+                                    onClick={() => updateFollowUpMutation.mutate({ followUpId: fu.followUpId, status: "CANCELLED" })}
+                                    disabled={updateFollowUpMutation.isPending}
+                                  >
+                                    <XCircle className="mr-2 h-4 w-4" />
+                                    Mark Cancelled
+                                  </DropdownMenuItem>
+                                  <DropdownMenuSeparator />
+                                  <DropdownMenuItem onClick={() => openEditFuModal(fu)}>
+                                    <Pencil className="mr-2 h-4 w-4" />
+                                    Edit
+                                  </DropdownMenuItem>
+                                </>
+                              )}
+                              <DropdownMenuItem
+                                onClick={() => archiveFuMutation.mutate(fu.followUpId)}
+                                disabled={archiveFuMutation.isPending}
                               >
-                                <CheckCircle className="h-4 w-4 mr-1" />
-                                Complete
-                              </Button>
-                              <Button
-                                size="sm"
-                                variant="outline"
-                                className="text-amber-600 border-amber-300 hover:bg-amber-50"
-                                onClick={() => updateFollowUpMutation.mutate({ followUpId: fu.followUpId, status: "NO_SHOW" })}
-                                disabled={updateFollowUpMutation.isPending}
-                              >
-                                <UserX className="h-4 w-4 mr-1" />
-                                No Show
-                              </Button>
-                              <Button
-                                size="sm"
-                                variant="outline"
-                                className="text-red-600 border-red-300 hover:bg-red-50"
-                                onClick={() => updateFollowUpMutation.mutate({ followUpId: fu.followUpId, status: "CANCELLED" })}
-                                disabled={updateFollowUpMutation.isPending}
-                              >
-                                <XCircle className="h-4 w-4 mr-1" />
-                                Cancel
-                              </Button>
-                              <Button
-                                size="sm"
-                                variant="outline"
-                                onClick={() => openEditFuModal(fu)}
-                              >
-                                <Pencil className="h-4 w-4 mr-1" />
-                                Edit
-                              </Button>
+                                <Archive className="mr-2 h-4 w-4" />
+                                Archive
+                              </DropdownMenuItem>
                             </>
                           )}
-                          <Button
-                            size="sm"
-                            variant="outline"
-                            className="text-gray-600 border-gray-300 hover:bg-gray-50"
-                            onClick={() => archiveFuMutation.mutate(fu.followUpId)}
-                            disabled={archiveFuMutation.isPending}
-                          >
-                            <Archive className="h-4 w-4 mr-1" />
-                            Archive
-                          </Button>
-                        </>
-                      )}
+                        </DropdownMenuContent>
+                      </DropdownMenu>
                     </div>
                   </div>
                 </div>
