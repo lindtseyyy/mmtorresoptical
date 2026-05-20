@@ -142,15 +142,14 @@ const ViewPatient: React.FC = () => {
     },
   });
 
-  const [fuFilter, setFuFilter] = useState("ACTIVE");
-  const [fuStatusFilter, setFuStatusFilter] = useState("PENDING");
+  const [fuFilter, setFuFilter] = useState("ALL");
   const [fuPage, setFuPage] = useState(0);
   const { data: followUps, isLoading: followUpsLoading } = useQuery({
-    queryKey: ["patient-follow-ups", patientId, fuFilter, fuStatusFilter, fuPage],
+    queryKey: ["patient-follow-ups", patientId, fuFilter, fuPage],
     queryFn: () => fetchFollowUpsByPatient(
       patientId,
-      fuStatusFilter !== "ALL" ? fuStatusFilter : undefined,
-      fuFilter === "ARCHIVED",
+      undefined,
+      fuFilter,
       fuPage,
       5,
     ),
@@ -164,8 +163,10 @@ const ViewPatient: React.FC = () => {
   const updateFollowUpMutation = useMutation({
     mutationFn: ({ followUpId, status }: { followUpId: string; status: string }) =>
       updateFollowUpStatus(followUpId, status),
-    onSuccess: () => {
+    onSuccess: (_data, variables) => {
       queryClient.invalidateQueries({ queryKey: ["patient-follow-ups", patientId] });
+      const label = variables.status === "NO_SHOW" ? "No Show" : variables.status.charAt(0) + variables.status.slice(1).toLowerCase();
+      toast.success(`Follow-up marked as ${label}`);
     },
     onError: (err: any) => toast.error(err?.response?.data || "Failed to update follow-up"),
   });
@@ -375,28 +376,14 @@ const ViewPatient: React.FC = () => {
             </div>
             <div className="flex items-center gap-3">
               <div className="flex items-center gap-2">
-                <span className="text-sm text-muted-foreground">Status:</span>
-                <Select value={fuStatusFilter} onValueChange={(v) => { setFuStatusFilter(v); setFuPage(0); }}>
-                  <SelectTrigger className="w-[130px] h-8">
-                    <SelectValue />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="ALL">All</SelectItem>
-                    <SelectItem value="PENDING">Pending</SelectItem>
-                    <SelectItem value="COMPLETED">Completed</SelectItem>
-                    <SelectItem value="NO_SHOW">No Show</SelectItem>
-                    <SelectItem value="CANCELLED">Cancelled</SelectItem>
-                  </SelectContent>
-                </Select>
-              </div>
-              <div className="flex items-center gap-2">
                 <Select value={fuFilter} onValueChange={(v) => { setFuFilter(v); setFuPage(0); }}>
                   <SelectTrigger className="w-[110px] h-8">
                     <SelectValue />
                   </SelectTrigger>
                   <SelectContent>
+                    <SelectItem value="ALL">All</SelectItem>
                     <SelectItem value="ACTIVE">Active</SelectItem>
-                    <SelectItem value="ARCHIVED">Archived</SelectItem>
+                    <SelectItem value="VOIDED">Voided</SelectItem>
                   </SelectContent>
                 </Select>
               </div>
@@ -412,7 +399,7 @@ const ViewPatient: React.FC = () => {
             <p className="py-4 text-center text-sm text-muted-foreground">Loading follow-ups...</p>
           ) : !followUps || followUps.content.length === 0 ? (
             <p className="py-4 text-center text-sm text-muted-foreground">
-              {fuFilter === "ARCHIVED" ? "No archived follow-ups." : "No follow-ups scheduled."}
+              {fuFilter === "VOIDED" ? "No voided follow-ups." : "No follow-ups scheduled."}
             </p>
           ) : (
             <div className="space-y-3">

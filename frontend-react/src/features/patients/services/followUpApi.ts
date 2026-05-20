@@ -61,13 +61,13 @@ const fetchFollowUpsByPrescription = async (prescriptionId: string): Promise<Pat
 const fetchFollowUpsByPatient = async (
   patientId: string,
   status?: string,
-  includeArchived = false,
+  archiveFilter = "ACTIVE",
   page = 0,
   size = 5,
 ): Promise<{ content: PatientFollowUp[]; totalPages: number; totalElements: number }> => {
   const params: Record<string, string | boolean | number> = { page, size, sort: "scheduledDate,desc" };
   if (status) params.status = status;
-  if (includeArchived) params.includeArchived = true;
+  params.archiveFilter = archiveFilter;
   const { data } = await api.get(`/follow-ups/patient/${patientId}`, { params });
   return {
     content: data.content,

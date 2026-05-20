@@ -251,7 +251,7 @@ const AuditLogs: React.FC = () => {
                           </Badge>
                         </td>
                         <td className="py-3 pr-4 text-muted-foreground">
-                          <span className="block truncate">{entry.resourceType}</span>
+                          <span className="block truncate">{entry.resourceType.replace(/_/g, " ")}</span>
                         </td>
                         <td className="py-3 pr-4 text-muted-foreground">
                           <span className="block truncate">{entry.details}</span>
@@ -364,7 +364,7 @@ const AuditLogs: React.FC = () => {
               </div>
               <div>
                 <Label className="text-xs text-muted-foreground">Resource Type</Label>
-                <p className="text-sm">{viewingEntry.resourceType}</p>
+                <p className="text-sm">{viewingEntry.resourceType.replace(/_/g, " ")}</p>
               </div>
               <div>
                 <Label className="text-xs text-muted-foreground">Performed by</Label>

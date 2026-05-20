@@ -11,6 +11,7 @@ public class PatientFollowUpAuditDTO {
 
     private UUID followUpId;
     private UUID patientId;
+    private String patientName;
     private UUID prescriptionId;
     private UUID eyeExamId;
     private LocalDate scheduledDate;
@@ -21,4 +22,6 @@ public class PatientFollowUpAuditDTO {
     private LocalDateTime createdAt;
     private LocalDateTime updatedAt;
     private UUID createdByUserId;
+    private String createdByName;
+    private String createdByRole;
 }

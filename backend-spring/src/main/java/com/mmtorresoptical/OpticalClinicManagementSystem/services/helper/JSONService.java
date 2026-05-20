@@ -3,14 +3,22 @@ package com.mmtorresoptical.OpticalClinicManagementSystem.services.helper;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.node.ObjectNode;
+import com.mmtorresoptical.OpticalClinicManagementSystem.model.Patient;
+import com.mmtorresoptical.OpticalClinicManagementSystem.model.User;
+import com.mmtorresoptical.OpticalClinicManagementSystem.repository.PatientRepository;
+import com.mmtorresoptical.OpticalClinicManagementSystem.repository.UserRepository;
 import org.springframework.stereotype.Component;
 
 import java.util.Map;
+import java.util.Optional;
+import java.util.UUID;
 
 @Component
 public class JSONService {
 
     private final ObjectMapper objectMapper;
+    private final PatientRepository patientRepository;
+    private final UserRepository userRepository;
 
     private static final Map<String, String> TRANSACTION_STATUS_LABELS = Map.of(
             "DEPOSIT", "Partial Deposit Owed",
@@ -25,8 +33,12 @@ public class JSONService {
             "STAFF", "Staff"
     );
 
-    public JSONService(ObjectMapper objectMapper) {
+    public JSONService(ObjectMapper objectMapper,
+                       PatientRepository patientRepository,
+                       UserRepository userRepository) {
         this.objectMapper = objectMapper;
+        this.patientRepository = patientRepository;
+        this.userRepository = userRepository;
     }
 
     public String toJson(Object object) {
@@ -98,6 +110,20 @@ public class JSONService {
                     && node.has("prescriptionId") && node.has("issueDate")
                     && (node.has("rightEye") || node.has("leftEye") || node.has("bothEyes"))) {
                 return sanitizePrescriptionAuditJson(node, true);
+            }
+
+            // ── CREATE / ARCHIVE / RESTORE Follow-Up: transform UUIDs, omit internal fields ──
+            if (("CREATE".equals(actionType) || "ARCHIVE".equals(actionType) || "RESTORE".equals(actionType))
+                    && node.has("followUpId") && node.has("scheduledDate") && node.has("status")) {
+                return sanitizeFollowUpAuditJson(node);
+            }
+
+            // ── UPDATE Follow-Up: only return fields that actually changed ──
+            if ("UPDATE".equals(actionType) && node.has("before") && node.has("after")) {
+                ObjectNode after = (ObjectNode) node.get("after");
+                if (after.has("followUpId")) {
+                    return sanitizeUpdateFollowUpAuditJson(node);
+                }
             }
 
             // ── UPDATE Patient: only return fields that actually changed ──
@@ -312,6 +338,131 @@ public class JSONService {
         sanitizeEyeGroup(clean, node, "bothEyes");
 
         return objectMapper.writeValueAsString(clean);
+    }
+
+    private String sanitizeFollowUpAuditJson(ObjectNode node) throws JsonProcessingException {
+        ObjectNode clean = objectMapper.createObjectNode();
+
+        copyField(clean, node, "followUpId");
+        if (node.has("scheduledDate") && !node.get("scheduledDate").isNull()) {
+            clean.put("scheduledDate", formatBirthDate(node.get("scheduledDate").asText()));
+        }
+        if (node.has("status") && !node.get("status").isNull()) {
+            clean.put("status", capitalizeWord(node.get("status").asText().replace("_", " ")));
+        }
+
+        // Resolve patient name: prefer embedded name, fall back to DB lookup
+        String patientName = resolvePatientName(node);
+        if (patientName != null) {
+            clean.put("patientName", patientName);
+        }
+
+        // Resolve createdBy: prefer embedded name+role, fall back to DB lookup
+        String createdBy = resolveCreatedBy(node);
+        if (createdBy != null) {
+            clean.put("createdBy", createdBy);
+        }
+
+        return objectMapper.writeValueAsString(clean);
+    }
+
+    private String resolvePatientName(ObjectNode node) {
+        if (node.has("patientName") && !node.get("patientName").isNull()) {
+            return node.get("patientName").asText();
+        }
+        if (node.has("patientId") && !node.get("patientId").isNull()) {
+            try {
+                UUID id = UUID.fromString(node.get("patientId").asText());
+                Optional<Patient> patient = patientRepository.findById(id);
+                if (patient.isPresent()) {
+                    return patient.get().getFirstName() + " " + patient.get().getLastName();
+                }
+            } catch (Exception ignored) {}
+            return node.get("patientId").asText();
+        }
+        return null;
+    }
+
+    private String resolveCreatedBy(ObjectNode node) {
+        if (node.has("createdByName") && !node.get("createdByName").isNull()) {
+            String name = node.get("createdByName").asText();
+            if (node.has("createdByRole") && !node.get("createdByRole").isNull()) {
+                name += " (" + capitalizeWord(node.get("createdByRole").asText()) + ")";
+            }
+            return name;
+        }
+        if (node.has("createdByUserId") && !node.get("createdByUserId").isNull()) {
+            try {
+                UUID id = UUID.fromString(node.get("createdByUserId").asText());
+                Optional<User> user = userRepository.findById(id);
+                if (user.isPresent()) {
+                    String name = user.get().getFirstName() + " " + user.get().getLastName();
+                    if (user.get().getRole() != null) {
+                        name += " (" + capitalizeWord(user.get().getRole().name()) + ")";
+                    }
+                    return name;
+                }
+            } catch (Exception ignored) {}
+        }
+        return null;
+    }
+
+    private String sanitizeUpdateFollowUpAuditJson(ObjectNode node) throws JsonProcessingException {
+        ObjectNode before = (ObjectNode) node.get("before");
+        ObjectNode after = (ObjectNode) node.get("after");
+
+        ObjectNode filteredBefore = objectMapper.createObjectNode();
+        ObjectNode filteredAfter = objectMapper.createObjectNode();
+
+        var it = after.fieldNames();
+        while (it.hasNext()) {
+            String field = it.next();
+
+            // Skip internal fields and derived fields (compared via their source UUIDs)
+            if ("prescriptionId".equals(field) || "eyeExamId".equals(field)
+                    || "isArchived".equals(field) || "createdAt".equals(field)
+                    || "updatedAt".equals(field) || "createdByName".equals(field)
+                    || "createdByRole".equals(field) || "patientName".equals(field)) {
+                continue;
+            }
+
+            String beforeVal = formatFollowUpValue(before, field);
+            String afterVal = formatFollowUpValue(after, field);
+
+            if (!beforeVal.equals(afterVal)) {
+                String outputField = field;
+                if ("patientId".equals(field)) {
+                    outputField = "patientName";
+                } else if ("createdByUserId".equals(field)) {
+                    outputField = "createdBy";
+                }
+                filteredBefore.put(outputField, beforeVal);
+                filteredAfter.put(outputField, afterVal);
+            }
+        }
+
+        ObjectNode result = objectMapper.createObjectNode();
+        result.set("before", filteredBefore);
+        result.set("after", filteredAfter);
+        return objectMapper.writeValueAsString(result);
+    }
+
+    private String formatFollowUpValue(ObjectNode source, String field) {
+        if (!source.has(field) || source.get(field).isNull()) return "—";
+
+        switch (field) {
+            case "patientId":
+                return resolvePatientName(source);
+            case "createdByUserId":
+                return resolveCreatedBy(source);
+            case "scheduledDate":
+            case "actualVisitDate":
+                return formatBirthDate(source.get(field).asText());
+            case "status":
+                return capitalizeWord(source.get(field).asText().replace("_", " "));
+            default:
+                return source.get(field).asText();
+        }
     }
 
     private void sanitizeEyeGroup(ObjectNode target, ObjectNode source, String groupKey) {

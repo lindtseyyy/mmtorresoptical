@@ -55,9 +55,9 @@ public class FollowUpController {
     @GetMapping("/patient/{patientId}")
     public ResponseEntity<Page<PatientFollowUpDTO>> getByPatient(@PathVariable UUID patientId,
                                                                   @RequestParam(required = false) String status,
-                                                                  @RequestParam(defaultValue = "false") boolean includeArchived,
+                                                                  @RequestParam(defaultValue = "ACTIVE") String archiveFilter,
                                                                   Pageable pageable) {
-        return ResponseEntity.ok(patientFollowUpService.getFollowUpsByPatient(patientId, status, includeArchived, pageable));
+        return ResponseEntity.ok(patientFollowUpService.getFollowUpsByPatient(patientId, status, archiveFilter, pageable));
     }
 
     @PatchMapping("/{id}/status")

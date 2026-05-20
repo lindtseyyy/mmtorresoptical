@@ -66,7 +66,10 @@ public class PatientFollowUpAuditHelper {
     private PatientFollowUpAuditDTO toAuditDTO(PatientFollowUp entity) {
         PatientFollowUpAuditDTO dto = new PatientFollowUpAuditDTO();
         dto.setFollowUpId(entity.getFollowUpId());
-        dto.setPatientId(entity.getPatient() != null ? entity.getPatient().getPatientId() : null);
+        if (entity.getPatient() != null) {
+            dto.setPatientId(entity.getPatient().getPatientId());
+            dto.setPatientName(entity.getPatient().getFirstName() + " " + entity.getPatient().getLastName());
+        }
         dto.setPrescriptionId(entity.getPrescription() != null ? entity.getPrescription().getPrescriptionId() : null);
         dto.setEyeExamId(entity.getEyeExam() != null ? entity.getEyeExam().getEyeExamId() : null);
         dto.setScheduledDate(entity.getScheduledDate());
@@ -76,7 +79,11 @@ public class PatientFollowUpAuditHelper {
         dto.setIsArchived(entity.getIsArchived());
         dto.setCreatedAt(entity.getCreatedAt());
         dto.setUpdatedAt(entity.getUpdatedAt());
-        dto.setCreatedByUserId(entity.getCreatedBy() != null ? entity.getCreatedBy().getUserId() : null);
+        if (entity.getCreatedBy() != null) {
+            dto.setCreatedByUserId(entity.getCreatedBy().getUserId());
+            dto.setCreatedByName(entity.getCreatedBy().getFirstName() + " " + entity.getCreatedBy().getLastName());
+            dto.setCreatedByRole(entity.getCreatedBy().getRole() != null ? entity.getCreatedBy().getRole().name() : null);
+        }
         return dto;
     }
 }

@@ -125,7 +125,7 @@ public class PatientFollowUpService {
                 .toList();
     }
 
-    public Page<PatientFollowUpDTO> getFollowUpsByPatient(UUID patientId, String statusFilter, boolean includeArchived, Pageable pageable) {
+    public Page<PatientFollowUpDTO> getFollowUpsByPatient(UUID patientId, String statusFilter, String archiveFilter, Pageable pageable) {
         Specification<PatientFollowUp> spec = (root, query, cb) ->
                 cb.equal(root.get("patient").get("patientId"), patientId);
 
@@ -134,9 +134,12 @@ public class PatientFollowUpService {
             spec = spec.and((root, query, cb) -> cb.equal(root.get("status"), status));
         }
 
-        if (!includeArchived) {
+        if ("ACTIVE".equals(archiveFilter)) {
             spec = spec.and((root, query, cb) -> cb.isFalse(root.get("isArchived")));
+        } else if ("VOIDED".equals(archiveFilter)) {
+            spec = spec.and((root, query, cb) -> cb.isTrue(root.get("isArchived")));
         }
+        // "ALL" → no archive filter
 
         return patientFollowUpRepository.findAll(spec, pageable).map(this::toDTO);
     }
@@ -145,6 +148,8 @@ public class PatientFollowUpService {
     public PatientFollowUpDTO updateStatus(UUID followUpId, UpdateFollowUpStatusRequestDTO request) {
         PatientFollowUp followUp = patientFollowUpRepository.findById(followUpId)
                 .orElseThrow(() -> new ResourceNotFoundException("Follow-up not found: " + followUpId));
+
+        PatientFollowUp before = copyForAudit(followUp);
 
         FollowUpStatus newStatus = FollowUpStatus.valueOf(request.getStatus());
         followUp.setStatus(newStatus);
@@ -155,6 +160,7 @@ public class PatientFollowUpService {
 
         followUp.setUpdatedBy(authenticatedUserService.getCurrentUser());
         PatientFollowUp saved = patientFollowUpRepository.save(followUp);
+        patientFollowUpAuditHelper.logUpdate(before, saved);
         return toDTO(saved);
     }
 
@@ -163,22 +169,33 @@ public class PatientFollowUpService {
         PatientFollowUp followUp = patientFollowUpRepository.findById(followUpId)
                 .orElseThrow(() -> new ResourceNotFoundException("Follow-up not found: " + followUpId));
 
+        PatientFollowUp before = copyForAudit(followUp);
+
         followUp.setScheduledDate(request.getScheduledDate());
         if (followUp.getStatus() == FollowUpStatus.NO_SHOW || followUp.getStatus() == FollowUpStatus.CANCELLED) {
             followUp.setStatus(FollowUpStatus.PENDING);
         }
         followUp.setUpdatedBy(authenticatedUserService.getCurrentUser());
         PatientFollowUp saved = patientFollowUpRepository.save(followUp);
+        patientFollowUpAuditHelper.logUpdate(before, saved);
         return toDTO(saved);
     }
 
     private PatientFollowUp copyForAudit(PatientFollowUp source) {
         PatientFollowUp copy = new PatientFollowUp();
         copy.setFollowUpId(source.getFollowUpId());
+        copy.setPatient(source.getPatient());
+        copy.setPrescription(source.getPrescription());
+        copy.setEyeExam(source.getEyeExam());
         copy.setScheduledDate(source.getScheduledDate());
-        copy.setFollowUpReason(source.getFollowUpReason());
+        copy.setActualVisitDate(source.getActualVisitDate());
         copy.setStatus(source.getStatus());
+        copy.setFollowUpReason(source.getFollowUpReason());
         copy.setIsArchived(source.getIsArchived());
+        copy.setCreatedAt(source.getCreatedAt());
+        copy.setUpdatedAt(source.getUpdatedAt());
+        copy.setCreatedBy(source.getCreatedBy());
+        copy.setUpdatedBy(source.getUpdatedBy());
         return copy;
     }
 
