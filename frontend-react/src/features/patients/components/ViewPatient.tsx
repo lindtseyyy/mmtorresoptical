@@ -386,7 +386,7 @@ const ViewPatient: React.FC = () => {
               <div className="flex items-center gap-2">
                 <span className="text-sm text-muted-foreground">Status:</span>
                 <Select value={fuStatusFilter} onValueChange={(v) => { setFuStatusFilter(v); setFuPage(0); }}>
-                  <SelectTrigger className="w-[130px]">
+                  <SelectTrigger className="w-[130px] h-8">
                     <SelectValue />
                   </SelectTrigger>
                   <SelectContent>
@@ -400,7 +400,7 @@ const ViewPatient: React.FC = () => {
               </div>
               <div className="flex items-center gap-2">
                 <Select value={fuFilter} onValueChange={(v) => { setFuFilter(v); setFuPage(0); }}>
-                  <SelectTrigger className="w-[110px]">
+                  <SelectTrigger className="w-[110px] h-8">
                     <SelectValue />
                   </SelectTrigger>
                   <SelectContent>
@@ -589,7 +589,7 @@ const ViewPatient: React.FC = () => {
               <div className="flex items-center gap-2">
                 <span className="text-sm text-muted-foreground">Status:</span>
                 <Select value={rxFilter} onValueChange={(v) => { setRxFilter(v); setRxPage(0); }}>
-                  <SelectTrigger className="w-[130px]">
+                  <SelectTrigger className="w-[130px] h-8">
                     <SelectValue />
                   </SelectTrigger>
                   <SelectContent>
@@ -599,7 +599,7 @@ const ViewPatient: React.FC = () => {
                   </SelectContent>
                 </Select>
               </div>
-              <Button asChild>
+              <Button size="sm" asChild>
                 <Link to={`/patients/add/prescription?patientId=${patientId}&patientName=${encodeURIComponent(fullName)}`}>
                   <Plus className="mr-1 h-4 w-4" />
                   Add Prescription
@@ -722,7 +722,7 @@ const ViewPatient: React.FC = () => {
               <div className="flex items-center gap-2">
                 <span className="text-sm text-muted-foreground">Status:</span>
                 <Select value={eeFilter} onValueChange={(v) => { setEeFilter(v); setEePage(0); }}>
-                  <SelectTrigger className="w-[130px]">
+                  <SelectTrigger className="w-[130px] h-8">
                     <SelectValue />
                   </SelectTrigger>
                   <SelectContent>
@@ -732,7 +732,7 @@ const ViewPatient: React.FC = () => {
                   </SelectContent>
                 </Select>
               </div>
-              <Button asChild>
+              <Button size="sm" asChild>
                 <Link to={`/patients/add/eye-exam?patientId=${patientId}&patientName=${encodeURIComponent(fullName)}`}>
                   <Plus className="mr-1 h-4 w-4" />
                   Add Eye Exam
