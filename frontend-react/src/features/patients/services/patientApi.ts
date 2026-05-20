@@ -117,7 +117,6 @@ export interface EyeExamListItem {
   createdAt: string;
   chiefComplaint: string | null;
   clinicalImpression: string | null;
-  isArchived: boolean;
   status: string | null;
   performedBy: { userId: string; fullName: string } | null;
 }

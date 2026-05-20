@@ -16,11 +16,13 @@ import com.mmtorresoptical.OpticalClinicManagementSystem.services.AuthenticatedU
 import com.mmtorresoptical.OpticalClinicManagementSystem.services.auditlog.resources.EyeExamAuditHelper;
 import com.mmtorresoptical.OpticalClinicManagementSystem.specification.EyeExamSpecification;
 import com.mmtorresoptical.OpticalClinicManagementSystem.utils.UUIDUtils;
+import jakarta.persistence.EntityManager;
 import lombok.RequiredArgsConstructor;
 import org.springframework.beans.BeanUtils;
 import org.springframework.data.domain.*;
 import org.springframework.data.jpa.domain.Specification;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDate;
 import java.time.LocalDateTime;
@@ -37,7 +39,9 @@ public class EyeExamService {
     private final EyeExamMapper eyeExamMapper;
     private final AuthenticatedUserService authenticatedUserService;
     private final EyeExamAuditHelper eyeExamAuditHelper;
+    private final EntityManager entityManager;
 
+    @Transactional
     public EyeExamResponseDTO createEyeExam(UUID patientId, CreateEyeExamRequestDTO requestDTO) {
         Patient retrievedPatient = patientRepository.findById(patientId)
                 .orElseThrow(() -> new ResourceNotFoundException("Patient not found with id: " + patientId));
@@ -52,7 +56,8 @@ public class EyeExamService {
         eyeExam.setPatient(retrievedPatient);
         eyeExam.setPerformedBy(authenticatedUser);
 
-        EyeExam savedExam = eyeExamRepository.save(eyeExam);
+        EyeExam savedExam = eyeExamRepository.saveAndFlush(eyeExam);
+        entityManager.refresh(savedExam);
 
         eyeExamAuditHelper.logCreate(savedExam);
 

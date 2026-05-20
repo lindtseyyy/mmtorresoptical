@@ -56,6 +56,14 @@ const formatDateTime = (dateStr: string | null) => {
   });
 };
 
+const formatEyeExamDateTime = (dateStr: string | null) => {
+  if (!dateStr) return "—";
+  const d = new Date(dateStr);
+  const date = d.toLocaleDateString("en-US", { year: "numeric", month: "long", day: "numeric" });
+  const time = d.toLocaleTimeString("en-US", { hour: "numeric", minute: "2-digit", hour12: true });
+  return `${date} • ${time}`;
+};
+
 const ViewPatient: React.FC = () => {
   const { id } = useParams<{ id: string }>();
   const patientId = id!;
@@ -383,7 +391,7 @@ const ViewPatient: React.FC = () => {
                   <SelectContent>
                     <SelectItem value="ALL">All</SelectItem>
                     <SelectItem value="ACTIVE">Active</SelectItem>
-                    <SelectItem value="VOIDED">Voided</SelectItem>
+                    <SelectItem value="VOIDED">Archived</SelectItem>
                   </SelectContent>
                 </Select>
               </div>
@@ -399,7 +407,7 @@ const ViewPatient: React.FC = () => {
             <p className="py-4 text-center text-sm text-muted-foreground">Loading follow-ups...</p>
           ) : !followUps || followUps.content.length === 0 ? (
             <p className="py-4 text-center text-sm text-muted-foreground">
-              {fuFilter === "VOIDED" ? "No voided follow-ups." : "No follow-ups scheduled."}
+              {fuFilter === "VOIDED" ? "No archived follow-ups." : "No follow-ups scheduled."}
             </p>
           ) : (
             <div className="space-y-3">
@@ -438,7 +446,7 @@ const ViewPatient: React.FC = () => {
                       {fu.isArchived ? (
                         <Button
                           size="sm"
-                          variant="outline"
+                          className="bg-green-800 text-white hover:bg-green-900"
                           onClick={() => restoreFuMutation.mutate(fu.followUpId)}
                           disabled={restoreFuMutation.isPending}
                         >
@@ -760,7 +768,7 @@ const ViewPatient: React.FC = () => {
                       )}
 
                       <p className="text-xs text-muted-foreground">
-                        Performed {formatDateTime(ee.createdAt)}
+                        Performed {formatEyeExamDateTime(ee.createdAt)}
                         {ee.performedBy ? ` by ${ee.performedBy.fullName}` : ""}
                       </p>
                     </div>
@@ -846,6 +854,7 @@ const ViewPatient: React.FC = () => {
             </Button>
             <Button
               variant="destructive"
+              className="bg-red-800 hover:bg-red-900 text-white"
               disabled={voidEeReason.length < 10 || voidingEe}
               onClick={async () => {
                 if (!voidEeDialog) return;
@@ -882,7 +891,7 @@ const ViewPatient: React.FC = () => {
             <DialogHeader>
               <DialogTitle>Eye Exam Details — {viewEeData.examNumber}</DialogTitle>
               <DialogDescription>
-                Performed {formatDateTime(viewEeData.createdAt)}
+                Performed {formatEyeExamDateTime(viewEeData.createdAt)}
                 {viewEeData.performedBy ? ` by ${viewEeData.performedBy.fullName}` : ""}
               </DialogDescription>
             </DialogHeader>

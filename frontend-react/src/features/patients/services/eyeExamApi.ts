@@ -30,7 +30,6 @@ export interface EyeExamResponse {
   fundusExamination: string | null;
   clinicalImpression: string | null;
   planNotes: string | null;
-  isArchived: boolean;
   status: string | null;
   voidReason: string | null;
   voidedAt: string | null;

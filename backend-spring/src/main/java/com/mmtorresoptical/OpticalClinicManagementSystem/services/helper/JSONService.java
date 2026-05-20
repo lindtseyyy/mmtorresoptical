@@ -98,6 +98,12 @@ public class JSONService {
                 return sanitizePatientAuditJson(node);
             }
 
+            // ── Eye Exam (all action types): drop UUIDs, resolve performedBy, format timestamps ──
+            if (node.has("eyeExamId") && node.has("examNumber")
+                    && node.has("chiefComplaint")) {
+                return sanitizeEyeExamAuditJson(node);
+            }
+
             // ── VOID Prescription: minimal fields only ──
             if ("VOID".equals(actionType)
                     && node.has("prescriptionId") && node.has("issueDate")
@@ -138,6 +144,62 @@ public class JSONService {
         } catch (JsonProcessingException e) {
             return detailsJson;
         }
+    }
+
+    private String sanitizeEyeExamAuditJson(ObjectNode node) throws JsonProcessingException {
+        ObjectNode clean = objectMapper.createObjectNode();
+
+        if (node.has("examNumber") && !node.get("examNumber").isNull()) {
+            clean.put("examNumber", node.get("examNumber").asText());
+        }
+        if (node.has("status") && !node.get("status").isNull()) {
+            clean.put("status", capitalizeWord(node.get("status").asText()));
+        }
+        if (node.has("createdAt") && !node.get("createdAt").isNull()) {
+            clean.put("createdAt", formatCreatedAt(node.get("createdAt").asText()));
+        }
+
+        String doctorName = resolvePerformedBy(node);
+        if (doctorName != null) {
+            clean.put("performedBy", doctorName);
+        }
+
+        copyField(clean, node, "chiefComplaint");
+        copyField(clean, node, "vaUnconvertedOd");
+        copyField(clean, node, "vaUnconvertedOs");
+        copyField(clean, node, "vaAidedOd");
+        copyField(clean, node, "vaAidedOs");
+        copyField(clean, node, "iopOd");
+        copyField(clean, node, "iopOs");
+        copyField(clean, node, "slitLampExamination");
+        copyField(clean, node, "fundusExamination");
+        copyField(clean, node, "clinicalImpression");
+        copyField(clean, node, "planNotes");
+        copyField(clean, node, "medicalHistorySnapshot");
+
+        if (node.has("voidReason") && !node.get("voidReason").isNull()
+                && !node.get("voidReason").asText().isBlank()) {
+            clean.put("voidReason", node.get("voidReason").asText());
+        }
+
+        return objectMapper.writeValueAsString(clean);
+    }
+
+    private String resolvePerformedBy(ObjectNode node) {
+        if (node.has("performedByUserId") && !node.get("performedByUserId").isNull()) {
+            try {
+                UUID id = UUID.fromString(node.get("performedByUserId").asText());
+                Optional<User> user = userRepository.findById(id);
+                if (user.isPresent()) {
+                    String name = user.get().getFirstName() + " " + user.get().getLastName();
+                    if (user.get().getRole() != null) {
+                        name += " (" + capitalizeWord(user.get().getRole().name()) + ")";
+                    }
+                    return name;
+                }
+            } catch (Exception ignored) {}
+        }
+        return null;
     }
 
     private String sanitizeRefundAuditJson(ObjectNode node) throws JsonProcessingException {
@@ -343,7 +405,6 @@ public class JSONService {
     private String sanitizeFollowUpAuditJson(ObjectNode node) throws JsonProcessingException {
         ObjectNode clean = objectMapper.createObjectNode();
 
-        copyField(clean, node, "followUpId");
         if (node.has("scheduledDate") && !node.get("scheduledDate").isNull()) {
             clean.put("scheduledDate", formatBirthDate(node.get("scheduledDate").asText()));
         }
@@ -420,6 +481,7 @@ public class JSONService {
 
             // Skip internal fields and derived fields (compared via their source UUIDs)
             if ("prescriptionId".equals(field) || "eyeExamId".equals(field)
+                    || "followUpId".equals(field)
                     || "isArchived".equals(field) || "createdAt".equals(field)
                     || "updatedAt".equals(field) || "createdByName".equals(field)
                     || "createdByRole".equals(field) || "patientName".equals(field)) {
