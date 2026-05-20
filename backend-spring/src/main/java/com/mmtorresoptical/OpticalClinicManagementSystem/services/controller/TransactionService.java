@@ -250,6 +250,9 @@ public class TransactionService {
         transaction.setTransactionStatus(TransactionStatus.COMPLETED);
         transaction.setCompletedAt(LocalDateTime.now());
         Transaction saved = transactionRepository.save(transaction);
+
+        transactionAuditHelper.logComplete(saved);
+
         return enrichWithPayments(transactionMapper.entityToResponseDTO(saved));
     }
 

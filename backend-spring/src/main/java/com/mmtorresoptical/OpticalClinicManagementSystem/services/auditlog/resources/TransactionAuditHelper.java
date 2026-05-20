@@ -88,10 +88,24 @@ public class TransactionAuditHelper {
                 transactionMapper.entityToAuditDTO(transaction);
 
         String detailsJson = jsonService.toJson(auditDTO);
-        auditLogService.log(ActionType.ADJUSTMENT,
+        auditLogService.log(ActionType.ADD_PAYMENT,
                 ResourceType.TRANSACTION,
                 transaction.getTransactionId(),
                 "Added payment to transaction",
+                detailsJson
+        );
+    }
+
+    public void logComplete(Transaction transaction) {
+
+        TransactionAuditDTO auditDTO =
+                transactionMapper.entityToAuditDTO(transaction);
+
+        String detailsJson = jsonService.toJson(auditDTO);
+        auditLogService.log(ActionType.COMPLETE,
+                ResourceType.TRANSACTION,
+                transaction.getTransactionId(),
+                "Marked transaction as completed — glasses picked up",
                 detailsJson
         );
     }

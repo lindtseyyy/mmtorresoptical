@@ -87,8 +87,13 @@ public class JSONService {
             }
 
             // ── Payment Adjustment: hide UUIDs, show who processed payment, humanize statuses ──
-            if ("ADJUSTMENT".equals(actionType) && node.has("transactionItemAuditDTOList")) {
+            if ("ADD_PAYMENT".equals(actionType) && node.has("transactionItemAuditDTOList")) {
                 return sanitizePaymentAdjustmentAuditJson(node, performedBy);
+            }
+
+            // ── Complete Transaction: hide UUIDs, show who marked complete, humanize statuses ──
+            if ("COMPLETE".equals(actionType) && node.has("transactionItemAuditDTOList")) {
+                return sanitizeCompleteTransactionAuditJson(node, performedBy);
             }
 
             // ── CREATE Transaction: hide UUIDs, humanize statuses ──
@@ -398,6 +403,74 @@ public class JSONService {
         }
         if (node.has("completedAt") && !node.get("completedAt").isNull()) {
             node.put("completedAt", formatCreatedAt(node.get("completedAt").asText()));
+        }
+        if (node.has("estimatedReadyDate") && !node.get("estimatedReadyDate").isNull()) {
+            node.put("estimatedReadyDate", formatBirthDate(node.get("estimatedReadyDate").asText()));
+        }
+
+        if (node.has("transactionItemAuditDTOList") && node.get("transactionItemAuditDTOList").isArray()) {
+            var cleanItems = objectMapper.createArrayNode();
+            for (var item : node.get("transactionItemAuditDTOList")) {
+                if (item.isObject()) {
+                    cleanItems.add(sanitizeTransactionItemAuditJson((ObjectNode) item));
+                }
+            }
+            node.set("transactionItemAuditDTOList", cleanItems);
+        }
+
+        return objectMapper.writeValueAsString(node);
+    }
+
+    private String sanitizeCompleteTransactionAuditJson(ObjectNode node, String performedBy) throws JsonProcessingException {
+        node.remove("transactionId");
+        node.remove("createdByUserId");
+
+        if (performedBy != null && !performedBy.isBlank()) {
+            node.put("markedCompleteBy", performedBy);
+        }
+
+        formatPesoField(node, "totalAmount");
+        formatPesoField(node, "amountPaid");
+        formatPesoField(node, "totalRefundedCash");
+        formatPesoField(node, "balanceDue");
+
+        if (node.has("paymentMethod") && !node.get("paymentMethod").isNull()
+                && !node.get("paymentMethod").asText().isBlank()) {
+            String method = capitalizeWord(node.get("paymentMethod").asText());
+            node.put("paymentMethod", method);
+            if ("Gcash".equalsIgnoreCase(method)
+                    && node.has("paymentReferenceNumber")
+                    && !node.get("paymentReferenceNumber").isNull()
+                    && !node.get("paymentReferenceNumber").asText().isBlank()) {
+                node.put("paymentReferenceNumber", node.get("paymentReferenceNumber").asText());
+            } else {
+                node.remove("paymentReferenceNumber");
+            }
+        } else {
+            node.remove("paymentMethod");
+            node.remove("paymentReferenceNumber");
+        }
+
+        if (node.has("transactionStatus")) {
+            String raw = node.get("transactionStatus").asText();
+            node.put("transactionStatus", formatTransactionStatus(raw));
+        }
+
+        if (node.has("refundStatus")) {
+            String refundStatus = node.get("refundStatus").asText();
+            if ("NONE".equalsIgnoreCase(refundStatus)) {
+                node.remove("refundStatus");
+            }
+        }
+
+        if (node.has("transactionDate") && !node.get("transactionDate").isNull()) {
+            node.put("transactionDate", formatCreatedAt(node.get("transactionDate").asText()));
+        }
+        if (node.has("completedAt") && !node.get("completedAt").isNull()) {
+            node.put("completedAt", formatCreatedAt(node.get("completedAt").asText()));
+        }
+        if (node.has("voidedAt") && !node.get("voidedAt").isNull()) {
+            node.put("voidedAt", formatCreatedAt(node.get("voidedAt").asText()));
         }
         if (node.has("estimatedReadyDate") && !node.get("estimatedReadyDate").isNull()) {
             node.put("estimatedReadyDate", formatBirthDate(node.get("estimatedReadyDate").asText()));

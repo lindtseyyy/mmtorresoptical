@@ -11,5 +11,7 @@ public enum ActionType {
     REFUND,
     EXPORT,
     BACKUP,
-    ADJUSTMENT
+    ADJUSTMENT,
+    ADD_PAYMENT,
+    COMPLETE
 }

@@ -247,7 +247,7 @@ const AuditLogs: React.FC = () => {
                         </td>
                         <td className="py-3 pr-4 text-center">
                           <Badge className={actionBadgeClass[entry.actionType] || "bg-gray-600 hover:bg-gray-600 text-white"}>
-                            {entry.actionType}
+                            {entry.actionType.replace(/_/g, " ")}
                           </Badge>
                         </td>
                         <td className="py-3 pr-4 text-muted-foreground">
@@ -358,7 +358,7 @@ const AuditLogs: React.FC = () => {
                 <Label className="text-xs text-muted-foreground">Action</Label>
                 <p className="text-sm">
                   <Badge className={actionBadgeClass[viewingEntry.actionType] || "bg-gray-600 hover:bg-gray-600 text-white"}>
-                    {viewingEntry.actionType}
+                    {viewingEntry.actionType.replace(/_/g, " ")}
                   </Badge>
                 </p>
               </div>
