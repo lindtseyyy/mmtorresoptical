@@ -63,7 +63,7 @@ public class PrescriptionService {
         Prescription prescription = new Prescription();
 
         // Set parent fields
-        prescription.setExamDate(prescriptionRequest.getExamDate());
+        prescription.setIssueDate(prescriptionRequest.getIssueDate());
         prescription.setNotes(prescriptionRequest.getNotes());
         prescription.setIsArchived(prescriptionRequest.getIsArchived());
 
@@ -244,7 +244,7 @@ public class PrescriptionService {
         User authenticatedUser = authenticatedUserService.getCurrentUser();
 
         Prescription clone = new Prescription();
-        clone.setExamDate(LocalDate.now());
+        clone.setIssueDate(LocalDate.now());
         clone.setNotes(source.getNotes());
         clone.setIsArchived(false);
         clone.setStatus(PrescriptionStatus.ACTIVE);

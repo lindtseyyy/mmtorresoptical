@@ -9,6 +9,7 @@ import java.util.UUID;
 public class EyeExamAuditDTO {
 
     private UUID eyeExamId;
+    private String examNumber;
     private LocalDateTime createdAt;
     private String chiefComplaint;
     private String medicalHistorySnapshot;

@@ -88,7 +88,7 @@ public class JSONService {
 
             // ── CREATE / ARCHIVE / RESTORE Prescription: group items by eye side, hide UUIDs ──
             if (("CREATE".equals(actionType) || "ARCHIVE".equals(actionType) || "RESTORE".equals(actionType))
-                    && node.has("prescriptionId") && node.has("examDate")
+                    && node.has("prescriptionId") && node.has("issueDate")
                     && (node.has("rightEye") || node.has("leftEye") || node.has("bothEyes"))) {
                 return sanitizePrescriptionAuditJson(node);
             }
@@ -287,8 +287,8 @@ public class JSONService {
     private String sanitizePrescriptionAuditJson(ObjectNode node) throws JsonProcessingException {
         ObjectNode clean = objectMapper.createObjectNode();
 
-        if (node.has("examDate") && !node.get("examDate").isNull()) {
-            clean.put("examDate", formatBirthDate(node.get("examDate").asText()));
+        if (node.has("issueDate") && !node.get("issueDate").isNull()) {
+            clean.put("issueDate", formatBirthDate(node.get("issueDate").asText()));
         }
         if (node.has("createdAt") && !node.get("createdAt").isNull()) {
             clean.put("createdAt", formatCreatedAt(node.get("createdAt").asText()));

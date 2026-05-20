@@ -10,6 +10,7 @@ import java.util.UUID;
 public class EyeExamResponseDTO {
 
     private UUID eyeExamId;
+    private String examNumber;
     private LocalDateTime createdAt;
     private String chiefComplaint;
     private String medicalHistorySnapshot;

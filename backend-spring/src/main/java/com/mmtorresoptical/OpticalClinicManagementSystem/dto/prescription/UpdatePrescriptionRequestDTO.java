@@ -8,8 +8,8 @@ import java.time.LocalDate;
 @Data
 public class UpdatePrescriptionRequestDTO {
 
-    @NotNull(message = "Exam date is required")
-    private LocalDate examDate;
+    @NotNull(message = "Issue date is required")
+    private LocalDate issueDate;
     private String notes;
 
 }

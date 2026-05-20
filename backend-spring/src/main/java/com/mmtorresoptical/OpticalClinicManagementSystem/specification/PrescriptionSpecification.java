@@ -51,7 +51,7 @@ public class PrescriptionSpecification {
 
             if (start != null && end != null) {
                 return cb.between(
-                        root.get("examDate"),
+                        root.get("issueDate"),
                         start,
                         end
                 );
@@ -59,13 +59,13 @@ public class PrescriptionSpecification {
 
             if (start != null) {
                 return cb.greaterThanOrEqualTo(
-                        root.get("examDate"),
+                        root.get("issueDate"),
                         start
                 );
             }
 
             return cb.lessThanOrEqualTo(
-                    root.get("examDate"),
+                    root.get("issueDate"),
                     end
             );
         };

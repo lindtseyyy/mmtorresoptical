@@ -11,8 +11,8 @@ import java.util.UUID;
 @Data
 public class CreatePrescriptionRequestDTO {
 
-    @NotNull(message = "Exam date is required")
-    private LocalDate examDate;
+    @NotNull(message = "Issue date is required")
+    private LocalDate issueDate;
     private String notes;
     private Boolean isArchived = false;
     private Boolean followUpRequired = false;

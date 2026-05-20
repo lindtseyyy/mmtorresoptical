@@ -26,12 +26,15 @@ public class Prescription {
     private UUID prescriptionId;
 
     @NotNull
-    @Column(name = "exam_date", nullable = false)
-    private LocalDate examDate;
+    @Column(name = "issue_date", nullable = false)
+    private LocalDate issueDate;
 
     @Convert(converter = AesEncryptionConverter.class)
     @Column(name = "notes", columnDefinition = "TEXT")
     private String notes;
+
+    @Column(name = "rx_number", unique = true, insertable = false, updatable = false)
+    private String rxNumber;
 
     @CreationTimestamp
     @Column(name = "created_at", nullable = false, updatable = false)

@@ -11,7 +11,8 @@ import java.util.UUID;
 public class PrescriptionListDTO {
 
     private UUID prescriptionId;
-    private LocalDate examDate;
+    private String rxNumber;
+    private LocalDate issueDate;
     private String notes;
     private LocalDateTime createdAt;
     private Boolean isArchived;

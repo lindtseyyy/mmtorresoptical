@@ -10,6 +10,6 @@ import java.util.UUID;
 
 public interface PrescriptionRepository extends JpaRepository<Prescription, UUID>, JpaSpecificationExecutor<Prescription> {
 
-    @Query("SELECT MAX(p.examDate) FROM Prescription p WHERE p.patient.patientId = :patientId AND p.isArchived = false")
-    LocalDate findMaxExamDateByPatientId(UUID patientId);
+    @Query("SELECT MAX(p.issueDate) FROM Prescription p WHERE p.patient.patientId = :patientId AND p.isArchived = false")
+    LocalDate findMaxIssueDateByPatientId(UUID patientId);
 }

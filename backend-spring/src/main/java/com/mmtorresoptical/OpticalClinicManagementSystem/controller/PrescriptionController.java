@@ -55,7 +55,7 @@ public class PrescriptionController {
      * @param id the UUID of the patient whose prescriptions are being retrieved
      * @param page the page number (default = 0)
      * @param size the number of records per page (default = 10)
-     * @param sortBy the field used for sorting (default = examDate)
+     * @param sortBy the field used for sorting (default = issueDate)
      * @param sortOrder the sorting direction: ascending or descending (default = descending)
      * @param archivedStatus filter for prescription records:
      *                       ACTIVE, ARCHIVED, or ALL (default = ACTIVE)
@@ -69,7 +69,7 @@ public class PrescriptionController {
                                                                                 @RequestParam(required = false) LocalDate maxDate,
                                                                                 @RequestParam(defaultValue = "0") int page,
                                                                               @RequestParam(defaultValue = "10") int size,
-                                                                              @RequestParam(defaultValue = "examDate") String sortBy,
+                                                                              @RequestParam(defaultValue = "issueDate") String sortBy,
                                                                               @RequestParam(defaultValue = "desc") String sortOrder,
                                                                               @RequestParam(defaultValue = "ACTIVE") String archivedStatus) {
 

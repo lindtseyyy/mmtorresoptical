@@ -367,7 +367,7 @@ public class PatientService {
 
         long totalVisits = transactionRepository.countByPatientId(patientId);
         LocalDateTime lastVisitDate = transactionRepository.findMaxTransactionDateByPatientId(patientId);
-        java.time.LocalDate lastRxDate = prescriptionRepository.findMaxExamDateByPatientId(patientId);
+        java.time.LocalDate lastRxDate = prescriptionRepository.findMaxIssueDateByPatientId(patientId);
         LocalDateTime lastPrescriptionDate = lastRxDate != null ? lastRxDate.atStartOfDay() : null;
         long purchasedProducts = transactionRepository.sumQuantityByPatientId(patientId);
         java.math.BigDecimal totalAmount = transactionRepository.sumTotalAmountByPatientId(patientId);
