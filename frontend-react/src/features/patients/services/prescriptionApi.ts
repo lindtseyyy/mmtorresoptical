@@ -25,6 +25,7 @@ export interface CreatePrescriptionInput {
   notes?: string;
   isArchived?: boolean;
   followUpRequired?: boolean;
+  followUpScheduledDate?: string;
   followUpReason?: string;
   eyeExamId?: string;
   itemsRequestDTOList: PrescriptionItemInput[];

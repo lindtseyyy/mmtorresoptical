@@ -33,8 +33,7 @@ import {
 } from "@/features/patients/services/patientApi";
 import { createArchivePatientMutationOptions } from "@/features/patients/hooks/patientQuery";
 import { voidPrescription, clonePrescription, fetchPrescription, type PrescriptionResponse } from "@/features/patients/services/prescriptionApi";
-import { fetchFollowUpsByPatient, updateFollowUpStatus } from "@/features/patients/services/followUpApi";
-import type { PatientFollowUp } from "@/features/patients/services/followUpApi";
+import { fetchFollowUpsByPatient, updateFollowUpStatus, createFollowUp, updateFollowUp, archiveFollowUp, restoreFollowUp, type PatientFollowUp, type CreateFollowUpInput } from "@/features/patients/services/followUpApi";
 import api from "@/shared/lib/axiosInstance";
 
 const formatDate = (dateStr: string | null) => {
@@ -139,11 +138,15 @@ const ViewPatient: React.FC = () => {
     },
   });
 
+  const [fuFilter, setFuFilter] = useState("ACTIVE");
   const { data: followUps, isLoading: followUpsLoading } = useQuery({
-    queryKey: ["patient-follow-ups", patientId],
-    queryFn: () => fetchFollowUpsByPatient(patientId),
+    queryKey: ["patient-follow-ups", patientId, fuFilter],
+    queryFn: () => fetchFollowUpsByPatient(patientId, undefined, fuFilter === "ARCHIVED"),
     enabled: !!patientId,
   });
+
+  const [fuModal, setFuModal] = useState<{ open: boolean; edit: PatientFollowUp | null }>({ open: false, edit: null });
+  const [fuForm, setFuForm] = useState({ scheduledDate: "", followUpReason: "", prescriptionId: "", eyeExamId: "" });
 
   const updateFollowUpMutation = useMutation({
     mutationFn: ({ followUpId, status }: { followUpId: string; status: string }) =>
@@ -153,6 +156,52 @@ const ViewPatient: React.FC = () => {
     },
     onError: (err: any) => toast.error(err?.response?.data || "Failed to update follow-up"),
   });
+
+  const saveFuMutation = useMutation({
+    mutationFn: (data: CreateFollowUpInput) =>
+      fuModal.edit
+        ? updateFollowUp(fuModal.edit.followUpId, { scheduledDate: data.scheduledDate, followUpReason: data.followUpReason })
+        : createFollowUp(data),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["patient-follow-ups", patientId] });
+      toast.success(fuModal.edit ? "Follow-up updated" : "Follow-up created");
+      setFuModal({ open: false, edit: null });
+    },
+    onError: (err: any) => toast.error(err?.response?.data || "Failed to save follow-up"),
+  });
+
+  const archiveFuMutation = useMutation({
+    mutationFn: (fuId: string) => archiveFollowUp(fuId),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["patient-follow-ups", patientId] });
+      toast.success("Follow-up archived");
+    },
+    onError: () => toast.error("Failed to archive follow-up"),
+  });
+
+  const restoreFuMutation = useMutation({
+    mutationFn: (fuId: string) => restoreFollowUp(fuId),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["patient-follow-ups", patientId] });
+      toast.success("Follow-up restored");
+    },
+    onError: () => toast.error("Failed to restore follow-up"),
+  });
+
+  const openCreateFuModal = () => {
+    setFuForm({ scheduledDate: "", followUpReason: "", prescriptionId: "", eyeExamId: "" });
+    setFuModal({ open: true, edit: null });
+  };
+
+  const openEditFuModal = (fu: PatientFollowUp) => {
+    setFuForm({
+      scheduledDate: fu.scheduledDate,
+      followUpReason: fu.followUpReason || "",
+      prescriptionId: fu.prescriptionId || "",
+      eyeExamId: fu.eyeExamId || "",
+    });
+    setFuModal({ open: true, edit: fu });
+  };
 
   const handleClone = async (prescriptionId: string) => {
     try {
@@ -320,19 +369,39 @@ const ViewPatient: React.FC = () => {
                 Scheduled follow-up visits
               </CardDescription>
             </div>
+            <div className="flex items-center gap-3">
+              <div className="flex items-center gap-2">
+                <span className="text-sm text-muted-foreground">Status:</span>
+                <Select value={fuFilter} onValueChange={(v) => setFuFilter(v)}>
+                  <SelectTrigger className="w-[130px]">
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="ACTIVE">Active</SelectItem>
+                    <SelectItem value="ARCHIVED">Archived</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+              <Button variant="outline" size="sm" onClick={openCreateFuModal}>
+                <Plus className="mr-1 h-4 w-4" />
+                Add Follow-Up
+              </Button>
+            </div>
           </div>
         </CardHeader>
         <CardContent>
           {followUpsLoading ? (
             <p className="py-4 text-center text-sm text-muted-foreground">Loading follow-ups...</p>
           ) : !followUps || followUps.length === 0 ? (
-            <p className="py-4 text-center text-sm text-muted-foreground">No follow-ups scheduled.</p>
+            <p className="py-4 text-center text-sm text-muted-foreground">
+              {fuFilter === "ARCHIVED" ? "No archived follow-ups." : "No follow-ups scheduled."}
+            </p>
           ) : (
             <div className="space-y-3">
               {followUps.map((fu: PatientFollowUp) => (
                 <div
                   key={fu.followUpId}
-                  className="rounded-lg border p-4 transition-colors bg-muted/60 hover:bg-muted"
+                  className={`rounded-lg border p-4 transition-colors bg-muted/60 hover:bg-muted${fu.isArchived ? " opacity-60" : ""}`}
                 >
                   <div className="flex items-start justify-between">
                     <div className="space-y-1 flex-1 min-w-0">
@@ -345,45 +414,82 @@ const ViewPatient: React.FC = () => {
                         >
                           {fu.status}
                         </Badge>
+                        {fu.isArchived && (
+                          <Badge className="bg-gray-500 text-white">Archived</Badge>
+                        )}
                       </div>
                       {fu.followUpReason && (
                         <p className="text-sm text-muted-foreground">{fu.followUpReason}</p>
                       )}
                     </div>
-                    {fu.status !== "COMPLETED" && fu.status !== "CANCELLED" && (
-                      <div className="flex items-center gap-1 shrink-0 ml-2">
+                    <div className="flex items-center gap-1 shrink-0 ml-2">
+                      {fu.isArchived ? (
                         <Button
                           size="sm"
                           variant="outline"
-                          className="text-green-600 border-green-300 hover:bg-green-50"
-                          onClick={() => updateFollowUpMutation.mutate({ followUpId: fu.followUpId, status: "COMPLETED" })}
-                          disabled={updateFollowUpMutation.isPending}
+                          onClick={() => restoreFuMutation.mutate(fu.followUpId)}
+                          disabled={restoreFuMutation.isPending}
                         >
-                          <CheckCircle className="h-4 w-4 mr-1" />
-                          Complete
+                          <Undo2 className="h-4 w-4 mr-1" />
+                          Restore
                         </Button>
-                        <Button
-                          size="sm"
-                          variant="outline"
-                          className="text-amber-600 border-amber-300 hover:bg-amber-50"
-                          onClick={() => updateFollowUpMutation.mutate({ followUpId: fu.followUpId, status: "NO_SHOW" })}
-                          disabled={updateFollowUpMutation.isPending}
-                        >
-                          <UserX className="h-4 w-4 mr-1" />
-                          No Show
-                        </Button>
-                        <Button
-                          size="sm"
-                          variant="outline"
-                          className="text-red-600 border-red-300 hover:bg-red-50"
-                          onClick={() => updateFollowUpMutation.mutate({ followUpId: fu.followUpId, status: "CANCELLED" })}
-                          disabled={updateFollowUpMutation.isPending}
-                        >
-                          <XCircle className="h-4 w-4 mr-1" />
-                          Cancel
-                        </Button>
-                      </div>
-                    )}
+                      ) : (
+                        <>
+                          {fu.status !== "COMPLETED" && fu.status !== "CANCELLED" && (
+                            <>
+                              <Button
+                                size="sm"
+                                variant="outline"
+                                className="text-green-600 border-green-300 hover:bg-green-50"
+                                onClick={() => updateFollowUpMutation.mutate({ followUpId: fu.followUpId, status: "COMPLETED" })}
+                                disabled={updateFollowUpMutation.isPending}
+                              >
+                                <CheckCircle className="h-4 w-4 mr-1" />
+                                Complete
+                              </Button>
+                              <Button
+                                size="sm"
+                                variant="outline"
+                                className="text-amber-600 border-amber-300 hover:bg-amber-50"
+                                onClick={() => updateFollowUpMutation.mutate({ followUpId: fu.followUpId, status: "NO_SHOW" })}
+                                disabled={updateFollowUpMutation.isPending}
+                              >
+                                <UserX className="h-4 w-4 mr-1" />
+                                No Show
+                              </Button>
+                              <Button
+                                size="sm"
+                                variant="outline"
+                                className="text-red-600 border-red-300 hover:bg-red-50"
+                                onClick={() => updateFollowUpMutation.mutate({ followUpId: fu.followUpId, status: "CANCELLED" })}
+                                disabled={updateFollowUpMutation.isPending}
+                              >
+                                <XCircle className="h-4 w-4 mr-1" />
+                                Cancel
+                              </Button>
+                              <Button
+                                size="sm"
+                                variant="outline"
+                                onClick={() => openEditFuModal(fu)}
+                              >
+                                <Pencil className="h-4 w-4 mr-1" />
+                                Edit
+                              </Button>
+                            </>
+                          )}
+                          <Button
+                            size="sm"
+                            variant="outline"
+                            className="text-gray-600 border-gray-300 hover:bg-gray-50"
+                            onClick={() => archiveFuMutation.mutate(fu.followUpId)}
+                            disabled={archiveFuMutation.isPending}
+                          >
+                            <Archive className="h-4 w-4 mr-1" />
+                            Archive
+                          </Button>
+                        </>
+                      )}
+                    </div>
                   </div>
                 </div>
               ))}
@@ -703,6 +809,86 @@ const ViewPatient: React.FC = () => {
               {voiding ? "Voiding..." : "Confirm Void"}
             </Button>
           </div>
+        </div>
+      </Dialog>
+
+      {/* Follow-Up Management Modal */}
+      <Dialog open={fuModal.open} onOpenChange={(open) => { if (!open) setFuModal({ open: false, edit: null }); }}>
+        <DialogHeader>
+          <DialogTitle>{fuModal.edit ? "Edit Follow-Up" : "Add Follow-Up"}</DialogTitle>
+          <DialogDescription>
+            {fuModal.edit ? "Modify the follow-up details" : "Schedule a new follow-up visit"}
+          </DialogDescription>
+        </DialogHeader>
+        <div className="space-y-4">
+          <div>
+            <label className="text-sm font-medium">Target Date *</label>
+            <input
+              type="date"
+              className="w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background mt-1"
+              value={fuForm.scheduledDate}
+              onChange={(e) => setFuForm((f) => ({ ...f, scheduledDate: e.target.value }))}
+            />
+          </div>
+          <div>
+            <label className="text-sm font-medium">Follow-up Reason</label>
+            <textarea
+              className="w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background mt-1"
+              placeholder="e.g. Routine check-up, monitor progress..."
+              rows={3}
+              value={fuForm.followUpReason}
+              onChange={(e) => setFuForm((f) => ({ ...f, followUpReason: e.target.value }))}
+            />
+          </div>
+          <div>
+            <label className="text-sm font-medium">Link to Prescription (Optional)</label>
+            <select
+              className="w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background mt-1"
+              value={fuForm.prescriptionId}
+              onChange={(e) => setFuForm((f) => ({ ...f, prescriptionId: e.target.value }))}
+            >
+              <option value="">None</option>
+              {rxData?.content.map((rx: PrescriptionListItem) => (
+                <option key={rx.prescriptionId} value={rx.prescriptionId}>
+                  {formatDate(rx.examDate)} {rx.notes ? `— ${rx.notes.substring(0, 40)}` : ""}
+                </option>
+              ))}
+            </select>
+          </div>
+          <div>
+            <label className="text-sm font-medium">Link to Eye Exam (Optional)</label>
+            <select
+              className="w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background mt-1"
+              value={fuForm.eyeExamId}
+              onChange={(e) => setFuForm((f) => ({ ...f, eyeExamId: e.target.value }))}
+            >
+              <option value="">None</option>
+              {eeData?.content.map((ee: EyeExamListItem) => (
+                <option key={ee.eyeExamId} value={ee.eyeExamId}>
+                  {formatDateTime(ee.createdAt)} {ee.chiefComplaint ? `— ${ee.chiefComplaint.substring(0, 40)}` : ""}
+                </option>
+              ))}
+            </select>
+          </div>
+        </div>
+        <div className="flex justify-end gap-2 pt-4">
+          <Button variant="outline" onClick={() => setFuModal({ open: false, edit: null })}>
+            Cancel
+          </Button>
+          <Button
+            disabled={!fuForm.scheduledDate || saveFuMutation.isPending}
+            onClick={() => {
+              saveFuMutation.mutate({
+                patientId,
+                scheduledDate: fuForm.scheduledDate,
+                followUpReason: fuForm.followUpReason || undefined,
+                prescriptionId: fuForm.prescriptionId || undefined,
+                eyeExamId: fuForm.eyeExamId || undefined,
+              });
+            }}
+          >
+            {saveFuMutation.isPending ? "Saving..." : fuModal.edit ? "Save Changes" : "Create Follow-Up"}
+          </Button>
         </div>
       </Dialog>
 

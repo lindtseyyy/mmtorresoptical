@@ -16,6 +16,7 @@ public class CreatePrescriptionRequestDTO {
     private String notes;
     private Boolean isArchived = false;
     private Boolean followUpRequired = false;
+    private LocalDate followUpScheduledDate;
     private String followUpReason;
 
     private UUID eyeExamId;

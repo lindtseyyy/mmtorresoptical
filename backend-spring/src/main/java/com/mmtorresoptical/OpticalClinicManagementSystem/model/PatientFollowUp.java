@@ -28,6 +28,10 @@ public class PatientFollowUp {
     private Prescription prescription;
 
     @ManyToOne
+    @JoinColumn(name = "eye_exam_id")
+    private EyeExam eyeExam;
+
+    @ManyToOne
     @JoinColumn(name = "patient_id", nullable = false)
     private Patient patient;
 
@@ -45,6 +49,9 @@ public class PatientFollowUp {
 
     @Column(name = "follow_up_reason", columnDefinition = "TEXT")
     private String followUpReason;
+
+    @Column(name = "is_archived", nullable = false, columnDefinition = "BOOLEAN NOT NULL DEFAULT FALSE")
+    private Boolean isArchived = false;
 
     @CreationTimestamp
     @Column(name = "created_at", nullable = false, updatable = false)

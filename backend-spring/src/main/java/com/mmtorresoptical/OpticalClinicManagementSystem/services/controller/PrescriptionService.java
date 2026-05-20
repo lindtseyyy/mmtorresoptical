@@ -17,6 +17,7 @@ import com.mmtorresoptical.OpticalClinicManagementSystem.repository.Prescription
 import com.mmtorresoptical.OpticalClinicManagementSystem.repository.EyeExamRepository;
 import com.mmtorresoptical.OpticalClinicManagementSystem.repository.PatientFollowUpRepository;
 import com.mmtorresoptical.OpticalClinicManagementSystem.services.AuthenticatedUserService;
+import com.mmtorresoptical.OpticalClinicManagementSystem.services.auditlog.resources.PatientFollowUpAuditHelper;
 import com.mmtorresoptical.OpticalClinicManagementSystem.services.auditlog.resources.PrescriptionAuditHelper;
 import com.mmtorresoptical.OpticalClinicManagementSystem.services.auditlog.resources.PrescriptionItemAuditHelper;
 import com.mmtorresoptical.OpticalClinicManagementSystem.specification.PrescriptionSpecification;
@@ -47,6 +48,7 @@ public class PrescriptionService {
     private final PrescriptionAuditHelper prescriptionAuditHelper;
     private final PrescriptionItemAuditHelper prescriptionItemAuditHelper;
     private final PatientFollowUpRepository patientFollowUpRepository;
+    private final PatientFollowUpAuditHelper patientFollowUpAuditHelper;
     private final EyeExamRepository eyeExamRepository;
 
     public PrescriptionResponseDTO createPrescription(UUID id, CreatePrescriptionRequestDTO prescriptionRequest) {
@@ -95,16 +97,17 @@ public class PrescriptionService {
         // Save the prescription
         Prescription savedPrescription = prescriptionRepository.save(prescription);
 
-        // Auto-create follow-up if requested (transient field from request DTO)
-        if (Boolean.TRUE.equals(prescriptionRequest.getFollowUpRequired())) {
+        // Create follow-up only if an explicit scheduled date was provided
+        if (prescriptionRequest.getFollowUpScheduledDate() != null) {
             PatientFollowUp followUp = new PatientFollowUp();
             followUp.setPrescription(savedPrescription);
             followUp.setPatient(retrievedPatient);
-            followUp.setScheduledDate(LocalDate.now().plusWeeks(2));
+            followUp.setScheduledDate(prescriptionRequest.getFollowUpScheduledDate());
             followUp.setFollowUpReason(prescriptionRequest.getFollowUpReason());
             followUp.setStatus(FollowUpStatus.PENDING);
             followUp.setCreatedBy(authenticatedUser);
             patientFollowUpRepository.save(followUp);
+            patientFollowUpAuditHelper.logCreate(followUp);
         }
 
         // Audit Logging

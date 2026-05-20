@@ -57,7 +57,7 @@ const prescriptionItemSchema = z.object({
 const prescriptionFormSchema = z.object({
   examDate: z.string().min(1, "Exam date is required"),
   notes: z.string().optional(),
-  followUpRequired: z.boolean().default(false),
+  followUpScheduledDate: z.string().optional(),
   followUpReason: z.string().optional(),
   prescriptionSource: z.enum(["internal", "outside"]).default("internal"),
   eyeExamId: z.string().optional(),
@@ -107,7 +107,7 @@ const AddPrescription: React.FC = () => {
     defaultValues: {
       examDate: "",
       notes: "",
-      followUpRequired: false,
+      followUpScheduledDate: "",
       followUpReason: "",
       prescriptionSource: "internal",
       eyeExamId: "",
@@ -153,7 +153,7 @@ const AddPrescription: React.FC = () => {
         examDate: data.examDate,
         notes: data.notes || undefined,
         isArchived: false,
-        followUpRequired: data.followUpRequired,
+        followUpScheduledDate: data.followUpScheduledDate || undefined,
         followUpReason: data.followUpReason || undefined,
         eyeExamId: data.prescriptionSource === "internal" && data.eyeExamId ? data.eyeExamId : undefined,
         itemsRequestDTOList: data.items.map((item) => ({
@@ -261,25 +261,21 @@ const AddPrescription: React.FC = () => {
 
               {/* Follow-up Section */}
               <div className="space-y-4 border-t pt-4">
-                <h3 className="text-sm font-medium">Follow-up Required</h3>
+                <h3 className="text-sm font-medium">Schedule Follow-Up (Optional)</h3>
                 <FormField
                   control={form.control}
-                  name="followUpRequired"
+                  name="followUpScheduledDate"
                   render={({ field }) => (
-                    <FormItem className="flex flex-row items-center space-x-2 space-y-0">
+                    <FormItem>
+                      <FormLabel>Target Date</FormLabel>
                       <FormControl>
-                        <Switch
-                          checked={field.value}
-                          onCheckedChange={field.onChange}
-                        />
+                        <Input type="date" {...field} />
                       </FormControl>
-                      <FormLabel className="text-sm font-normal">
-                        Follow-up Required
-                      </FormLabel>
+                      <FormMessage />
                     </FormItem>
                   )}
                 />
-                {form.watch("followUpRequired") && (
+                {form.watch("followUpScheduledDate") && (
                   <FormField
                     control={form.control}
                     name="followUpReason"

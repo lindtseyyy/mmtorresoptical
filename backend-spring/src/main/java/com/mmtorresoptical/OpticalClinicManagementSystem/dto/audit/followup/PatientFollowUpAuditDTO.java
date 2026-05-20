@@ -1,22 +1,24 @@
-package com.mmtorresoptical.OpticalClinicManagementSystem.dto.followup;
+package com.mmtorresoptical.OpticalClinicManagementSystem.dto.audit.followup;
 
-import com.mmtorresoptical.OpticalClinicManagementSystem.dto.user.UserSummaryDTO;
 import lombok.Data;
+
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.util.UUID;
 
 @Data
-public class PatientFollowUpDTO {
+public class PatientFollowUpAuditDTO {
+
     private UUID followUpId;
+    private UUID patientId;
     private UUID prescriptionId;
     private UUID eyeExamId;
-    private UUID patientId;
     private LocalDate scheduledDate;
     private LocalDate actualVisitDate;
     private String status;
     private String followUpReason;
     private Boolean isArchived;
     private LocalDateTime createdAt;
-    private UserSummaryDTO createdBy;
+    private LocalDateTime updatedAt;
+    private UUID createdByUserId;
 }

@@ -1,6 +1,7 @@
 package com.mmtorresoptical.OpticalClinicManagementSystem.services.auditlog.resources;
 
 import com.mmtorresoptical.OpticalClinicManagementSystem.dto.audit.base.update.AuditUpdateEvent;
+import com.mmtorresoptical.OpticalClinicManagementSystem.dto.audit.followup.PatientFollowUpAuditDTO;
 import com.mmtorresoptical.OpticalClinicManagementSystem.enums.ActionType;
 import com.mmtorresoptical.OpticalClinicManagementSystem.enums.ResourceType;
 import com.mmtorresoptical.OpticalClinicManagementSystem.model.PatientFollowUp;
@@ -17,7 +18,8 @@ public class PatientFollowUpAuditHelper {
     private final JSONService jsonService;
 
     public void logCreate(PatientFollowUp followUp) {
-        String detailsJson = jsonService.toJson(followUp);
+        PatientFollowUpAuditDTO dto = toAuditDTO(followUp);
+        String detailsJson = jsonService.toJson(dto);
         auditLogService.log(ActionType.CREATE,
                 ResourceType.PATIENT_FOLLOW_UP,
                 followUp.getFollowUpId(),
@@ -27,9 +29,9 @@ public class PatientFollowUpAuditHelper {
     }
 
     public void logUpdate(PatientFollowUp before, PatientFollowUp after) {
-        String beforeJson = jsonService.toJson(before);
-        String afterJson = jsonService.toJson(after);
-        AuditUpdateEvent<String> event = new AuditUpdateEvent<>(beforeJson, afterJson);
+        PatientFollowUpAuditDTO beforeDTO = toAuditDTO(before);
+        PatientFollowUpAuditDTO afterDTO = toAuditDTO(after);
+        AuditUpdateEvent<PatientFollowUpAuditDTO> event = new AuditUpdateEvent<>(beforeDTO, afterDTO);
         String detailsJson = jsonService.toJson(event);
         auditLogService.log(ActionType.UPDATE,
                 ResourceType.PATIENT_FOLLOW_UP,
@@ -37,5 +39,44 @@ public class PatientFollowUpAuditHelper {
                 "Updated patient follow-up record",
                 detailsJson
         );
+    }
+
+    public void logArchive(PatientFollowUp followUp) {
+        PatientFollowUpAuditDTO dto = toAuditDTO(followUp);
+        String detailsJson = jsonService.toJson(dto);
+        auditLogService.log(ActionType.ARCHIVE,
+                ResourceType.PATIENT_FOLLOW_UP,
+                followUp.getFollowUpId(),
+                "Archived patient follow-up record",
+                detailsJson
+        );
+    }
+
+    public void logRestore(PatientFollowUp followUp) {
+        PatientFollowUpAuditDTO dto = toAuditDTO(followUp);
+        String detailsJson = jsonService.toJson(dto);
+        auditLogService.log(ActionType.RESTORE,
+                ResourceType.PATIENT_FOLLOW_UP,
+                followUp.getFollowUpId(),
+                "Restored patient follow-up record",
+                detailsJson
+        );
+    }
+
+    private PatientFollowUpAuditDTO toAuditDTO(PatientFollowUp entity) {
+        PatientFollowUpAuditDTO dto = new PatientFollowUpAuditDTO();
+        dto.setFollowUpId(entity.getFollowUpId());
+        dto.setPatientId(entity.getPatient() != null ? entity.getPatient().getPatientId() : null);
+        dto.setPrescriptionId(entity.getPrescription() != null ? entity.getPrescription().getPrescriptionId() : null);
+        dto.setEyeExamId(entity.getEyeExam() != null ? entity.getEyeExam().getEyeExamId() : null);
+        dto.setScheduledDate(entity.getScheduledDate());
+        dto.setActualVisitDate(entity.getActualVisitDate());
+        dto.setStatus(entity.getStatus() != null ? entity.getStatus().name() : null);
+        dto.setFollowUpReason(entity.getFollowUpReason());
+        dto.setIsArchived(entity.getIsArchived());
+        dto.setCreatedAt(entity.getCreatedAt());
+        dto.setUpdatedAt(entity.getUpdatedAt());
+        dto.setCreatedByUserId(entity.getCreatedBy() != null ? entity.getCreatedBy().getUserId() : null);
+        return dto;
     }
 }
