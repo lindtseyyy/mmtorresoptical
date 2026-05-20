@@ -33,6 +33,7 @@ import RefundDrawer from "./RefundDrawer";
 import RefundReceipt from "./RefundReceipt";
 import PrintableReceipt from "./PrintableReceipt";
 import AddPaymentDrawer from "./AddPaymentDrawer";
+import PaymentReceipt from "./PaymentReceipt";
 
 const formatDate = (dateStr: string | null) => {
   if (!dateStr) return "—";
@@ -107,11 +108,13 @@ const ViewTransaction: React.FC = () => {
   const addPaymentMutation = useMutation({
     mutationFn: (data: { amount: number; paymentMethod: string; referenceNumber?: string }) =>
       addPayment(transactionId, data),
-    onSuccess: () => {
+    onSuccess: (payment: PaymentResponse) => {
       queryClient.invalidateQueries({ queryKey: ["transaction", transactionId] });
       queryClient.invalidateQueries({ queryKey: ["transactions"] });
       toast.success("Payment added successfully");
       setPaymentDrawerOpen(false);
+      setLastPayment(payment);
+      setPaymentReceiptOpen(true);
     },
     onError: (error: any) => {
       toast.error(error?.response?.data?.message ?? error?.message ?? "Payment failed");
@@ -143,6 +146,10 @@ const ViewTransaction: React.FC = () => {
 
   // ── Payment drawer state ──
   const [paymentDrawerOpen, setPaymentDrawerOpen] = useState(false);
+
+  // ── Payment receipt state ──
+  const [paymentReceiptOpen, setPaymentReceiptOpen] = useState(false);
+  const [lastPayment, setLastPayment] = useState<PaymentResponse | null>(null);
 
   // ── Complete dialog state ──
   const [completeDialogOpen, setCompleteDialogOpen] = useState(false);
@@ -891,6 +898,19 @@ const ViewTransaction: React.FC = () => {
         transaction={tx}
         printMode="UPDATED"
       />
+
+      {/* Payment Receipt Dialog */}
+      {tx && lastPayment && (
+        <PaymentReceipt
+          open={paymentReceiptOpen}
+          onClose={() => {
+            setPaymentReceiptOpen(false);
+            setLastPayment(null);
+          }}
+          transaction={tx}
+          payment={lastPayment}
+        />
+      )}
     </div>
   );
 };

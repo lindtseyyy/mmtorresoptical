@@ -227,6 +227,8 @@ public class TransactionService {
         transaction.setTransactionStatus(computeStatus(transaction.getTotalAmount(), newAmountPaid));
         transactionRepository.save(transaction);
 
+        transactionAuditHelper.logPayment(transaction);
+
         PaymentResponseDTO response = new PaymentResponseDTO();
         response.setId(payment.getId());
         response.setAmount(payment.getAmount());
