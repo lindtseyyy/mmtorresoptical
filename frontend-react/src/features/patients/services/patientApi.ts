@@ -117,6 +117,7 @@ export interface EyeExamListItem {
   chiefComplaint: string | null;
   clinicalImpression: string | null;
   isArchived: boolean;
+  status: string | null;
   performedBy: { userId: string; fullName: string } | null;
 }
 
@@ -134,10 +135,10 @@ const fetchPatientPrescriptions = async (
   patientId: string,
   page = 0,
   size = 5,
-  archivedStatus = "ALL",
+  status = "ALL",
 ): Promise<{ content: PrescriptionListItem[]; totalPages: number; totalElements: number }> => {
   const { data } = await api.get(`/admin/patient/${patientId}/prescriptions`, {
-    params: { page, size, sortBy: "issueDate", sortOrder: "desc", archivedStatus },
+    params: { page, size, sortBy: "issueDate", sortOrder: "desc", status },
   });
   return {
     content: data.content,
@@ -150,10 +151,10 @@ const fetchPatientEyeExams = async (
   patientId: string,
   page = 0,
   size = 5,
-  archivedStatus = "ALL",
+  status = "ALL",
 ): Promise<{ content: EyeExamListItem[]; totalPages: number; totalElements: number }> => {
   const { data } = await api.get(`/admin/patients/${patientId}/eye-exams`, {
-    params: { page, size, sortBy: "createdAt", sortOrder: "desc", archivedStatus },
+    params: { page, size, sortBy: "createdAt", sortOrder: "desc", status },
   });
   return {
     content: data.content,

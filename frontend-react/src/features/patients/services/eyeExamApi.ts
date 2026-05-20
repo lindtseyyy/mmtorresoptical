@@ -31,6 +31,10 @@ export interface EyeExamResponse {
   clinicalImpression: string | null;
   planNotes: string | null;
   isArchived: boolean;
+  status: string | null;
+  voidReason: string | null;
+  voidedAt: string | null;
+  voidedBy: { userId: string; fullName: string } | null;
   performedBy: { userId: string; fullName: string } | null;
 }
 
@@ -44,4 +48,8 @@ const getEyeExam = async (id: string): Promise<EyeExamResponse> => {
   return data;
 };
 
-export { createEyeExam, getEyeExam };
+const voidEyeExam = async (id: string, voidReason: string): Promise<void> => {
+  await api.post(`/admin/eye-exams/${id}/void`, { voidReason });
+};
+
+export { createEyeExam, getEyeExam, voidEyeExam };
