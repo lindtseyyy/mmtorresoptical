@@ -61,6 +61,7 @@ export interface PrescriptionResponse {
   notes: string | null;
   status: string;
   eyeExamId?: string | null;
+  eyeExamNumber?: string | null;
   createdAt: string;
   isArchived: boolean;
   createdBy: { userId: string; fullName: string } | null;

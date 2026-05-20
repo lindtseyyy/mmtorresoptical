@@ -58,12 +58,22 @@ const fetchFollowUpsByPrescription = async (prescriptionId: string): Promise<Pat
   return data;
 };
 
-const fetchFollowUpsByPatient = async (patientId: string, status?: string, includeArchived = false): Promise<PatientFollowUp[]> => {
-  const params: Record<string, string | boolean> = {};
+const fetchFollowUpsByPatient = async (
+  patientId: string,
+  status?: string,
+  includeArchived = false,
+  page = 0,
+  size = 5,
+): Promise<{ content: PatientFollowUp[]; totalPages: number; totalElements: number }> => {
+  const params: Record<string, string | boolean | number> = { page, size, sort: "scheduledDate,desc" };
   if (status) params.status = status;
   if (includeArchived) params.includeArchived = true;
   const { data } = await api.get(`/follow-ups/patient/${patientId}`, { params });
-  return data;
+  return {
+    content: data.content,
+    totalPages: data.page.totalPages,
+    totalElements: data.page.totalElements,
+  };
 };
 
 const updateFollowUpStatus = async (followUpId: string, status: string): Promise<PatientFollowUp> => {

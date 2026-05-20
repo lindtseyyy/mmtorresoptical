@@ -144,13 +144,17 @@ const ViewPatient: React.FC = () => {
 
   const [fuFilter, setFuFilter] = useState("ACTIVE");
   const [fuStatusFilter, setFuStatusFilter] = useState("PENDING");
+  const [fuPage, setFuPage] = useState(0);
   const { data: followUps, isLoading: followUpsLoading } = useQuery({
-    queryKey: ["patient-follow-ups", patientId, fuFilter, fuStatusFilter],
+    queryKey: ["patient-follow-ups", patientId, fuFilter, fuStatusFilter, fuPage],
     queryFn: () => fetchFollowUpsByPatient(
       patientId,
       fuStatusFilter !== "ALL" ? fuStatusFilter : undefined,
-      fuFilter === "ARCHIVED"
+      fuFilter === "ARCHIVED",
+      fuPage,
+      5,
     ),
+    placeholderData: keepPreviousData,
     enabled: !!patientId,
   });
 
@@ -381,7 +385,7 @@ const ViewPatient: React.FC = () => {
             <div className="flex items-center gap-3">
               <div className="flex items-center gap-2">
                 <span className="text-sm text-muted-foreground">Status:</span>
-                <Select value={fuStatusFilter} onValueChange={(v) => setFuStatusFilter(v)}>
+                <Select value={fuStatusFilter} onValueChange={(v) => { setFuStatusFilter(v); setFuPage(0); }}>
                   <SelectTrigger className="w-[130px]">
                     <SelectValue />
                   </SelectTrigger>
@@ -395,7 +399,7 @@ const ViewPatient: React.FC = () => {
                 </Select>
               </div>
               <div className="flex items-center gap-2">
-                <Select value={fuFilter} onValueChange={(v) => setFuFilter(v)}>
+                <Select value={fuFilter} onValueChange={(v) => { setFuFilter(v); setFuPage(0); }}>
                   <SelectTrigger className="w-[110px]">
                     <SelectValue />
                   </SelectTrigger>
@@ -415,13 +419,13 @@ const ViewPatient: React.FC = () => {
         <CardContent>
           {followUpsLoading ? (
             <p className="py-4 text-center text-sm text-muted-foreground">Loading follow-ups...</p>
-          ) : !followUps || followUps.length === 0 ? (
+          ) : !followUps || followUps.content.length === 0 ? (
             <p className="py-4 text-center text-sm text-muted-foreground">
               {fuFilter === "ARCHIVED" ? "No archived follow-ups." : "No follow-ups scheduled."}
             </p>
           ) : (
             <div className="space-y-3">
-              {followUps.map((fu: PatientFollowUp) => (
+              {followUps.content.map((fu: PatientFollowUp) => (
                 <div
                   key={fu.followUpId}
                   className={`rounded-lg border p-4 transition-colors bg-muted/60 hover:bg-muted${fu.isArchived ? " opacity-60" : ""}`}
@@ -536,6 +540,33 @@ const ViewPatient: React.FC = () => {
                   </div>
                 </div>
               ))}
+              {followUps.totalPages > 1 && (
+                <div className="flex items-center justify-between pt-2">
+                  <p className="text-xs text-muted-foreground">
+                    Page {fuPage + 1} of {followUps.totalPages}
+                  </p>
+                  <div className="flex gap-1">
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      onClick={() => setFuPage((p) => p - 1)}
+                      disabled={fuPage === 0}
+                    >
+                      <ChevronLeft className="h-4 w-4" />
+                      Previous
+                    </Button>
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      onClick={() => setFuPage((p) => p + 1)}
+                      disabled={fuPage >= followUps.totalPages - 1}
+                    >
+                      Next
+                      <ChevronRight className="h-4 w-4" />
+                    </Button>
+                  </div>
+                </div>
+              )}
             </div>
           )}
         </CardContent>
@@ -1085,6 +1116,9 @@ const ViewPatient: React.FC = () => {
               <DialogTitle>Prescription Details — {viewRxData.rxNumber}</DialogTitle>
               <DialogDescription>
                 Date Issued: {formatDate(viewRxData.issueDate)}
+                {viewRxData.eyeExamNumber && (
+                  <><br />Linked Exam: {viewRxData.eyeExamNumber}</>
+                )}
               </DialogDescription>
             </DialogHeader>
             <div className="space-y-4">

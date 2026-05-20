@@ -107,6 +107,7 @@ export interface PrescriptionListItem {
   isArchived: boolean;
   status: string;
   eyeExamId: string | null;
+  eyeExamNumber: string | null;
   createdBy: { userId: string; fullName: string } | null;
 }
 
