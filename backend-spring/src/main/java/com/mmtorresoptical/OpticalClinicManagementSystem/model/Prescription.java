@@ -8,6 +8,8 @@ import lombok.Getter;
 import lombok.Setter;
 import org.hibernate.annotations.ColumnDefault;
 import org.hibernate.annotations.CreationTimestamp;
+import org.hibernate.annotations.Generated;
+import org.hibernate.annotations.GenerationTime;
 
 import java.time.LocalDate;
 import java.time.LocalDateTime;
@@ -33,6 +35,7 @@ public class Prescription {
     @Column(name = "notes", columnDefinition = "TEXT")
     private String notes;
 
+    @Generated(GenerationTime.INSERT)
     @Column(name = "rx_number", unique = true, insertable = false, updatable = false)
     private String rxNumber;
 

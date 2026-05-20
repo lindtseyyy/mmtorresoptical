@@ -1,4 +1,4 @@
-import { useState, useLayoutEffect } from "react";
+import { useState, useLayoutEffect, useEffect } from "react";
 import { useNavigate, useSearchParams, Link } from "react-router-dom";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useForm, useFieldArray, type SubmitHandler } from "react-hook-form";
@@ -32,7 +32,11 @@ import {
 import { Switch } from "@/shared/components/ui/switch";
 import { Textarea } from "@/shared/components/ui/textarea";
 import { toast } from "sonner";
-import { createPrescription, type CreatePrescriptionInput } from "@/features/patients/services/prescriptionApi";
+import {
+  createPrescription,
+  fetchPrescription,
+  type CreatePrescriptionInput,
+} from "@/features/patients/services/prescriptionApi";
 import { fetchPatientEyeExams, type EyeExamListItem } from "@/features/patients/services/patientApi";
 
 const prescriptionItemSchema = z.object({
@@ -91,6 +95,7 @@ const AddPrescription: React.FC = () => {
   const [searchParams] = useSearchParams();
   const patientId = searchParams.get("patientId") ?? "";
   const patientName = searchParams.get("patientName") ?? "";
+  const cloneFrom = searchParams.get("cloneFrom");
 
   useLayoutEffect(() => {
     const scrollToTop = () => {
@@ -140,6 +145,45 @@ const AddPrescription: React.FC = () => {
       return next;
     });
   };
+
+  const { data: sourceRx } = useQuery({
+    queryKey: ["prescription", cloneFrom],
+    queryFn: () => fetchPrescription(cloneFrom!),
+    enabled: !!cloneFrom,
+  });
+
+  useEffect(() => {
+    if (sourceRx) {
+      const items = sourceRx.prescriptionItems.map((item) => ({
+        correctionType: item.correctionType,
+        eyeSide: item.eyeSide,
+        sph: item.sph != null ? String(item.sph) : "",
+        cyl: item.cyl != null ? String(item.cyl) : "",
+        axis: item.axis != null ? String(item.axis) : "",
+        addPower: item.addPower != null ? String(item.addPower) : "",
+        pd: item.pd != null ? String(item.pd) : "",
+        lensType: item.lensType ?? "",
+        frameTypePreference: item.frameTypePreference ?? "",
+        lensCoatings: item.lensCoatings ?? "",
+        lensMaterial: item.lensMaterial ?? "",
+        lensWearType: item.lensWearType ?? "",
+        lensMaterialCl: item.lensMaterialCl ?? "",
+        baseCurve: item.baseCurve != null ? String(item.baseCurve) : "",
+        diameter: item.diameter != null ? String(item.diameter) : "",
+        notes: item.notes ?? "",
+      }));
+      form.reset({
+        issueDate: "",
+        notes: sourceRx.notes ?? "",
+        followUpScheduledDate: "",
+        followUpReason: "",
+        prescriptionSource: sourceRx.eyeExamId ? "internal" : "outside",
+        eyeExamId: sourceRx.eyeExamId ?? "",
+        items: items.length > 0 ? items : [{ ...emptyItem }],
+      });
+      setExpandedItems(new Set(items.map((_, i) => i)));
+    }
+  }, [sourceRx]);
 
   const { data: eyeExamsData } = useQuery({
     queryKey: ["patient-eye-exams", patientId, "ACTIVE"],
@@ -208,7 +252,11 @@ const AddPrescription: React.FC = () => {
       <div className="flex items-start justify-between">
         <div>
           <h2 className="text-3xl font-bold">
-            {form.watch("prescriptionSource") === "outside" ? "Add Prescription — Manual Intake (Outside Rx)" : "Add Prescription"}
+            {cloneFrom
+              ? "Re-issue Prescription"
+              : form.watch("prescriptionSource") === "outside"
+                ? "Add Prescription — Manual Intake (Outside Rx)"
+                : "Add Prescription"}
           </h2>
           <p className="text-muted-foreground">
             For {patientName || "patient"}

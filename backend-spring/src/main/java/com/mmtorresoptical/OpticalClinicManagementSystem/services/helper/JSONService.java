@@ -86,11 +86,18 @@ public class JSONService {
                 return sanitizePatientAuditJson(node);
             }
 
-            // ── CREATE / ARCHIVE / RESTORE Prescription: group items by eye side, hide UUIDs ──
+            // ── VOID Prescription: minimal fields only ──
+            if ("VOID".equals(actionType)
+                    && node.has("prescriptionId") && node.has("issueDate")
+                    && (node.has("rightEye") || node.has("leftEye") || node.has("bothEyes"))) {
+                return sanitizePrescriptionAuditJson(node, false);
+            }
+
+            // ── CREATE / ARCHIVE / RESTORE Prescription: include rxNumber + eye groups, hide UUIDs ──
             if (("CREATE".equals(actionType) || "ARCHIVE".equals(actionType) || "RESTORE".equals(actionType))
                     && node.has("prescriptionId") && node.has("issueDate")
                     && (node.has("rightEye") || node.has("leftEye") || node.has("bothEyes"))) {
-                return sanitizePrescriptionAuditJson(node);
+                return sanitizePrescriptionAuditJson(node, true);
             }
 
             // ── UPDATE Patient: only return fields that actually changed ──
@@ -284,9 +291,12 @@ public class JSONService {
         target.put("fullName", fullName.trim());
     }
 
-    private String sanitizePrescriptionAuditJson(ObjectNode node) throws JsonProcessingException {
+    private String sanitizePrescriptionAuditJson(ObjectNode node, boolean includeRxNumber) throws JsonProcessingException {
         ObjectNode clean = objectMapper.createObjectNode();
 
+        if (includeRxNumber && node.has("rxNumber") && !node.get("rxNumber").isNull()) {
+            clean.put("rxNumber", node.get("rxNumber").asText());
+        }
         if (node.has("issueDate") && !node.get("issueDate").isNull()) {
             clean.put("issueDate", formatBirthDate(node.get("issueDate").asText()));
         }

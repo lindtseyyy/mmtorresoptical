@@ -33,7 +33,7 @@ import {
   type EyeExamListItem,
 } from "@/features/patients/services/patientApi";
 import { createArchivePatientMutationOptions } from "@/features/patients/hooks/patientQuery";
-import { voidPrescription, clonePrescription, fetchPrescription, type PrescriptionResponse } from "@/features/patients/services/prescriptionApi";
+import { voidPrescription, fetchPrescription, type PrescriptionResponse } from "@/features/patients/services/prescriptionApi";
 import { getEyeExam, voidEyeExam } from "@/features/patients/services/eyeExamApi";
 import { fetchFollowUpsByPatient, updateFollowUpStatus, createFollowUp, updateFollowUp, archiveFollowUp, restoreFollowUp, type PatientFollowUp, type CreateFollowUpInput } from "@/features/patients/services/followUpApi";
 import api from "@/shared/lib/axiosInstance";
@@ -216,15 +216,6 @@ const ViewPatient: React.FC = () => {
     setFuModal({ open: true, edit: fu });
   };
 
-  const handleClone = async (prescriptionId: string) => {
-    try {
-      await clonePrescription(prescriptionId);
-      toast.success("Prescription cloned successfully");
-      queryClient.invalidateQueries({ queryKey: ["patient-prescriptions"] });
-    } catch (err: any) {
-      toast.error(err?.response?.data || "Failed to clone prescription");
-    }
-  };
 
   if (patientLoading) {
     return (
@@ -630,7 +621,7 @@ const ViewPatient: React.FC = () => {
                           <Badge variant="secondary" className="bg-gray-500 text-white">Archived</Badge>
                         )}
                         {rx.status === "VOIDED" && (
-                          <Badge variant="destructive" className="ml-2">VOIDED</Badge>
+                          <Badge className="ml-2 bg-red-800 text-white">Voided</Badge>
                         )}
                       </div>
                       {rx.notes && (
@@ -653,19 +644,23 @@ const ViewPatient: React.FC = () => {
                           <Eye className="mr-2 h-4 w-4" />
                           View Details
                         </DropdownMenuItem>
-                        {!rx.isArchived && (
+                        {!rx.isArchived && rx.status !== "VOIDED" && (
                           <DropdownMenuItem
                             onClick={() => setVoidRxDialog(rx)}
                             className="text-red-600"
                           >
                             <Ban className="mr-2 h-4 w-4" />
-                            Void
+                            Void {rx.rxNumber}
                           </DropdownMenuItem>
                         )}
                         {rx.status === "VOIDED" && (
-                          <DropdownMenuItem onClick={() => handleClone(rx.prescriptionId)}>
-                            <Copy className="mr-2 h-4 w-4" />
-                            Clone & Re-issue
+                          <DropdownMenuItem asChild>
+                            <Link
+                              to={`/patients/add/prescription?patientId=${patientId}&patientName=${encodeURIComponent(fullName)}&cloneFrom=${rx.prescriptionId}`}
+                            >
+                              <Copy className="mr-2 h-4 w-4" />
+                              Clone & Re-issue
+                            </Link>
                           </DropdownMenuItem>
                         )}
                       </DropdownMenuContent>
@@ -760,7 +755,7 @@ const ViewPatient: React.FC = () => {
                           {ee.examNumber}
                         </span>
                         {ee.status === "VOIDED" && (
-                          <Badge variant="destructive">VOIDED</Badge>
+                          <Badge className="bg-red-800 text-white">Voided</Badge>
                         )}
                       </div>
 
@@ -906,7 +901,7 @@ const ViewPatient: React.FC = () => {
             </DialogHeader>
             <div className="space-y-4">
               {viewEeData.status === "VOIDED" && (
-                <Badge variant="destructive">VOIDED</Badge>
+                <Badge className="bg-red-800 text-white">Voided</Badge>
               )}
               {viewEeData.chiefComplaint && (
                 <div>
@@ -979,14 +974,18 @@ const ViewPatient: React.FC = () => {
         <DialogHeader>
           <DialogTitle>Void Prescription</DialogTitle>
           <DialogDescription>
-            Are you sure you want to void the prescription from {voidRxDialog ? formatDate(voidRxDialog.issueDate) : ""}? This action cannot be undone.
+            Are you sure you want to void{" "}
+            <strong>{voidRxDialog ? voidRxDialog.rxNumber : "this prescription"}</strong>{" "}
+            from{" "}
+            <strong>{voidRxDialog ? formatDate(voidRxDialog.issueDate) : ""}</strong>
+            ? This action cannot be undone.
           </DialogDescription>
         </DialogHeader>
         <div className="space-y-4">
           <div>
             <label className="text-sm font-medium">Reason for voiding</label>
             <textarea
-              className="w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 mt-1"
+              className="w-full rounded-md border border-gray-300 dark:border-gray-600 bg-background px-3 py-2 text-sm ring-offset-background placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 mt-1"
               placeholder="Enter reason (at least 10 characters)..."
               rows={3}
               value={voidReason}
@@ -999,6 +998,7 @@ const ViewPatient: React.FC = () => {
             </Button>
             <Button
               variant="destructive"
+              className="bg-red-800 hover:bg-red-900 text-white"
               disabled={voidReason.length < 10 || voiding}
               onClick={async () => {
                 if (!voidRxDialog) return;
@@ -1124,11 +1124,12 @@ const ViewPatient: React.FC = () => {
             <div className="space-y-4">
               {/* Status badges */}
               <div className="flex items-center gap-2">
-                <Badge className={viewRxData.isArchived ? "bg-gray-500 text-white" : "bg-green-700 text-white"}>
-                  {viewRxData.isArchived ? "Archived" : "Active"}
-                </Badge>
-                {viewRxData.status === "VOIDED" && (
-                  <Badge variant="destructive">VOIDED</Badge>
+                {viewRxData.status === "VOIDED" ? (
+                  <Badge className="bg-red-800 text-white">Voided</Badge>
+                ) : (
+                  <Badge className={viewRxData.isArchived ? "bg-gray-500 text-white" : "bg-green-700 text-white"}>
+                    {viewRxData.isArchived ? "Archived" : "Active"}
+                  </Badge>
                 )}
               </div>
 
@@ -1191,11 +1192,6 @@ const ViewPatient: React.FC = () => {
                   </div>
                 )}
               </div>
-            </div>
-            <div className="flex justify-end pt-4">
-              <Button variant="outline" onClick={() => setViewRxId(null)}>
-                Close
-              </Button>
             </div>
           </>
         )}

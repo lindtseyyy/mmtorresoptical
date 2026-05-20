@@ -32,10 +32,11 @@ public class PrescriptionAuditHelper implements AuditLogHelper<Prescription> {
     @Override
     public void logCreate(Prescription prescription) {
         String detailsJson = buildDetailsJson(prescription);
+        String rxNumber = prescription.getRxNumber();
         auditLogService.log(ActionType.CREATE,
                 ResourceType.PRESCRIPTION,
                 prescription.getPrescriptionId(),
-                "Created prescription record",
+                rxNumber != null ? "Created prescription record: " + rxNumber : "Created prescription record",
                 detailsJson
         );
     }
@@ -85,10 +86,11 @@ public class PrescriptionAuditHelper implements AuditLogHelper<Prescription> {
 
     public void logVoid(Prescription prescription) {
         String detailsJson = buildDetailsJson(prescription);
+        String rxNumber = prescription.getRxNumber();
         auditLogService.log(ActionType.VOID,
                 ResourceType.PRESCRIPTION,
                 prescription.getPrescriptionId(),
-                "Voided prescription record",
+                rxNumber != null ? "Voided prescription record: " + rxNumber : "Voided prescription record",
                 detailsJson
         );
     }
@@ -99,6 +101,39 @@ public class PrescriptionAuditHelper implements AuditLogHelper<Prescription> {
                 prescriptionItemMapper.entityListToAuditDTOList(prescription.getPrescriptionItems());
 
         ObjectNode root = objectMapper.valueToTree(auditDTO);
+
+        ArrayNode rightEye = objectMapper.createArrayNode();
+        ArrayNode leftEye = objectMapper.createArrayNode();
+        ArrayNode bothEyes = objectMapper.createArrayNode();
+
+        for (PrescriptionItemAuditDTO item : itemDTOs) {
+            ObjectNode itemNode = objectMapper.valueToTree(item);
+            String side = item.getEyeSide() != null ? item.getEyeSide().toUpperCase() : "";
+            switch (side) {
+                case "RIGHT" -> rightEye.add(itemNode);
+                case "LEFT" -> leftEye.add(itemNode);
+                case "BOTH" -> bothEyes.add(itemNode);
+                default -> rightEye.add(itemNode);
+            }
+        }
+
+        root.set("rightEye", rightEye);
+        root.set("leftEye", leftEye);
+        root.set("bothEyes", bothEyes);
+
+        return jsonService.toJson(root);
+    }
+
+    private String buildVoidDetailsJson(Prescription prescription) {
+        List<PrescriptionItemAuditDTO> itemDTOs =
+                prescriptionItemMapper.entityListToAuditDTOList(prescription.getPrescriptionItems());
+
+        ObjectNode root = objectMapper.createObjectNode();
+        root.put("issueDate", prescription.getIssueDate() != null ? prescription.getIssueDate().toString() : null);
+        root.put("notes", prescription.getNotes());
+        if (prescription.getCreatedAt() != null) {
+            root.put("createdAt", prescription.getCreatedAt().toString());
+        }
 
         ArrayNode rightEye = objectMapper.createArrayNode();
         ArrayNode leftEye = objectMapper.createArrayNode();
