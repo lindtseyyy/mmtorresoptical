@@ -76,6 +76,8 @@ const ManageSales: React.FC = () => {
     onSuccess: (data) => {
       queryClient.invalidateQueries({ queryKey: ["products"] });
       queryClient.invalidateQueries({ queryKey: ["inventory-summary"] });
+      queryClient.invalidateQueries({ queryKey: ["transaction-metrics"] });
+      queryClient.invalidateQueries({ queryKey: ["transactions"] });
       setLastReceipt(data);
       sessionStorage.removeItem(STORAGE_KEY);
       setCart([]);

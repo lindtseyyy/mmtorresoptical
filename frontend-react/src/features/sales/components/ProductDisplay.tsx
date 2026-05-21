@@ -26,7 +26,7 @@ const ProductCard: React.FC<{
   const [imgFailed, setImgFailed] = useState(false);
 
   return (
-    <div className="flex flex-col rounded-lg border border-border bg-card shadow-sm transition-shadow hover:shadow-md overflow-hidden">
+    <div className={`flex flex-col rounded-lg border border-border bg-card shadow-sm transition-shadow hover:shadow-md overflow-hidden${outOfStock ? " opacity-50" : ""}`}>
       <div className="aspect-[4/3] bg-muted/50 flex items-center justify-center overflow-hidden relative">
         {product.imageDir && !imgFailed ? (
           <img
@@ -158,6 +158,9 @@ const ProductDisplay: React.FC<ProductDisplayProps> = ({
 
     const effectiveSortBy = !isPhysical && sortBy === "quantity" ? "name" : sortBy;
     result.sort((a, b) => {
+      const aOos = a.productType === "PHYSICAL" && a.quantity === 0 ? 1 : 0;
+      const bOos = b.productType === "PHYSICAL" && b.quantity === 0 ? 1 : 0;
+      if (aOos !== bOos) return aOos - bOos;
       let cmp: number;
       switch (effectiveSortBy) {
         case "price":
