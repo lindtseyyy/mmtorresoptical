@@ -151,12 +151,13 @@ const ViewPatient: React.FC = () => {
   });
 
   const [fuFilter, setFuFilter] = useState("ALL");
+  const [fuStatusFilter, setFuStatusFilter] = useState("ALL");
   const [fuPage, setFuPage] = useState(0);
   const { data: followUps, isLoading: followUpsLoading } = useQuery({
-    queryKey: ["patient-follow-ups", patientId, fuFilter, fuPage],
+    queryKey: ["patient-follow-ups", patientId, fuFilter, fuStatusFilter, fuPage],
     queryFn: () => fetchFollowUpsByPatient(
       patientId,
-      undefined,
+      fuStatusFilter === "ALL" ? undefined : fuStatusFilter,
       fuFilter,
       fuPage,
       5,
@@ -384,6 +385,20 @@ const ViewPatient: React.FC = () => {
             </div>
             <div className="flex items-center gap-3">
               <div className="flex items-center gap-2">
+                <span className="text-sm text-muted-foreground whitespace-nowrap">Follow Up Status:</span>
+                <Select value={fuStatusFilter} onValueChange={(v) => { setFuStatusFilter(v); setFuPage(0); }}>
+                  <SelectTrigger className="w-[110px] h-8">
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="ALL">All Status</SelectItem>
+                    <SelectItem value="PENDING">Pending</SelectItem>
+                    <SelectItem value="COMPLETED">Completed</SelectItem>
+                    <SelectItem value="NO_SHOW">No Show</SelectItem>
+                    <SelectItem value="CANCELLED">Cancelled</SelectItem>
+                  </SelectContent>
+                </Select>
+                <span className="text-sm text-muted-foreground whitespace-nowrap">Status:</span>
                 <Select value={fuFilter} onValueChange={(v) => { setFuFilter(v); setFuPage(0); }}>
                   <SelectTrigger className="w-[110px] h-8">
                     <SelectValue />
