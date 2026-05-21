@@ -18,7 +18,7 @@ function createPatientsListQueryOptions(
   sortBy?: string,
   sortOrder?: string,
   archivedStatus?: string,
-  gender?: string,
+  sex?: string,
 ) {
   return queryOptions({
     queryKey: [
@@ -29,10 +29,10 @@ function createPatientsListQueryOptions(
       sortBy ?? "fullNameSortable",
       sortOrder ?? "asc",
       archivedStatus ?? "ACTIVE",
-      gender ?? "all",
+      sex ?? "all",
     ],
     queryFn: () =>
-      fetchPatients(page, size, keyword, sortBy, sortOrder, archivedStatus, gender),
+      fetchPatients(page, size, keyword, sortBy, sortOrder, archivedStatus, sex),
   });
 }
 

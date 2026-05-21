@@ -1,7 +1,6 @@
 package com.mmtorresoptical.OpticalClinicManagementSystem.enums;
 
-public enum Gender {
+public enum Sex {
     MALE,
-    FEMALE,
-    OTHERS
+    FEMALE
 }

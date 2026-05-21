@@ -26,7 +26,7 @@ const EditPatient: React.FC = () => {
         firstName: patient.firstName,
         middleName: patient.middleName ?? undefined,
         lastName: patient.lastName,
-        gender: patient.gender as "Male" | "Female" | "Other",
+        sex: patient.sex as "Male" | "Female",
         birthDate: patient.birthDate,
         email: patient.email,
         contactNumber: patient.contactNumber,

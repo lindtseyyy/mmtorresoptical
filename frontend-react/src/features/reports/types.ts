@@ -68,7 +68,6 @@ export interface PatientReportDataset {
   newPatientsInPeriod: number;
   maleCount: number;
   femaleCount: number;
-  otherGenderCount: number;
   ageGroupDistribution: AgeGroupStat[];
   totalVisits: number;
   completedVisits: number;

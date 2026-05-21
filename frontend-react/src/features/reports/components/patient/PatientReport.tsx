@@ -25,7 +25,7 @@ const PatientReport: React.FC<PatientReportProps> = ({
   onMinDateChange,
   onMaxDateChange,
 }) => {
-  const genderTotal = report.maleCount + report.femaleCount + report.otherGenderCount;
+  const sexTotal = report.maleCount + report.femaleCount;
   const ageTotal = report.ageGroupDistribution.reduce((sum, ag) => sum + ag.count, 0);
 
   return (
@@ -69,13 +69,13 @@ const PatientReport: React.FC<PatientReportProps> = ({
           <div className="grid grid-cols-1 gap-6 lg:grid-cols-2">
             <Card>
               <CardHeader className="bg-muted">
-                <CardTitle className="text-base">Gender Distribution</CardTitle>
+                <CardTitle className="text-base">Sex Distribution</CardTitle>
               </CardHeader>
               <CardContent className="p-0">
                 <table className="w-full text-sm">
                   <thead>
                     <tr className="border-b text-left text-muted-foreground">
-                      <th className="py-3 pl-6 pr-4 font-medium">Gender</th>
+                      <th className="py-3 pl-6 pr-4 font-medium">Sex</th>
                       <th className="py-3 pr-6 font-medium text-right">Count</th>
                     </tr>
                   </thead>
@@ -88,15 +88,9 @@ const PatientReport: React.FC<PatientReportProps> = ({
                       <td className="py-2.5 pl-6 pr-4 text-muted-foreground">Female</td>
                       <td className="py-2.5 pr-6 text-right font-medium">{number(report.femaleCount)}</td>
                     </tr>
-                    {report.otherGenderCount > 0 && (
-                      <tr className="border-b hover:bg-muted/50">
-                        <td className="py-2.5 pl-6 pr-4 text-muted-foreground">Others</td>
-                        <td className="py-2.5 pr-6 text-right font-medium">{number(report.otherGenderCount)}</td>
-                      </tr>
-                    )}
                     <tr className="bg-muted/30 font-semibold">
                       <td className="py-2.5 pl-6 pr-4">Total</td>
-                      <td className="py-2.5 pr-6 text-right">{number(genderTotal)}</td>
+                      <td className="py-2.5 pr-6 text-right">{number(sexTotal)}</td>
                     </tr>
                   </tbody>
                 </table>

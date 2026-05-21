@@ -39,7 +39,7 @@ const ManageUsers: React.FC = () => {
   const [sortBy, setSortBy] = useState("fullNameSortable");
   const [sortOrder, setSortOrder] = useState<"asc" | "desc">("asc");
   const [roleFilter, setRoleFilter] = useState("all");
-  const [genderFilter, setGenderFilter] = useState("all");
+  const [sexFilter, setSexFilter] = useState("all");
   const [page, setPage] = useState(0);
 
   useEffect(() => {
@@ -50,7 +50,7 @@ const ManageUsers: React.FC = () => {
   const currentUserId = getCurrentUserId();
 
   const { data: pageData, isLoading, isFetching } = useQuery({
-    ...createUsersListQueryOptions(page, PAGE_SIZE, debouncedSearchQuery, sortBy, sortOrder, roleFilter, genderFilter),
+    ...createUsersListQueryOptions(page, PAGE_SIZE, debouncedSearchQuery, sortBy, sortOrder, roleFilter, sexFilter),
     placeholderData: keepPreviousData,
   });
 
@@ -61,7 +61,7 @@ const ManageUsers: React.FC = () => {
   // Reset page when search or sort changes
   useEffect(() => {
     setPage(0);
-  }, [debouncedSearchQuery, sortBy, sortOrder, roleFilter, genderFilter]);
+  }, [debouncedSearchQuery, sortBy, sortOrder, roleFilter, sexFilter]);
 
   // If current page is empty and not the first page, step back
   useEffect(() => {
@@ -210,16 +210,15 @@ const ManageUsers: React.FC = () => {
                 </Select>
               </div>
               <div className="flex items-center gap-2">
-                <span className="text-sm text-muted-foreground whitespace-nowrap">Gender:</span>
-                <Select value={genderFilter} onValueChange={setGenderFilter}>
+                <span className="text-sm text-muted-foreground whitespace-nowrap">Sex:</span>
+                <Select value={sexFilter} onValueChange={setSexFilter}>
                   <SelectTrigger className="w-[130px]">
                     <SelectValue />
                   </SelectTrigger>
                   <SelectContent>
-                    <SelectItem value="all">All Genders</SelectItem>
+                    <SelectItem value="all">All</SelectItem>
                     <SelectItem value="MALE">Male</SelectItem>
                     <SelectItem value="FEMALE">Female</SelectItem>
-                    <SelectItem value="OTHERS">Other</SelectItem>
                   </SelectContent>
                 </Select>
               </div>
@@ -277,7 +276,7 @@ const ManageUsers: React.FC = () => {
                           <span className="block truncate">{user.contactNumber}</span>
                         </td>
                         <td className="py-3 pr-4 capitalize">
-                          <span className="block truncate">{user.gender}</span>
+                          <span className="block truncate">{user.sex}</span>
                         </td>
                         <td className="py-3">
                           {user.userId !== currentUserId ? (

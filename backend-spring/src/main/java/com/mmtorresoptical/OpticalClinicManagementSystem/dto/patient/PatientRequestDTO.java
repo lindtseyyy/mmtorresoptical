@@ -19,8 +19,8 @@ public class PatientRequestDTO {
     @Size(max = 50)
     private String lastName;
 
-    @NotBlank(message = "Gender is required")
-    private String gender;
+    @NotBlank(message = "Sex is required")
+    private String sex;
 
     @NotBlank(message = "Contact number is required")
     @Size(max = 15)

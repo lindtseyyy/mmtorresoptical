@@ -62,7 +62,7 @@ public class PdfBoxPatientReportGenerator {
                                          PatientReportDataset dataset) throws IOException {
         state = writePatientSummary(document, state, dataset);
         drawSectionSeparator(state.contentStream, state);
-        state = writeGenderDistribution(document, state, dataset);
+        state = writeSexDistribution(document, state, dataset);
         drawSectionSeparator(state.contentStream, state);
         state = writeAgeGroupTable(document, state, dataset.getAgeGroupDistribution());
         drawSectionSeparator(state.contentStream, state);
@@ -78,7 +78,7 @@ public class PdfBoxPatientReportGenerator {
                                            PatientReportDataset dataset) throws IOException {
         state = writeDateRangePatientSummary(document, state, dataset);
         drawSectionSeparator(state.contentStream, state);
-        state = writeGenderDistribution(document, state, dataset);
+        state = writeSexDistribution(document, state, dataset);
         drawSectionSeparator(state.contentStream, state);
         state = writeAgeGroupTable(document, state, dataset.getAgeGroupDistribution());
         drawSectionSeparator(state.contentStream, state);
@@ -107,14 +107,11 @@ public class PdfBoxPatientReportGenerator {
         return state;
     }
 
-    private PageState writeGenderDistribution(PDDocument document, PageState state,
+    private PageState writeSexDistribution(PDDocument document, PageState state,
                                               PatientReportDataset dataset) throws IOException {
-        state = writeSectionHeader(document, state, "Gender Distribution");
+        state = writeSectionHeader(document, state, "Sex Distribution");
         state = writeKeyValueLine(document, state, "Male", String.valueOf(dataset.getMaleCount()));
         state = writeKeyValueLine(document, state, "Female", String.valueOf(dataset.getFemaleCount()));
-        if (dataset.getOtherGenderCount() > 0) {
-            state = writeKeyValueLine(document, state, "Other", String.valueOf(dataset.getOtherGenderCount()));
-        }
         return state;
     }
 

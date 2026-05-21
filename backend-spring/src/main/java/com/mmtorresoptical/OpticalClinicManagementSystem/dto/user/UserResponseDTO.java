@@ -14,7 +14,7 @@ public class UserResponseDTO {
     private String firstName;
     private String middleName; // Optional
     private String lastName;
-    private String gender;
+    private String sex;
     private LocalDate birthDate;
     private String email;
     private String contactNumber;

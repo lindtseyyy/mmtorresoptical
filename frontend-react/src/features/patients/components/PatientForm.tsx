@@ -59,7 +59,7 @@ export const PatientForm: React.FC<PatientFormProps> = ({
       firstName: "",
       middleName: "",
       lastName: "",
-      gender: undefined,
+      sex: undefined,
       birthDate: "",
       email: "",
       contactNumber: "",
@@ -74,7 +74,7 @@ export const PatientForm: React.FC<PatientFormProps> = ({
       firstName: data.firstName ?? "",
       middleName: data.middleName ?? "",
       lastName: data.lastName ?? "",
-      gender: data.gender ?? "Other",
+      sex: data.sex ?? "Male",
       birthDate: data.birthDate ?? "",
       email: data.email ?? "",
       contactNumber: data.contactNumber ?? "",
@@ -142,23 +142,22 @@ export const PatientForm: React.FC<PatientFormProps> = ({
             <div className="grid gap-4 md:grid-cols-2">
               <FormField
                 control={form.control}
-                name="gender"
+                name="sex"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel>Gender *</FormLabel>
+                    <FormLabel>Sex *</FormLabel>
                     <Select
                       onValueChange={field.onChange}
                       defaultValue={field.value}
                     >
                       <FormControl>
                         <SelectTrigger>
-                          <SelectValue placeholder="Select gender" />
+                          <SelectValue placeholder="Select sex" />
                         </SelectTrigger>
                       </FormControl>
                       <SelectContent>
                         <SelectItem value="Male">Male</SelectItem>
                         <SelectItem value="Female">Female</SelectItem>
-                        <SelectItem value="Other">Other</SelectItem>
                       </SelectContent>
                     </Select>
                     <FormMessage />

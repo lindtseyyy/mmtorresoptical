@@ -2,21 +2,9 @@ import type { PageResponse } from "@/shared/types";
 import type { Patient, PatientFormData } from "@/features/patients/types";
 import api from "@/shared/lib/axiosInstance";
 
-const GENDER_TO_BACKEND: Record<string, string> = {
-  Male: "MALE",
-  Female: "FEMALE",
-  Other: "OTHERS",
-};
-
-const GENDER_FROM_BACKEND: Record<string, string> = {
-  MALE: "Male",
-  FEMALE: "Female",
-  OTHERS: "Other",
-};
-
 const mapPatientFromBackend = (patient: Patient): Patient => ({
   ...patient,
-  gender: GENDER_FROM_BACKEND[patient.gender] ?? patient.gender,
+  sex: patient.sex.charAt(0) + patient.sex.slice(1).toLowerCase(),
 });
 
 const fetchPatients = async (
@@ -26,7 +14,7 @@ const fetchPatients = async (
   sortBy = "fullNameSortable",
   sortOrder = "asc",
   archivedStatus = "ACTIVE",
-  gender?: string,
+  sex?: string,
 ): Promise<PageResponse<Patient>> => {
   const { data } = await api.get("/admin/patients", {
     params: {
@@ -36,7 +24,7 @@ const fetchPatients = async (
       sortOrder,
       archivedStatus,
       ...(keyword && { keyword }),
-      ...(gender && gender !== "all" && { gender }),
+      ...(sex && sex !== "all" && { sex }),
     },
   });
   return {
@@ -56,7 +44,7 @@ const fetchPatient = async (id: string): Promise<Patient> => {
 const addPatient = async (data: PatientFormData) => {
   const payload = {
     ...data,
-    gender: GENDER_TO_BACKEND[data.gender] ?? data.gender,
+    sex: data.sex.toUpperCase(),
   };
   return await api.post("/admin/patients", payload);
 };
@@ -70,7 +58,7 @@ const updatePatient = async ({
 }) => {
   const payload = {
     ...data,
-    gender: GENDER_TO_BACKEND[data.gender] ?? data.gender,
+    sex: data.sex.toUpperCase(),
   };
   return await api.put(`/admin/patients/${id}`, payload);
 };

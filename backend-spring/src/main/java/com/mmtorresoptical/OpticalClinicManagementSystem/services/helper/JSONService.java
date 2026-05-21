@@ -101,7 +101,7 @@ public class JSONService {
                 return sanitizeCreateTransactionAuditJson(node, performedBy);
             }
 
-            // ── CREATE / ARCHIVE / RESTORE User: remove internal IDs, format role / birthDate / gender ──
+            // ── CREATE / ARCHIVE / RESTORE User: remove internal IDs, format role / birthDate / sex ──
             if (("CREATE".equals(actionType) || "ARCHIVE".equals(actionType) || "RESTORE".equals(actionType))
                     && node.has("userId") && node.has("username")) {
                 return sanitizeUserAuditJson(node);
@@ -609,7 +609,7 @@ public class JSONService {
         copyField(clean, node, "username");
         copyField(clean, node, "email");
         copyField(clean, node, "contactNumber");
-        copyField(clean, node, "gender");
+        copyField(clean, node, "sex");
         copyField(clean, node, "birthDate");
 
         formatDisplayFields(clean);
@@ -623,7 +623,7 @@ public class JSONService {
         copyFullName(clean, node);
         copyField(clean, node, "email");
         copyField(clean, node, "contactNumber");
-        copyField(clean, node, "gender");
+        copyField(clean, node, "sex");
         copyField(clean, node, "createdAt");
 
         formatDisplayFields(clean);
@@ -671,7 +671,7 @@ public class JSONService {
             if ("birthDate".equals(field)) {
                 String raw = node.get(field).asText();
                 node.put(field, formatBirthDate(raw));
-            } else if ("gender".equals(field)) {
+            } else if ("sex".equals(field)) {
                 String raw = node.get(field).asText();
                 node.put(field, capitalizeWord(raw));
             }

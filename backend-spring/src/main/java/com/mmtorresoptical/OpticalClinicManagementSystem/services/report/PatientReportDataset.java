@@ -27,7 +27,6 @@ public class PatientReportDataset {
 
     private int maleCount;
     private int femaleCount;
-    private int otherGenderCount;
 
     private List<AgeGroupStat> ageGroupDistribution;
 

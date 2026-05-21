@@ -1,6 +1,6 @@
 package com.mmtorresoptical.OpticalClinicManagementSystem.repository;
 
-import com.mmtorresoptical.OpticalClinicManagementSystem.enums.Gender;
+import com.mmtorresoptical.OpticalClinicManagementSystem.enums.Sex;
 import com.mmtorresoptical.OpticalClinicManagementSystem.model.Patient;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
@@ -28,7 +28,7 @@ public interface PatientRepository extends JpaRepository<Patient, UUID>, JpaSpec
     // Aggregation queries for reports
     long countByIsArchived(boolean archived);
 
-    long countByGender(Gender gender);
+    long countBySex(Sex sex);
 
     @Query("SELECT COUNT(p) FROM Patient p WHERE p.createdAt >= :start AND p.createdAt < :end")
     long countByCreatedAtBetween(LocalDateTime start, LocalDateTime end);

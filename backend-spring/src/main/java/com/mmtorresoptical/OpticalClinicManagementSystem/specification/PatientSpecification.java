@@ -1,6 +1,6 @@
 package com.mmtorresoptical.OpticalClinicManagementSystem.specification;
 
-import com.mmtorresoptical.OpticalClinicManagementSystem.enums.Gender;
+import com.mmtorresoptical.OpticalClinicManagementSystem.enums.Sex;
 import com.mmtorresoptical.OpticalClinicManagementSystem.model.Patient;
 import org.springframework.data.jpa.domain.Specification;
 
@@ -20,12 +20,12 @@ public class PatientSpecification {
                 cb.equal(root.get("patientId"), patientId);
     }
 
-    public static Specification<Patient> hasGender(String gender) {
+    public static Specification<Patient> hasSex(String sex) {
         return (root, query, cb) -> {
-            if (gender == null || gender.equalsIgnoreCase("ALL")) {
+            if (sex == null || sex.equalsIgnoreCase("ALL")) {
                 return cb.conjunction();
             }
-            return cb.equal(root.get("gender"), Gender.valueOf(gender.toUpperCase()));
+            return cb.equal(root.get("sex"), Sex.valueOf(sex.toUpperCase()));
         };
     }
 

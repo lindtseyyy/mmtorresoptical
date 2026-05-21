@@ -12,7 +12,7 @@ public class UserAuditDTO {
     private String firstName;
     private String middleName;
     private String lastName;
-    private String gender;
+    private String sex;
     private LocalDate birthDate;
     private String email;
     private String contactNumber;

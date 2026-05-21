@@ -52,9 +52,9 @@ public class UserController {
                                                   @RequestParam(defaultValue = "ACTIVE") String archivedStatus,
                                                   @RequestParam(defaultValue = "") String keyword,
                                                   @RequestParam(defaultValue = "") String role,
-                                                  @RequestParam(defaultValue = "") String gender) {
+                                                  @RequestParam(defaultValue = "") String sex) {
 
-        Page<UserDetailsDTO> userDetailsDTOPage = userService.getAllUsers(page, size, sortBy, sortOrder, archivedStatus, keyword, role, gender);
+        Page<UserDetailsDTO> userDetailsDTOPage = userService.getAllUsers(page, size, sortBy, sortOrder, archivedStatus, keyword, role, sex);
 
         return ResponseEntity.ok(userDetailsDTOPage);
     }

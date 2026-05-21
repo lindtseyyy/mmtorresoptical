@@ -1,7 +1,7 @@
 package com.mmtorresoptical.OpticalClinicManagementSystem.model;
 
 import com.mmtorresoptical.OpticalClinicManagementSystem.converter.AesEncryptionConverter;
-import com.mmtorresoptical.OpticalClinicManagementSystem.enums.Gender;
+import com.mmtorresoptical.OpticalClinicManagementSystem.enums.Sex;
 import jakarta.persistence.*;
 import jakarta.validation.constraints.Email;
 import jakarta.validation.constraints.NotNull;
@@ -56,8 +56,8 @@ public class Patient {
 
     @Enumerated(EnumType.STRING)
     @NotNull
-    @Column(name = "gender", nullable = false, length = 10)
-    private Gender gender;
+    @Column(name = "sex", nullable = false, length = 10)
+    private Sex sex;
 
     @Convert(converter = AesEncryptionConverter.class)
     @Size(max = 15)

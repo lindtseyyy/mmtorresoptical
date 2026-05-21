@@ -2,19 +2,6 @@ import type { PageResponse } from "@/shared/types";
 import type { User, UserFormData, UserSummary } from "@/features/users/types";
 import api from "@/shared/lib/axiosInstance";
 
-// Backend enums use uppercase; frontend uses title case
-const GENDER_TO_BACKEND: Record<string, string> = {
-  Male: "MALE",
-  Female: "FEMALE",
-  Other: "OTHERS",
-};
-
-const GENDER_FROM_BACKEND: Record<string, string> = {
-  MALE: "Male",
-  FEMALE: "Female",
-  OTHERS: "Other",
-};
-
 const ROLE_TO_BACKEND: Record<string, string> = {
   Admin: "ADMIN",
   Staff: "STAFF",
@@ -25,9 +12,9 @@ const ROLE_FROM_BACKEND: Record<string, string> = {
   STAFF: "Staff",
 };
 
-const mapEnumsToBackend = (data: { gender?: string; role?: string }) => {
-  if (data.gender && GENDER_TO_BACKEND[data.gender]) {
-    data.gender = GENDER_TO_BACKEND[data.gender];
+const mapEnumsToBackend = (data: { sex?: string; role?: string }) => {
+  if (data.sex) {
+    data.sex = data.sex.toUpperCase();
   }
   if (data.role && ROLE_TO_BACKEND[data.role]) {
     data.role = ROLE_TO_BACKEND[data.role];
@@ -36,7 +23,7 @@ const mapEnumsToBackend = (data: { gender?: string; role?: string }) => {
 
 const mapUserFromBackend = (user: User): User => ({
   ...user,
-  gender: GENDER_FROM_BACKEND[user.gender] ?? user.gender,
+  sex: user.sex.charAt(0) + user.sex.slice(1).toLowerCase(),
   role: (ROLE_FROM_BACKEND[user.role] ?? user.role) as User["role"],
 });
 
@@ -48,7 +35,7 @@ const fetchUsers = async (
   sortBy = "fullNameSortable",
   sortOrder = "asc",
   role?: string,
-  gender?: string,
+  sex?: string,
   archivedStatus = "ACTIVE",
 ): Promise<PageResponse<User>> => {
   const { data } = await api.get("/admin/users", {
@@ -60,7 +47,7 @@ const fetchUsers = async (
       archivedStatus,
       ...(keyword && { keyword }),
       ...(role && role !== "all" && { role }),
-      ...(gender && gender !== "all" && { gender }),
+      ...(sex && sex !== "all" && { sex }),
     },
   });
   return {

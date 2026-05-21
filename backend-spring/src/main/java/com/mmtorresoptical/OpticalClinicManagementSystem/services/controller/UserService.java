@@ -82,7 +82,7 @@ public class UserService {
                                             String archivedStatus,
                                             String keyword,
                                             String role,
-                                            String gender) {
+                                            String sex) {
 
         Sort.Direction direction;
         try {
@@ -120,9 +120,9 @@ public class UserService {
                 predicates.add(cb.equal(root.get("role").as(String.class), role.toUpperCase()));
             }
 
-            // Gender filter
-            if (gender != null && !gender.isBlank()) {
-                predicates.add(cb.equal(root.get("gender").as(String.class), gender.toUpperCase()));
+            // Sex filter
+            if (sex != null && !sex.isBlank()) {
+                predicates.add(cb.equal(root.get("sex").as(String.class), sex.toUpperCase()));
             }
 
             return cb.and(predicates.toArray(new Predicate[0]));

@@ -113,7 +113,7 @@ export const UserForm: React.FC<UserFormProps> = ({
       firstName: "",
       middleName: "",
       lastName: "",
-      gender: undefined,
+      sex: undefined,
       birthDate: "",
       email: "",
       contactNumber: "",
@@ -133,7 +133,7 @@ export const UserForm: React.FC<UserFormProps> = ({
       firstName: rest.firstName ?? "",
       middleName: rest.middleName ?? "",
       lastName: rest.lastName ?? "",
-      gender: rest.gender ?? "Other",
+      sex: rest.sex ?? "Male",
       birthDate: rest.birthDate ?? "",
       email: rest.email ?? "",
       contactNumber: rest.contactNumber ?? "",
@@ -203,23 +203,22 @@ export const UserForm: React.FC<UserFormProps> = ({
             <div className="grid gap-4 md:grid-cols-2">
               <FormField
                 control={form.control}
-                name="gender"
+                name="sex"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel>Gender *</FormLabel>
+                    <FormLabel>Sex *</FormLabel>
                     <Select
                       onValueChange={field.onChange}
                       defaultValue={field.value}
                     >
                       <FormControl>
                         <SelectTrigger>
-                          <SelectValue placeholder="Select gender" />
+                          <SelectValue placeholder="Select sex" />
                         </SelectTrigger>
                       </FormControl>
                       <SelectContent>
                         <SelectItem value="Male">Male</SelectItem>
                         <SelectItem value="Female">Female</SelectItem>
-                        <SelectItem value="Other">Other</SelectItem>
                       </SelectContent>
                     </Select>
                     <FormMessage />

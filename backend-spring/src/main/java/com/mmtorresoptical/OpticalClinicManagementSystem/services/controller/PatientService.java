@@ -6,7 +6,7 @@ import com.mmtorresoptical.OpticalClinicManagementSystem.dto.patient.PatientDeta
 import com.mmtorresoptical.OpticalClinicManagementSystem.dto.patient.PatientRequestDTO;
 import com.mmtorresoptical.OpticalClinicManagementSystem.dto.patient.PatientResponseDTO;
 import com.mmtorresoptical.OpticalClinicManagementSystem.dto.patient.PatientSearchResultDTO;
-import com.mmtorresoptical.OpticalClinicManagementSystem.enums.Gender;
+import com.mmtorresoptical.OpticalClinicManagementSystem.enums.Sex;
 import com.mmtorresoptical.OpticalClinicManagementSystem.exception.custom.ConflictException;
 import com.mmtorresoptical.OpticalClinicManagementSystem.exception.custom.ResourceNotFoundException;
 import com.mmtorresoptical.OpticalClinicManagementSystem.mapper.PatientMapper;
@@ -74,8 +74,8 @@ public class PatientService {
         patient.setMiddleNameHash(middleNameHash);
         patient.setLastNameHash(lastNameHash);
 
-        // Set patient gender
-        patient.setGender(Gender.valueOf(patientRequest.getGender()));
+        // Set patient sex
+        patient.setSex(Sex.valueOf(patientRequest.getSex()));
 
         // Set contact information
         patient.setContactNumber(patientRequest.getContactNumber());
@@ -113,7 +113,7 @@ public class PatientService {
                                                   String sortBy,
                                                   String sortOrder,
                                                   String archivedStatus,
-                                                  String gender) {
+                                                  String sex) {
 
         Specification<Patient> spec = Specification.allOf();
 
@@ -133,7 +133,7 @@ public class PatientService {
         );
 
         spec = spec.and(
-                PatientSpecification.hasGender(gender)
+                PatientSpecification.hasSex(sex)
         );
 
         // Determine sorting direction from request parameter

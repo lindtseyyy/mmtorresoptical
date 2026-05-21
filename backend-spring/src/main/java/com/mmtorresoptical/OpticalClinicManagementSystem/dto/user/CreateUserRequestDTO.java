@@ -20,8 +20,8 @@ public class CreateUserRequestDTO {
     @NotEmpty(message = "Last name is required")
     private String lastName;
 
-    @NotEmpty(message = "Gender is required")
-    private String gender;
+    @NotEmpty(message = "Sex is required")
+    private String sex;
 
     @NotNull(message = "Birth date is required")
     private LocalDate birthDate;

@@ -27,7 +27,7 @@ const ManagePatients: React.FC = () => {
   const [debouncedSearchQuery, setDebouncedSearchQuery] = useState(searchQuery);
   const [sortBy, setSortBy] = useState("fullNameSortable");
   const [sortOrder, setSortOrder] = useState<"asc" | "desc">("asc");
-  const [genderFilter, setGenderFilter] = useState("all");
+  const [sexFilter, setSexFilter] = useState("all");
   const [page, setPage] = useState(0);
 
   useEffect(() => {
@@ -37,7 +37,7 @@ const ManagePatients: React.FC = () => {
   const navigate = useNavigate();
 
   const { data: pageData, isLoading, isFetching } = useQuery({
-    ...createPatientsListQueryOptions(page, PAGE_SIZE, debouncedSearchQuery, sortBy, sortOrder, undefined, genderFilter),
+    ...createPatientsListQueryOptions(page, PAGE_SIZE, debouncedSearchQuery, sortBy, sortOrder, undefined, sexFilter),
     placeholderData: keepPreviousData,
   });
 
@@ -53,7 +53,7 @@ const ManagePatients: React.FC = () => {
 
   useEffect(() => {
     setPage(0);
-  }, [debouncedSearchQuery, sortBy, sortOrder, genderFilter]);
+  }, [debouncedSearchQuery, sortBy, sortOrder, sexFilter]);
 
   useEffect(() => {
     if (patients.length === 0 && page > 0 && !isFetching) {
@@ -136,15 +136,14 @@ const ManagePatients: React.FC = () => {
             <div className="flex flex-wrap items-center justify-end gap-4">
               <div className="flex items-center gap-2">
                 <span className="text-sm text-muted-foreground whitespace-nowrap">Gender:</span>
-                <Select value={genderFilter} onValueChange={setGenderFilter}>
+                <Select value={sexFilter} onValueChange={setSexFilter}>
                   <SelectTrigger className="w-[130px]">
                     <SelectValue />
                   </SelectTrigger>
                   <SelectContent>
-                    <SelectItem value="all">All Genders</SelectItem>
+                    <SelectItem value="all">All</SelectItem>
                     <SelectItem value="MALE">Male</SelectItem>
                     <SelectItem value="FEMALE">Female</SelectItem>
-                    <SelectItem value="OTHERS">Other</SelectItem>
                   </SelectContent>
                 </Select>
               </div>
@@ -184,7 +183,7 @@ const ManagePatients: React.FC = () => {
                           <span className="block truncate">{patient.email}</span>
                         </td>
                         <td className="py-3 pr-4 text-center capitalize">
-                          <span className="block truncate">{patient.gender}</span>
+                          <span className="block truncate">{patient.sex}</span>
                         </td>
                         <td className="py-3 pr-4 text-muted-foreground">
                           <span className="block truncate">{patient.contactNumber}</span>

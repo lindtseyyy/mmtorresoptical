@@ -13,20 +13,20 @@ import org.mapstruct.*;
 public interface PatientMapper {
 
     @Mapping(
-            target = "gender",
-            expression = "java(patient.getGender().name())"
+            target = "sex",
+            expression = "java(patient.getSex().name())"
     )
     PatientResponseDTO entityToResponse(Patient patient);
 
     @Mapping(
-            target = "gender",
-            expression = "java(patient.getGender().name())"
+            target = "sex",
+            expression = "java(patient.getSex().name())"
     )
     PatientDetailsDTO entityToDetailedResponse(Patient patient);
 
     @Mapping(
-            target = "gender",
-            expression = "java(patient.getGender().name())"
+            target = "sex",
+            expression = "java(patient.getSex().name())"
     )
     PatientAuditDTO entityToAuditDTO(Patient patient);
 

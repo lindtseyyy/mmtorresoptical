@@ -31,7 +31,7 @@ const EditUser: React.FC = () => {
         firstName: user.firstName,
         middleName: user.middleName ?? undefined,
         lastName: user.lastName,
-        gender: user.gender as "Male" | "Female" | "Other",
+        sex: user.sex as "Male" | "Female",
         birthDate: user.birthDate,
         email: user.email,
         contactNumber: user.contactNumber,

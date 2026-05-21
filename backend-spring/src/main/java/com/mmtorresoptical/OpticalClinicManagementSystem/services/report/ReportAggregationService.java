@@ -2,7 +2,7 @@ package com.mmtorresoptical.OpticalClinicManagementSystem.services.report;
 
 import com.mmtorresoptical.OpticalClinicManagementSystem.dto.metrics.TransactionMonthlyTrendPoint;
 import com.mmtorresoptical.OpticalClinicManagementSystem.dto.product.ProductDetailsDTO;
-import com.mmtorresoptical.OpticalClinicManagementSystem.enums.Gender;
+import com.mmtorresoptical.OpticalClinicManagementSystem.enums.Sex;
 import com.mmtorresoptical.OpticalClinicManagementSystem.enums.RefundStatus;
 import com.mmtorresoptical.OpticalClinicManagementSystem.enums.ReportType;
 import com.mmtorresoptical.OpticalClinicManagementSystem.enums.TransactionStatus;
@@ -246,9 +246,8 @@ public class ReportAggregationService {
         long activePatients = patientRepository.countByIsArchived(false);
         long archivedPatients = patientRepository.countByIsArchived(true);
 
-        int maleCount = (int) patientRepository.countByGender(Gender.MALE);
-        int femaleCount = (int) patientRepository.countByGender(Gender.FEMALE);
-        int otherGenderCount = (int) patientRepository.countByGender(Gender.OTHERS);
+        int maleCount = (int) patientRepository.countBySex(Sex.MALE);
+        int femaleCount = (int) patientRepository.countBySex(Sex.FEMALE);
 
         List<Patient> activePatientList = patientRepository.findAllActive();
         List<PatientReportDataset.AgeGroupStat> ageGroups = computeAgeGroupDistribution(activePatientList);
@@ -286,7 +285,6 @@ public class ReportAggregationService {
                 .newPatientsInPeriod(newPatientsInPeriod)
                 .maleCount(maleCount)
                 .femaleCount(femaleCount)
-                .otherGenderCount(otherGenderCount)
                 .ageGroupDistribution(ageGroups)
                 .totalVisits(totalVisits)
                 .completedVisits(completedVisits)
@@ -308,9 +306,6 @@ public class ReportAggregationService {
         rows.add(Arrays.<Object>asList("Archived Patients", dataset.getArchivedPatients()));
         rows.add(Arrays.<Object>asList("Male", dataset.getMaleCount()));
         rows.add(Arrays.<Object>asList("Female", dataset.getFemaleCount()));
-        if (dataset.getOtherGenderCount() > 0) {
-            rows.add(Arrays.<Object>asList("Other Gender", dataset.getOtherGenderCount()));
-        }
         rows.add(Arrays.<Object>asList("Total Visits", dataset.getTotalVisits()));
         rows.add(Arrays.<Object>asList("Completed Visits", dataset.getCompletedVisits()));
         rows.add(Arrays.<Object>asList("Missed/Cancelled Visits", dataset.getMissedOrCancelledVisits()));

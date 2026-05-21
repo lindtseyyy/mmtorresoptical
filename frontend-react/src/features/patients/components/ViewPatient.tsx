@@ -348,7 +348,7 @@ const ViewPatient: React.FC = () => {
             </div>
             <div>
               <p className="text-xs text-muted-foreground">Gender</p>
-              <p className="font-medium">{patient?.gender || "—"}</p>
+              <p className="font-medium">{patient?.sex || "—"}</p>
             </div>
             <div>
               <p className="text-xs text-muted-foreground">Birth Date</p>

@@ -1,6 +1,6 @@
 package com.mmtorresoptical.OpticalClinicManagementSystem.config;
 
-import com.mmtorresoptical.OpticalClinicManagementSystem.enums.Gender;
+import com.mmtorresoptical.OpticalClinicManagementSystem.enums.Sex;
 import com.mmtorresoptical.OpticalClinicManagementSystem.enums.Role;
 import com.mmtorresoptical.OpticalClinicManagementSystem.model.User;
 import com.mmtorresoptical.OpticalClinicManagementSystem.repository.UserRepository;
@@ -42,7 +42,7 @@ public class DataSeeder implements CommandLineRunner {
             adminUser.setLastName("Account");
             adminUser.setEmail("admin@mmtorres.com");
             adminUser.setContactNumber("0000000000"); // Placeholder
-            adminUser.setGender(Gender.OTHERS); // Placeholder
+            adminUser.setSex(Sex.MALE); // Placeholder
             adminUser.setBirthDate(LocalDate.of(1990, 1, 1)); // Placeholder
 
             // Security Question

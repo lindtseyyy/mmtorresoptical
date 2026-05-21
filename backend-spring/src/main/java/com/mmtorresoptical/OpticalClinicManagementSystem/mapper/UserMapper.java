@@ -18,8 +18,8 @@ public interface UserMapper {
     User requestDTOtoEntity(CreateUserRequestDTO requestDTO);
 
     @Mapping(
-            target = "gender",
-            expression = "java(user.getGender().name())"
+            target = "sex",
+            expression = "java(user.getSex().name())"
     )
     @Mapping(
             target = "role",
@@ -28,8 +28,8 @@ public interface UserMapper {
     UserResponseDTO entityToResponseDTO(User user);
 
     @Mapping(
-            target = "gender",
-            expression = "java(user.getGender().name())"
+            target = "sex",
+            expression = "java(user.getSex().name())"
     )
     @Mapping(
             target = "role",
@@ -38,8 +38,8 @@ public interface UserMapper {
     UserDetailsDTO entityToDetailsDTO(User user);
 
     @Mapping(
-            target = "gender",
-            expression = "java(user.getGender().name())"
+            target = "sex",
+            expression = "java(user.getSex().name())"
     )
     @Mapping(
             target = "role",

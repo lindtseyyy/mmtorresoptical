@@ -1,21 +1,9 @@
 import api from "@/shared/lib/axiosInstance";
 import type { UserProfile, ProfileFormData, ChangePasswordFormData, SecurityQuestionFormData } from "@/features/profile/types";
 
-const GENDER_TO_BACKEND: Record<string, string> = {
-  Male: "MALE",
-  Female: "FEMALE",
-  Other: "OTHERS",
-};
-
-const GENDER_FROM_BACKEND: Record<string, string> = {
-  MALE: "Male",
-  FEMALE: "Female",
-  OTHERS: "Other",
-};
-
 const mapProfileFromBackend = (data: UserProfile): UserProfile => ({
   ...data,
-  gender: GENDER_FROM_BACKEND[data.gender] ?? data.gender,
+  sex: data.sex.charAt(0) + data.sex.slice(1).toLowerCase(),
 });
 
 export const fetchOwnProfile = async (): Promise<UserProfile> => {
@@ -24,10 +12,7 @@ export const fetchOwnProfile = async (): Promise<UserProfile> => {
 };
 
 export const updateOwnProfile = async (formData: ProfileFormData) => {
-  const payload = { ...formData };
-  if (payload.gender && GENDER_TO_BACKEND[payload.gender]) {
-    payload.gender = GENDER_TO_BACKEND[payload.gender];
-  }
+  const payload = { ...formData, sex: formData.sex.toUpperCase() };
   const { data } = await api.put("/users/me", payload);
   return mapProfileFromBackend(data);
 };

@@ -62,7 +62,7 @@ const EditProfile: React.FC = () => {
           firstName: profile.firstName,
           middleName: profile.middleName ?? "",
           lastName: profile.lastName,
-          gender: profile.gender as "Male" | "Female" | "Other",
+          sex: profile.sex as "Male" | "Female",
           birthDate: profile.birthDate,
           email: profile.email,
           contactNumber: profile.contactNumber,
@@ -208,20 +208,19 @@ const EditProfile: React.FC = () => {
               <div className="grid gap-4 md:grid-cols-2">
                 <FormField
                   control={profileForm.control}
-                  name="gender"
+                  name="sex"
                   render={({ field }) => (
                     <FormItem>
-                      <FormLabel>Gender *</FormLabel>
+                      <FormLabel>Sex *</FormLabel>
                       <Select onValueChange={field.onChange} value={field.value}>
                         <FormControl>
                           <SelectTrigger>
-                            <SelectValue placeholder="Select gender" />
+                            <SelectValue placeholder="Select sex" />
                           </SelectTrigger>
                         </FormControl>
                         <SelectContent>
                           <SelectItem value="Male">Male</SelectItem>
                           <SelectItem value="Female">Female</SelectItem>
-                          <SelectItem value="Other">Other</SelectItem>
                         </SelectContent>
                       </Select>
                       <FormMessage />

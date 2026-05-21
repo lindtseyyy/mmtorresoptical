@@ -4,7 +4,7 @@ export const profileSchema = z.object({
   firstName: z.string().min(1, "First name is required").max(50),
   middleName: z.string().optional(),
   lastName: z.string().min(1, "Last name is required").max(50),
-  gender: z.enum(["Male", "Female", "Other"]),
+  sex: z.enum(["Male", "Female"]),
   birthDate: z.string().min(1, "Birth date is required"),
   email: z.string().email("Invalid email address"),
   contactNumber: z.string().min(10, "Must be at least 10 digits"),
@@ -38,7 +38,7 @@ export interface UserProfile {
   firstName: string;
   middleName: string | null;
   lastName: string;
-  gender: string;
+  sex: string;
   birthDate: string;
   email: string;
   contactNumber: string;
