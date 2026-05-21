@@ -124,26 +124,43 @@ const OriginalReceipt: React.FC<{
           </tr>
         </thead>
         <tbody>
-          {tx.transactionItems.map((item) => (
-            <tr key={item.transactionItemId} className="border-b border-border/30">
-              <td className="py-1 align-top">
-                <span className="font-medium">{item.product.productName}</span>
-                {item.isDiscounted && (
-                  <span className="text-green-600">
-                    {" "}
-                    ({item.discountType === "PERCENT"
-                      ? `${item.discountValue}%`
-                      : `₱${format2(item.discountValue)}`}{" "}
-                    off)
-                  </span>
-                )}
-              </td>
-              <td className="py-1 text-center align-top text-muted-foreground">{item.quantity}</td>
-              <td className="py-1 text-right align-top tabular-nums font-medium">
-                {format2(item.isDiscounted ? item.subtotal : item.unitPrice * item.quantity)}
-              </td>
-            </tr>
-          ))}
+          {tx.transactionItems.map((item) => {
+            const originalTotal = item.unitPrice * item.quantity;
+            const discountAmount = originalTotal - item.subtotal;
+            return (
+              <tr key={item.transactionItemId} className="border-b border-border/30">
+                <td className="py-1 align-top">
+                  <span className="font-medium">{item.product.productName}</span>
+                  {item.isDiscounted && (
+                    <div className="text-[10px] text-muted-foreground">
+                      <span>{format2(item.unitPrice)} × {item.quantity}</span>
+                      <span className="text-green-600 ml-1">
+                        ({item.discountType === "PERCENT"
+                          ? `${item.discountValue}%`
+                          : `₱${format2(item.discountValue)}`}{" "}
+                        off)
+                      </span>
+                    </div>
+                  )}
+                </td>
+                <td className="py-1 text-center align-top text-muted-foreground">{item.quantity}</td>
+                <td className="py-1 text-right align-top tabular-nums">
+                  {item.isDiscounted ? (
+                    <>
+                      <span className="text-muted-foreground line-through text-[10px] block">
+                        {format2(originalTotal)}
+                      </span>
+                      <span className="font-medium text-green-600">
+                        {format2(item.subtotal)}
+                      </span>
+                    </>
+                  ) : (
+                    <span className="font-medium">{format2(originalTotal)}</span>
+                  )}
+                </td>
+              </tr>
+            );
+          })}
         </tbody>
       </table>
 
@@ -169,28 +186,37 @@ const OriginalReceipt: React.FC<{
 
       {/* Payment Info */}
       <div className="rounded-sm bg-muted/50 px-2 py-1.5 mb-3">
-        <div className="flex justify-between font-semibold">
-          <span>Amount Paid</span>
-          <span className="tabular-nums">{format2(tx.amountPaid ?? 0)}</span>
-        </div>
+        {(tx.payments ?? []).map((p) => (
+          <div key={p.id}>
+            <div className="flex justify-between font-semibold">
+              <span>{p.paymentMethod}</span>
+              <span className="tabular-nums">{format2(p.amount)}</span>
+            </div>
+            {p.referenceNumber && (
+              <div className="text-[10px] text-muted-foreground mt-0.5">
+                Ref# {p.referenceNumber}
+              </div>
+            )}
+          </div>
+        ))}
+        {(() => {
+          const totalTendered = (tx.payments ?? []).reduce((sum, p) => sum + p.amount, 0);
+          const changeAmount = Math.max(0, totalTendered - tx.totalAmount);
+          if (changeAmount > 0) {
+            return (
+              <div className="flex justify-between text-green-600 font-semibold mt-0.5">
+                <span>Change</span>
+                <span className="tabular-nums">{format2(changeAmount)}</span>
+              </div>
+            );
+          }
+          return null;
+        })()}
         {(tx.balanceDue ?? 0) > 0 && (
           <div className="flex justify-between text-amber-600 font-semibold mt-0.5">
             <span>Remaining Balance</span>
             <span className="tabular-nums">{format2(tx.balanceDue ?? 0)}</span>
           </div>
-        )}
-        {(tx.payments?.length ?? 0) > 0 && (
-          <>
-            <hr className="border-dashed border-border my-1.5" />
-            <div className="text-[10px] text-muted-foreground space-y-0.5">
-              {tx.payments.map((p) => (
-                <div key={p.id} className="flex justify-between">
-                  <span>{p.paymentMethod}{p.referenceNumber ? ` (#${p.referenceNumber})` : ""}</span>
-                  <span className="tabular-nums">{format2(p.amount)}</span>
-                </div>
-              ))}
-            </div>
-          </>
         )}
       </div>
 

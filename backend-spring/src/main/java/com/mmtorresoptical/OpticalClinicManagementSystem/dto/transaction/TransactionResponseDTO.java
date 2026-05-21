@@ -21,6 +21,7 @@ public class TransactionResponseDTO {
     private BigDecimal totalAmount;
     private BigDecimal amountPaid;
     private BigDecimal balanceDue;
+    private BigDecimal change;
     private LocalDateTime completedAt;
     private String transactionStatus;
     private String refundStatus;

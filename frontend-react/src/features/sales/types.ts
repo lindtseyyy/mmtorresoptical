@@ -79,6 +79,7 @@ export interface TransactionResponse {
   totalAmount: number;
   amountPaid: number;
   balanceDue: number;
+  change: number;
   completedAt: string | null;
   estimatedReadyDate: string | null;
   transactionStatus: string;

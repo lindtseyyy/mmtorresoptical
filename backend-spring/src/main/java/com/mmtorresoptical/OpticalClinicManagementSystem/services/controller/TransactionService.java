@@ -156,12 +156,18 @@ public class TransactionService {
         if (amountTendered.compareTo(BigDecimal.ZERO) <= 0) {
             throw new BadRequestException("At least a deposit payment is required to create a transaction.");
         }
-        if (amountTendered.compareTo(total) > 0) {
+
+        PaymentMethod paymentMethod = transactionRequestDTO.getPaymentMethod() != null
+                ? transactionRequestDTO.getPaymentMethod()
+                : PaymentMethod.CASH;
+
+        if (paymentMethod == PaymentMethod.GCASH && amountTendered.compareTo(total) > 0) {
             amountTendered = total;
         }
 
-        transaction.setAmountPaid(amountTendered);
-        transaction.setTransactionStatus(computeStatus(total, amountTendered));
+        BigDecimal amountPaid = amountTendered.min(total);
+        transaction.setAmountPaid(amountPaid);
+        transaction.setTransactionStatus(computeStatus(total, amountPaid));
 
         Transaction savedTransaction = transactionRepository.saveAndFlush(transaction);
 
@@ -170,11 +176,7 @@ public class TransactionService {
             Payment payment = new Payment();
             payment.setTransaction(savedTransaction);
             payment.setAmount(amountTendered);
-            payment.setPaymentMethod(
-                transactionRequestDTO.getPaymentMethod() != null
-                    ? transactionRequestDTO.getPaymentMethod()
-                    : PaymentMethod.CASH
-            );
+            payment.setPaymentMethod(paymentMethod);
             payment.setReferenceNumber(transactionRequestDTO.getReferenceNumber());
             Payment savedPayment = paymentRepository.save(payment);
             if (savedTransaction.getPayments() == null) {
@@ -186,7 +188,10 @@ public class TransactionService {
         // Audit Logging
         transactionAuditHelper.logCreate(savedTransaction);
 
-        return enrichWithPayments(transactionMapper.entityToResponseDTO(savedTransaction));
+        TransactionResponseDTO response = enrichWithPayments(transactionMapper.entityToResponseDTO(savedTransaction));
+        BigDecimal change = amountTendered.subtract(amountPaid);
+        response.setChange(change);
+        return response;
     }
 
     @Transactional
@@ -253,7 +258,15 @@ public class TransactionService {
 
         transactionAuditHelper.logComplete(saved);
 
-        return enrichWithPayments(transactionMapper.entityToResponseDTO(saved));
+        TransactionResponseDTO response = enrichWithPayments(transactionMapper.entityToResponseDTO(saved));
+        BigDecimal totalPayments = response.getPayments() != null
+                ? response.getPayments().stream()
+                    .map(PaymentResponseDTO::getAmount)
+                    .reduce(BigDecimal.ZERO, BigDecimal::add)
+                : BigDecimal.ZERO;
+        BigDecimal change = totalPayments.subtract(saved.getTotalAmount()).max(BigDecimal.ZERO);
+        response.setChange(change);
+        return response;
     }
 
     public List<PaymentResponseDTO> getPaymentsForTransaction(UUID transactionId) {
@@ -354,6 +367,12 @@ public class TransactionService {
                     return pd;
                 }).collect(Collectors.toList());
         dto.setPayments(paymentDTOs);
+
+        BigDecimal totalPayments = paymentDTOs.stream()
+                .map(PaymentResponseDTO::getAmount)
+                .reduce(BigDecimal.ZERO, BigDecimal::add);
+        BigDecimal change = totalPayments.subtract(transaction.getTotalAmount()).max(BigDecimal.ZERO);
+        dto.setChange(change);
 
         return dto;
     }
