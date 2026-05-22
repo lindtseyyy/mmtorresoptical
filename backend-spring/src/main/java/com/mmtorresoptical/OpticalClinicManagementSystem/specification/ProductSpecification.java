@@ -94,9 +94,16 @@ public class ProductSpecification {
                 return null;
             }
             String upper = stockStatus.toUpperCase();
+            if ("OUT_OF_STOCK".equals(upper)) {
+                return cb.and(
+                    cb.notEqual(root.get("productType"), "SERVICE"),
+                    cb.equal(root.get("quantity"), 0)
+                );
+            }
             if ("LOW_STOCK".equals(upper)) {
                 return cb.and(
                     cb.notEqual(root.get("productType"), "SERVICE"),
+                    cb.greaterThan(root.get("quantity"), 0),
                     cb.lessThanOrEqualTo(
                         cb.diff(root.get("quantity"), root.get("lowLevelThreshold")), 0)
                 );

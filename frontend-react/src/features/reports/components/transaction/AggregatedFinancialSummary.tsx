@@ -47,7 +47,7 @@ function refundDeductionAggregate(
         e.refundStatus === "FULL"
       ) {
         count++;
-        totalValue += e.items.reduce((sum, item) => sum + (item.itemCreditAmount ?? 0), 0);
+        totalValue += e.items.reduce((sum, item) => sum + (item.refundAmount ?? 0), 0);
       }
     }
   }

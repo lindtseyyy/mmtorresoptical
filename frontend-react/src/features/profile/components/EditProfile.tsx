@@ -5,6 +5,8 @@ import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
 import { Eye, EyeOff, Loader2 } from "lucide-react";
 
+const roleMap: Record<string, string> = { ADMIN: "Administrator", STAFF: "Staff" };
+
 import { Button } from "@/shared/components/ui/button";
 import { Input } from "@/shared/components/ui/input";
 import {
@@ -293,7 +295,7 @@ const EditProfile: React.FC = () => {
             </div>
             <div className="space-y-1">
               <p className="text-sm font-medium">Role</p>
-              <p className="text-sm text-muted-foreground">{profile?.role === "Admin" ? "Administrator" : "Staff"}</p>
+              <p className="text-sm text-muted-foreground">{roleMap[profile?.role?.toUpperCase() ?? ""] ?? profile?.role ?? "—"}</p>
             </div>
           </div>
         </CardContent>

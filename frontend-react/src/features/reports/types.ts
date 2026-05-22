@@ -97,7 +97,7 @@ export interface TransactionItemEntry {
   discountValue: number | null;
   refundedQuantity: number | null;
   refundReason: string | null;
-  itemCreditAmount: number | null;
+  refundAmount: number | null;
   actualCashBack: number | null;
 }
 

@@ -42,7 +42,7 @@ public class DataSeeder implements CommandLineRunner {
             adminUser.setLastName("Account");
             adminUser.setEmail("admin@mmtorres.com");
             adminUser.setContactNumber("0000000000"); // Placeholder
-            adminUser.setSex(Sex.MALE); // Placeholder
+            adminUser.setSex(Sex.FEMALE); // Placeholder
             adminUser.setBirthDate(LocalDate.of(1990, 1, 1)); // Placeholder
 
             // Security Question

@@ -107,7 +107,7 @@ const TransactionRow: React.FC<TransactionRowProps> = ({ entry }) => {
                       {entry.items.some((i) => i.refundedQuantity) && (
                         <td className="py-1 pr-2 text-right">
                           {item.refundedQuantity
-                            ? `${item.refundedQuantity}${item.itemCreditAmount ? ` (${currency(item.itemCreditAmount)})` : ""}`
+                            ? `${item.refundedQuantity}${item.refundAmount ? ` (${currency(item.itemCreditAmount)})` : ""}`
                             : "-"}
                         </td>
                       )}

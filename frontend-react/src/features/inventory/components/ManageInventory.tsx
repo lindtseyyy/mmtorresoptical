@@ -70,6 +70,9 @@ const ManageInventory: React.FC = () => {
     if (product.productType === "SERVICE") {
       return { label: "Service", variant: "default" as const };
     }
+    if (product.quantity === 0) {
+      return { label: "No Stock", variant: "destructive" as const };
+    }
     if (product.quantity <= product.lowLevelThreshold) {
       return { label: "Low Stock", variant: "destructive" as const };
     } else if (product.quantity >= product.overstockedThreshold) {
@@ -221,6 +224,7 @@ const ManageInventory: React.FC = () => {
                   <SelectContent>
                     <SelectItem value="all">All Stock</SelectItem>
                     <SelectItem value="NORMAL">Normal</SelectItem>
+                    <SelectItem value="OUT_OF_STOCK">No Stock</SelectItem>
                     <SelectItem value="LOW_STOCK">Low Stock</SelectItem>
                     <SelectItem value="OVERSTOCKED">Overstocked</SelectItem>
                   </SelectContent>
