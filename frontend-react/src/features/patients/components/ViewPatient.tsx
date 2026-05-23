@@ -151,7 +151,7 @@ const ViewPatient: React.FC = () => {
   });
 
   const [fuFilter, setFuFilter] = useState("ALL");
-  const [fuStatusFilter, setFuStatusFilter] = useState("ALL");
+  const [fuStatusFilter, setFuStatusFilter] = useState("PENDING");
   const [fuPage, setFuPage] = useState(0);
   const { data: followUps, isLoading: followUpsLoading } = useQuery({
     queryKey: ["patient-follow-ups", patientId, fuFilter, fuStatusFilter, fuPage],
@@ -366,7 +366,284 @@ const ViewPatient: React.FC = () => {
               <p className="text-xs text-muted-foreground">Address</p>
               <p className="font-medium">{patient?.address || "—"}</p>
             </div>
+            {patient?.medicalHistory && (
+              <div className="col-span-2 sm:col-span-3 pt-2 pt-2 border-t border-muted-foreground/30">
+                <p className="text-xs text-muted-foreground">Medical History</p>
+                <p className="text-sm whitespace-pre-wrap">{patient.medicalHistory}</p>
+              </div>
+            )}
           </div>
+        </CardContent>
+      </Card>
+
+      {/* Eye Exams */}
+      <Card>
+        <CardHeader>
+          <div className="flex items-center justify-between">
+            <div>
+              <CardTitle className="flex items-center gap-2">
+                <Stethoscope className="h-5 w-5" />
+                Eye Exams
+              </CardTitle>
+              <CardDescription>
+                {eeData?.totalElements ?? 0} total exam(s)
+              </CardDescription>
+            </div>
+            <div className="flex items-center gap-3">
+              <div className="flex items-center gap-2">
+                <span className="text-sm text-muted-foreground">Status:</span>
+                <Select value={eeFilter} onValueChange={(v) => { setEeFilter(v); setEePage(0); }}>
+                  <SelectTrigger className="w-[130px] h-8">
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="ALL">All</SelectItem>
+                    <SelectItem value="ACTIVE">Active</SelectItem>
+                    <SelectItem value="VOIDED">Voided</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+              <Button size="sm" asChild>
+                <Link to={`/patients/add/eye-exam?patientId=${patientId}&patientName=${encodeURIComponent(fullName)}`}>
+                  <Plus className="mr-1 h-4 w-4" />
+                  Add Eye Exam
+                </Link>
+              </Button>
+            </div>
+          </div>
+        </CardHeader>
+        <CardContent>
+          {!eeData || eeData.content.length === 0 ? (
+            <p className="py-4 text-center text-sm text-muted-foreground">
+              No{eeFilter === "VOIDED" ? " voided" : ""} eye exams recorded.
+            </p>
+          ) : (
+            <div className="space-y-3">
+              {eeData.content.map((ee: EyeExamListItem) => (
+                <div
+                  key={ee.eyeExamId}
+                  className={`rounded-lg border p-4 transition-colors bg-muted/60 hover:bg-muted${ee.status === "VOIDED" ? " opacity-60" : ""}`}
+                >
+                  <div className="flex items-start justify-between">
+                    <div className="space-y-2 flex-1 min-w-0">
+                      <div className="flex items-center gap-2">
+                        <span className="font-medium">
+                          {ee.examNumber}
+                        </span>
+                        {ee.status === "VOIDED" && (
+                          <Badge className="bg-red-800 text-white">Voided</Badge>
+                        )}
+                      </div>
+
+                      {ee.chiefComplaint && (
+                        <div>
+                          <p className="text-xs text-muted-foreground">Chief Complaint</p>
+                          <p className="text-sm">{ee.chiefComplaint}</p>
+                        </div>
+                      )}
+                      {ee.clinicalImpression && (
+                        <div>
+                          <p className="text-xs text-muted-foreground">Clinical Impression</p>
+                          <p className="text-sm">{ee.clinicalImpression}</p>
+                        </div>
+                      )}
+
+                      <p className="text-xs text-muted-foreground">
+                        Performed {formatEyeExamDateTime(ee.createdAt)}
+                        {ee.performedBy ? ` by ${ee.performedBy.fullName}` : ""}
+                      </p>
+                    </div>
+                    <DropdownMenu>
+                      <DropdownMenuTrigger asChild>
+                        <Button variant="ghost" className="h-12 w-12 shrink-0 hover:bg-muted p-0 [&_svg]:size-auto focus-visible:ring-0">
+                          <MoreHorizontal className="h-10 w-10" />
+                        </Button>
+                      </DropdownMenuTrigger>
+                      <DropdownMenuContent align="end" className="bg-gray-100 dark:bg-gray-800 border-gray-300 dark:border-gray-700">
+                        <DropdownMenuItem onClick={() => setViewEeId(ee.eyeExamId)}>
+                          <Eye className="mr-2 h-4 w-4" />
+                          View Details
+                        </DropdownMenuItem>
+                        {ee.status !== "VOIDED" && (
+                          <DropdownMenuItem
+                            onClick={() => setVoidEeDialog(ee)}
+                            className="text-red-600"
+                          >
+                            <Ban className="mr-2 h-4 w-4" />
+                            Void
+                          </DropdownMenuItem>
+                        )}
+                      </DropdownMenuContent>
+                    </DropdownMenu>
+                  </div>
+                </div>
+              ))}
+              {eeData.totalPages > 1 && (
+                <div className="flex items-center justify-between pt-2">
+                  <p className="text-xs text-muted-foreground">
+                    Page {eePage + 1} of {eeData.totalPages}
+                  </p>
+                  <div className="flex gap-1">
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      onClick={() => setEePage((p) => p - 1)}
+                      disabled={eePage === 0}
+                    >
+                      <ChevronLeft className="h-4 w-4" />
+                      Previous
+                    </Button>
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      onClick={() => setEePage((p) => p + 1)}
+                      disabled={eePage >= eeData.totalPages - 1}
+                    >
+                      Next
+                      <ChevronRight className="h-4 w-4" />
+                    </Button>
+                  </div>
+                </div>
+              )}
+            </div>
+          )}
+        </CardContent>
+      </Card>
+
+      {/* Prescriptions */}
+      <Card>
+        <CardHeader>
+          <div className="flex items-center justify-between">
+            <div>
+              <CardTitle className="flex items-center gap-2">
+                <Stethoscope className="h-5 w-5" />
+                Prescriptions
+              </CardTitle>
+              <CardDescription>
+                {rxData?.totalElements ?? 0} total prescription(s)
+              </CardDescription>
+            </div>
+            <div className="flex items-center gap-3">
+              <div className="flex items-center gap-2">
+                <span className="text-sm text-muted-foreground">Status:</span>
+                <Select value={rxFilter} onValueChange={(v) => { setRxFilter(v); setRxPage(0); }}>
+                  <SelectTrigger className="w-[130px] h-8">
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="ALL">All</SelectItem>
+                    <SelectItem value="ACTIVE">Active</SelectItem>
+                    <SelectItem value="VOIDED">Voided</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+              <Button size="sm" asChild>
+                <Link to={`/patients/add/prescription?patientId=${patientId}&patientName=${encodeURIComponent(fullName)}`}>
+                  <Plus className="mr-1 h-4 w-4" />
+                  Add Prescription
+                </Link>
+              </Button>
+            </div>
+          </div>
+        </CardHeader>
+        <CardContent>
+          {!rxData || rxData.content.length === 0 ? (
+            <p className="py-4 text-center text-sm text-muted-foreground">
+              No prescriptions recorded.
+            </p>
+          ) : (
+            <div className="space-y-3">
+              {rxData.content.map((rx: PrescriptionListItem) => (
+                <div
+                  key={rx.prescriptionId}
+                  className={`rounded-lg border p-4 transition-colors bg-muted/60 hover:bg-muted${rx.status === "VOIDED" ? " opacity-60" : ""}`}
+                >
+                  <div className="flex items-start justify-between">
+                    <div className="space-y-1 flex-1 min-w-0">
+                      <div className="flex items-center gap-2">
+                        <span className="font-medium">
+                          {rx.rxNumber}
+                        </span>
+                        {rx.isArchived && (
+                          <Badge variant="secondary" className="bg-gray-500 text-white">Archived</Badge>
+                        )}
+                        {rx.status === "VOIDED" && (
+                          <Badge className="ml-2 bg-red-800 text-white">Voided</Badge>
+                        )}
+                      </div>
+                      {rx.notes && (
+                        <p className="text-sm text-muted-foreground">{rx.notes}</p>
+                      )}
+                      <p className="text-xs text-muted-foreground">
+                        Date Issued: {formatDate(rx.issueDate)}
+                        {rx.eyeExamId ? " · Internal Rx" : " · Outside Rx"}
+                        {rx.createdBy ? ` — by ${rx.createdBy.fullName}` : ""}
+                      </p>
+                    </div>
+                    <DropdownMenu>
+                      <DropdownMenuTrigger asChild>
+                        <Button variant="ghost" className="h-12 w-12 shrink-0 hover:bg-muted p-0 [&_svg]:size-auto focus-visible:ring-0">
+                          <MoreHorizontal className="h-10 w-10" />
+                        </Button>
+                      </DropdownMenuTrigger>
+                      <DropdownMenuContent align="end" className="bg-gray-100 dark:bg-gray-800 border-gray-300 dark:border-gray-700">
+                        <DropdownMenuItem onClick={() => setViewRxId(rx.prescriptionId)}>
+                          <Eye className="mr-2 h-4 w-4" />
+                          View Details
+                        </DropdownMenuItem>
+                        {!rx.isArchived && rx.status !== "VOIDED" && (
+                          <DropdownMenuItem
+                            onClick={() => setVoidRxDialog(rx)}
+                            className="text-red-600"
+                          >
+                            <Ban className="mr-2 h-4 w-4" />
+                            Void {rx.rxNumber}
+                          </DropdownMenuItem>
+                        )}
+                        {rx.status === "VOIDED" && (
+                          <DropdownMenuItem asChild>
+                            <Link
+                              to={`/patients/add/prescription?patientId=${patientId}&patientName=${encodeURIComponent(fullName)}&cloneFrom=${rx.prescriptionId}`}
+                            >
+                              <Copy className="mr-2 h-4 w-4" />
+                              Clone & Re-issue
+                            </Link>
+                          </DropdownMenuItem>
+                        )}
+                      </DropdownMenuContent>
+                    </DropdownMenu>
+                  </div>
+                </div>
+              ))}
+              {rxData.totalPages > 1 && (
+                <div className="flex items-center justify-between pt-2">
+                  <p className="text-xs text-muted-foreground">
+                    Page {rxPage + 1} of {rxData.totalPages}
+                  </p>
+                  <div className="flex gap-1">
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      onClick={() => setRxPage((p) => p - 1)}
+                      disabled={rxPage === 0}
+                    >
+                      <ChevronLeft className="h-4 w-4" />
+                      Previous
+                    </Button>
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      onClick={() => setRxPage((p) => p + 1)}
+                      disabled={rxPage >= rxData.totalPages - 1}
+                    >
+                      Next
+                      <ChevronRight className="h-4 w-4" />
+                    </Button>
+                  </div>
+                </div>
+              )}
+            </div>
+          )}
         </CardContent>
       </Card>
 
@@ -561,277 +838,6 @@ const ViewPatient: React.FC = () => {
                       size="sm"
                       onClick={() => setFuPage((p) => p + 1)}
                       disabled={fuPage >= followUps.totalPages - 1}
-                    >
-                      Next
-                      <ChevronRight className="h-4 w-4" />
-                    </Button>
-                  </div>
-                </div>
-              )}
-            </div>
-          )}
-        </CardContent>
-      </Card>
-
-      {/* Prescriptions */}
-      <Card>
-        <CardHeader>
-          <div className="flex items-center justify-between">
-            <div>
-              <CardTitle className="flex items-center gap-2">
-                <Stethoscope className="h-5 w-5" />
-                Prescriptions
-              </CardTitle>
-              <CardDescription>
-                {rxData?.totalElements ?? 0} total prescription(s)
-              </CardDescription>
-            </div>
-            <div className="flex items-center gap-3">
-              <div className="flex items-center gap-2">
-                <span className="text-sm text-muted-foreground">Status:</span>
-                <Select value={rxFilter} onValueChange={(v) => { setRxFilter(v); setRxPage(0); }}>
-                  <SelectTrigger className="w-[130px] h-8">
-                    <SelectValue />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="ALL">All</SelectItem>
-                    <SelectItem value="ACTIVE">Active</SelectItem>
-                    <SelectItem value="VOIDED">Voided</SelectItem>
-                  </SelectContent>
-                </Select>
-              </div>
-              <Button size="sm" asChild>
-                <Link to={`/patients/add/prescription?patientId=${patientId}&patientName=${encodeURIComponent(fullName)}`}>
-                  <Plus className="mr-1 h-4 w-4" />
-                  Add Prescription
-                </Link>
-              </Button>
-            </div>
-          </div>
-        </CardHeader>
-        <CardContent>
-          {!rxData || rxData.content.length === 0 ? (
-            <p className="py-4 text-center text-sm text-muted-foreground">
-              No prescriptions recorded.
-            </p>
-          ) : (
-            <div className="space-y-3">
-              {rxData.content.map((rx: PrescriptionListItem) => (
-                <div
-                  key={rx.prescriptionId}
-                  className={`rounded-lg border p-4 transition-colors bg-muted/60 hover:bg-muted${rx.status === "VOIDED" ? " opacity-60" : ""}`}
-                >
-                  <div className="flex items-start justify-between">
-                    <div className="space-y-1 flex-1 min-w-0">
-                      <div className="flex items-center gap-2">
-                        <span className="font-medium">
-                          {rx.rxNumber}
-                        </span>
-                        {rx.isArchived && (
-                          <Badge variant="secondary" className="bg-gray-500 text-white">Archived</Badge>
-                        )}
-                        {rx.status === "VOIDED" && (
-                          <Badge className="ml-2 bg-red-800 text-white">Voided</Badge>
-                        )}
-                      </div>
-                      {rx.notes && (
-                        <p className="text-sm text-muted-foreground">{rx.notes}</p>
-                      )}
-                      <p className="text-xs text-muted-foreground">
-                        Date Issued: {formatDate(rx.issueDate)}
-                        {rx.eyeExamId ? " · Internal Rx" : " · Outside Rx"}
-                        {rx.createdBy ? ` — by ${rx.createdBy.fullName}` : ""}
-                      </p>
-                    </div>
-                    <DropdownMenu>
-                      <DropdownMenuTrigger asChild>
-                        <Button variant="ghost" className="h-12 w-12 shrink-0 hover:bg-muted p-0 [&_svg]:size-auto focus-visible:ring-0">
-                          <MoreHorizontal className="h-10 w-10" />
-                        </Button>
-                      </DropdownMenuTrigger>
-                      <DropdownMenuContent align="end" className="bg-gray-100 dark:bg-gray-800 border-gray-300 dark:border-gray-700">
-                        <DropdownMenuItem onClick={() => setViewRxId(rx.prescriptionId)}>
-                          <Eye className="mr-2 h-4 w-4" />
-                          View Details
-                        </DropdownMenuItem>
-                        {!rx.isArchived && rx.status !== "VOIDED" && (
-                          <DropdownMenuItem
-                            onClick={() => setVoidRxDialog(rx)}
-                            className="text-red-600"
-                          >
-                            <Ban className="mr-2 h-4 w-4" />
-                            Void {rx.rxNumber}
-                          </DropdownMenuItem>
-                        )}
-                        {rx.status === "VOIDED" && (
-                          <DropdownMenuItem asChild>
-                            <Link
-                              to={`/patients/add/prescription?patientId=${patientId}&patientName=${encodeURIComponent(fullName)}&cloneFrom=${rx.prescriptionId}`}
-                            >
-                              <Copy className="mr-2 h-4 w-4" />
-                              Clone & Re-issue
-                            </Link>
-                          </DropdownMenuItem>
-                        )}
-                      </DropdownMenuContent>
-                    </DropdownMenu>
-                  </div>
-                </div>
-              ))}
-              {rxData.totalPages > 1 && (
-                <div className="flex items-center justify-between pt-2">
-                  <p className="text-xs text-muted-foreground">
-                    Page {rxPage + 1} of {rxData.totalPages}
-                  </p>
-                  <div className="flex gap-1">
-                    <Button
-                      variant="outline"
-                      size="sm"
-                      onClick={() => setRxPage((p) => p - 1)}
-                      disabled={rxPage === 0}
-                    >
-                      <ChevronLeft className="h-4 w-4" />
-                      Previous
-                    </Button>
-                    <Button
-                      variant="outline"
-                      size="sm"
-                      onClick={() => setRxPage((p) => p + 1)}
-                      disabled={rxPage >= rxData.totalPages - 1}
-                    >
-                      Next
-                      <ChevronRight className="h-4 w-4" />
-                    </Button>
-                  </div>
-                </div>
-              )}
-            </div>
-          )}
-        </CardContent>
-      </Card>
-
-      {/* Eye Exams */}
-      <Card>
-        <CardHeader>
-          <div className="flex items-center justify-between">
-            <div>
-              <CardTitle className="flex items-center gap-2">
-                <Stethoscope className="h-5 w-5" />
-                Eye Exams
-              </CardTitle>
-              <CardDescription>
-                {eeData?.totalElements ?? 0} total exam(s)
-              </CardDescription>
-            </div>
-            <div className="flex items-center gap-3">
-              <div className="flex items-center gap-2">
-                <span className="text-sm text-muted-foreground">Status:</span>
-                <Select value={eeFilter} onValueChange={(v) => { setEeFilter(v); setEePage(0); }}>
-                  <SelectTrigger className="w-[130px] h-8">
-                    <SelectValue />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="ALL">All</SelectItem>
-                    <SelectItem value="ACTIVE">Active</SelectItem>
-                    <SelectItem value="VOIDED">Voided</SelectItem>
-                  </SelectContent>
-                </Select>
-              </div>
-              <Button size="sm" asChild>
-                <Link to={`/patients/add/eye-exam?patientId=${patientId}&patientName=${encodeURIComponent(fullName)}`}>
-                  <Plus className="mr-1 h-4 w-4" />
-                  Add Eye Exam
-                </Link>
-              </Button>
-            </div>
-          </div>
-        </CardHeader>
-        <CardContent>
-          {!eeData || eeData.content.length === 0 ? (
-            <p className="py-4 text-center text-sm text-muted-foreground">
-              No{eeFilter === "VOIDED" ? " voided" : ""} eye exams recorded.
-            </p>
-          ) : (
-            <div className="space-y-3">
-              {eeData.content.map((ee: EyeExamListItem) => (
-                <div
-                  key={ee.eyeExamId}
-                  className={`rounded-lg border p-4 transition-colors bg-muted/60 hover:bg-muted${ee.status === "VOIDED" ? " opacity-60" : ""}`}
-                >
-                  <div className="flex items-start justify-between">
-                    <div className="space-y-2 flex-1 min-w-0">
-                      <div className="flex items-center gap-2">
-                        <span className="font-medium">
-                          {ee.examNumber}
-                        </span>
-                        {ee.status === "VOIDED" && (
-                          <Badge className="bg-red-800 text-white">Voided</Badge>
-                        )}
-                      </div>
-
-                      {ee.chiefComplaint && (
-                        <div>
-                          <p className="text-xs text-muted-foreground">Chief Complaint</p>
-                          <p className="text-sm">{ee.chiefComplaint}</p>
-                        </div>
-                      )}
-                      {ee.clinicalImpression && (
-                        <div>
-                          <p className="text-xs text-muted-foreground">Clinical Impression</p>
-                          <p className="text-sm">{ee.clinicalImpression}</p>
-                        </div>
-                      )}
-
-                      <p className="text-xs text-muted-foreground">
-                        Performed {formatEyeExamDateTime(ee.createdAt)}
-                        {ee.performedBy ? ` by ${ee.performedBy.fullName}` : ""}
-                      </p>
-                    </div>
-                    <DropdownMenu>
-                      <DropdownMenuTrigger asChild>
-                        <Button variant="ghost" className="h-12 w-12 shrink-0 hover:bg-muted p-0 [&_svg]:size-auto focus-visible:ring-0">
-                          <MoreHorizontal className="h-10 w-10" />
-                        </Button>
-                      </DropdownMenuTrigger>
-                      <DropdownMenuContent align="end" className="bg-gray-100 dark:bg-gray-800 border-gray-300 dark:border-gray-700">
-                        <DropdownMenuItem onClick={() => setViewEeId(ee.eyeExamId)}>
-                          <Eye className="mr-2 h-4 w-4" />
-                          View Details
-                        </DropdownMenuItem>
-                        {ee.status !== "VOIDED" && (
-                          <DropdownMenuItem
-                            onClick={() => setVoidEeDialog(ee)}
-                            className="text-red-600"
-                          >
-                            <Ban className="mr-2 h-4 w-4" />
-                            Void
-                          </DropdownMenuItem>
-                        )}
-                      </DropdownMenuContent>
-                    </DropdownMenu>
-                  </div>
-                </div>
-              ))}
-              {eeData.totalPages > 1 && (
-                <div className="flex items-center justify-between pt-2">
-                  <p className="text-xs text-muted-foreground">
-                    Page {eePage + 1} of {eeData.totalPages}
-                  </p>
-                  <div className="flex gap-1">
-                    <Button
-                      variant="outline"
-                      size="sm"
-                      onClick={() => setEePage((p) => p - 1)}
-                      disabled={eePage === 0}
-                    >
-                      <ChevronLeft className="h-4 w-4" />
-                      Previous
-                    </Button>
-                    <Button
-                      variant="outline"
-                      size="sm"
-                      onClick={() => setEePage((p) => p + 1)}
-                      disabled={eePage >= eeData.totalPages - 1}
                     >
                       Next
                       <ChevronRight className="h-4 w-4" />
