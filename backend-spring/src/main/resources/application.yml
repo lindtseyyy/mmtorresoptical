@@ -26,8 +26,8 @@ app:
 
   database:
     backup:
-      use-docker: true
-      docker-container: postgres-db
+      use-docker: false
+      docker-container: postgres_db_mmtorres
 
 server:
   port: 8080
