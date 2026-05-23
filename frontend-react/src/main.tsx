@@ -66,6 +66,7 @@ import EditProfile from "@/features/profile/components/EditProfile";
 
 // --- Shared ---
 import MainLayout from "@/shared/components/layout/MainLayout";
+import AuthGuard from "@/shared/components/layout/AuthGuard";
 import AdminGuard from "@/shared/components/layout/AdminGuard";
 import NotFound from "@/shared/components/layout/NotFound";
 
@@ -87,7 +88,7 @@ const router = createBrowserRouter([
   {
     // This is your protected route group
     path: "/",
-    element: <MainLayout />,
+    element: <AuthGuard><MainLayout /></AuthGuard>,
     children: [
       { index: true, element: <Navigate to="/dashboard" replace /> },
       { path: "dashboard", element: <Dashboard /> },

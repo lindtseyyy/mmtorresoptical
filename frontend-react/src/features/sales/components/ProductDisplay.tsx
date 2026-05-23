@@ -5,7 +5,7 @@ import { Button } from "@/shared/components/ui/button";
 import { Badge } from "@/shared/components/ui/badge";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/shared/components/ui/select";
 import type { Product } from "@/features/inventory/types";
-import { CATEGORY_LABELS, PHYSICAL_CATEGORIES, SERVICE_CATEGORIES } from "@/features/inventory/types";
+import { CATEGORY_LABELS, PHYSICAL_CATEGORIES, SERVICE_CATEGORIES, type Category } from "@/features/inventory/types";
 
 interface ProductDisplayProps {
   products: Product[];
@@ -69,7 +69,7 @@ const ProductCard: React.FC<{
         </div>
 
         <span className="mb-1 text-[11px] text-muted-foreground/70">
-          {CATEGORY_LABELS[product.category] ?? product.category}
+          {CATEGORY_LABELS[product.category as Category] ?? product.category}
         </span>
 
         {isService ? (

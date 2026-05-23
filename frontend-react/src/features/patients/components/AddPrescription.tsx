@@ -29,7 +29,6 @@ import {
   CardHeader,
   CardTitle,
 } from "@/shared/components/ui/card";
-import { Switch } from "@/shared/components/ui/switch";
 import { Textarea } from "@/shared/components/ui/textarea";
 import { toast } from "sonner";
 import {
@@ -63,7 +62,7 @@ const prescriptionFormSchema = z.object({
   notes: z.string().optional(),
   followUpScheduledDate: z.string().optional(),
   followUpReason: z.string().optional(),
-  prescriptionSource: z.enum(["internal", "outside"]).default("internal"),
+  prescriptionSource: z.enum(["internal", "outside"]),
   eyeExamId: z.string().optional(),
   items: z.array(prescriptionItemSchema).min(1, "Add at least one prescription item"),
 });

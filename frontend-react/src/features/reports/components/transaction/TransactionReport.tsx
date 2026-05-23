@@ -1,5 +1,5 @@
 import { useMemo } from "react";
-import { Card, CardContent, CardHeader, CardTitle } from "@/shared/components/ui/card";
+import { Card, CardContent, CardHeader } from "@/shared/components/ui/card";
 import { Input } from "@/shared/components/ui/input";
 import AggregatedFinancialSummary from "@/features/reports/components/transaction/AggregatedFinancialSummary";
 import VoidedRefundedLog from "@/features/reports/components/transaction/VoidedRefundedLog";

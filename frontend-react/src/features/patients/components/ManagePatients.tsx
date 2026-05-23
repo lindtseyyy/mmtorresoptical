@@ -42,7 +42,6 @@ const ManagePatients: React.FC = () => {
   });
 
   const patients = pageData?.content ?? [];
-  const totalElements = pageData?.totalElements ?? 0;
   const totalPages = pageData?.totalPages ?? 0;
 
   // Stable counts — unaffected by filter changes

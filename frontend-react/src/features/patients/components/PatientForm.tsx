@@ -3,7 +3,6 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import { patientSchema, type PatientFormData } from "@/features/patients/types";
 import { Button } from "@/shared/components/ui/button";
 import { Input } from "@/shared/components/ui/input";
-import { Switch } from "@/shared/components/ui/switch";
 import { Textarea } from "@/shared/components/ui/textarea";
 import {
   Select,

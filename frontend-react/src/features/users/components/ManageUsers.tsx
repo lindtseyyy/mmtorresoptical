@@ -14,7 +14,6 @@ import {
 import { useNavigate } from "react-router-dom";
 import { Card, CardContent } from "@/shared/components/ui/card";
 import EmptyTableRows from "@/shared/components/EmptyTableRows";
-import type { User } from "@/features/users/types";
 import {
   createUsersListQueryOptions,
   createUserSummaryQueryOptions,
@@ -55,7 +54,6 @@ const ManageUsers: React.FC = () => {
   });
 
   const users = pageData?.content ?? [];
-  const totalElements = pageData?.totalElements ?? 0;
   const totalPages = pageData?.totalPages ?? 0;
 
   // Reset page when search or sort changes

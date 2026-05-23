@@ -49,8 +49,8 @@ const PaymentSection: React.FC<PaymentSectionProps> = ({
     }
 
     onComplete({
-      paymentType,
-      ...(paymentType === "CASH" && { cashTender: cashTenderAmount }),
+      paymentMethod: paymentType,
+      amountTendered: paymentType === "CASH" ? cashTenderAmount : grandTotal,
       ...(paymentType === "GCASH" && {
         referenceNumber: referenceNumber.trim(),
       }),

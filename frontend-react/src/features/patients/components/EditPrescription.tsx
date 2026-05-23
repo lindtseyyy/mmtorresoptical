@@ -29,7 +29,6 @@ import {
   CardHeader,
   CardTitle,
 } from "@/shared/components/ui/card";
-import { Switch } from "@/shared/components/ui/switch";
 import { Textarea } from "@/shared/components/ui/textarea";
 import { toast } from "sonner";
 import {
@@ -59,7 +58,7 @@ const prescriptionItemSchema = z.object({
 const prescriptionFormSchema = z.object({
   issueDate: z.string().min(1, "Issue date is required"),
   notes: z.string().optional(),
-  followUpRequired: z.boolean().default(false),
+  followUpRequired: z.boolean(),
   followUpReason: z.string().optional(),
   items: z.array(prescriptionItemSchema).min(1, "Add at least one prescription item"),
 });

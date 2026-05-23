@@ -21,7 +21,6 @@ import { Button } from "@/shared/components/ui/button";
 import { isAdmin } from "@/shared/lib/auth";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/shared/components/ui/card";
 import StatusBadge from "@/shared/components/ui/StatusBadge";
-import { Badge } from "@/shared/components/ui/badge";
 import { Checkbox } from "@/shared/components/ui/checkbox";
 import { Input } from "@/shared/components/ui/input";
 import { Label } from "@/shared/components/ui/label";
@@ -401,7 +400,7 @@ const ViewTransaction: React.FC = () => {
                   Mark Complete
                 </Button>
               )}
-              {isAdmin() && (tx.transactionStatus === "PAID" || tx.transactionStatus === "DEPOSIT") && tx.refundStatus === "NONE" && tx.transactionStatus !== "REFUNDED" && (
+              {isAdmin() && (tx.transactionStatus === "PAID" || tx.transactionStatus === "DEPOSIT") && tx.refundStatus === "NONE" && (
                 <Button
                   size="sm"
                   variant="destructive"

@@ -140,6 +140,8 @@ export const UserForm: React.FC<UserFormProps> = ({
       username: rest.username ?? "",
       password: rest.password ?? "",
       role: rest.role ?? "Staff",
+      confirmPassword: rest.password ?? "",
+      isArchived: false,
     };
 
     await onFormSubmit(payload);

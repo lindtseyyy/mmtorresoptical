@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import type { SubmitHandler } from "react-hook-form";
 import { useForm } from "react-hook-form";
 import type { LoginFormData } from "@/features/auth/types";
@@ -19,6 +19,21 @@ const Login: React.FC = () => {
   const navigate = useNavigate();
   const location = useLocation();
   const resetSuccess = (location.state as { passwordReset?: boolean })?.passwordReset;
+
+  useEffect(() => {
+    const token = localStorage.getItem("authToken");
+    if (token) {
+      try {
+        const payload = JSON.parse(atob(token.split(".")[1]));
+        const now = Math.floor(Date.now() / 1000);
+        if (payload.exp && payload.exp > now) {
+          navigate("/", { replace: true });
+        }
+      } catch {
+        localStorage.removeItem("authToken");
+      }
+    }
+  }, [navigate]);
 
   const {
     register,

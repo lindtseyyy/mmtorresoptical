@@ -1,5 +1,4 @@
 import { PieChart, Pie, Cell, Tooltip, ResponsiveContainer, Legend } from "recharts";
-import type { TooltipProps } from "recharts";
 import type { TransactionReportSummary } from "@/features/reports/types";
 
 const currency = (value: number) =>
@@ -67,7 +66,7 @@ const TransactionLifecycleChart: React.FC<TransactionLifecycleChartProps> = ({ s
             ))}
           </Pie>
           <Tooltip
-            content={({ active, payload }: TooltipProps<number, string>) => {
+            content={({ active, payload }: any) => {
               if (!active || !payload || payload.length === 0) return null;
               const d = payload[0].payload as LifecycleSlice;
               const pct = totalAmount > 0 ? ((d.amount / totalAmount) * 100).toFixed(1) : "0";

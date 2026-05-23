@@ -56,7 +56,7 @@ public class Patient {
 
     @Enumerated(EnumType.STRING)
     @NotNull
-    @Column(name = "sex", nullable = false, length = 10)
+    @Column(name = "sex", length = 10)
     private Sex sex;
 
     @Convert(converter = AesEncryptionConverter.class)

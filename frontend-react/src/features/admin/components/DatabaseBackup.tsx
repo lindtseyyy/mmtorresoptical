@@ -61,7 +61,7 @@ const DatabaseBackup: React.FC = () => {
   const [restorePassword, setRestorePassword] = useState("");
   const [showRestorePassword, setShowRestorePassword] = useState(false);
   const [showOverlay, setShowOverlay] = useState(false);
-  const overlayTimerRef = useRef<ReturnType<typeof setTimeout>>();
+  const overlayTimerRef = useRef<ReturnType<typeof setTimeout> | undefined>(undefined);
 
   const fileInputRef = useRef<HTMLInputElement>(null);
 

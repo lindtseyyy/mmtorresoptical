@@ -5,7 +5,6 @@ import { useNavigate } from "react-router-dom";
 import { toast } from "sonner";
 import { Button } from "@/shared/components/ui/button";
 import { Input } from "@/shared/components/ui/input";
-import { Badge } from "@/shared/components/ui/badge";
 import { Card, CardContent } from "@/shared/components/ui/card";
 import { MetricCard } from "@/shared/components/MetricCard";
 import {
@@ -33,7 +32,7 @@ import {
 import StatusBadge from "@/shared/components/ui/StatusBadge";
 import EmptyTableRows from "@/shared/components/EmptyTableRows";
 import AddPaymentDrawer from "@/features/sales/components/AddPaymentDrawer";
-import { addPayment, completeTransaction } from "@/features/sales/services/transactionApi";
+import { addPayment } from "@/features/sales/services/transactionApi";
 import type { TransactionListItem } from "@/features/sales/types";
 
 const formatDate = (dateStr: string | null) => {
@@ -114,20 +113,7 @@ const ManageTransactions: React.FC = () => {
     },
   });
 
-  const completeMutation = useMutation({
-    mutationFn: (id: string) => completeTransaction(id),
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["transactions"] });
-      queryClient.invalidateQueries({ queryKey: ["transaction-metrics"] });
-      toast.success("Transaction marked as completed");
-    },
-    onError: (error: any) => {
-      toast.error(error?.response?.data?.message ?? error?.message ?? "Failed to complete");
-    },
-  });
-
   const transactions = pageData?.content ?? [];
-  const totalElements = pageData?.totalElements ?? 0;
   const totalPages = pageData?.totalPages ?? 0;
 
   const mountedRef = useRef(false);

@@ -112,6 +112,7 @@ export interface RefundStateItem {
 export interface TransactionListItem {
   transactionId: string;
   transactionNumber: string;
+  referenceNumber: string;
   transactionDate: string;
   totalAmount: number;
   amountPaid: number;
@@ -120,6 +121,7 @@ export interface TransactionListItem {
   estimatedReadyDate: string | null;
   transactionStatus: string;
   refundStatus: string;
+  paymentType: string;
   createdBy: { userId: string; username: string; role: string; fullName: string };
   patient: { patientId: string; fullName: string } | null;
 }

@@ -1,7 +1,7 @@
 import { useState } from "react";
 import { Printer, BookOpen, HelpCircle, ChevronDown, ChevronUp } from "lucide-react";
 import { Button } from "@/shared/components/ui/button";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/shared/components/ui/card";
+import { Card, CardContent, CardHeader, CardTitle } from "@/shared/components/ui/card";
 
 type Tab = "manual" | "faq";
 

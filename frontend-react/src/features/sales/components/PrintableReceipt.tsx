@@ -126,7 +126,6 @@ const OriginalReceipt: React.FC<{
         <tbody>
           {tx.transactionItems.map((item) => {
             const originalTotal = item.unitPrice * item.quantity;
-            const discountAmount = originalTotal - item.subtotal;
             return (
               <tr key={item.transactionItemId} className="border-b border-border/30">
                 <td className="py-1 align-top">

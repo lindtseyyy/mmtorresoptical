@@ -48,7 +48,6 @@ const ManageInventory: React.FC = () => {
   });
 
   const products = pageData?.content ?? [];
-  const totalElements = pageData?.totalElements ?? 0;
   const totalPages = pageData?.totalPages ?? 0;
 
   const { data: summary } = useQuery(createInventorySummaryQueryOptions());

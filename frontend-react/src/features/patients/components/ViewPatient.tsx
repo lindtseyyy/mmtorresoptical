@@ -22,21 +22,17 @@ import {
 } from "@/shared/components/ui/select";
 import { Dialog, DialogHeader, DialogTitle, DialogDescription } from "@/shared/components/ui/dialog";
 import { toast } from "sonner";
-import { restorePatient } from "@/features/patients/services/patientApi";
 import {
   fetchPatient,
   fetchPatientProfileMetrics,
   fetchPatientPrescriptions,
   fetchPatientEyeExams,
-  type PatientProfileMetrics,
   type PrescriptionListItem,
   type EyeExamListItem,
 } from "@/features/patients/services/patientApi";
-import { createArchivePatientMutationOptions } from "@/features/patients/hooks/patientQuery";
-import { voidPrescription, fetchPrescription, type PrescriptionResponse } from "@/features/patients/services/prescriptionApi";
+import { voidPrescription, fetchPrescription } from "@/features/patients/services/prescriptionApi";
 import { getEyeExam, voidEyeExam } from "@/features/patients/services/eyeExamApi";
 import { fetchFollowUpsByPatient, updateFollowUpStatus, createFollowUp, updateFollowUp, archiveFollowUp, restoreFollowUp, type PatientFollowUp, type CreateFollowUpInput } from "@/features/patients/services/followUpApi";
-import api from "@/shared/lib/axiosInstance";
 
 const formatDate = (dateStr: string | null) => {
   if (!dateStr) return "—";
@@ -111,15 +107,6 @@ const ViewPatient: React.FC = () => {
     enabled: !!viewRxId,
   });
 
-  const archiveRxMutation = useMutation({
-    mutationFn: (rxId: string) => api.delete(`/admin/prescriptions/${rxId}`),
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["patient-prescriptions", patientId] });
-      toast.success("Prescription archived");
-    },
-    onError: () => toast.error("Failed to archive prescription"),
-  });
-
   const [voidEeDialog, setVoidEeDialog] = useState<EyeExamListItem | null>(null);
   const [voidEeReason, setVoidEeReason] = useState("");
   const [voidingEe, setVoidingEe] = useState(false);
@@ -129,25 +116,6 @@ const ViewPatient: React.FC = () => {
     queryKey: ["eye-exam", viewEeId],
     queryFn: () => getEyeExam(viewEeId!),
     enabled: !!viewEeId,
-  });
-
-  const archivePatientMutation = useMutation(
-    createArchivePatientMutationOptions(queryClient)
-  );
-
-  const restorePatientMutation = useMutation({
-    mutationFn: restorePatient,
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["patients"] });
-      queryClient.invalidateQueries({ queryKey: ["patient", patientId] });
-      queryClient.invalidateQueries({ queryKey: ["patient-metrics"] });
-      toast.success("Patient Restored", {
-        description: "The patient has been successfully restored.",
-      });
-    },
-    onError: () => {
-      toast.error("Error", { description: "Failed to restore patient." });
-    },
   });
 
   const [fuFilter, setFuFilter] = useState("ALL");

@@ -8,7 +8,6 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/sha
 import { MetricCard } from "@/shared/components/MetricCard";
 import { Badge } from "@/shared/components/ui/badge";
 import StatusBadge from "@/shared/components/ui/StatusBadge";
-import { toast } from "sonner";
 import {
   fetchProduct,
   fetchProductMetrics,
