@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { NavLink, useLocation, useNavigate } from "react-router-dom";
 import { Users, Eye, LogOut, UserRound, UserRoundCog, ShoppingCart, Receipt, FileText, Database, CircleHelp, Info, ChevronDown, LayoutDashboard } from "lucide-react";
 import { Button, buttonVariants } from "@/shared/components/ui/button";
@@ -84,6 +84,21 @@ const Sidenav: React.FC = () => {
     }
     return expanded;
   });
+
+  useEffect(() => {
+    setExpandedMenus((prev) => {
+      const next = new Set(prev);
+      for (const item of menuItems) {
+        if (item.children) {
+          const hasActiveChild = item.children.some((child) => location.pathname.startsWith(child.href));
+          if (!hasActiveChild) {
+            next.delete(item.title);
+          }
+        }
+      }
+      return next;
+    });
+  }, [location.pathname]);
 
   const user = getUserFromToken();
   const visibleItems = menuItems.filter((item) => isAdmin() || item.roles.includes("STAFF"));
