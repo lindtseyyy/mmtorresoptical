@@ -512,6 +512,14 @@ public class TransactionService {
             throw new IllegalStateException("Transaction already voided");
         }
 
+        if (transaction.getFulfillmentStatus() == FulfillmentStatus.COMPLETED) {
+            throw new IllegalStateException("Cannot void a transaction where items have already been picked up. Please process a refund instead.");
+        }
+
+        if (transaction.getFulfillmentStatus() == FulfillmentStatus.READY_FOR_PICKUP) {
+            throw new IllegalStateException("Cannot void a transaction where items have been marked as ready for pickup. Please process a refund instead.");
+        }
+
         if (transaction.getTransactionStatus() == TransactionStatus.REFUNDED) {
             throw new IllegalStateException("Cannot void a fully refunded transaction");
         }
