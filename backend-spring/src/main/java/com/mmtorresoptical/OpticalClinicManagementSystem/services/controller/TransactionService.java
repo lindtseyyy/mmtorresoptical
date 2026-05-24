@@ -158,6 +158,12 @@ public class TransactionService {
             throw new BadRequestException("At least a deposit payment is required to create a transaction.");
         }
 
+        BigDecimal minDeposit = total.multiply(new BigDecimal("0.50")).setScale(2, RoundingMode.HALF_UP);
+        if (amountTendered.compareTo(total) < 0 && amountTendered.compareTo(minDeposit) < 0) {
+            throw new BadRequestException(
+                    "Deposit must be at least 50% of the total. Minimum required: ₱" + minDeposit);
+        }
+
         PaymentMethod paymentMethod = transactionRequestDTO.getPaymentMethod() != null
                 ? transactionRequestDTO.getPaymentMethod()
                 : PaymentMethod.CASH;
@@ -213,8 +219,12 @@ public class TransactionService {
         BigDecimal remaining = transaction.getTotalAmount()
                 .subtract(transaction.getAmountPaid())
                 .add(refundedCash);
-        if (request.getAmount().compareTo(remaining) > 0) {
-            throw new BadRequestException("Payment amount exceeds remaining balance of " + remaining);
+
+        if (request.getAmount().compareTo(remaining) != 0) {
+            throw new BadRequestException(
+                    "Partial balance collection is restricted. The remaining balance of ₱"
+                            + remaining.setScale(2, RoundingMode.HALF_UP)
+                            + " must be settled in full.");
         }
 
         Payment payment = new Payment();
@@ -263,6 +273,10 @@ public class TransactionService {
         // Can't go backward
         if ((requestedStatus == FulfillmentStatus.PENDING_LAB && currentStatus != FulfillmentStatus.PENDING_LAB)) {
             throw new BadRequestException("Cannot revert fulfillment status back to Pending Lab from " + currentStatus.name());
+        }
+
+        if (requestedStatus == FulfillmentStatus.COMPLETED && transaction.getTransactionStatus() != TransactionStatus.PAID) {
+            throw new BadRequestException("Cannot mark as picked up until the transaction is fully paid.");
         }
 
         transaction.setFulfillmentStatus(requestedStatus);

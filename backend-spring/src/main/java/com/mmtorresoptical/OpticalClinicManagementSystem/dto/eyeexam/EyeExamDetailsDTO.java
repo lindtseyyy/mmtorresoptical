@@ -12,6 +12,7 @@ public class EyeExamDetailsDTO {
     private UUID eyeExamId;
     private String examNumber;
     private LocalDateTime createdAt;
+    private String examType;
     private String chiefComplaint;
     private String medicalHistorySnapshot;
     private String vaUnconvertedOd;

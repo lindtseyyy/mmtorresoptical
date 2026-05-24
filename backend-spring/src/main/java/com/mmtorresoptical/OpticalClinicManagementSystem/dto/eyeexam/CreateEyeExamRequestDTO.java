@@ -1,9 +1,14 @@
 package com.mmtorresoptical.OpticalClinicManagementSystem.dto.eyeexam;
 
+import com.mmtorresoptical.OpticalClinicManagementSystem.enums.ExamType;
+import jakarta.validation.constraints.NotNull;
 import lombok.Data;
 
 @Data
 public class CreateEyeExamRequestDTO {
+
+    @NotNull
+    private ExamType examType;
 
     private String chiefComplaint;
     private String vaUnconvertedOd;

@@ -399,6 +399,11 @@ const ViewPatient: React.FC = () => {
                         <span className="font-medium">
                           {ee.examNumber}
                         </span>
+                        {ee.examType && (
+                          <Badge className={ee.examType === "COMPUTERIZED" ? "bg-blue-700 text-white" : "bg-gray-700 text-white"}>
+                            {ee.examType === "COMPUTERIZED" ? "Computerized" : "Manual"}
+                          </Badge>
+                        )}
                         {ee.status === "VOIDED" && (
                           <Badge className="bg-red-800 text-white">Voided</Badge>
                         )}
@@ -888,6 +893,14 @@ const ViewPatient: React.FC = () => {
             <div className="space-y-4">
               {viewEeData.status === "VOIDED" && (
                 <Badge className="bg-red-800 text-white">Voided</Badge>
+              )}
+              {viewEeData.examType && (
+                <div>
+                  <p className="text-xs font-medium text-muted-foreground">Exam Type</p>
+                  <Badge className={viewEeData.examType === "COMPUTERIZED" ? "bg-blue-700 text-white" : "bg-gray-700 text-white"}>
+                    {viewEeData.examType === "COMPUTERIZED" ? "Computerized" : "Manual"}
+                  </Badge>
+                </div>
               )}
               {viewEeData.chiefComplaint && (
                 <div>

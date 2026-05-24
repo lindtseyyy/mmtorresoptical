@@ -17,7 +17,7 @@ public class TransactionPaymentValidator
         if (tendered == null || tendered.compareTo(BigDecimal.ZERO) <= 0) {
             context.disableDefaultConstraintViolation();
             context.buildConstraintViolationWithTemplate(
-                            "At least a partial payment is required.")
+                            "At least a deposit payment is required to create a transaction.")
                     .addPropertyNode("amountTendered")
                     .addConstraintViolation();
             return false;

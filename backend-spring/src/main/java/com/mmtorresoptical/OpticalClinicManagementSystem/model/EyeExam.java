@@ -2,6 +2,7 @@ package com.mmtorresoptical.OpticalClinicManagementSystem.model;
 
 import com.mmtorresoptical.OpticalClinicManagementSystem.converter.AesEncryptionConverter;
 import com.mmtorresoptical.OpticalClinicManagementSystem.enums.EyeExamStatus;
+import com.mmtorresoptical.OpticalClinicManagementSystem.enums.ExamType;
 import jakarta.persistence.*;
 import lombok.Getter;
 import lombok.Setter;
@@ -83,6 +84,10 @@ public class EyeExam {
     @Convert(converter = AesEncryptionConverter.class)
     @Column(name = "plan_notes", columnDefinition = "TEXT")
     private String planNotes;
+
+    @Enumerated(EnumType.STRING)
+    @Column(name = "exam_type", nullable = false)
+    private ExamType examType = ExamType.MANUAL;
 
     @Column(name = "is_archived", nullable = false)
     private Boolean isArchived = false;

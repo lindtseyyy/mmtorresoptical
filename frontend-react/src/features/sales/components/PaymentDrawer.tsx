@@ -14,6 +14,7 @@ interface PaymentDrawerProps {
   grandTotal: number;
   onComplete: (data: PaymentData) => void;
   pending: boolean;
+  hasPatient: boolean;
 }
 
 const PaymentDrawer: React.FC<PaymentDrawerProps> = ({
@@ -23,6 +24,7 @@ const PaymentDrawer: React.FC<PaymentDrawerProps> = ({
   grandTotal,
   onComplete,
   pending,
+  hasPatient,
 }) => {
   const [paymentMethod, setPaymentMethod] = useState<"CASH" | "GCASH">("CASH");
   const [amountTenderedStr, setAmountTenderedStr] = useState("");
@@ -33,10 +35,15 @@ const PaymentDrawer: React.FC<PaymentDrawerProps> = ({
   const remainingBalance = Math.max(0, grandTotal - amountTendered);
   const isPartial = amountTendered > 0 && amountTendered < grandTotal;
   const isFullPayment = amountTendered >= grandTotal;
+  const minDeposit = grandTotal * 0.50;
+  const belowMinDeposit = amountTendered < minDeposit;
+  const depositAllowed = amountTendered < grandTotal && amountTendered > 0;
 
   const canComplete =
     items.length > 0 &&
     amountTendered > 0 &&
+    !belowMinDeposit &&
+    !(depositAllowed && !hasPatient) &&
     !pending &&
     (paymentMethod === "GCASH"
       ? referenceNumber.trim().length > 0
@@ -239,7 +246,9 @@ const PaymentDrawer: React.FC<PaymentDrawerProps> = ({
                     step="0.01"
                     value={amountTenderedStr}
                     onChange={(e) => {
-                      let val = e.target.value;
+                      const raw = e.target.value.replace(/[^0-9.]/g, '');
+                      const parts = raw.split('.');
+                      let val = parts.length > 2 ? parts[0] + '.' + parts.slice(1).join('') : raw;
                       if (isGcash && parseFloat(val) > grandTotal) {
                         val = grandTotal.toFixed(2);
                       }
@@ -280,10 +289,30 @@ const PaymentDrawer: React.FC<PaymentDrawerProps> = ({
                 </div>
               )}
 
-              {isPartial && (
+              {isPartial && !belowMinDeposit && hasPatient && (
                 <div className="flex items-center gap-1.5 text-xs text-amber-600">
                   <AlertTriangle className="h-3.5 w-3.5" />
                   Partial payment — ₱{remainingBalance.toFixed(2)} will remain as balance due.
+                </div>
+              )}
+
+              {belowMinDeposit && hasPatient && (
+                <div className="flex items-center gap-1.5 text-xs text-red-600">
+                  <AlertTriangle className="h-3.5 w-3.5" />
+                  Minimum deposit required: <span className="font-bold">₱{minDeposit.toFixed(2)}</span> (50% of total)
+                </div>
+              )}
+
+              {depositAllowed && !hasPatient && (
+                <div className="flex items-center gap-1.5 text-xs text-red-600">
+                  <AlertTriangle className="h-3.5 w-3.5" />
+                  Deposits require a linked patient. Please associate a patient before making a partial payment.
+                </div>
+              )}
+
+              {belowMinDeposit && amountTendered > 0 && hasPatient && (
+                <div className="text-xs text-red-600">
+                  Deposit must be at least 50% of the total. Add <span className="font-bold">₱{(minDeposit - amountTendered).toFixed(2)}</span> more.
                 </div>
               )}
             </div>

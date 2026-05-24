@@ -37,16 +37,12 @@ const AddPaymentDrawer: React.FC<AddPaymentDrawerProps> = ({
   }, [open, balanceDue]);
 
   const amount = parseFloat(amountStr) || 0;
-  const canComplete = amount > 0 && amount <= balanceDue && !pending &&
+  const canComplete = amount > 0 && !pending &&
     (paymentMethod === "GCASH" ? referenceNumber.trim().length > 0 : true);
 
   const handleSubmit = () => {
     if (amount <= 0) {
       toast.error("Enter a valid payment amount");
-      return;
-    }
-    if (amount > balanceDue) {
-      toast.error("Payment exceeds remaining balance");
       return;
     }
     if (paymentMethod === "GCASH" && !referenceNumber.trim()) {
@@ -61,8 +57,6 @@ const AddPaymentDrawer: React.FC<AddPaymentDrawerProps> = ({
   };
 
   if (!open) return null;
-
-  const newBalance = balanceDue - amount;
 
   return (
     <>
@@ -136,35 +130,22 @@ const AddPaymentDrawer: React.FC<AddPaymentDrawerProps> = ({
             </div>
           </div>
 
-          {/* Amount */}
+          {/* Amount — read-only exact balance */}
           <div className="space-y-2 rounded-lg border border-border bg-background/50 p-3">
-            <Label className="text-xs text-muted-foreground">Amount</Label>
+            <Label className="text-xs text-muted-foreground">Amount to Settle</Label>
             <div className="relative">
               <span className="absolute left-2.5 top-1/2 -translate-y-1/2 text-sm text-muted-foreground">₱</span>
               <Input
                 type="number"
-                min="0.01"
-                max={balanceDue}
-                step="0.01"
                 value={amountStr}
-                onChange={(e) => setAmountStr(e.target.value)}
-                className="pl-7"
-                disabled={pending}
+                className="pl-7 bg-muted/50 cursor-not-allowed"
+                readOnly
+                disabled
               />
             </div>
-
-            {amount > 0 && amount <= balanceDue && (
-              <div className="flex justify-between rounded-md bg-green-50 dark:bg-green-950 p-2 text-sm">
-                <span className="text-green-700 dark:text-green-300">New Balance</span>
-                <span className="font-bold tabular-nums text-green-700 dark:text-green-300">
-                  ₱{newBalance.toFixed(2)}
-                </span>
-              </div>
-            )}
-
-            {amount > balanceDue && (
-              <p className="text-xs text-destructive">Amount exceeds remaining balance</p>
-            )}
+            <p className="text-xs text-muted-foreground">
+              The remaining balance must be settled in full — partial payments are not allowed.
+            </p>
           </div>
 
           {/* GCash reference */}
@@ -198,7 +179,7 @@ const AddPaymentDrawer: React.FC<AddPaymentDrawerProps> = ({
             ) : (
               <>
                 <CreditCard className="h-4 w-4" />
-                Add Payment — ₱{amount.toFixed(2)}
+                Settle Balance — ₱{amount.toFixed(2)}
               </>
             )}
           </Button>

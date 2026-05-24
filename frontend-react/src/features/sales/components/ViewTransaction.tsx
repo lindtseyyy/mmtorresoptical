@@ -408,9 +408,10 @@ const ViewTransaction: React.FC = () => {
               {isAdmin() && tx.fulfillmentStatus === "READY_FOR_PICKUP" && (
                 <Button
                   size="sm"
-                  className="h-8 bg-teal-600 hover:bg-teal-700 text-white"
+                  className="h-8 bg-teal-600 hover:bg-teal-700 text-white disabled:opacity-50"
                   onClick={() => { setFulfillTarget("COMPLETED"); setFulfillDialogOpen(true); }}
-                  disabled={fulfillMutation.isPending}
+                  disabled={tx.transactionStatus !== "PAID" || fulfillMutation.isPending}
+                  title={tx.transactionStatus !== "PAID" ? "Transaction must be fully paid before marking as picked up" : undefined}
                 >
                   <PackageOpen className="mr-1 h-3.5 w-3.5" />
                   Mark as Picked Up

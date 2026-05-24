@@ -460,6 +460,7 @@ const ManageSales: React.FC = () => {
         grandTotal={grandTotal}
         onComplete={handleCompleteSale}
         pending={transactionMutation.isPending}
+        hasPatient={selectedPatient !== null}
       />
 
       <ReceiptDialog

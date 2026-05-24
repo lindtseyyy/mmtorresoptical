@@ -18,6 +18,7 @@ export interface EyeExamResponse {
   eyeExamId: string;
   examNumber: string;
   createdAt: string;
+  examType: string | null;
   chiefComplaint: string | null;
   medicalHistorySnapshot: string | null;
   vaUnconvertedOd: string | null;

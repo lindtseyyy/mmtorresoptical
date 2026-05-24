@@ -8,6 +8,13 @@ import { ArrowLeft } from "lucide-react";
 import { Button } from "@/shared/components/ui/button";
 import { Input } from "@/shared/components/ui/input";
 import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/shared/components/ui/select";
+import {
   Form,
   FormControl,
   FormField,
@@ -27,6 +34,7 @@ import { toast } from "sonner";
 import { createEyeExam, type CreateEyeExamInput } from "@/features/patients/services/eyeExamApi";
 
 const eyeExamSchema = z.object({
+  examType: z.enum(["COMPUTERIZED", "MANUAL"], { required_error: "Exam type is required" }),
   chiefComplaint: z.string().min(1, "Chief complaint is required"),
   vaUnconvertedOd: z.string().optional(),
   vaUnconvertedOs: z.string().optional(),
@@ -62,6 +70,7 @@ const AddEyeExam: React.FC = () => {
   const form = useForm<EyeExamFormValues>({
     resolver: zodResolver(eyeExamSchema),
     defaultValues: {
+      examType: "MANUAL",
       chiefComplaint: "",
       vaUnconvertedOd: "",
       vaUnconvertedOs: "",
@@ -79,6 +88,7 @@ const AddEyeExam: React.FC = () => {
   const mutation = useMutation({
     mutationFn: (data: EyeExamFormValues) => {
       const payload: CreateEyeExamInput = {
+        examType: data.examType,
         chiefComplaint: data.chiefComplaint,
         vaUnconvertedOd: data.vaUnconvertedOd || undefined,
         vaUnconvertedOs: data.vaUnconvertedOs || undefined,
@@ -149,6 +159,37 @@ const AddEyeExam: React.FC = () => {
                         placeholder="e.g. Blurry vision, digital eye strain, headache around eyes..."
                         {...field}
                       />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+            </CardContent>
+          </Card>
+
+          {/* Exam Type */}
+          <Card>
+            <CardHeader>
+              <CardTitle>Exam Type</CardTitle>
+              <CardDescription>Methodology used for this assessment</CardDescription>
+            </CardHeader>
+            <CardContent>
+              <FormField
+                control={form.control}
+                name="examType"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Exam Type *</FormLabel>
+                    <FormControl>
+                      <Select onValueChange={field.onChange} defaultValue={field.value}>
+                        <SelectTrigger>
+                          <SelectValue placeholder="Select exam type" />
+                        </SelectTrigger>
+                        <SelectContent>
+                          <SelectItem value="COMPUTERIZED">Computerized</SelectItem>
+                          <SelectItem value="MANUAL">Manual</SelectItem>
+                        </SelectContent>
+                      </Select>
                     </FormControl>
                     <FormMessage />
                   </FormItem>

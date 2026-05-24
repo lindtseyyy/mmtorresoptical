@@ -103,6 +103,7 @@ export interface EyeExamListItem {
   eyeExamId: string;
   examNumber: string;
   createdAt: string;
+  examType: string | null;
   chiefComplaint: string | null;
   clinicalImpression: string | null;
   status: string | null;
