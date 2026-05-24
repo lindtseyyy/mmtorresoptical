@@ -141,6 +141,11 @@ const OriginalReceipt: React.FC<{
                       </span>
                     </div>
                   )}
+                  {item.quantity > 1 && (
+                    <div className="text-[11px] text-muted-foreground">
+                      └─ ₱{format2(item.unitPrice)} each
+                    </div>
+                  )}
                 </td>
                 <td className="py-1 text-center align-top text-muted-foreground">{item.quantity}</td>
                 <td className="py-1 text-right align-top tabular-nums">
@@ -401,6 +406,11 @@ const UpdatedStatement: React.FC<{ transaction: TransactionResponse }> = ({ tran
                           : `₱${format2(item.discountValue)}`}{" "}
                         off)
                       </span>
+                    )}
+                    {item.activeQty > 1 && (
+                      <div className="text-[11px] text-muted-foreground">
+                        └─ ₱{format2(item.unitPrice)} each
+                      </div>
                     )}
                   </td>
                   <td className="py-1 text-center align-top text-muted-foreground">{item.activeQty}</td>
