@@ -233,7 +233,6 @@ const ManageTransactions: React.FC = () => {
                     <SelectItem value="all">All Statuses</SelectItem>
                     <SelectItem value="DEPOSIT">Deposit</SelectItem>
                     <SelectItem value="PAID">Paid</SelectItem>
-                    <SelectItem value="COMPLETED">Completed</SelectItem>
                     <SelectItem value="VOIDED">Voided</SelectItem>
                   </SelectContent>
                 </Select>
@@ -251,13 +250,14 @@ const ManageTransactions: React.FC = () => {
                 <table className="w-full table-fixed text-sm">
                   <thead>
                     <tr className="border-b text-left text-muted-foreground">
-                      <th className="w-[18%] py-3 pr-4 font-medium">Transaction Number</th>
-                      <th className="w-[12%] py-3 pr-4 text-center font-medium">Total Amount</th>
-                      <th className="w-[11%] py-3 pr-4 text-center font-medium">Payment</th>
-                      <th className="w-[10%] py-3 pr-4 text-center font-medium">Refund</th>
-                      <th className="w-[11%] py-3 pr-4 text-center font-medium">Transaction Date</th>
-                      <th className="w-[10%] py-3 pr-4 text-center font-medium">Pickup By</th>
-                      <th className="w-[12%] py-3 pr-4 font-medium">Processed By</th>
+                      <th className="w-[16%] py-3 pr-4 font-medium">Transaction Number</th>
+                      <th className="w-[10%] py-3 pr-4 text-center font-medium">Total Amount</th>
+                      <th className="w-[10%] py-3 pr-4 text-center font-medium">Financial</th>
+                      <th className="w-[10%] py-3 pr-4 text-center font-medium">Fulfillment</th>
+                      <th className="w-[9%] py-3 pr-4 text-center font-medium">Refund</th>
+                      <th className="w-[10%] py-3 pr-4 text-center font-medium">Transaction Date</th>
+                      <th className="w-[9%] py-3 pr-4 text-center font-medium">Pickup By</th>
+                      <th className="w-[11%] py-3 pr-4 font-medium">Processed By</th>
                       <th className="w-[8%] py-3 text-center font-medium">Action</th>
                     </tr>
                   </thead>
@@ -279,6 +279,9 @@ const ManageTransactions: React.FC = () => {
                         </td>
                         <td className="py-3 pr-4 text-center">
                           <StatusBadge status={tx.transactionStatus} />
+                        </td>
+                        <td className="py-3 pr-4 text-center">
+                          <StatusBadge status={tx.fulfillmentStatus} />
                         </td>
                         <td className="py-3 pr-4 text-center">
                           {tx.refundStatus !== "NONE" ? (
@@ -312,7 +315,7 @@ const ManageTransactions: React.FC = () => {
                     ))}
                     <EmptyTableRows
                       count={PAGE_SIZE - (transactions?.length ?? 0)}
-                      colSpan={7}
+                      colSpan={9}
                       className="h-[57px]"
                     />
                   </tbody>

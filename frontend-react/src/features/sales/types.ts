@@ -84,6 +84,7 @@ export interface TransactionResponse {
   estimatedReadyDate: string | null;
   transactionStatus: string;
   refundStatus: string;
+  fulfillmentStatus: string;
   createdBy: { id: string; fullName: string };
   patient: { id: string; fullName: string } | null;
   voidedBy?: { userId: string; username: string; role: string; fullName: string } | null;
@@ -121,6 +122,7 @@ export interface TransactionListItem {
   estimatedReadyDate: string | null;
   transactionStatus: string;
   refundStatus: string;
+  fulfillmentStatus: string;
   paymentType: string;
   createdBy: { userId: string; username: string; role: string; fullName: string };
   patient: { patientId: string; fullName: string } | null;

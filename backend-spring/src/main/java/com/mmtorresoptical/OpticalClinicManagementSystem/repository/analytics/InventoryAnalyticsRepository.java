@@ -205,7 +205,6 @@ public interface InventoryAnalyticsRepository extends JpaRepository<Product, UUI
     JOIN ti.transaction t
     JOIN ti.product p
     WHERE t.transactionStatus IN (
-        com.mmtorresoptical.OpticalClinicManagementSystem.enums.TransactionStatus.COMPLETED,
         com.mmtorresoptical.OpticalClinicManagementSystem.enums.TransactionStatus.PAID,
         com.mmtorresoptical.OpticalClinicManagementSystem.enums.TransactionStatus.DEPOSIT
     )
@@ -256,7 +255,6 @@ public interface InventoryAnalyticsRepository extends JpaRepository<Product, UUI
     JOIN ti.transaction t
     JOIN ti.product p
     WHERE t.transactionStatus IN (
-        com.mmtorresoptical.OpticalClinicManagementSystem.enums.TransactionStatus.COMPLETED,
         com.mmtorresoptical.OpticalClinicManagementSystem.enums.TransactionStatus.PAID,
         com.mmtorresoptical.OpticalClinicManagementSystem.enums.TransactionStatus.DEPOSIT
     )
@@ -299,7 +297,6 @@ public interface InventoryAnalyticsRepository extends JpaRepository<Product, UUI
     JOIN ti.transaction t
     WHERE ti.product.productId = :productId
       AND t.transactionStatus IN (
-        com.mmtorresoptical.OpticalClinicManagementSystem.enums.TransactionStatus.COMPLETED,
         com.mmtorresoptical.OpticalClinicManagementSystem.enums.TransactionStatus.PAID,
         com.mmtorresoptical.OpticalClinicManagementSystem.enums.TransactionStatus.DEPOSIT
       )

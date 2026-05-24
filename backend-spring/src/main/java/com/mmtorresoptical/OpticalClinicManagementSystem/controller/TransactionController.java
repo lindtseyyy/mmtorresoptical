@@ -95,6 +95,15 @@ public class TransactionController {
         return ResponseEntity.ok().build();
     }
 
+    @PatchMapping("/{id}/fulfillment")
+    public ResponseEntity<TransactionResponseDTO> updateFulfillmentStatus(
+            @PathVariable UUID id,
+            @Valid @RequestBody FulfillmentStatusUpdateDTO request
+    ) {
+        TransactionResponseDTO transaction = transactionService.updateFulfillmentStatus(id, request);
+        return ResponseEntity.ok(transaction);
+    }
+
     @GetMapping("/metrics")
     public ResponseEntity<TransactionMetricsDTO> getTransactionMetrics() {
         return ResponseEntity.ok(transactionService.getTransactionMetrics());
@@ -128,14 +137,6 @@ public class TransactionController {
     ) {
         List<PaymentResponseDTO> payments = transactionService.getPaymentsForTransaction(id);
         return ResponseEntity.ok(payments);
-    }
-
-    @PostMapping("/{id}/complete")
-    public ResponseEntity<TransactionResponseDTO> completeTransaction(
-            @PathVariable UUID id
-    ) {
-        TransactionResponseDTO transaction = transactionService.completeTransaction(id);
-        return ResponseEntity.ok(transaction);
     }
 
 }

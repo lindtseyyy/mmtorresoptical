@@ -7,6 +7,7 @@ import com.mmtorresoptical.OpticalClinicManagementSystem.dto.refund.ItemRefundRe
 import com.mmtorresoptical.OpticalClinicManagementSystem.dto.refund.RefundTransactionRequestDTO;
 import com.mmtorresoptical.OpticalClinicManagementSystem.dto.transaction.*;
 import com.mmtorresoptical.OpticalClinicManagementSystem.dto.refund.RefundItemDTO;
+import com.mmtorresoptical.OpticalClinicManagementSystem.enums.FulfillmentStatus;
 import com.mmtorresoptical.OpticalClinicManagementSystem.enums.DiscountType;
 import com.mmtorresoptical.OpticalClinicManagementSystem.enums.PaymentMethod;
 import com.mmtorresoptical.OpticalClinicManagementSystem.enums.ProductType;
@@ -199,10 +200,6 @@ public class TransactionService {
         Transaction transaction = transactionRepository.findById(transactionId)
                 .orElseThrow(() -> new ResourceNotFoundException("Transaction not found with id: " + transactionId));
 
-        if (transaction.getTransactionStatus() == TransactionStatus.COMPLETED) {
-            throw new IllegalStateException("Cannot add payment to a completed transaction");
-        }
-
         if (transaction.getTransactionStatus() == TransactionStatus.VOIDED) {
             throw new IllegalStateException("Cannot add payment to a voided transaction");
         }
@@ -244,20 +241,50 @@ public class TransactionService {
     }
 
     @Transactional
-    public TransactionResponseDTO completeTransaction(UUID transactionId) {
+    public TransactionResponseDTO updateFulfillmentStatus(UUID transactionId, FulfillmentStatusUpdateDTO request) {
         Transaction transaction = transactionRepository.findById(transactionId)
                 .orElseThrow(() -> new ResourceNotFoundException("Transaction not found with id: " + transactionId));
 
-        if (transaction.getTransactionStatus() != TransactionStatus.PAID) {
-            throw new IllegalStateException("Only fully paid transactions can be completed. Current status: " + transaction.getTransactionStatus());
+        FulfillmentStatus currentStatus = transaction.getFulfillmentStatus();
+        FulfillmentStatus requestedStatus = request.getFulfillmentStatus();
+
+        if (requestedStatus == currentStatus) {
+            throw new BadRequestException("Transaction is already in " + currentStatus.name() + " fulfillment status.");
         }
 
-        transaction.setTransactionStatus(TransactionStatus.COMPLETED);
-        transaction.setCompletedAt(LocalDateTime.now());
+        if (requestedStatus == FulfillmentStatus.READY_FOR_PICKUP && currentStatus != FulfillmentStatus.PENDING_LAB) {
+            throw new BadRequestException("Can only mark as Ready for Pickup from Pending Lab status. Current: " + currentStatus.name());
+        }
+
+        if (requestedStatus == FulfillmentStatus.COMPLETED && currentStatus != FulfillmentStatus.READY_FOR_PICKUP) {
+            throw new BadRequestException("Can only mark as Completed from Ready for Pickup status. Current: " + currentStatus.name());
+        }
+
+        // Can't go backward
+        if ((requestedStatus == FulfillmentStatus.PENDING_LAB && currentStatus != FulfillmentStatus.PENDING_LAB)) {
+            throw new BadRequestException("Cannot revert fulfillment status back to Pending Lab from " + currentStatus.name());
+        }
+
+        transaction.setFulfillmentStatus(requestedStatus);
+
+        if (requestedStatus == FulfillmentStatus.COMPLETED) {
+            transaction.setCompletedAt(LocalDateTime.now());
+        }
+
         Transaction saved = transactionRepository.save(transaction);
 
+        // Audit: reuse COMPLETE action type for fulfillment completion (or if PENDING_LAB→READY, PENDING_LAB→COMPLETED from READY, or READY→COMPLETED)
+        String summary;
+        if (requestedStatus == FulfillmentStatus.COMPLETED) {
+            summary = "Marked transaction as picked up — order fulfilled";
+        } else if (requestedStatus == FulfillmentStatus.READY_FOR_PICKUP) {
+            summary = "Marked transaction as ready for pickup";
+        } else {
+            summary = "Marked transaction as returning to pending lab";
+        }
         transactionAuditHelper.logComplete(saved);
 
+        // Enrich with payments
         TransactionResponseDTO response = enrichWithPayments(transactionMapper.entityToResponseDTO(saved));
         BigDecimal totalPayments = response.getPayments() != null
                 ? response.getPayments().stream()
@@ -426,7 +453,7 @@ public class TransactionService {
 
         BigDecimal totalAccountsReceivable = transactionRepository.sumBalanceDueByTransactionStatusPartiallyPaid();
 
-        long awaitingPickupCount = transactionRepository.countByTransactionStatus(TransactionStatus.PAID);
+        long awaitingPickupCount = transactionRepository.countByFulfillmentStatus(FulfillmentStatus.READY_FOR_PICKUP);
 
         return TransactionMetricsDTO.builder()
                 .totalTransactions(totalTransactions)
@@ -509,6 +536,7 @@ public class TransactionService {
         }
 
         transaction.setTransactionStatus(TransactionStatus.VOIDED);
+        transaction.setFulfillmentStatus(FulfillmentStatus.PENDING_LAB);
         transaction.setVoidedBy(authenticatedUser);
         transaction.setVoidedAt(LocalDateTime.now());
         transaction.setVoidReason(voidTransactionRequestDTO.getReason());
@@ -628,6 +656,7 @@ public class TransactionService {
         BigDecimal amountPaid = transaction.getAmountPaid();
         BigDecimal cashToReturn;
         TransactionStatus previousStatus = transaction.getTransactionStatus();
+        FulfillmentStatus previousFulfillmentStatus = transaction.getFulfillmentStatus();
         RefundStatus previousRefundStatus = transaction.getRefundStatus();
 
         if (amountPaid.compareTo(newOrderTotal) > 0) {
@@ -635,12 +664,7 @@ public class TransactionService {
             BigDecimal newTotalRefundedCash = previousRefundedCash.add(cashToReturn);
             transaction.setTotalRefundedCash(newTotalRefundedCash);
             BigDecimal effectivePaid = amountPaid.subtract(newTotalRefundedCash);
-            if (effectivePaid.compareTo(transaction.getTotalAmount()) >= 0
-                    && previousStatus == TransactionStatus.COMPLETED) {
-                transaction.setTransactionStatus(TransactionStatus.COMPLETED);
-            } else {
-                transaction.setTransactionStatus(computeStatus(newOrderTotal, effectivePaid));
-            }
+            transaction.setTransactionStatus(computeStatus(newOrderTotal, effectivePaid));
         } else {
             cashToReturn = BigDecimal.ZERO;
             BigDecimal effectivePaid = amountPaid.subtract(previousRefundedCash);

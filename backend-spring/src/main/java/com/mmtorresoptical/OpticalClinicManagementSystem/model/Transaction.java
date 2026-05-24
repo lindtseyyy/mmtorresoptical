@@ -1,5 +1,6 @@
 package com.mmtorresoptical.OpticalClinicManagementSystem.model;
 
+import com.mmtorresoptical.OpticalClinicManagementSystem.enums.FulfillmentStatus;
 import com.mmtorresoptical.OpticalClinicManagementSystem.enums.RefundStatus;
 import com.mmtorresoptical.OpticalClinicManagementSystem.enums.TransactionStatus;
 import jakarta.persistence.*;
@@ -47,6 +48,11 @@ public class Transaction {
     @NotNull
     @Column(name = "refund_status", nullable = false)
     private RefundStatus refundStatus = RefundStatus.NONE;
+
+    @Enumerated(EnumType.STRING)
+    @NotNull
+    @Column(name = "fulfillment_status", nullable = false)
+    private FulfillmentStatus fulfillmentStatus = FulfillmentStatus.PENDING_LAB;
 
     @Column(name = "amount_paid", precision = 10, scale = 2)
     private BigDecimal amountPaid = BigDecimal.ZERO;

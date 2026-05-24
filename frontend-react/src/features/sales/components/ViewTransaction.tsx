@@ -14,6 +14,8 @@ import {
   EyeOff,
   CreditCard,
   CheckCircle,
+  PackageOpen,
+  PackageCheck,
   Printer,
   FileText,
 } from "lucide-react";
@@ -25,7 +27,7 @@ import { Checkbox } from "@/shared/components/ui/checkbox";
 import { Input } from "@/shared/components/ui/input";
 import { Label } from "@/shared/components/ui/label";
 import { Dialog, DialogHeader, DialogTitle, DialogDescription } from "@/shared/components/ui/dialog";
-import { fetchTransaction, refundTransaction, voidTransaction, addPayment, completeTransaction } from "@/features/sales/services/transactionApi";
+import { fetchTransaction, refundTransaction, voidTransaction, addPayment, updateFulfillmentStatus } from "@/features/sales/services/transactionApi";
 import { toast } from "sonner";
 import type { TransactionItemResponse, RefundStateItem, RefundMethod, PaymentResponse, ItemRefundResponse, RefundReceiptData } from "@/features/sales/types";
 import RefundDrawer from "./RefundDrawer";
@@ -120,16 +122,17 @@ const ViewTransaction: React.FC = () => {
     },
   });
 
-  const completeMutation = useMutation({
-    mutationFn: () => completeTransaction(transactionId),
+  const fulfillMutation = useMutation({
+    mutationFn: (status: string) => updateFulfillmentStatus(transactionId, status),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["transaction", transactionId] });
       queryClient.invalidateQueries({ queryKey: ["transactions"] });
-      setCompleteDialogOpen(false);
-      toast.success("Transaction marked as completed");
+      setFulfillDialogOpen(false);
+      setFulfillTarget(null);
+      toast.success("Fulfillment status updated");
     },
     onError: (error: any) => {
-      toast.error(error?.response?.data?.message ?? error?.message ?? "Failed to complete");
+      toast.error(error?.response?.data?.message ?? error?.message ?? "Failed to update fulfillment status");
     },
   });
 
@@ -150,12 +153,13 @@ const ViewTransaction: React.FC = () => {
   const [paymentReceiptOpen, setPaymentReceiptOpen] = useState(false);
   const [lastPayment, setLastPayment] = useState<PaymentResponse | null>(null);
 
-  // ── Complete dialog state ──
-  const [completeDialogOpen, setCompleteDialogOpen] = useState(false);
-
   // ── Reprint receipt state ──
   const [reprintReceiptOpen, setReprintReceiptOpen] = useState(false);
   const [statementOpen, setStatementOpen] = useState(false);
+
+  // ── Fulfillment dialog state ──
+  const [fulfillDialogOpen, setFulfillDialogOpen] = useState(false);
+  const [fulfillTarget, setFulfillTarget] = useState<"READY_FOR_PICKUP" | "COMPLETED" | null>(null);
 
   // ── Void dialog state ──
   const [voidDialogOpen, setVoidDialogOpen] = useState(false);
@@ -334,6 +338,7 @@ const ViewTransaction: React.FC = () => {
               <div className="flex items-center gap-2">
                 <h2 className="text-3xl font-bold">{tx.transactionNumber}</h2>
                 <StatusBadge status={tx.transactionStatus} />
+                <StatusBadge status={tx.fulfillmentStatus} />
                 {tx.refundStatus !== "NONE" && (
                   <StatusBadge status={tx.refundStatus} />
                 )}
@@ -389,15 +394,26 @@ const ViewTransaction: React.FC = () => {
                   Add Payment
                 </Button>
               )}
-              {isAdmin() && tx.transactionStatus === "PAID" && (
+              {isAdmin() && tx.fulfillmentStatus === "PENDING_LAB" && (
                 <Button
                   size="sm"
-                  className="h-8 bg-blue-600 hover:bg-blue-700 text-white"
-                  onClick={() => setCompleteDialogOpen(true)}
-                  disabled={completeMutation.isPending}
+                  className="h-8 bg-yellow-600 hover:bg-yellow-700 text-white"
+                  onClick={() => { setFulfillTarget("READY_FOR_PICKUP"); setFulfillDialogOpen(true); }}
+                  disabled={fulfillMutation.isPending}
                 >
-                  <CheckCircle className="mr-1 h-3.5 w-3.5" />
-                  Mark Complete
+                  <PackageCheck className="mr-1 h-3.5 w-3.5" />
+                  Mark as Ready for Pickup
+                </Button>
+              )}
+              {isAdmin() && tx.fulfillmentStatus === "READY_FOR_PICKUP" && (
+                <Button
+                  size="sm"
+                  className="h-8 bg-teal-600 hover:bg-teal-700 text-white"
+                  onClick={() => { setFulfillTarget("COMPLETED"); setFulfillDialogOpen(true); }}
+                  disabled={fulfillMutation.isPending}
+                >
+                  <PackageOpen className="mr-1 h-3.5 w-3.5" />
+                  Mark as Picked Up
                 </Button>
               )}
               {isAdmin() && (tx.transactionStatus === "PAID" || tx.transactionStatus === "DEPOSIT") && tx.refundStatus === "NONE" && (
@@ -445,7 +461,7 @@ const ViewTransaction: React.FC = () => {
                 <p className="font-medium text-amber-600">{formatCurrency(effectiveBalanceDue)}</p>
               </div>
             )}
-            {tx.transactionStatus === "COMPLETED" && tx.completedAt && (
+            {tx.fulfillmentStatus === "COMPLETED" && tx.completedAt && (
               <div>
                 <p className="text-xs text-muted-foreground">Completed At</p>
                 <p className="font-medium">{formatDateTime(tx.completedAt)}</p>
@@ -814,28 +830,38 @@ const ViewTransaction: React.FC = () => {
         </div>
       </Dialog>
 
-      {/* Complete Transaction Dialog */}
-      <Dialog open={completeDialogOpen} onOpenChange={setCompleteDialogOpen}>
+      {/* Fulfillment Confirmation Dialog */}
+      <Dialog open={fulfillDialogOpen} onOpenChange={setFulfillDialogOpen}>
         <DialogHeader>
-          <DialogTitle>Mark as Complete</DialogTitle>
+          <DialogTitle>
+            {fulfillTarget === "READY_FOR_PICKUP" ? "Mark as Ready for Pickup" : "Mark as Picked Up"}
+          </DialogTitle>
           <DialogDescription>
-            This will mark <strong>{tx.transactionNumber}</strong> as completed. This confirms the patient has picked up their glasses and the transaction is fully settled. This action cannot be undone.
+            {fulfillTarget === "READY_FOR_PICKUP" ? (
+              <>
+                This will mark <strong>{tx?.transactionNumber}</strong> as <strong>Ready for Pickup</strong>. The patient can now come in to collect their glasses.
+              </>
+            ) : (
+              <>
+                This will mark <strong>{tx?.transactionNumber}</strong> as <strong>Picked Up</strong>. This confirms the glasses have been handed to the patient and the order is complete. This action cannot be undone.
+              </>
+            )}
           </DialogDescription>
         </DialogHeader>
         <div className="flex justify-end gap-2 pt-4">
           <Button
             variant="outline"
-            onClick={() => setCompleteDialogOpen(false)}
-            disabled={completeMutation.isPending}
+            onClick={() => { setFulfillDialogOpen(false); setFulfillTarget(null); }}
+            disabled={fulfillMutation.isPending}
           >
             Cancel
           </Button>
           <Button
-            className="bg-blue-600 hover:bg-blue-700 text-white"
-            onClick={() => completeMutation.mutate()}
-            disabled={completeMutation.isPending}
+            className={fulfillTarget === "READY_FOR_PICKUP" ? "bg-yellow-600 hover:bg-yellow-700 text-white" : "bg-teal-600 hover:bg-teal-700 text-white"}
+            onClick={() => fulfillTarget && fulfillMutation.mutate(fulfillTarget)}
+            disabled={fulfillMutation.isPending || !fulfillTarget}
           >
-            {completeMutation.isPending ? "Processing..." : "Confirm Complete"}
+            {fulfillMutation.isPending ? "Processing..." : fulfillTarget === "READY_FOR_PICKUP" ? "Confirm Ready" : "Confirm Picked Up"}
           </Button>
         </div>
       </Dialog>

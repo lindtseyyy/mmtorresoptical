@@ -23,9 +23,14 @@ public class JSONService {
     private static final Map<String, String> TRANSACTION_STATUS_LABELS = Map.of(
             "DEPOSIT", "Partial Deposit Owed",
             "PAID", "Paid",
-            "COMPLETED", "Completed",
             "VOIDED", "Voided",
             "REFUNDED", "Refunded"
+    );
+
+    private static final Map<String, String> FULFILLMENT_STATUS_LABELS = Map.of(
+            "PENDING_LAB", "In Lab",
+            "READY_FOR_PICKUP", "Ready for Pickup",
+            "COMPLETED", "Picked Up"
     );
 
     private static final Map<String, String> ROLE_LABELS = Map.of(
@@ -307,6 +312,11 @@ public class JSONService {
             node.put("transactionStatus", formatTransactionStatus(raw));
         }
 
+        if (node.has("fulfillmentStatus")) {
+            String raw = node.get("fulfillmentStatus").asText();
+            node.put("fulfillmentStatus", formatFulfillmentStatus(raw));
+        }
+
         if (node.has("refundStatus")) {
             String refundStatus = node.get("refundStatus").asText();
             if ("NONE".equalsIgnoreCase(refundStatus)) {
@@ -388,6 +398,11 @@ public class JSONService {
             node.put("transactionStatus", formatTransactionStatus(raw));
         }
 
+        if (node.has("fulfillmentStatus")) {
+            String raw = node.get("fulfillmentStatus").asText();
+            node.put("fulfillmentStatus", formatFulfillmentStatus(raw));
+        }
+
         if (node.has("refundStatus")) {
             String refundStatus = node.get("refundStatus").asText();
             if ("NONE".equalsIgnoreCase(refundStatus)) {
@@ -456,6 +471,11 @@ public class JSONService {
             node.put("transactionStatus", formatTransactionStatus(raw));
         }
 
+        if (node.has("fulfillmentStatus")) {
+            String raw = node.get("fulfillmentStatus").asText();
+            node.put("fulfillmentStatus", formatFulfillmentStatus(raw));
+        }
+
         if (node.has("refundStatus")) {
             String refundStatus = node.get("refundStatus").asText();
             if ("NONE".equalsIgnoreCase(refundStatus)) {
@@ -522,6 +542,11 @@ public class JSONService {
         if (node.has("transactionStatus")) {
             String raw = node.get("transactionStatus").asText();
             node.put("transactionStatus", formatTransactionStatus(raw));
+        }
+
+        if (node.has("fulfillmentStatus")) {
+            String raw = node.get("fulfillmentStatus").asText();
+            node.put("fulfillmentStatus", formatFulfillmentStatus(raw));
         }
 
         if (node.has("refundStatus")) {
@@ -980,6 +1005,10 @@ public class JSONService {
 
     private String formatTransactionStatus(String status) {
         return TRANSACTION_STATUS_LABELS.getOrDefault(status, status);
+    }
+
+    private String formatFulfillmentStatus(String status) {
+        return FULFILLMENT_STATUS_LABELS.getOrDefault(status, status);
     }
 
     private String formatRole(String role) {

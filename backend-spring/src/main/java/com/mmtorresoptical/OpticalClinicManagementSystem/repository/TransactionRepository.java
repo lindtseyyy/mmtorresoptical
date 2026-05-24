@@ -1,5 +1,6 @@
 package com.mmtorresoptical.OpticalClinicManagementSystem.repository;
 
+import com.mmtorresoptical.OpticalClinicManagementSystem.enums.FulfillmentStatus;
 import com.mmtorresoptical.OpticalClinicManagementSystem.enums.TransactionStatus;
 import com.mmtorresoptical.OpticalClinicManagementSystem.model.Transaction;
 import org.springframework.data.jpa.repository.JpaRepository;
@@ -37,6 +38,11 @@ public interface TransactionRepository extends JpaRepository<Transaction, UUID>,
     long countByTransactionStatusAndTransactionDateBetween(TransactionStatus status, LocalDateTime start, LocalDateTime end);
 
     long countByTransactionStatus(TransactionStatus status);
+
+    long countByFulfillmentStatus(FulfillmentStatus status);
+
+    @Query("SELECT COUNT(t) FROM Transaction t WHERE t.fulfillmentStatus = :status AND t.transactionDate >= :start AND t.transactionDate < :end")
+    long countByFulfillmentStatusAndTransactionDateBetween(FulfillmentStatus status, LocalDateTime start, LocalDateTime end);
 
     @Query("SELECT COUNT(t) FROM Transaction t WHERE t.patient.patientId = :patientId")
     long countByPatientId(UUID patientId);

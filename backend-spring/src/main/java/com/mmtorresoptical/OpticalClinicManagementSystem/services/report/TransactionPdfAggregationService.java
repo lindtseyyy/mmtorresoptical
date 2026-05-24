@@ -23,7 +23,7 @@ public class TransactionPdfAggregationService {
     private final TransactionService transactionService;
 
     private static final List<String> STATUS_ORDER = List.of(
-        "DEPOSIT", "PAID", "COMPLETED", "VOIDED", "REFUNDED"
+        "DEPOSIT", "PAID", "VOIDED", "REFUNDED"
     );
 
     public TransactionHierarchicalReportDataset buildTransactionReport(
@@ -191,7 +191,7 @@ public class TransactionPdfAggregationService {
 
             if (entry.getStatus() == null) continue;
             switch (entry.getStatus()) {
-                case PAID, COMPLETED -> {
+                case PAID -> {
                     completedCount++;
                     completedAmount = completedAmount.add(amount);
                 }

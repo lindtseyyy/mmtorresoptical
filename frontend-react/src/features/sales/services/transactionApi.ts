@@ -125,9 +125,9 @@ const fetchPayments = async (transactionId: string): Promise<PaymentResponse[]> 
   return data;
 };
 
-const completeTransaction = async (transactionId: string): Promise<TransactionResponse> => {
-  const { data } = await api.post(`/transactions/${transactionId}/complete`);
+const updateFulfillmentStatus = async (transactionId: string, fulfillmentStatus: string): Promise<TransactionResponse> => {
+  const { data } = await api.patch(`/transactions/${transactionId}/fulfillment`, { fulfillmentStatus });
   return data;
 };
 
-export { createTransaction, fetchTransactions, fetchProductTransactions, fetchTransactionMetrics, fetchAccountsReceivable, fetchTransaction, voidTransaction, refundTransaction, addPayment, fetchPayments, completeTransaction };
+export { createTransaction, fetchTransactions, fetchProductTransactions, fetchTransactionMetrics, fetchAccountsReceivable, fetchTransaction, voidTransaction, refundTransaction, addPayment, fetchPayments, updateFulfillmentStatus };

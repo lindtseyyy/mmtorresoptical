@@ -25,6 +25,7 @@ public class TransactionDetailsDTO {
     private LocalDateTime completedAt;
     private String transactionStatus;
     private String refundStatus;
+    private String fulfillmentStatus;
     private LocalDate estimatedReadyDate;
 
     private UserSummaryDTO voidedBy;

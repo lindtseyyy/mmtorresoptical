@@ -2,6 +2,7 @@ package com.mmtorresoptical.OpticalClinicManagementSystem.services.report;
 
 import com.mmtorresoptical.OpticalClinicManagementSystem.dto.metrics.TransactionMonthlyTrendPoint;
 import com.mmtorresoptical.OpticalClinicManagementSystem.dto.product.ProductDetailsDTO;
+import com.mmtorresoptical.OpticalClinicManagementSystem.enums.FulfillmentStatus;
 import com.mmtorresoptical.OpticalClinicManagementSystem.enums.Sex;
 import com.mmtorresoptical.OpticalClinicManagementSystem.enums.RefundStatus;
 import com.mmtorresoptical.OpticalClinicManagementSystem.enums.ReportType;
@@ -197,7 +198,7 @@ public class ReportAggregationService {
         BigDecimal totalAmount = t.getTotalAmount() != null ? t.getTotalAmount() : BigDecimal.ZERO;
 
         BigDecimal base = switch (paymentStatus) {
-            case COMPLETED, PAID -> totalAmount;
+            case PAID -> totalAmount;
             case DEPOSIT -> t.getAmountPaid() != null ? t.getAmountPaid() : BigDecimal.ZERO;
             case VOIDED -> totalAmount.negate();
             default -> BigDecimal.ZERO;
@@ -258,7 +259,7 @@ public class ReportAggregationService {
 
         if (isOverall) {
             totalVisits = (int) transactionRepository.count();
-            completedVisits = (int) transactionRepository.countByTransactionStatus(TransactionStatus.COMPLETED);
+            completedVisits = (int) transactionRepository.countByFulfillmentStatus(FulfillmentStatus.COMPLETED);
             missedOrCancelledVisits = (int) transactionRepository.countByTransactionStatus(TransactionStatus.VOIDED);
         } else {
             LocalDateTime rangeStart = minDate != null ? minDate.atStartOfDay() : LocalDateTime.of(2000, 1, 1, 0, 0);
@@ -268,8 +269,8 @@ public class ReportAggregationService {
             newPatientsInPeriod = (int) patientRepository.countByCreatedAtBetween(rangeStart, rangeEnd);
 
             totalVisits = (int) transactionRepository.countByTransactionDateBetween(rangeStart, rangeEnd);
-            completedVisits = (int) transactionRepository.countByTransactionStatusAndTransactionDateBetween(
-                    TransactionStatus.COMPLETED, rangeStart, rangeEnd);
+            completedVisits = (int) transactionRepository.countByFulfillmentStatusAndTransactionDateBetween(
+                    FulfillmentStatus.COMPLETED, rangeStart, rangeEnd);
             missedOrCancelledVisits = (int) transactionRepository.countByTransactionStatusAndTransactionDateBetween(
                     TransactionStatus.VOIDED, rangeStart, rangeEnd);
         }

@@ -19,6 +19,7 @@ public interface TransactionMapper {
     @Mapping(target = "transactionDate", ignore = true)
     @Mapping(target = "totalAmount", ignore = true)
     @Mapping(target = "transactionStatus", ignore = true)
+    @Mapping(target = "fulfillmentStatus", ignore = true)
     @Mapping(target = "amountPaid", ignore = true)
     @Mapping(target = "balanceDue", ignore = true)
     @Mapping(target = "completedAt", ignore = true)
@@ -47,6 +48,10 @@ public interface TransactionMapper {
             target = "refundStatus",
             expression = "java(transaction.getRefundStatus().name())"
     )
+    @Mapping(
+            target = "fulfillmentStatus",
+            expression = "java(transaction.getFulfillmentStatus().name())"
+    )
     TransactionDetailsDTO entityToDetailsDTO(Transaction transaction);
 
     @Mapping(
@@ -65,6 +70,10 @@ public interface TransactionMapper {
             target = "refundStatus",
             expression = "java(transaction.getRefundStatus().name())"
     )
+    @Mapping(
+            target = "fulfillmentStatus",
+            expression = "java(transaction.getFulfillmentStatus().name())"
+    )
     TransactionResponseDTO entityToResponseDTO(Transaction transaction);
 
     @Mapping(
@@ -82,6 +91,10 @@ public interface TransactionMapper {
     @Mapping(
             target = "refundStatus",
             expression = "java(transaction.getRefundStatus().name())"
+    )
+    @Mapping(
+            target = "fulfillmentStatus",
+            expression = "java(transaction.getFulfillmentStatus().name())"
     )
     TransactionListDTO entityToListDTO(Transaction transaction);
 
