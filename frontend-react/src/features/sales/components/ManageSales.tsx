@@ -1,7 +1,7 @@
 import { useState, useCallback, useEffect, useMemo } from "react";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
-import { Loader2, Trash2, UserRound, X, FileText } from "lucide-react";
+import { Loader2, Trash2, UserRound, X, FileText, ChevronDown, ChevronUp } from "lucide-react";
 
 import { Button } from "@/shared/components/ui/button";
 import SegmentedControl from "@/shared/components/ui/segmented-control";
@@ -43,6 +43,7 @@ const ManageSales: React.FC = () => {
   const [estimatedReadyDate, setEstimatedReadyDate] = useState("");
   const [isPatientModalOpen, setIsPatientModalOpen] = useState(false);
   const [selectedPrescriptionId, setSelectedPrescriptionId] = useState("");
+  const [patientExpanded, setPatientExpanded] = useState(true);
 
   const { data: patientPrescriptions = [] } = usePatientPrescriptions(selectedPatient?.patientId);
 
@@ -312,28 +313,98 @@ const ManageSales: React.FC = () => {
         {/* Customer Context */}
         <div className="rounded-lg border border-primary/30 bg-primary/5 p-3">
           {selectedPatient ? (
-            <div className="flex items-center gap-3">
-              <div className="flex h-9 w-9 items-center justify-center rounded-full bg-primary/10 shrink-0">
-                <UserRound className="h-4 w-4 text-primary" />
+            <>
+              <div className="flex items-center gap-3">
+                <button
+                  type="button"
+                  className="flex items-center gap-3 flex-1 min-w-0 text-left"
+                  onClick={() => setPatientExpanded((p) => !p)}
+                >
+                  <div className="flex h-9 w-9 items-center justify-center rounded-full bg-primary/10 shrink-0">
+                    <UserRound className="h-4 w-4 text-primary" />
+                  </div>
+                  <div className="min-w-0 flex-1">
+                    <p className="text-sm font-medium truncate">
+                      {selectedPatient.fullName}
+                    </p>
+                  </div>
+                  {patientExpanded ? (
+                    <ChevronUp className="h-4 w-4 text-muted-foreground shrink-0" />
+                  ) : (
+                    <ChevronDown className="h-4 w-4 text-muted-foreground shrink-0" />
+                  )}
+                </button>
+                <Button
+                  variant="ghost"
+                  size="icon"
+                  className="h-8 w-8 shrink-0 bg-red-800 text-white hover:bg-red-900 hover:text-white"
+                  onClick={() => {
+                    setSelectedPatient(null);
+                    setSelectedPrescriptionId("");
+                  }}
+                >
+                  <X className="h-4 w-4" />
+                </Button>
               </div>
-              <div className="min-w-0 flex-1">
-                <p className="text-sm font-medium truncate">
-                  {selectedPatient.fullName}
-                </p>
 
-              </div>
-              <Button
-                variant="ghost"
-                size="icon"
-                className="h-8 w-8 text-destructive hover:text-destructive shrink-0"
-                onClick={() => {
-                  setSelectedPatient(null);
-                  setSelectedPrescriptionId("");
-                }}
-              >
-                <X className="h-4 w-4" />
-              </Button>
-            </div>
+              {patientExpanded && (
+                <>
+                  <div className="mt-3">
+                    <label className="text-xs font-medium text-muted-foreground">
+                      Estimated Pickup Date
+                    </label>
+                    <input
+                      type="date"
+                      value={estimatedReadyDate}
+                      onChange={(e) => setEstimatedReadyDate(e.target.value)}
+                      min={new Date().toISOString().split("T")[0]}
+                      className="mt-1 flex h-9 w-full rounded-md border border-input bg-transparent px-3 py-1 text-sm shadow-sm transition-colors placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring"
+                    />
+                    <p className="text-xs text-muted-foreground mt-1">
+                      Defaults to 3 days from today if left empty.
+                    </p>
+                  </div>
+
+                  {patientPrescriptions.length > 0 && (
+                    <div className="mt-3 space-y-2">
+                      <label className="text-xs font-medium text-muted-foreground">
+                        Load Prescription Recommendations
+                      </label>
+                      <div className="flex gap-2">
+                        <select
+                          value={selectedPrescriptionId}
+                          onChange={(e) => setSelectedPrescriptionId(e.target.value)}
+                          className="flex-1 h-9 rounded-md border border-input bg-transparent px-3 py-1 text-sm shadow-sm"
+                        >
+                          <option value="">Select a prescription...</option>
+                          {patientPrescriptions.map((rx: any) => (
+                            <option key={rx.prescriptionId} value={rx.prescriptionId}>
+                              {rx.rxNumber} —{" "}
+                              {new Date(rx.issueDate).toLocaleDateString("en-US", {
+                                year: "numeric",
+                                month: "short",
+                                day: "numeric",
+                              })}
+                            </option>
+                          ))}
+                        </select>
+                        <Button
+                          type="button"
+                          variant="outline"
+                          size="sm"
+                          className="h-9 shrink-0 gap-1.5"
+                          disabled={!selectedPrescriptionId}
+                          onClick={() => loadPrescriptionToCart(selectedPrescriptionId)}
+                        >
+                          <FileText className="h-3.5 w-3.5" />
+                          Load to Cart
+                        </Button>
+                      </div>
+                    </div>
+                  )}
+                </>
+              )}
+            </>
           ) : (
             <Button
               variant="outline"
@@ -344,62 +415,6 @@ const ManageSales: React.FC = () => {
               <UserRound className="h-4 w-4" />
               Associate Patient
             </Button>
-          )}
-
-          {selectedPatient && (
-            <div className="mt-3">
-              <label className="text-xs font-medium text-muted-foreground">
-                Estimated Pickup Date
-              </label>
-              <input
-                type="date"
-                value={estimatedReadyDate}
-                onChange={(e) => setEstimatedReadyDate(e.target.value)}
-                min={new Date().toISOString().split("T")[0]}
-                className="mt-1 flex h-9 w-full rounded-md border border-input bg-transparent px-3 py-1 text-sm shadow-sm transition-colors placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring"
-              />
-              <p className="text-xs text-muted-foreground mt-1">
-                Defaults to 3 days from today if left empty.
-              </p>
-            </div>
-          )}
-
-          {selectedPatient && patientPrescriptions.length > 0 && (
-            <div className="mt-3 space-y-2">
-              <label className="text-xs font-medium text-muted-foreground">
-                Load Prescription Recommendations
-              </label>
-              <div className="flex gap-2">
-                <select
-                  value={selectedPrescriptionId}
-                  onChange={(e) => setSelectedPrescriptionId(e.target.value)}
-                  className="flex-1 h-9 rounded-md border border-input bg-transparent px-3 py-1 text-sm shadow-sm"
-                >
-                  <option value="">Select a prescription...</option>
-                  {patientPrescriptions.map((rx: any) => (
-                    <option key={rx.prescriptionId} value={rx.prescriptionId}>
-                      {rx.rxNumber} —{" "}
-                      {new Date(rx.issueDate).toLocaleDateString("en-US", {
-                        year: "numeric",
-                        month: "short",
-                        day: "numeric",
-                      })}
-                    </option>
-                  ))}
-                </select>
-                <Button
-                  type="button"
-                  variant="outline"
-                  size="sm"
-                  className="h-9 shrink-0 gap-1.5"
-                  disabled={!selectedPrescriptionId}
-                  onClick={() => loadPrescriptionToCart(selectedPrescriptionId)}
-                >
-                  <FileText className="h-3.5 w-3.5" />
-                  Load to Cart
-                </Button>
-              </div>
-            </div>
           )}
         </div>
 
