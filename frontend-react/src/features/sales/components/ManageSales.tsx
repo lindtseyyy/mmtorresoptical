@@ -320,10 +320,7 @@ const ManageSales: React.FC = () => {
                 <p className="text-sm font-medium truncate">
                   {selectedPatient.fullName}
                 </p>
-                <p className="text-xs text-muted-foreground">
-                  ID: {selectedPatient.patientId.slice(0, 8)} &middot;{" "}
-                  {selectedPatient.contactNumber}
-                </p>
+
               </div>
               <Button
                 variant="ghost"
@@ -381,7 +378,12 @@ const ManageSales: React.FC = () => {
                   <option value="">Select a prescription...</option>
                   {patientPrescriptions.map((rx: any) => (
                     <option key={rx.prescriptionId} value={rx.prescriptionId}>
-                      {rx.rxNumber} — {rx.issueDate}
+                      {rx.rxNumber} —{" "}
+                      {new Date(rx.issueDate).toLocaleDateString("en-US", {
+                        year: "numeric",
+                        month: "short",
+                        day: "numeric",
+                      })}
                     </option>
                   ))}
                 </select>
@@ -389,7 +391,7 @@ const ManageSales: React.FC = () => {
                   type="button"
                   variant="outline"
                   size="sm"
-                  className="shrink-0 gap-1.5"
+                  className="h-9 shrink-0 gap-1.5"
                   disabled={!selectedPrescriptionId}
                   onClick={() => loadPrescriptionToCart(selectedPrescriptionId)}
                 >
