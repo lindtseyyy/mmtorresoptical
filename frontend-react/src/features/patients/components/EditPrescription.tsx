@@ -16,13 +16,6 @@ import {
   FormMessage,
 } from "@/shared/components/ui/form";
 import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/shared/components/ui/select";
-import {
   Card,
   CardContent,
   CardDescription,
@@ -43,9 +36,6 @@ const prescriptionFormSchema = z.object({
 });
 
 type PrescriptionFormValues = z.infer<typeof prescriptionFormSchema>;
-
-const numStr = (val: number | null | undefined): string =>
-  val != null ? String(val) : "";
 
 const EditPrescription: React.FC = () => {
   const navigate = useNavigate();

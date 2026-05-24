@@ -1,7 +1,7 @@
 import { useState } from "react";
 import { useParams, Link, useNavigate } from "react-router-dom";
 import { useQuery, useMutation, useQueryClient, keepPreviousData } from "@tanstack/react-query";
-import { ArrowLeft, ShoppingCart, Calendar, FileText, Activity, Stethoscope, ChevronLeft, ChevronRight, ChevronDown, ChevronUp, MoreHorizontal, Pencil, Archive, Clock, Plus, Undo2, Ban, Copy, CheckCircle, UserX, XCircle, Eye } from "lucide-react";
+import { ArrowLeft, ShoppingCart, Calendar, FileText, Activity, Stethoscope, ChevronLeft, ChevronRight, ChevronDown, MoreHorizontal, Pencil, Archive, Clock, Plus, Undo2, Ban, Copy, CheckCircle, UserX, XCircle, Eye } from "lucide-react";
 import { Button } from "@/shared/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/shared/components/ui/card";
 import { MetricCard } from "@/shared/components/MetricCard";

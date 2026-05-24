@@ -1,6 +1,7 @@
 import api from "@/shared/lib/axiosInstance";
 
 export interface CreateEyeExamInput {
+  examType?: string;
   chiefComplaint?: string;
   vaUnconvertedOd?: string;
   vaUnconvertedOs?: string;

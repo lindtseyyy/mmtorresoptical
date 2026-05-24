@@ -34,7 +34,7 @@ import { toast } from "sonner";
 import { createEyeExam, type CreateEyeExamInput } from "@/features/patients/services/eyeExamApi";
 
 const eyeExamSchema = z.object({
-  examType: z.enum(["COMPUTERIZED", "MANUAL"], { required_error: "Exam type is required" }),
+  examType: z.enum(["COMPUTERIZED", "MANUAL"]),
   chiefComplaint: z.string().min(1, "Chief complaint is required"),
   vaUnconvertedOd: z.string().optional(),
   vaUnconvertedOs: z.string().optional(),

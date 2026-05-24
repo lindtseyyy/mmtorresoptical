@@ -4,7 +4,7 @@ import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useForm, useFieldArray, type SubmitHandler } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
-import { ArrowLeft, Plus, Trash2, Eye, Package, Copy } from "lucide-react";
+import { ArrowLeft, Trash2, Eye, Package, Copy } from "lucide-react";
 import { Button } from "@/shared/components/ui/button";
 import { Input } from "@/shared/components/ui/input";
 import {
@@ -120,7 +120,7 @@ const AddPrescription: React.FC = () => {
   }, []);
 
   const form = useForm<PrescriptionFormValues>({
-    resolver: zodResolver(prescriptionFormSchema),
+    resolver: zodResolver(prescriptionFormSchema as any),
     defaultValues: {
       issueDate: "",
       notes: "",

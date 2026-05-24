@@ -13,7 +13,6 @@ import {
   Eye,
   EyeOff,
   CreditCard,
-  CheckCircle,
   PackageOpen,
   PackageCheck,
   Printer,
