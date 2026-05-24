@@ -2,7 +2,7 @@ import { useState, useEffect } from "react";
 import { useQuery, useMutation, useQueryClient, keepPreviousData } from "@tanstack/react-query";
 import { Button } from "@/shared/components/ui/button";
 import { Input } from "@/shared/components/ui/input";
-import { Search, Archive, Undo2, ChevronLeft, ChevronRight, Glasses, Package, Layers, AlertTriangle, TrendingUp, Banknote, ArrowUp, ArrowDown } from "lucide-react";
+import { Search, Archive, Undo2, ChevronLeft, ChevronRight, Glasses, ArrowUp, ArrowDown, AlertTriangle } from "lucide-react";
 import {
   Select,
   SelectContent,
@@ -12,6 +12,7 @@ import {
 } from "@/shared/components/ui/select";
 import { Badge } from "@/shared/components/ui/badge";
 import { Card, CardContent } from "@/shared/components/ui/card";
+import { MetricCard } from "@/shared/components/MetricCard";
 import {
   AlertDialog,
   AlertDialogAction,
@@ -116,80 +117,31 @@ const InventoryMaintenance: React.FC = () => {
         </p>
       </div>
 
-      <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
-        <Card>
-          <CardContent className="flex items-center gap-4 p-5">
-            <div className="flex h-11 w-11 items-center justify-center rounded-full bg-primary/10">
-              <Package className="h-5 w-5 text-primary" />
-            </div>
-            <div>
-              <p className="text-2xl font-bold">{summary?.totalProducts ?? "—"}</p>
-              <p className="text-sm text-muted-foreground">Total Products</p>
-            </div>
-          </CardContent>
-        </Card>
-
-        <Card>
-          <CardContent className="flex items-center gap-4 p-5">
-            <div className="flex h-11 w-11 items-center justify-center rounded-full bg-blue-500/10">
-              <Layers className="h-5 w-5 text-blue-500" />
-            </div>
-            <div>
-              <p className="text-2xl font-bold">{summary?.totalStockQuantity ?? "—"}</p>
-              <p className="text-sm text-muted-foreground">Total Stock Quantity</p>
-            </div>
-          </CardContent>
-        </Card>
-
-        <Card>
-          <CardContent className="flex items-center gap-4 p-5">
-            <div className="flex h-11 w-11 items-center justify-center rounded-full bg-emerald-500/10">
-              <Banknote className="h-5 w-5 text-emerald-500" />
-            </div>
-            <div>
-              <p className="text-2xl font-bold">
-                {summary != null ? `₱ ${summary.inventoryValue.toLocaleString("en-US", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}` : "—"}
-              </p>
-              <p className="text-sm text-muted-foreground">Total Inventory Value</p>
-            </div>
-          </CardContent>
-        </Card>
-
-        <Card className="border-red-200">
-          <CardContent className="flex items-center gap-4 p-5">
-            <div className="flex h-11 w-11 items-center justify-center rounded-full bg-red-500/10">
-              <AlertTriangle className="h-5 w-5 text-red-500" />
-            </div>
-            <div>
-              <p className="text-2xl font-bold text-red-600">{summary?.countLowStockProducts ?? "—"}</p>
-              <p className="text-sm text-muted-foreground">Low Stock Items</p>
-            </div>
-          </CardContent>
-        </Card>
-
-        <Card className="border-amber-200">
-          <CardContent className="flex items-center gap-4 p-5">
-            <div className="flex h-11 w-11 items-center justify-center rounded-full bg-amber-500/10">
-              <TrendingUp className="h-5 w-5 text-amber-500" />
-            </div>
-            <div>
-              <p className="text-2xl font-bold text-amber-600">{summary?.countOverstockedProducts ?? "—"}</p>
-              <p className="text-sm text-muted-foreground">Overstocked Items</p>
-            </div>
-          </CardContent>
-        </Card>
-
-        <Card className="border-gray-300">
-          <CardContent className="flex items-center gap-4 p-5">
-            <div className="flex h-11 w-11 items-center justify-center rounded-full bg-muted">
-              <Archive className="h-5 w-5 text-muted-foreground" />
-            </div>
-            <div>
-              <p className="text-2xl font-bold">{summary?.countArchivedProducts ?? "—"}</p>
-              <p className="text-sm text-muted-foreground">Archived Products</p>
-            </div>
-          </CardContent>
-        </Card>
+      <div className="grid grid-cols-1 gap-4 sm:grid-cols-3">
+        <MetricCard
+          icon={Archive}
+          label="Archived Products"
+          value={summary?.countArchivedProducts ?? "—"}
+          color="muted"
+          size="sm"
+          labelPosition="bottom"
+        />
+        <MetricCard
+          icon={Archive}
+          label="Archived Inventory Value"
+          value={summary != null ? `₱ ${summary.archivedInventoryValue.toLocaleString("en-US", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}` : "—"}
+          color="muted"
+          size="sm"
+          labelPosition="bottom"
+        />
+        <MetricCard
+          icon={AlertTriangle}
+          label="Orphaned Archived Stock"
+          value={summary?.countArchivedWithStock ?? "—"}
+          color={"red"}
+          size="sm"
+          labelPosition="bottom"
+        />
       </div>
 
       <Card>

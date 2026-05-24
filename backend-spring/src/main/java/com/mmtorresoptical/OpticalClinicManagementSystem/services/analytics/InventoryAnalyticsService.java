@@ -46,6 +46,8 @@ public class InventoryAnalyticsService {
         long countOverStockedProducts = inventoryAnalyticsRepository.countOverstockedProducts();
         long countOutOfStockProducts = inventoryAnalyticsRepository.countOutOfStockProducts();
         long countArchivedProducts = inventoryAnalyticsRepository.countArchivedProducts();
+        BigDecimal archivedInventoryValue = inventoryAnalyticsRepository.archivedInventoryValue();
+        long countArchivedWithStock = inventoryAnalyticsRepository.countArchivedWithStock();
 
         return InventoryAnalyticsDTO.builder()
                 .totalProducts(totalProducts)
@@ -55,6 +57,8 @@ public class InventoryAnalyticsService {
                 .countOverstockedProducts(countOverStockedProducts)
                 .countOutOfStockProducts(countOutOfStockProducts)
                 .countArchivedProducts(countArchivedProducts)
+                .archivedInventoryValue(archivedInventoryValue)
+                .countArchivedWithStock(countArchivedWithStock)
                 .build();
     }
 

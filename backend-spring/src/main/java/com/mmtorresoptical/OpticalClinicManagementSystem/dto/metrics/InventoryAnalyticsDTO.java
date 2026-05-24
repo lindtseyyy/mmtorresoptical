@@ -21,4 +21,8 @@ public class InventoryAnalyticsDTO {
     long countOutOfStockProducts;
 
     long countArchivedProducts;
+
+    BigDecimal archivedInventoryValue;
+
+    long countArchivedWithStock;
 }

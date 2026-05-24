@@ -320,4 +320,27 @@ public interface InventoryAnalyticsRepository extends JpaRepository<Product, UUI
     """)
     List<CategoryBreakdownDTO> findCategoryBreakdown();
 
+    /*
+     * ARCHIVED INVENTORY VALUE — sum of unitPrice * quantity for archived PHYSICAL products
+     */
+    @Query("""
+        SELECT COALESCE(SUM(p.unitPrice * p.quantity), 0)
+        FROM Product p
+        WHERE p.isArchived = true
+          AND p.productType = com.mmtorresoptical.OpticalClinicManagementSystem.enums.ProductType.PHYSICAL
+    """)
+    BigDecimal archivedInventoryValue();
+
+    /*
+     * COUNT ARCHIVED PHYSICAL PRODUCTS WITH POSITIVE STOCK — orphaned stock audit flag
+     */
+    @Query("""
+        SELECT COUNT(p)
+        FROM Product p
+        WHERE p.isArchived = true
+          AND p.productType = com.mmtorresoptical.OpticalClinicManagementSystem.enums.ProductType.PHYSICAL
+          AND p.quantity > 0
+    """)
+    long countArchivedWithStock();
+
 }

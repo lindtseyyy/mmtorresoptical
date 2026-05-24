@@ -186,7 +186,10 @@ export interface InventorySummary {
   inventoryValue: number;
   countLowStockProducts: number;
   countOverstockedProducts: number;
+  countOutOfStockProducts: number;
   countArchivedProducts: number;
+  archivedInventoryValue: number;
+  countArchivedWithStock: number;
 }
 
 export interface ProductMetrics {
