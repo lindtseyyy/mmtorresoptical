@@ -1,13 +1,20 @@
 import api from "@/shared/lib/axiosInstance";
 
-export interface PrescriptionItemInput {
-  correctionType: string;
-  eyeSide: string;
-  sph?: number;
-  cyl?: number;
-  axis?: number;
-  addPower?: number;
-  pd?: number;
+export interface LensSpecification {
+  lensTypePurpose?: string;
+  correctionType?: string;
+  rightSph?: number;
+  rightCyl?: number;
+  rightAxis?: number;
+  rightPrism?: number;
+  rightAdd?: number;
+  rightPd?: number;
+  leftSph?: number;
+  leftCyl?: number;
+  leftAxis?: number;
+  leftPrism?: number;
+  leftAdd?: number;
+  leftPd?: number;
   lensType?: string;
   frameTypePreference?: string;
   lensCoatings?: string;
@@ -17,41 +24,42 @@ export interface PrescriptionItemInput {
   baseCurve?: number;
   diameter?: number;
   notes?: string;
-  isArchived?: boolean;
 }
 
 export interface CreatePrescriptionInput {
   issueDate: string;
   notes?: string;
   isArchived?: boolean;
-  followUpRequired?: boolean;
   followUpScheduledDate?: string;
   followUpReason?: string;
   eyeExamId?: string;
-  itemsRequestDTOList: PrescriptionItemInput[];
+  lensSpecifications: LensSpecification[];
+  products: RecommendationItemInput[];
 }
 
-export interface PrescriptionItemResponse {
-  prescriptionItemId: string;
-  correctionType: string;
-  eyeSide: string;
-  sph: number | null;
-  cyl: number | null;
-  axis: number | null;
-  addPower: number | null;
-  pd: number | null;
-  lensType: string | null;
-  frameTypePreference: string | null;
-  lensCoatings: string | null;
-  lensMaterial: string | null;
-  lensWearType: string | null;
-  lensMaterialCl: string | null;
-  baseCurve: number | null;
-  diameter: number | null;
-  notes: string | null;
-  isArchived: boolean;
-  createdAt: string;
-  createdBy: { userId: string; fullName: string } | null;
+export interface RecommendationItemInput {
+  productId: string;
+  quantity: number;
+  staffNotes?: string;
+}
+
+export interface PrescriptionRecommendationsPayload {
+  lensSpecifications?: LensSpecification[];
+  items: RecommendationItemInput[];
+}
+
+export interface RecommendationResponse {
+  id: string;
+  productId: string;
+  productName: string;
+  category: string;
+  supplier: string;
+  imageDir: string;
+  productType: string;
+  unitPrice: number;
+  stockQuantity: number;
+  quantity: number;
+  staffNotes?: string;
 }
 
 export interface PrescriptionResponse {
@@ -65,30 +73,12 @@ export interface PrescriptionResponse {
   createdAt: string;
   isArchived: boolean;
   createdBy: { userId: string; fullName: string } | null;
-  prescriptionItems: PrescriptionItemResponse[];
+  lensSpecifications: LensSpecification[];
+  recommendations?: RecommendationResponse[];
 }
 
 export interface UpdatePrescriptionInput {
   issueDate: string;
-  notes?: string;
-}
-
-export interface UpdatePrescriptionItemInput {
-  correctionType?: string;
-  eyeSide?: string;
-  sph?: number;
-  cyl?: number;
-  axis?: number;
-  addPower?: number;
-  pd?: number;
-  lensType?: string;
-  frameTypePreference?: string;
-  lensCoatings?: string;
-  lensMaterial?: string;
-  lensWearType?: string;
-  lensMaterialCl?: string;
-  baseCurve?: number;
-  diameter?: number;
   notes?: string;
 }
 
@@ -112,18 +102,6 @@ const updatePrescription = async (id: string, data: UpdatePrescriptionInput) => 
   return await api.put(`/admin/prescriptions/${id}`, data);
 };
 
-const updatePrescriptionItem = async (id: string, data: UpdatePrescriptionItemInput) => {
-  return await api.put(`/admin/prescription-items/${id}`, data);
-};
-
-const archivePrescriptionItem = async (id: string) => {
-  return await api.delete(`/admin/prescription-items/${id}`);
-};
-
-const createPrescriptionItems = async (prescriptionId: string, items: PrescriptionItemInput[]) => {
-  return await api.post(`/admin/prescriptions/${prescriptionId}/prescription-items`, items);
-};
-
 const voidPrescription = async (id: string, voidReason: string) => {
   return await api.post(`/admin/prescriptions/${id}/void`, { voidReason });
 };
@@ -133,4 +111,39 @@ const clonePrescription = async (id: string): Promise<PrescriptionResponse> => {
   return data;
 };
 
-export { createPrescription, fetchPrescription, updatePrescription, updatePrescriptionItem, archivePrescriptionItem, createPrescriptionItems, voidPrescription, clonePrescription };
+const syncPrescriptionBlocks = async (
+  id: string,
+  payload: PrescriptionRecommendationsPayload
+): Promise<void> => {
+  await api.put(`/prescriptions/${id}/sync`, payload);
+};
+
+const fetchPrescriptionForCheckout = async (id: string): Promise<PrescriptionResponse> => {
+  const { data } = await api.get(`/prescriptions/${id}`);
+  return data;
+};
+
+const fetchPatientPrescriptions = async (
+  patientId: string,
+  params?: { page?: number; size?: number }
+): Promise<{ content: PrescriptionResponse[] }> => {
+  const { data } = await api.get(`/patient/${patientId}/prescriptions`, {
+    params: {
+      page: params?.page ?? 0,
+      size: params?.size ?? 50,
+      status: "ACTIVE",
+    },
+  });
+  return data;
+};
+
+export {
+  createPrescription,
+  fetchPrescription,
+  updatePrescription,
+  voidPrescription,
+  clonePrescription,
+  syncPrescriptionBlocks,
+  fetchPrescriptionForCheckout,
+  fetchPatientPrescriptions,
+};

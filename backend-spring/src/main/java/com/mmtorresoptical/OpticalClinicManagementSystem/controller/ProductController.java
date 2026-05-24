@@ -3,6 +3,7 @@ package com.mmtorresoptical.OpticalClinicManagementSystem.controller;
 import com.mmtorresoptical.OpticalClinicManagementSystem.dto.product.CreateProductRequestDTO;
 import com.mmtorresoptical.OpticalClinicManagementSystem.dto.product.ProductDetailsDTO;
 import com.mmtorresoptical.OpticalClinicManagementSystem.dto.product.ProductResponseDTO;
+import com.mmtorresoptical.OpticalClinicManagementSystem.dto.product.ProductSummaryDTO;
 import com.mmtorresoptical.OpticalClinicManagementSystem.dto.product.StockAdjustmentRequestDTO;
 import com.mmtorresoptical.OpticalClinicManagementSystem.dto.product.UpdateProductRequestDTO;
 import com.mmtorresoptical.OpticalClinicManagementSystem.dto.transaction.TransactionListDTO;
@@ -174,5 +175,13 @@ public class ProductController {
                 page, size, sortBy, sortOrder
         );
         return ResponseEntity.ok(transactions);
+    }
+
+    @GetMapping("/summary")
+    public ResponseEntity<List<ProductSummaryDTO>> getProductSummaries(
+            @RequestParam(required = false) String keyword,
+            @RequestParam(required = false) String category) {
+        List<ProductSummaryDTO> summaries = productService.getProductSummaries(keyword, category);
+        return ResponseEntity.ok(summaries);
     }
 }

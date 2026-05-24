@@ -1,25 +1,24 @@
 package com.mmtorresoptical.OpticalClinicManagementSystem.services.controller;
 
 import com.mmtorresoptical.OpticalClinicManagementSystem.dto.prescription.*;
-import com.mmtorresoptical.OpticalClinicManagementSystem.dto.prescriptionitems.PrescriptionItemResponseDTO;
-import com.mmtorresoptical.OpticalClinicManagementSystem.dto.prescriptionitems.CreatePrescriptionItemRequestDTO;
-import com.mmtorresoptical.OpticalClinicManagementSystem.dto.prescriptionitems.PrescriptionItemDetailsDTO;
+import com.mmtorresoptical.OpticalClinicManagementSystem.exception.custom.BadRequestException;
 import com.mmtorresoptical.OpticalClinicManagementSystem.exception.custom.ResourceNotFoundException;
 import com.mmtorresoptical.OpticalClinicManagementSystem.enums.FollowUpStatus;
 import com.mmtorresoptical.OpticalClinicManagementSystem.enums.PrescriptionStatus;
 import com.mmtorresoptical.OpticalClinicManagementSystem.exception.custom.MethodNotAllowedException;
-import com.mmtorresoptical.OpticalClinicManagementSystem.mapper.PrescriptionItemMapper;
+import com.mmtorresoptical.OpticalClinicManagementSystem.mapper.PrescriptionLensDetailMapper;
 import com.mmtorresoptical.OpticalClinicManagementSystem.mapper.PrescriptionMapper;
 import com.mmtorresoptical.OpticalClinicManagementSystem.model.*;
 import com.mmtorresoptical.OpticalClinicManagementSystem.repository.PatientRepository;
-import com.mmtorresoptical.OpticalClinicManagementSystem.repository.PrescriptionItemsRepository;
+import com.mmtorresoptical.OpticalClinicManagementSystem.repository.PrescriptionLensDetailRepository;
+import com.mmtorresoptical.OpticalClinicManagementSystem.repository.PrescriptionRecommendationRepository;
 import com.mmtorresoptical.OpticalClinicManagementSystem.repository.PrescriptionRepository;
+import com.mmtorresoptical.OpticalClinicManagementSystem.repository.ProductRepository;
 import com.mmtorresoptical.OpticalClinicManagementSystem.repository.EyeExamRepository;
 import com.mmtorresoptical.OpticalClinicManagementSystem.repository.PatientFollowUpRepository;
 import com.mmtorresoptical.OpticalClinicManagementSystem.services.AuthenticatedUserService;
 import com.mmtorresoptical.OpticalClinicManagementSystem.services.auditlog.resources.PatientFollowUpAuditHelper;
 import com.mmtorresoptical.OpticalClinicManagementSystem.services.auditlog.resources.PrescriptionAuditHelper;
-import com.mmtorresoptical.OpticalClinicManagementSystem.services.auditlog.resources.PrescriptionItemAuditHelper;
 import com.mmtorresoptical.OpticalClinicManagementSystem.specification.PrescriptionSpecification;
 import com.mmtorresoptical.OpticalClinicManagementSystem.utils.UUIDUtils;
 import lombok.RequiredArgsConstructor;
@@ -31,9 +30,11 @@ import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDate;
 import java.time.LocalDateTime;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
+import java.util.stream.Collectors;
 
 @Service
 @RequiredArgsConstructor
@@ -42,35 +43,40 @@ public class PrescriptionService {
     private final PrescriptionRepository prescriptionRepository;
     private final PatientRepository patientRepository;
     private final PrescriptionMapper prescriptionMapper;
-    private final PrescriptionItemMapper prescriptionItemMapper;
+    private final PrescriptionLensDetailMapper prescriptionLensDetailMapper;
     private final AuthenticatedUserService authenticatedUserService;
-    private final PrescriptionItemsRepository prescriptionItemsRepository;
+    private final PrescriptionLensDetailRepository lensDetailRepository;
+    private final PrescriptionRecommendationRepository recommendationRepository;
+    private final ProductRepository productRepository;
     private final PrescriptionAuditHelper prescriptionAuditHelper;
-    private final PrescriptionItemAuditHelper prescriptionItemAuditHelper;
     private final PatientFollowUpRepository patientFollowUpRepository;
     private final PatientFollowUpAuditHelper patientFollowUpAuditHelper;
     private final EyeExamRepository eyeExamRepository;
 
+    @Transactional
     public PrescriptionResponseDTO createPrescription(UUID id, CreatePrescriptionRequestDTO prescriptionRequest) {
-        // Retrieve patient or throw exception if not found
         Patient retrievedPatient = patientRepository.findById(id)
                 .orElseThrow(() -> new ResourceNotFoundException("Patient not found with id: " + id));
 
-        // Retrieve user
         User authenticatedUser = authenticatedUserService.getCurrentUser();
 
-        // Create new prescription
-        Prescription prescription = new Prescription();
+        boolean hasLens = prescriptionRequest.getLensSpecifications() != null
+                && !prescriptionRequest.getLensSpecifications().isEmpty();
+        boolean hasProducts = prescriptionRequest.getProducts() != null
+                && !prescriptionRequest.getProducts().isEmpty();
 
-        // Set parent fields
+        if (!hasLens && !hasProducts) {
+            throw new BadRequestException(
+                    "A prescription must contain either an eyeglass specification or a product recommendation.");
+        }
+
+        Prescription prescription = new Prescription();
         prescription.setIssueDate(prescriptionRequest.getIssueDate());
         prescription.setNotes(prescriptionRequest.getNotes());
         prescription.setIsArchived(prescriptionRequest.getIsArchived());
-
         prescription.setPatient(retrievedPatient);
         prescription.setUser(authenticatedUser);
 
-        // Link to eye exam if provided
         if (prescriptionRequest.getEyeExamId() != null) {
             EyeExam eyeExam = eyeExamRepository.findById(prescriptionRequest.getEyeExamId())
                     .orElseThrow(() -> new ResourceNotFoundException(
@@ -78,29 +84,66 @@ public class PrescriptionService {
             prescription.setEyeExam(eyeExam);
         }
 
-        // Map prescription items
-        List<PrescriptionItem> items = prescriptionRequest
-                .getItemsRequestDTOList()
-                .stream()
-                .map(itemDTO -> {
-                    PrescriptionItem item = prescriptionItemMapper.createRequestDTOtoEntity(itemDTO);
-
-                    item.setPrescription(prescription);
-                    item.setUser(authenticatedUser);
-
-                    return item;
-                }).toList();
-
-        // Set the relationship
-        prescription.setPrescriptionItems(items);
-
-        // Save the prescription
         Prescription savedPrescription = prescriptionRepository.save(prescription);
 
-        // Create follow-up only if an explicit scheduled date was provided
+        if (hasLens) {
+            List<PrescriptionLensDetail> lensDetails = prescriptionRequest.getLensSpecifications().stream()
+                    .map(lensDTO -> {
+                        PrescriptionLensDetail ld = new PrescriptionLensDetail();
+                        ld.setPrescription(savedPrescription);
+                        ld.setUser(authenticatedUser);
+                        ld.setLensTypePurpose(lensDTO.getLensTypePurpose());
+                        ld.setRightSph(lensDTO.getRightSph());
+                        ld.setRightCyl(lensDTO.getRightCyl());
+                        ld.setRightAxis(lensDTO.getRightAxis());
+                        ld.setRightPrism(lensDTO.getRightPrism());
+                        ld.setRightAdd(lensDTO.getRightAdd());
+                        ld.setRightPd(lensDTO.getRightPd());
+                        ld.setLeftSph(lensDTO.getLeftSph());
+                        ld.setLeftCyl(lensDTO.getLeftCyl());
+                        ld.setLeftAxis(lensDTO.getLeftAxis());
+                        ld.setLeftPrism(lensDTO.getLeftPrism());
+                        ld.setLeftAdd(lensDTO.getLeftAdd());
+                        ld.setLeftPd(lensDTO.getLeftPd());
+                        ld.setCorrectionType(lensDTO.getCorrectionType());
+                        ld.setLensType(lensDTO.getLensType());
+                        ld.setFrameTypePreference(lensDTO.getFrameTypePreference());
+                        ld.setLensCoatings(lensDTO.getLensCoatings());
+                        ld.setLensMaterial(lensDTO.getLensMaterial());
+                        ld.setLensWearType(lensDTO.getLensWearType());
+                        ld.setLensMaterialCl(lensDTO.getLensMaterialCl());
+                        ld.setBaseCurve(lensDTO.getBaseCurve());
+                        ld.setDiameter(lensDTO.getDiameter());
+                        ld.setNotes(lensDTO.getNotes());
+                        return ld;
+                    }).collect(Collectors.toList());
+
+            savedPrescription.getPrescriptionLensDetails().addAll(lensDetails);
+            prescriptionRepository.save(savedPrescription);
+        }
+
+        final Prescription finalSavedPrescription = savedPrescription;
+
+        if (hasProducts) {
+            List<PrescriptionRecommendation> recs = prescriptionRequest.getProducts().stream()
+                    .map(item -> {
+                        Product product = productRepository.findById(item.productId())
+                                .orElseThrow(() -> new ResourceNotFoundException("Product not found: " + item.productId()));
+
+                        PrescriptionRecommendation rec = new PrescriptionRecommendation();
+                        rec.setPrescription(finalSavedPrescription);
+                        rec.setProduct(product);
+                        rec.setQuantity(item.quantity());
+                        rec.setStaffNotes(item.staffNotes());
+                        return rec;
+                    }).collect(Collectors.toList());
+
+            recommendationRepository.saveAll(recs);
+        }
+
         if (prescriptionRequest.getFollowUpScheduledDate() != null) {
             PatientFollowUp followUp = new PatientFollowUp();
-            followUp.setPrescription(savedPrescription);
+            followUp.setPrescription(finalSavedPrescription);
             followUp.setPatient(retrievedPatient);
             followUp.setScheduledDate(prescriptionRequest.getFollowUpScheduledDate());
             followUp.setFollowUpReason(prescriptionRequest.getFollowUpReason());
@@ -110,11 +153,11 @@ public class PrescriptionService {
             patientFollowUpAuditHelper.logCreate(followUp);
         }
 
-        // Audit Logging
-        prescriptionAuditHelper.logCreate(savedPrescription);
+        prescriptionAuditHelper.logCreate(finalSavedPrescription);
 
-        // Map the prescription entity to prescription response DTO and return
-        return prescriptionMapper.entityToResponseDTO(savedPrescription);
+        PrescriptionResponseDTO response = prescriptionMapper.entityToResponseDTO(finalSavedPrescription);
+        response.setRecommendations(buildRecommendationResponses(finalSavedPrescription.getPrescriptionId()));
+        return response;
     }
 
     public Page<PrescriptionListDTO> getAllPatientPrescriptions(UUID patientId,
@@ -160,36 +203,30 @@ public class PrescriptionService {
                 PrescriptionSpecification.hasPatientId(patientId)
         );
 
-        // Determine sorting direction from request parameter
         Sort.Direction direction;
 
         try {
             direction = Sort.Direction.fromString(sortOrder);
         } catch (IllegalArgumentException ex) {
-            // Default to descending if invalid input
             direction = Sort.Direction.DESC;
         }
 
-        // Create pageable configuration with sorting
-        // Always sort active before archived, then by the requested field
         Sort sort = Sort.by(Sort.Direction.ASC, "status")
                 .and(Sort.by(direction, sortBy));
         Pageable pageable = PageRequest.of(page, size, sort);
 
-        // Fetches prescriptions associated with the given patient ID
         Page<Prescription> prescriptions = prescriptionRepository.findAll(spec, pageable);
 
-        // Map each of prescription entity to prescription listDTO and return
         return prescriptions.map(prescriptionMapper::entityToListDTO);
     }
 
     public PrescriptionDetailsDTO getPrescription(UUID id) {
-        // Retrieve prescription or throw exception if not found
         Prescription retrievedPrescription = prescriptionRepository.findById(id)
                 .orElseThrow(() -> new ResourceNotFoundException("Prescription not found with id: " + id));
 
-        // Map prescription entity to prescription details DTO and return
-        return prescriptionMapper.entityToDetailsDTO(retrievedPrescription);
+        PrescriptionDetailsDTO dto = prescriptionMapper.entityToDetailsDTO(retrievedPrescription);
+        dto.setRecommendations(buildRecommendationResponses(id));
+        return dto;
     }
 
     public PrescriptionDetailsDTO updatePrescription(UUID id, UpdatePrescriptionRequestDTO updatePrescriptionRequestDTO) {
@@ -201,17 +238,13 @@ public class PrescriptionService {
     }
 
     public void restorePrescription(UUID id) {
-        // Retrieve prescription or throw exception if not found
         Prescription retrievedPrescription = prescriptionRepository.findById(id)
                 .orElseThrow(() -> new ResourceNotFoundException("Prescription not found with id: " + id));
 
-        // Update the isArchived field
         retrievedPrescription.setIsArchived(false);
 
-        // Persist the updated prescription
         prescriptionRepository.save(retrievedPrescription);
 
-        // Audit Logging
         prescriptionAuditHelper.logRestore(retrievedPrescription);
     }
 
@@ -252,55 +285,127 @@ public class PrescriptionService {
         clone.setUser(authenticatedUser);
         clone.setEyeExam(source.getEyeExam());
 
-        List<PrescriptionItem> clonedItems = source.getPrescriptionItems().stream()
-                .map(item -> {
-                    PrescriptionItem newItem = new PrescriptionItem();
-                    BeanUtils.copyProperties(item, newItem, "prescriptionItemId", "prescription", "user", "createdAt", "isArchived");
-                    newItem.setPrescription(clone);
-                    newItem.setUser(authenticatedUser);
-                    newItem.setIsArchived(false);
-                    return newItem;
-                }).toList();
-        clone.setPrescriptionItems(clonedItems);
+        final Prescription saved = prescriptionRepository.save(clone);
 
-        Prescription saved = prescriptionRepository.save(clone);
+        if (source.getPrescriptionLensDetails() != null && !source.getPrescriptionLensDetails().isEmpty()) {
+            List<PrescriptionLensDetail> clonedLenses = source.getPrescriptionLensDetails().stream()
+                    .map(sourceLens -> {
+                        PrescriptionLensDetail clonedLens = new PrescriptionLensDetail();
+                        BeanUtils.copyProperties(sourceLens, clonedLens, "id", "prescription", "user", "createdAt");
+                        clonedLens.setPrescription(saved);
+                        clonedLens.setUser(authenticatedUser);
+                        return clonedLens;
+                    }).collect(Collectors.toList());
+            saved.getPrescriptionLensDetails().addAll(clonedLenses);
+            prescriptionRepository.save(saved);
+        }
+
+        List<PrescriptionRecommendation> originalRecs = recommendationRepository
+                .findAllByPrescriptionId(source.getPrescriptionId());
+        if (!originalRecs.isEmpty()) {
+            final Prescription s = saved;
+            List<PrescriptionRecommendation> clonedRecs = originalRecs.stream().map(r -> {
+                PrescriptionRecommendation cloneRec = new PrescriptionRecommendation();
+                cloneRec.setPrescription(s);
+                cloneRec.setProduct(r.getProduct());
+                cloneRec.setQuantity(r.getQuantity());
+                cloneRec.setStaffNotes(r.getStaffNotes());
+                return cloneRec;
+            }).collect(Collectors.toList());
+
+            recommendationRepository.saveAll(clonedRecs);
+        }
+
         prescriptionAuditHelper.logCreate(saved);
-        return prescriptionMapper.entityToResponseDTO(saved);
+        PrescriptionResponseDTO response = prescriptionMapper.entityToResponseDTO(saved);
+        response.setRecommendations(buildRecommendationResponses(saved.getPrescriptionId()));
+        return response;
     }
 
     @Transactional
-    public List<PrescriptionItemDetailsDTO> addItems(UUID prescriptionId,
-                                                     List<CreatePrescriptionItemRequestDTO> createPrescriptionItemRequestDTOList) {
-
-        // Retrieve patient or throw exception if not found
-        Prescription retrievedPrescription = prescriptionRepository.findById(prescriptionId)
+    public void syncPrescriptionBlocks(UUID prescriptionId, PrescriptionRecommendationsDTO dto) {
+        Prescription prescription = prescriptionRepository.findById(prescriptionId)
                 .orElseThrow(() -> new ResourceNotFoundException("Prescription not found with id: " + prescriptionId));
 
         User authenticatedUser = authenticatedUserService.getCurrentUser();
 
-        List<PrescriptionItem> newItems = createPrescriptionItemRequestDTOList
-                .stream()
-                .map(dto -> {
-                            PrescriptionItem item = prescriptionItemMapper.createRequestDTOtoEntity(dto);
+        // Clear existing child data
+        lensDetailRepository.deleteAllByPrescriptionId(prescriptionId);
+        recommendationRepository.deleteAllByPrescriptionId(prescriptionId);
+        lensDetailRepository.flush();
+        recommendationRepository.flush();
 
-                            item.setPrescription(retrievedPrescription);
-                            item.setUser(authenticatedUser);
+        // Rebuild lens details
+        if (dto.lensSpecifications() != null && !dto.lensSpecifications().isEmpty()) {
+            List<PrescriptionLensDetail> lensDetails = dto.lensSpecifications().stream()
+                    .map(ls -> {
+                        PrescriptionLensDetail ld = new PrescriptionLensDetail();
+                        ld.setPrescription(prescription);
+                        ld.setUser(authenticatedUser);
+                        ld.setLensTypePurpose(ls.getLensTypePurpose());
+                        ld.setRightSph(ls.getRightSph());
+                        ld.setRightCyl(ls.getRightCyl());
+                        ld.setRightAxis(ls.getRightAxis());
+                        ld.setRightPrism(ls.getRightPrism());
+                        ld.setRightAdd(ls.getRightAdd());
+                        ld.setRightPd(ls.getRightPd());
+                        ld.setLeftSph(ls.getLeftSph());
+                        ld.setLeftCyl(ls.getLeftCyl());
+                        ld.setLeftAxis(ls.getLeftAxis());
+                        ld.setLeftPrism(ls.getLeftPrism());
+                        ld.setLeftAdd(ls.getLeftAdd());
+                        ld.setLeftPd(ls.getLeftPd());
+                        ld.setCorrectionType(ls.getCorrectionType());
+                        ld.setLensType(ls.getLensType());
+                        ld.setFrameTypePreference(ls.getFrameTypePreference());
+                        ld.setLensCoatings(ls.getLensCoatings());
+                        ld.setLensMaterial(ls.getLensMaterial());
+                        ld.setLensWearType(ls.getLensWearType());
+                        ld.setLensMaterialCl(ls.getLensMaterialCl());
+                        ld.setBaseCurve(ls.getBaseCurve());
+                        ld.setDiameter(ls.getDiameter());
+                        ld.setNotes(ls.getNotes());
+                        return ld;
+                    }).collect(Collectors.toList());
 
-                            return item;
-                        }
-                        ).toList();
-
-        prescriptionItemsRepository.saveAll(newItems);
-
-        // Audit Logging
-        int count = newItems.size();
-
-        if (count == 1) {
-            prescriptionItemAuditHelper.logCreate(newItems.get(0));
-        } else {
-            prescriptionItemAuditHelper.logCreateBatch(newItems);
+            lensDetailRepository.saveAll(lensDetails);
         }
 
-        return newItems.stream().map(prescriptionItemMapper::entityToDetailsDTO).toList();
+        // Rebuild recommendations
+        if (dto.items() != null && !dto.items().isEmpty()) {
+            List<PrescriptionRecommendation> entities = dto.items().stream().map(item -> {
+                Product product = productRepository.findById(item.productId())
+                        .orElseThrow(() -> new ResourceNotFoundException("Product not found: " + item.productId()));
+
+                PrescriptionRecommendation rec = new PrescriptionRecommendation();
+                rec.setPrescription(prescription);
+                rec.setProduct(product);
+                rec.setQuantity(item.quantity());
+                rec.setStaffNotes(item.staffNotes());
+                return rec;
+            }).collect(Collectors.toList());
+
+            recommendationRepository.saveAll(entities);
+        }
+    }
+
+    private List<RecommendationResponseDTO> buildRecommendationResponses(UUID prescriptionId) {
+        return recommendationRepository.findAllByPrescriptionId(prescriptionId).stream()
+                .map(r -> {
+                    Product p = r.getProduct();
+                    return new RecommendationResponseDTO(
+                            r.getId(),
+                            p.getProductId(),
+                            p.getProductName(),
+                            p.getCategory(),
+                            p.getSupplier(),
+                            p.getImageDir(),
+                            p.getProductType().name(),
+                            p.getUnitPrice(),
+                            p.getQuantity(),
+                            r.getQuantity(),
+                            r.getStaffNotes()
+                    );
+                }).collect(Collectors.toList());
     }
 }

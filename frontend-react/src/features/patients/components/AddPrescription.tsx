@@ -4,7 +4,7 @@ import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useForm, useFieldArray, type SubmitHandler } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
-import { ArrowLeft, Plus, Trash2, ChevronDown } from "lucide-react";
+import { ArrowLeft, Plus, Trash2, Eye, Package, Copy } from "lucide-react";
 import { Button } from "@/shared/components/ui/button";
 import { Input } from "@/shared/components/ui/input";
 import {
@@ -35,17 +35,32 @@ import {
   createPrescription,
   fetchPrescription,
   type CreatePrescriptionInput,
+  type LensSpecification,
 } from "@/features/patients/services/prescriptionApi";
-import { fetchPatientEyeExams, type EyeExamListItem } from "@/features/patients/services/patientApi";
+import ProductPickerModal from "@/features/patients/components/ProductPickerModal";
+import type { ProductSummary } from "@/features/inventory/types";
 
-const prescriptionItemSchema = z.object({
-  correctionType: z.string().min(1, "Required"),
-  eyeSide: z.string().min(1, "Required"),
-  sph: z.string().optional(),
-  cyl: z.string().optional(),
-  axis: z.string().optional(),
-  addPower: z.string().optional(),
-  pd: z.string().optional(),
+const recommendationItemSchema = z.object({
+  productId: z.string().min(1, "Select a product"),
+  quantity: z.number().int().min(1, "Min 1"),
+  staffNotes: z.string().optional(),
+});
+
+const lensSpecSchema = z.object({
+  lensTypePurpose: z.string().optional(),
+  correctionType: z.string().optional(),
+  rightSph: z.string().optional(),
+  rightCyl: z.string().optional(),
+  rightAxis: z.string().optional(),
+  rightPrism: z.string().optional(),
+  rightAdd: z.string().optional(),
+  rightPd: z.string().optional(),
+  leftSph: z.string().optional(),
+  leftCyl: z.string().optional(),
+  leftAxis: z.string().optional(),
+  leftPrism: z.string().optional(),
+  leftAdd: z.string().optional(),
+  leftPd: z.string().optional(),
   lensType: z.string().optional(),
   frameTypePreference: z.string().optional(),
   lensCoatings: z.string().optional(),
@@ -62,30 +77,28 @@ const prescriptionFormSchema = z.object({
   notes: z.string().optional(),
   followUpScheduledDate: z.string().optional(),
   followUpReason: z.string().optional(),
-  prescriptionSource: z.enum(["internal", "outside"]),
-  eyeExamId: z.string().optional(),
-  items: z.array(prescriptionItemSchema).min(1, "Add at least one prescription item"),
+  lensSpecifications: z.array(lensSpecSchema).default([]),
+  products: z.array(recommendationItemSchema).default([]),
 });
 
 type PrescriptionFormValues = z.infer<typeof prescriptionFormSchema>;
 
-const emptyItem = {
+const numOrUndef = (val: number | null | undefined): number | undefined =>
+  val != null ? Number(val) : undefined;
+
+const strOrUndef = (val: string | null | undefined): string | undefined =>
+  val?.trim() ? val : undefined;
+
+const emptyLens = {
+  lensTypePurpose: "",
   correctionType: "",
-  eyeSide: "",
-  sph: "",
-  cyl: "",
-  axis: "",
-  addPower: "",
-  pd: "",
-  lensType: "",
-  frameTypePreference: "",
-  lensCoatings: "",
-  lensMaterial: "",
-  lensWearType: "",
-  lensMaterialCl: "",
-  baseCurve: "",
-  diameter: "",
-  notes: "",
+  rightSph: "", rightCyl: "", rightAxis: "",
+  rightPrism: "", rightAdd: "", rightPd: "",
+  leftSph: "", leftCyl: "", leftAxis: "",
+  leftPrism: "", leftAdd: "", leftPd: "",
+  lensType: "", frameTypePreference: "", lensCoatings: "",
+  lensMaterial: "", lensWearType: "", lensMaterialCl: "",
+  baseCurve: "", diameter: "", notes: "",
 };
 
 const AddPrescription: React.FC = () => {
@@ -113,37 +126,31 @@ const AddPrescription: React.FC = () => {
       notes: "",
       followUpScheduledDate: "",
       followUpReason: "",
-      prescriptionSource: "internal",
-      eyeExamId: "",
-      items: [{ ...emptyItem }],
+      lensSpecifications: [],
+      products: [],
     },
   });
 
-  const { fields, append, remove } = useFieldArray({
+  const {
+    fields: lensFields,
+    append: appendLens,
+    remove: removeLens,
+  } = useFieldArray({
     control: form.control,
-    name: "items",
+    name: "lensSpecifications",
   });
 
-  const [expandedItems, setExpandedItems] = useState<Set<number>>(
-    () => new Set(fields.map((_, i) => i)),
-  );
+  const {
+    fields: recFields,
+    append: appendRec,
+    remove: removeRec,
+  } = useFieldArray({
+    control: form.control,
+    name: "products",
+  });
 
-  const handleAppend = () => {
-    append({ ...emptyItem });
-    setExpandedItems(new Set([fields.length]));
-  };
-
-  const toggleItem = (index: number) => {
-    setExpandedItems((prev) => {
-      const next = new Set(prev);
-      if (next.has(index)) {
-        next.delete(index);
-      } else {
-        next.add(index);
-      }
-      return next;
-    });
-  };
+  const [pickerIndex, setPickerIndex] = useState<number | null>(null);
+  const [productSummariesMap, setProductSummariesMap] = useState<Record<string, ProductSummary>>({});
 
   const { data: sourceRx } = useQuery({
     queryKey: ["prescription", cloneFrom],
@@ -153,73 +160,92 @@ const AddPrescription: React.FC = () => {
 
   useEffect(() => {
     if (sourceRx) {
-      const items = sourceRx.prescriptionItems.map((item) => ({
-        correctionType: item.correctionType,
-        eyeSide: item.eyeSide,
-        sph: item.sph != null ? String(item.sph) : "",
-        cyl: item.cyl != null ? String(item.cyl) : "",
-        axis: item.axis != null ? String(item.axis) : "",
-        addPower: item.addPower != null ? String(item.addPower) : "",
-        pd: item.pd != null ? String(item.pd) : "",
-        lensType: item.lensType ?? "",
-        frameTypePreference: item.frameTypePreference ?? "",
-        lensCoatings: item.lensCoatings ?? "",
-        lensMaterial: item.lensMaterial ?? "",
-        lensWearType: item.lensWearType ?? "",
-        lensMaterialCl: item.lensMaterialCl ?? "",
-        baseCurve: item.baseCurve != null ? String(item.baseCurve) : "",
-        diameter: item.diameter != null ? String(item.diameter) : "",
-        notes: item.notes ?? "",
-      }));
       form.reset({
         issueDate: "",
         notes: sourceRx.notes ?? "",
         followUpScheduledDate: "",
         followUpReason: "",
-        prescriptionSource: sourceRx.eyeExamId ? "internal" : "outside",
-        eyeExamId: sourceRx.eyeExamId ?? "",
-        items: items.length > 0 ? items : [{ ...emptyItem }],
+        lensSpecifications: (sourceRx.lensSpecifications || []).map((lens) => ({
+          lensTypePurpose: lens.lensTypePurpose ?? "",
+          correctionType: lens.correctionType ?? "",
+          rightSph: lens.rightSph != null ? String(lens.rightSph) : "",
+          rightCyl: lens.rightCyl != null ? String(lens.rightCyl) : "",
+          rightAxis: lens.rightAxis != null ? String(lens.rightAxis) : "",
+          rightPrism: lens.rightPrism != null ? String(lens.rightPrism) : "",
+          rightAdd: lens.rightAdd != null ? String(lens.rightAdd) : "",
+          rightPd: lens.rightPd != null ? String(lens.rightPd) : "",
+          leftSph: lens.leftSph != null ? String(lens.leftSph) : "",
+          leftCyl: lens.leftCyl != null ? String(lens.leftCyl) : "",
+          leftAxis: lens.leftAxis != null ? String(lens.leftAxis) : "",
+          leftPrism: lens.leftPrism != null ? String(lens.leftPrism) : "",
+          leftAdd: lens.leftAdd != null ? String(lens.leftAdd) : "",
+          leftPd: lens.leftPd != null ? String(lens.leftPd) : "",
+          lensType: lens.lensType ?? "",
+          frameTypePreference: lens.frameTypePreference ?? "",
+          lensCoatings: lens.lensCoatings ?? "",
+          lensMaterial: lens.lensMaterial ?? "",
+          lensWearType: lens.lensWearType ?? "",
+          lensMaterialCl: lens.lensMaterialCl ?? "",
+          baseCurve: lens.baseCurve != null ? String(lens.baseCurve) : "",
+          diameter: lens.diameter != null ? String(lens.diameter) : "",
+          notes: lens.notes ?? "",
+        })),
+        products: (sourceRx.recommendations || []).map((r) => ({
+          productId: r.productId,
+          quantity: r.quantity,
+          staffNotes: r.staffNotes || "",
+        })),
       });
-      setExpandedItems(new Set(items.map((_, i) => i)));
     }
   }, [sourceRx]);
 
-  const { data: eyeExamsData } = useQuery({
-    queryKey: ["patient-eye-exams", patientId, "ACTIVE"],
-    queryFn: () => fetchPatientEyeExams(patientId, 0, 100, "ACTIVE"),
-    enabled: !!patientId && form.watch("prescriptionSource") === "internal",
-  });
-
   const mutation = useMutation({
-    mutationFn: (data: PrescriptionFormValues) => {
+    mutationFn: async (data: PrescriptionFormValues) => {
+      const lensSpecs: LensSpecification[] = data.lensSpecifications.map((ls) => ({
+        lensTypePurpose: strOrUndef(ls.lensTypePurpose),
+        correctionType: strOrUndef(ls.correctionType),
+        rightSph: numOrUndef(ls.rightSph ? Number(ls.rightSph) : undefined),
+        rightCyl: numOrUndef(ls.rightCyl ? Number(ls.rightCyl) : undefined),
+        rightAxis: ls.rightAxis ? Number(ls.rightAxis) : undefined,
+        rightPrism: numOrUndef(ls.rightPrism ? Number(ls.rightPrism) : undefined),
+        rightAdd: numOrUndef(ls.rightAdd ? Number(ls.rightAdd) : undefined),
+        rightPd: numOrUndef(ls.rightPd ? Number(ls.rightPd) : undefined),
+        leftSph: numOrUndef(ls.leftSph ? Number(ls.leftSph) : undefined),
+        leftCyl: numOrUndef(ls.leftCyl ? Number(ls.leftCyl) : undefined),
+        leftAxis: ls.leftAxis ? Number(ls.leftAxis) : undefined,
+        leftPrism: numOrUndef(ls.leftPrism ? Number(ls.leftPrism) : undefined),
+        leftAdd: numOrUndef(ls.leftAdd ? Number(ls.leftAdd) : undefined),
+        leftPd: numOrUndef(ls.leftPd ? Number(ls.leftPd) : undefined),
+        lensType: strOrUndef(ls.lensType),
+        frameTypePreference: strOrUndef(ls.frameTypePreference),
+        lensCoatings: strOrUndef(ls.lensCoatings),
+        lensMaterial: strOrUndef(ls.lensMaterial),
+        lensWearType: strOrUndef(ls.lensWearType),
+        lensMaterialCl: strOrUndef(ls.lensMaterialCl),
+        baseCurve: numOrUndef(ls.baseCurve ? Number(ls.baseCurve) : undefined),
+        diameter: numOrUndef(ls.diameter ? Number(ls.diameter) : undefined),
+        notes: strOrUndef(ls.notes),
+      }));
+
+      const products = data.products.length > 0
+        ? data.products.map((r) => ({
+            productId: r.productId,
+            quantity: r.quantity,
+            staffNotes: strOrUndef(r.staffNotes) || undefined,
+          }))
+        : [];
+
       const payload: CreatePrescriptionInput = {
         issueDate: data.issueDate,
-        notes: data.notes || undefined,
+        notes: strOrUndef(data.notes),
         isArchived: false,
         followUpScheduledDate: data.followUpScheduledDate || undefined,
-        followUpReason: data.followUpReason || undefined,
-        eyeExamId: data.prescriptionSource === "internal" && data.eyeExamId ? data.eyeExamId : undefined,
-        itemsRequestDTOList: data.items.map((item) => ({
-          correctionType: item.correctionType,
-          eyeSide: item.eyeSide,
-          sph: item.sph ? Number(item.sph) : undefined,
-          cyl: item.cyl ? Number(item.cyl) : undefined,
-          axis: item.axis ? Number(item.axis) : undefined,
-          addPower: item.addPower ? Number(item.addPower) : undefined,
-          pd: item.pd ? Number(item.pd) : undefined,
-          lensType: item.lensType || undefined,
-          frameTypePreference: item.frameTypePreference || undefined,
-          lensCoatings: item.lensCoatings || undefined,
-          lensMaterial: item.lensMaterial || undefined,
-          lensWearType: item.lensWearType || undefined,
-          lensMaterialCl: item.lensMaterialCl || undefined,
-          baseCurve: item.baseCurve ? Number(item.baseCurve) : undefined,
-          diameter: item.diameter ? Number(item.diameter) : undefined,
-          isArchived: false,
-          notes: item.notes || undefined,
-        })),
+        followUpReason: strOrUndef(data.followUpReason),
+        lensSpecifications: lensSpecs,
+        products,
       };
-      return createPrescription(patientId, payload);
+
+      await createPrescription(patientId, payload);
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["patients"] });
@@ -229,33 +255,30 @@ const AddPrescription: React.FC = () => {
       navigate(`/patients/view/${patientId}`);
     },
     onError: (error: any) => {
-      toast.error("Error", {
-        description: "Failed to create prescription. Please try again.",
-      });
+      const msg = error?.response?.data?.message ?? "Failed to create prescription. Please try again.";
+      toast.error("Error", { description: msg });
       console.error(error);
     },
   });
 
   const handleSubmit: SubmitHandler<PrescriptionFormValues> = async (data) => {
+    const hasLensData = data.lensSpecifications.length > 0;
+    const hasProductsData = data.products.length > 0;
+
+    if (!hasLensData && !hasProductsData) {
+      toast.error("A prescription must contain either an eyeglass specification or a product recommendation.");
+      return;
+    }
+
     mutation.mutate(data);
   };
-
-  const formatEnum = (value: string) =>
-    value
-      .toLowerCase()
-      .replace(/_/g, " ")
-      .replace(/\b\w/g, (c) => c.toUpperCase());
 
   return (
     <div className="mx-auto max-w-4xl space-y-6">
       <div className="flex items-start justify-between">
         <div>
           <h2 className="text-3xl font-bold">
-            {cloneFrom
-              ? "Re-issue Prescription"
-              : form.watch("prescriptionSource") === "outside"
-                ? "Add Prescription — Manual Intake (Outside Rx)"
-                : "Add Prescription"}
+            {cloneFrom ? "Re-issue Prescription" : "Add Prescription"}
           </h2>
           <p className="text-muted-foreground">
             For {patientName || "patient"}
@@ -271,7 +294,7 @@ const AddPrescription: React.FC = () => {
 
       <Form {...form}>
         <form onSubmit={form.handleSubmit(handleSubmit)} className="space-y-6">
-          <Card className="bg-primary/10 border-b-2 border-b-primary/30 rounded-b-none">
+          <Card className="bg-slate-100 border-b-2 border-b-slate-300 rounded-b-none">
             <CardHeader>
               <CardTitle>Prescription Details</CardTitle>
               <CardDescription>Enter the issue date and notes</CardDescription>
@@ -306,7 +329,6 @@ const AddPrescription: React.FC = () => {
                 )}
               />
 
-              {/* Follow-up Section */}
               <div className="space-y-4 border-t pt-4">
                 <h3 className="text-sm font-medium">Schedule Follow-Up (Optional)</h3>
                 <FormField
@@ -341,151 +363,93 @@ const AddPrescription: React.FC = () => {
             </CardContent>
           </Card>
 
-          {/* Prescription Source */}
-          <Card>
-            <CardHeader>
-              <CardTitle>Prescription Source</CardTitle>
-              <CardDescription>Select whether this prescription is from an internal eye exam or an outside source</CardDescription>
-            </CardHeader>
-            <CardContent className="space-y-4">
-              <FormField
-                control={form.control}
-                name="prescriptionSource"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>Source Type</FormLabel>
-                    <Select
-                      onValueChange={(v) => {
-                        field.onChange(v);
-                        if (v === "outside") form.setValue("eyeExamId", "");
-                      }}
-                      defaultValue={field.value}
-                    >
-                      <FormControl>
-                        <SelectTrigger>
-                          <SelectValue placeholder="Select source" />
-                        </SelectTrigger>
-                      </FormControl>
-                      <SelectContent>
-                        <SelectItem value="internal">Internal Exam</SelectItem>
-                        <SelectItem value="outside">Outside Prescription</SelectItem>
-                      </SelectContent>
-                    </Select>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
-              {form.watch("prescriptionSource") === "internal" && (
-                <FormField
-                  control={form.control}
-                  name="eyeExamId"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel>Link to Eye Exam</FormLabel>
-                      <Select
-                        onValueChange={field.onChange}
-                        defaultValue={field.value}
-                      >
-                        <FormControl>
-                          <SelectTrigger>
-                            <SelectValue placeholder="Select an eye exam (optional)" />
-                          </SelectTrigger>
-                        </FormControl>
-                        <SelectContent>
-                          {eyeExamsData?.content.map((exam: EyeExamListItem) => (
-                            <SelectItem key={exam.eyeExamId} value={exam.eyeExamId}>
-                              {new Date(exam.createdAt).toLocaleDateString("en-US", {
-                                year: "numeric", month: "short", day: "numeric",
-                              })}
-                              {exam.chiefComplaint ? ` — ${exam.chiefComplaint.substring(0, 60)}${exam.chiefComplaint.length > 60 ? "..." : ""}` : ""}
-                            </SelectItem>
-                          ))}
-                        </SelectContent>
-                      </Select>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
-              )}
-              {form.watch("prescriptionSource") === "outside" && (
-                <p className="text-sm text-muted-foreground italic">
-                  Outside prescription — no eye exam will be linked to this record.
-                </p>
-              )}
-            </CardContent>
-          </Card>
+          {/* Canvas area with action buttons */}
+          <div className="rounded-lg border-2 border-dashed border-slate-300 bg-slate-100 p-4 space-y-3">
+            {lensFields.length === 0 && recFields.length === 0 && (
+              <p className="text-sm text-muted-foreground text-center">
+                Add at least one block to create the prescription.
+              </p>
+            )}
 
-          <div className="flex items-center gap-3 pt-2">
-            <div className="h-px flex-1 bg-border" />
-            <span className="text-sm font-semibold text-muted-foreground uppercase tracking-wider">
-              Prescription Items ({fields.length})
-            </span>
-            <div className="h-px flex-1 bg-border" />
+            <div className="flex gap-2">
+              <Button
+                type="button"
+                variant="outline"
+                size="sm"
+                className="flex-1 gap-1"
+                onClick={() => appendLens({ ...emptyLens })}
+              >
+                <Eye className="h-4 w-4" />
+                Add Eyeglass Specification
+              </Button>
+
+              <Button
+                type="button"
+                variant="outline"
+                size="sm"
+                className="flex-1 gap-1"
+                onClick={() => appendRec({ productId: "", quantity: 1, staffNotes: "" })}
+              >
+                <Package className="h-4 w-4" />
+                Add Medication / Product
+              </Button>
+            </div>
           </div>
 
-          {fields.map((field, index) => {
-            const isExpanded = expandedItems.has(index);
-            const correctionType = form.watch(`items.${index}.correctionType`);
-            const eyeSide = form.watch(`items.${index}.eyeSide`);
-            const summary = [correctionType, eyeSide]
-              .filter(Boolean)
-              .map(formatEnum)
-              .join(" — ") || "No details yet";
+          {lensFields.map((field, index) => {
+            const correctionType = form.watch(`lensSpecifications.${index}.correctionType`);
+
+            const copyRightToLeft = (idx: number) => {
+              const fields = [
+                "rightSph", "rightCyl", "rightAxis", "rightPrism", "rightAdd", "rightPd",
+              ] as const;
+              for (const f of fields) {
+                form.setValue(
+                  `lensSpecifications.${idx}.left${f.slice(5)}` as any,
+                  form.getValues(`lensSpecifications.${idx}.${f}` as any),
+                );
+              }
+            };
+
+            const copyLeftToRight = (idx: number) => {
+              const fields = [
+                "leftSph", "leftCyl", "leftAxis", "leftPrism", "leftAdd", "leftPd",
+              ] as const;
+              for (const f of fields) {
+                form.setValue(
+                  `lensSpecifications.${idx}.right${f.slice(4)}` as any,
+                  form.getValues(`lensSpecifications.${idx}.${f}` as any),
+                );
+              }
+            };
 
             return (
-              <Card
-                key={field.id}
-                className={index === 0 ? "rounded-t-none border-t-0" : ""}
-              >
-                <CardHeader
-                  className="cursor-pointer select-none"
-                  onClick={() => toggleItem(index)}
-                >
+              <Card key={field.id} className="shadow-none border-2">
+                <CardHeader>
                   <div className="flex items-center justify-between">
-                    <div className="flex items-center gap-3">
-                      <ChevronDown
-                        className={`h-4 w-4 text-muted-foreground transition-transform ${
-                          isExpanded ? "rotate-0" : "-rotate-90"
-                        }`}
-                      />
-                      <div>
-                        <CardTitle>Prescription Item {index + 1}</CardTitle>
-                        {!isExpanded && (
-                          <CardDescription>{summary}</CardDescription>
-                        )}
-                      </div>
+                    <div>
+                      <CardTitle>Eyeglass Specification</CardTitle>
+                      <CardDescription>Optical measurements and lens preferences</CardDescription>
                     </div>
-                    <div className="flex items-center gap-1">
-                      {fields.length > 1 && (
-                        <Button
-                          type="button"
-                          variant="ghost"
-                          size="icon"
-                          onClick={(e) => {
-                            e.stopPropagation();
-                            remove(index);
-                          }}
-                          className="text-red-500 hover:text-red-700"
-                        >
-                          <Trash2 className="h-4 w-4" />
-                        </Button>
-                      )}
-                    </div>
+                    <Button
+                      type="button"
+                      variant="ghost"
+                      size="sm"
+                      className="bg-red-700 text-white hover:bg-red-800"
+                      onClick={() => removeLens(index)}
+                    >
+                      Remove ✕
+                    </Button>
                   </div>
                 </CardHeader>
-                {isExpanded && (
                 <CardContent className="space-y-4">
-                <div className="grid gap-4 md:grid-cols-2">
                   <FormField
                     control={form.control}
-                    name={`items.${index}.correctionType`}
-                    render={({ field }) => (
+                    name={`lensSpecifications.${index}.correctionType`}
+                    render={({ field: f }) => (
                       <FormItem>
-                        <FormLabel>Correction Type *</FormLabel>
-                        <Select
-                          onValueChange={field.onChange}
-                          defaultValue={field.value}
-                        >
+                        <FormLabel>Correction Type</FormLabel>
+                        <Select onValueChange={f.onChange} defaultValue={f.value ?? ""}>
                           <FormControl>
                             <SelectTrigger>
                               <SelectValue placeholder="Select" />
@@ -500,257 +464,224 @@ const AddPrescription: React.FC = () => {
                       </FormItem>
                     )}
                   />
+
                   <FormField
                     control={form.control}
-                    name={`items.${index}.eyeSide`}
-                    render={({ field }) => (
+                    name={`lensSpecifications.${index}.lensTypePurpose`}
+                    render={({ field: f }) => (
                       <FormItem>
-                        <FormLabel>Eye Side *</FormLabel>
-                        <Select
-                          onValueChange={field.onChange}
-                          defaultValue={field.value}
+                        <FormLabel>Purpose</FormLabel>
+                        <FormControl><Input placeholder="Enter Purpose" {...f} /></FormControl>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+
+                  <div className="grid gap-4 md:grid-cols-2">
+                    <div className="space-y-3 rounded-lg border bg-muted/60 p-3">
+                      <div className="flex items-center justify-between">
+                        <h4 className="text-sm font-semibold">Right Eye (OD)</h4>
+                        <Button
+                          type="button"
+                          variant="secondary"
+                          size="sm"
+                          className="h-7 gap-1 text-xs"
+                          onClick={() => copyLeftToRight(index)}
                         >
-                          <FormControl>
-                            <SelectTrigger>
-                              <SelectValue placeholder="Select" />
-                            </SelectTrigger>
-                          </FormControl>
-                          <SelectContent>
-                            <SelectItem value="LEFT">Left</SelectItem>
-                            <SelectItem value="RIGHT">Right</SelectItem>
-                            <SelectItem value="BOTH">Both</SelectItem>
-                          </SelectContent>
-                        </Select>
-                        <FormMessage />
-                      </FormItem>
-                    )}
-                  />
-                </div>
+                          <Copy className="h-3 w-3" />
+                          Copy from Left
+                        </Button>
+                      </div>
+                      <div className="grid gap-3 md:grid-cols-3">
+                        <FormField control={form.control} name={`lensSpecifications.${index}.rightSph`} render={({ field: f }) => (
+                          <FormItem><FormLabel>SPH</FormLabel><FormControl><Input {...f} /></FormControl></FormItem>
+                        )} />
+                        <FormField control={form.control} name={`lensSpecifications.${index}.rightCyl`} render={({ field: f }) => (
+                          <FormItem><FormLabel>CYL</FormLabel><FormControl><Input {...f} /></FormControl></FormItem>
+                        )} />
+                        <FormField control={form.control} name={`lensSpecifications.${index}.rightAxis`} render={({ field: f }) => (
+                          <FormItem><FormLabel>Axis</FormLabel><FormControl><Input {...f} /></FormControl></FormItem>
+                        )} />
+                      </div>
+                      <div className="grid gap-3 md:grid-cols-3">
+                        <FormField control={form.control} name={`lensSpecifications.${index}.rightPrism`} render={({ field: f }) => (
+                          <FormItem><FormLabel>Prism</FormLabel><FormControl><Input {...f} /></FormControl></FormItem>
+                        )} />
+                        <FormField control={form.control} name={`lensSpecifications.${index}.rightAdd`} render={({ field: f }) => (
+                          <FormItem><FormLabel>Add</FormLabel><FormControl><Input {...f} /></FormControl></FormItem>
+                        )} />
+                        <FormField control={form.control} name={`lensSpecifications.${index}.rightPd`} render={({ field: f }) => (
+                          <FormItem><FormLabel>PD</FormLabel><FormControl><Input {...f} /></FormControl></FormItem>
+                        )} />
+                      </div>
+                    </div>
 
-                <div className="grid gap-4 md:grid-cols-3">
-                  <FormField
-                    control={form.control}
-                    name={`items.${index}.sph`}
-                    render={({ field }) => (
-                      <FormItem>
-                        <FormLabel>SPH</FormLabel>
-                        <FormControl>
-                          <Input placeholder="e.g. -2.00" {...field} />
-                        </FormControl>
-                        <FormMessage />
-                      </FormItem>
-                    )}
-                  />
-                  <FormField
-                    control={form.control}
-                    name={`items.${index}.cyl`}
-                    render={({ field }) => (
-                      <FormItem>
-                        <FormLabel>CYL</FormLabel>
-                        <FormControl>
-                          <Input placeholder="e.g. -0.75" {...field} />
-                        </FormControl>
-                        <FormMessage />
-                      </FormItem>
-                    )}
-                  />
-                  <FormField
-                    control={form.control}
-                    name={`items.${index}.axis`}
-                    render={({ field }) => (
-                      <FormItem>
-                        <FormLabel>Axis</FormLabel>
-                        <FormControl>
-                          <Input placeholder="e.g. 180" {...field} />
-                        </FormControl>
-                        <FormMessage />
-                      </FormItem>
-                    )}
-                  />
-                </div>
+                    <div className="space-y-3 rounded-lg border bg-muted/30 p-3">
+                      <div className="flex items-center justify-between">
+                        <h4 className="text-sm font-semibold">Left Eye (OS)</h4>
+                        <Button
+                          type="button"
+                          variant="secondary"
+                          size="sm"
+                          className="h-7 gap-1 text-xs"
+                          onClick={() => copyRightToLeft(index)}
+                        >
+                          <Copy className="h-3 w-3" />
+                          Copy from Right
+                        </Button>
+                      </div>
+                      <div className="grid gap-3 md:grid-cols-3">
+                        <FormField control={form.control} name={`lensSpecifications.${index}.leftSph`} render={({ field: f }) => (
+                          <FormItem><FormLabel>SPH</FormLabel><FormControl><Input {...f} /></FormControl></FormItem>
+                        )} />
+                        <FormField control={form.control} name={`lensSpecifications.${index}.leftCyl`} render={({ field: f }) => (
+                          <FormItem><FormLabel>CYL</FormLabel><FormControl><Input {...f} /></FormControl></FormItem>
+                        )} />
+                        <FormField control={form.control} name={`lensSpecifications.${index}.leftAxis`} render={({ field: f }) => (
+                          <FormItem><FormLabel>Axis</FormLabel><FormControl><Input {...f} /></FormControl></FormItem>
+                        )} />
+                      </div>
+                      <div className="grid gap-3 md:grid-cols-3">
+                        <FormField control={form.control} name={`lensSpecifications.${index}.leftPrism`} render={({ field: f }) => (
+                          <FormItem><FormLabel>Prism</FormLabel><FormControl><Input {...f} /></FormControl></FormItem>
+                        )} />
+                        <FormField control={form.control} name={`lensSpecifications.${index}.leftAdd`} render={({ field: f }) => (
+                          <FormItem><FormLabel>Add</FormLabel><FormControl><Input {...f} /></FormControl></FormItem>
+                        )} />
+                        <FormField control={form.control} name={`lensSpecifications.${index}.leftPd`} render={({ field: f }) => (
+                          <FormItem><FormLabel>PD</FormLabel><FormControl><Input {...f} /></FormControl></FormItem>
+                        )} />
+                      </div>
+                    </div>
+                  </div>
 
-                <div className="grid gap-4 md:grid-cols-3">
-                  <FormField
-                    control={form.control}
-                    name={`items.${index}.addPower`}
-                    render={({ field }) => (
-                      <FormItem>
-                        <FormLabel>Add Power</FormLabel>
-                        <FormControl>
-                          <Input placeholder="e.g. +2.00" {...field} />
-                        </FormControl>
-                        <FormMessage />
-                      </FormItem>
-                    )}
-                  />
-                  <FormField
-                    control={form.control}
-                    name={`items.${index}.pd`}
-                    render={({ field }) => (
-                      <FormItem>
-                        <FormLabel>PD</FormLabel>
-                        <FormControl>
-                          <Input placeholder="e.g. 62" {...field} />
-                        </FormControl>
-                        <FormMessage />
-                      </FormItem>
-                    )}
-                  />
-                  <FormField
-                    control={form.control}
-                    name={`items.${index}.lensType`}
-                    render={({ field }) => (
+                  <div className="grid gap-4 md:grid-cols-3">
+                    <FormField control={form.control} name={`lensSpecifications.${index}.lensType`} render={({ field: f }) => (
                       <FormItem>
                         <FormLabel>Lens Type</FormLabel>
-                        <Select
-                          onValueChange={field.onChange}
-                          defaultValue={field.value}
-                        >
-                          <FormControl>
-                            <SelectTrigger>
-                              <SelectValue placeholder="Select" />
-                            </SelectTrigger>
-                          </FormControl>
-                          <SelectContent>
-                            <SelectItem value="SINGLE_VISION">Single Vision</SelectItem>
-                            <SelectItem value="DOUBLE_VISION">Double Vision</SelectItem>
-                          </SelectContent>
-                        </Select>
-                        <FormMessage />
+                        <FormControl><Input placeholder="Enter Lens Type" {...f} /></FormControl>
                       </FormItem>
-                    )}
-                  />
-                </div>
+                    )} />
+                    <FormField control={form.control} name={`lensSpecifications.${index}.frameTypePreference`} render={({ field: f }) => (
+                      <FormItem><FormLabel>Frame Type</FormLabel><FormControl><Input placeholder="Enter Frame Type" {...f} /></FormControl></FormItem>
+                    )} />
+                    <FormField control={form.control} name={`lensSpecifications.${index}.lensMaterial`} render={({ field: f }) => (
+                      <FormItem><FormLabel>Lens Material</FormLabel><FormControl><Input placeholder="Enter Lens Material" {...f} /></FormControl></FormItem>
+                    )} />
+                  </div>
 
-                <div className="grid gap-4 md:grid-cols-2">
-                  <FormField
-                    control={form.control}
-                    name={`items.${index}.frameTypePreference`}
-                    render={({ field }) => (
-                      <FormItem>
-                        <FormLabel>Frame Type Preference</FormLabel>
-                        <FormControl>
-                          <Input placeholder="e.g. Full rim, Half rim" {...field} />
-                        </FormControl>
-                        <FormMessage />
-                      </FormItem>
-                    )}
-                  />
-                  <FormField
-                    control={form.control}
-                    name={`items.${index}.lensMaterial`}
-                    render={({ field }) => (
-                      <FormItem>
-                        <FormLabel>Lens Material</FormLabel>
-                        <FormControl>
-                          <Input placeholder="e.g. Polycarbonate" {...field} />
-                        </FormControl>
-                        <FormMessage />
-                      </FormItem>
-                    )}
-                  />
-                </div>
+                  <div className="grid gap-4 md:grid-cols-2">
+                    <FormField control={form.control} name={`lensSpecifications.${index}.lensCoatings`} render={({ field: f }) => (
+                      <FormItem><FormLabel>Lens Coatings</FormLabel><FormControl><Input placeholder="Enter Lens Coatings" {...f} /></FormControl></FormItem>
+                    )} />
+                    <FormField control={form.control} name={`lensSpecifications.${index}.lensWearType`} render={({ field: f }) => (
+                      <FormItem><FormLabel>Lens Wear Type</FormLabel><FormControl><Input placeholder="Enter Lens Wear Type" {...f} /></FormControl></FormItem>
+                    )} />
+                  </div>
 
-                <div className="grid gap-4 md:grid-cols-2">
-                  <FormField
-                    control={form.control}
-                    name={`items.${index}.lensCoatings`}
-                    render={({ field }) => (
-                      <FormItem>
-                        <FormLabel>Lens Coatings</FormLabel>
-                        <FormControl>
-                          <Input placeholder="e.g. Anti-reflective, UV" {...field} />
-                        </FormControl>
-                        <FormMessage />
-                      </FormItem>
-                    )}
-                  />
-                  <FormField
-                    control={form.control}
-                    name={`items.${index}.lensWearType`}
-                    render={({ field }) => (
-                      <FormItem>
-                        <FormLabel>Lens Wear Type</FormLabel>
-                        <FormControl>
-                          <Input placeholder="e.g. Daily, Extended" {...field} />
-                        </FormControl>
-                        <FormMessage />
-                      </FormItem>
-                    )}
-                  />
-                </div>
-
-                <div className="grid gap-4 md:grid-cols-3">
-                  <FormField
-                    control={form.control}
-                    name={`items.${index}.lensMaterialCl`}
-                    render={({ field }) => (
-                      <FormItem>
-                        <FormLabel>CL Material</FormLabel>
-                        <FormControl>
-                          <Input placeholder="e.g. Silicone hydrogel" {...field} />
-                        </FormControl>
-                        <FormMessage />
-                      </FormItem>
-                    )}
-                  />
-                  <FormField
-                    control={form.control}
-                    name={`items.${index}.baseCurve`}
-                    render={({ field }) => (
-                      <FormItem>
-                        <FormLabel>Base Curve</FormLabel>
-                        <FormControl>
-                          <Input placeholder="e.g. 8.6" {...field} />
-                        </FormControl>
-                        <FormMessage />
-                      </FormItem>
-                    )}
-                  />
-                  <FormField
-                    control={form.control}
-                    name={`items.${index}.diameter`}
-                    render={({ field }) => (
-                      <FormItem>
-                        <FormLabel>Diameter</FormLabel>
-                        <FormControl>
-                          <Input placeholder="e.g. 14.0" {...field} />
-                        </FormControl>
-                        <FormMessage />
-                      </FormItem>
-                    )}
-                  />
-                </div>
-
-
-                <FormField
-                  control={form.control}
-                  name={`items.${index}.notes`}
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel>Item Notes</FormLabel>
-                      <FormControl>
-                        <Textarea placeholder="Notes for this item..." {...field} />
-                      </FormControl>
-                      <FormMessage />
-                    </FormItem>
+                  {correctionType === "CONTACT_LENS" && (
+                    <div className="grid gap-4 md:grid-cols-3">
+                      <FormField control={form.control} name={`lensSpecifications.${index}.lensMaterialCl`} render={({ field: f }) => (
+                        <FormItem><FormLabel>CL Material</FormLabel><FormControl><Input placeholder="Enter CL Material" {...f} /></FormControl></FormItem>
+                      )} />
+                      <FormField control={form.control} name={`lensSpecifications.${index}.baseCurve`} render={({ field: f }) => (
+                        <FormItem><FormLabel>Base Curve</FormLabel><FormControl><Input placeholder="Enter Base Curve" {...f} /></FormControl></FormItem>
+                      )} />
+                      <FormField control={form.control} name={`lensSpecifications.${index}.diameter`} render={({ field: f }) => (
+                        <FormItem><FormLabel>Diameter</FormLabel><FormControl><Input placeholder="Enter Diameter" {...f} /></FormControl></FormItem>
+                      )} />
+                    </div>
                   )}
-                />
-              </CardContent>
-              )}
-            </Card>
-          );
-        })}
 
-          <Button
-            type="button"
-            variant="outline"
-            className="w-full py-3"
-            onClick={handleAppend}
-          >
-            <Plus className="mr-2 h-4 w-4" />
-            Add Another Prescription Item
-          </Button>
+                  <FormField control={form.control} name={`lensSpecifications.${index}.notes`} render={({ field: f }) => (
+                    <FormItem><FormLabel>Notes</FormLabel><FormControl><Textarea placeholder="Enter Notes" {...f} /></FormControl></FormItem>
+                  )} />
+                </CardContent>
+              </Card>
+            );
+          })}
+
+          {recFields.map((field, index) => {
+            const product = productSummariesMap[form.watch(`products.${index}.productId`)];
+            return (
+              <div key={field.id} className="flex items-start gap-3 rounded-lg border p-3">
+                <div className="flex-1 space-y-3">
+                  <div className="flex items-center gap-2">
+                    <Button
+                      type="button"
+                      variant="outline"
+                      size="sm"
+                      className="gap-1.5"
+                      onClick={() => setPickerIndex(index)}
+                    >
+                      {product ? product.productName : "Select product..."}
+                    </Button>
+                    {product && (
+                      <span className="text-xs text-muted-foreground">{product.category}</span>
+                    )}
+                  </div>
+                  <div className="grid gap-3 md:grid-cols-2">
+                    <div>
+                      <FormField
+                        control={form.control}
+                        name={`products.${index}.quantity`}
+                        render={({ field: f }) => (
+                          <FormItem>
+                            <FormLabel>Qty</FormLabel>
+                            <FormControl>
+                              <Input
+                                type="number"
+                                min={1}
+                                value={f.value}
+                                onChange={(e) => f.onChange(Number(e.target.value) || 1)}
+                              />
+                            </FormControl>
+                            <FormMessage />
+                          </FormItem>
+                        )}
+                      />
+                    </div>
+                    <div>
+                      <FormField
+                        control={form.control}
+                        name={`products.${index}.staffNotes`}
+                        render={({ field: f }) => (
+                          <FormItem>
+                            <FormLabel>Usage Notes</FormLabel>
+                            <FormControl>
+                              <Input placeholder="e.g. Take twice daily" {...f} />
+                            </FormControl>
+                            <FormMessage />
+                          </FormItem>
+                        )}
+                      />
+                    </div>
+                  </div>
+                </div>
+                <Button
+                  type="button"
+                  variant="ghost"
+                  size="icon"
+                  onClick={() => removeRec(index)}
+                  className="text-red-500 hover:text-red-700 shrink-0 mt-6"
+                >
+                  <Trash2 className="h-4 w-4" />
+                </Button>
+              </div>
+            );
+          })}
+
+          <ProductPickerModal
+            open={pickerIndex !== null}
+            onOpenChange={(open) => { if (!open) setPickerIndex(null); }}
+            onSelect={(product) => {
+              if (pickerIndex !== null) {
+                form.setValue(`products.${pickerIndex}.productId`, product.productId, { shouldValidate: true });
+                setProductSummariesMap((prev) => ({ ...prev, [product.productId]: product }));
+                setPickerIndex(null);
+              }
+            }}
+          />
 
           <div className="flex justify-end gap-2 pt-6">
             <Button type="submit" disabled={mutation.isPending}>

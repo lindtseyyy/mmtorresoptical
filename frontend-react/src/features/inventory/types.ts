@@ -165,6 +165,15 @@ export interface Product {
   createdAt: string;
 }
 
+export interface ProductSummary {
+  productId: string;
+  productName: string;
+  imageDir: string;
+  category: string;
+  supplier: string;
+  productType: string;
+}
+
 export interface ProductSearchFilters {
   query: string;
   category: string;

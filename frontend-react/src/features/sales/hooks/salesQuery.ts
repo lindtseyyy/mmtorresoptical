@@ -1,6 +1,7 @@
 import { useQuery } from "@tanstack/react-query";
 import { fetchProducts } from "@/features/inventory/services/productApi";
 import { createTransaction } from "@/features/sales/services/transactionApi";
+import { fetchPatientPrescriptions } from "@/features/patients/services/prescriptionApi";
 import type { TransactionRequest } from "@/features/sales/types";
 
 const useProductsForSale = () =>
@@ -16,4 +17,12 @@ const useCreateTransaction = () => ({
   mutationFn: (data: TransactionRequest) => createTransaction(data),
 });
 
-export { useProductsForSale, useCreateTransaction };
+const usePatientPrescriptions = (patientId?: string) =>
+  useQuery({
+    queryKey: ["patient", "prescriptions", patientId],
+    queryFn: () => fetchPatientPrescriptions(patientId!),
+    enabled: !!patientId,
+    select: (data) => data.content,
+  });
+
+export { useProductsForSale, useCreateTransaction, usePatientPrescriptions };

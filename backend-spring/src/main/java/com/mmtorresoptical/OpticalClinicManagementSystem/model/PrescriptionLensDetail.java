@@ -1,16 +1,9 @@
 package com.mmtorresoptical.OpticalClinicManagementSystem.model;
 
 import com.mmtorresoptical.OpticalClinicManagementSystem.converter.AesBigDecimalConverter;
-import com.mmtorresoptical.OpticalClinicManagementSystem.converter.AesCorrectionTypeConverter;
 import com.mmtorresoptical.OpticalClinicManagementSystem.converter.AesEncryptionConverter;
-import com.mmtorresoptical.OpticalClinicManagementSystem.converter.AesEyeSideConverter;
 import com.mmtorresoptical.OpticalClinicManagementSystem.converter.AesIntegerConverter;
-import com.mmtorresoptical.OpticalClinicManagementSystem.converter.AesLensTypeConverter;
-import com.mmtorresoptical.OpticalClinicManagementSystem.enums.CorrectionType;
-import com.mmtorresoptical.OpticalClinicManagementSystem.enums.EyeSide;
-import com.mmtorresoptical.OpticalClinicManagementSystem.enums.LensType;
 import jakarta.persistence.*;
-import jakarta.validation.constraints.NotNull;
 import lombok.Getter;
 import lombok.Setter;
 import org.hibernate.annotations.CreationTimestamp;
@@ -22,49 +15,80 @@ import java.util.UUID;
 @Getter
 @Setter
 @Entity
-@Table(name = "prescription_items")
-public class PrescriptionItem {
+@Table(name = "prescription_lens_details")
+public class PrescriptionLensDetail {
 
     @Id
     @GeneratedValue(strategy = GenerationType.AUTO)
-    @Column(name = "prescription_item_id", updatable = false, nullable = false)
-    private UUID prescriptionItemId;
+    @Column(name = "id", updatable = false, nullable = false)
+    private UUID id;
 
-    @Convert(converter = AesCorrectionTypeConverter.class)
-    @NotNull
-    @Column(name = "correction_type", columnDefinition = "TEXT")
-    private CorrectionType correctionType;
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "prescription_id", nullable = false)
+    private Prescription prescription;
 
-    @Convert(converter = AesEyeSideConverter.class)
-    @NotNull
-    @Column(name = "eye_side", columnDefinition = "TEXT")
-    private EyeSide eyeSide; // LEFT / RIGHT / BOTH
+    @Convert(converter = AesEncryptionConverter.class)
+    @Column(name = "lens_type_purpose", columnDefinition = "TEXT", nullable = false)
+    private String lensTypePurpose;
 
-    // Optical values (decimal precision important) (optional)
+    // Right eye
     @Convert(converter = AesBigDecimalConverter.class)
-    @Column(name = "sph", columnDefinition = "TEXT")
-    private BigDecimal sph;
+    @Column(name = "right_sph", columnDefinition = "TEXT")
+    private BigDecimal rightSph;
 
     @Convert(converter = AesBigDecimalConverter.class)
-    @Column(name = "cyl", columnDefinition = "TEXT")
-    private BigDecimal cyl;
+    @Column(name = "right_cyl", columnDefinition = "TEXT")
+    private BigDecimal rightCyl;
 
     @Convert(converter = AesIntegerConverter.class)
-    @Column(name = "axis", columnDefinition = "TEXT")
-    private Integer axis;
+    @Column(name = "right_axis", columnDefinition = "TEXT")
+    private Integer rightAxis;
 
     @Convert(converter = AesBigDecimalConverter.class)
-    @Column(name = "add_power", columnDefinition = "TEXT")
-    private BigDecimal addPower;
+    @Column(name = "right_prism", columnDefinition = "TEXT")
+    private BigDecimal rightPrism;
 
     @Convert(converter = AesBigDecimalConverter.class)
-    @Column(name = "pd", columnDefinition = "TEXT")
-    private BigDecimal pd;
+    @Column(name = "right_add", columnDefinition = "TEXT")
+    private BigDecimal rightAdd;
 
-    // Lens / frame details (optional)
-    @Convert(converter = AesLensTypeConverter.class)
+    @Convert(converter = AesBigDecimalConverter.class)
+    @Column(name = "right_pd", columnDefinition = "TEXT")
+    private BigDecimal rightPd;
+
+    // Left eye
+    @Convert(converter = AesBigDecimalConverter.class)
+    @Column(name = "left_sph", columnDefinition = "TEXT")
+    private BigDecimal leftSph;
+
+    @Convert(converter = AesBigDecimalConverter.class)
+    @Column(name = "left_cyl", columnDefinition = "TEXT")
+    private BigDecimal leftCyl;
+
+    @Convert(converter = AesIntegerConverter.class)
+    @Column(name = "left_axis", columnDefinition = "TEXT")
+    private Integer leftAxis;
+
+    @Convert(converter = AesBigDecimalConverter.class)
+    @Column(name = "left_prism", columnDefinition = "TEXT")
+    private BigDecimal leftPrism;
+
+    @Convert(converter = AesBigDecimalConverter.class)
+    @Column(name = "left_add", columnDefinition = "TEXT")
+    private BigDecimal leftAdd;
+
+    @Convert(converter = AesBigDecimalConverter.class)
+    @Column(name = "left_pd", columnDefinition = "TEXT")
+    private BigDecimal leftPd;
+
+    // Shared fields
+    @Convert(converter = AesEncryptionConverter.class)
+    @Column(name = "correction_type", columnDefinition = "TEXT")
+    private String correctionType;
+
+    @Convert(converter = AesEncryptionConverter.class)
     @Column(name = "lens_type", columnDefinition = "TEXT")
-    private LensType lensType;
+    private String lensType;
 
     @Convert(converter = AesEncryptionConverter.class)
     @Column(name = "frame_type_preference", columnDefinition = "TEXT")
@@ -94,27 +118,15 @@ public class PrescriptionItem {
     @Column(name = "diameter", columnDefinition = "TEXT")
     private BigDecimal diameter;
 
-    // Notes
     @Convert(converter = AesEncryptionConverter.class)
     @Column(name = "notes", columnDefinition = "TEXT")
     private String notes;
 
-    // Audit fields
     @CreationTimestamp
     @Column(name = "created_at", updatable = false)
     private LocalDateTime createdAt;
 
-    @Column(name = "is_archived", nullable = false)
-    private Boolean isArchived = false;
-
-    // Relationship
-    @ManyToOne
+    @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "created_by", nullable = false)
     private User user;
-
-    // MANY items → ONE prescription
-//    @ManyToOne(fetch = FetchType.LAZY)
-    @ManyToOne
-    @JoinColumn(name = "prescription_id", nullable = false)
-    private Prescription prescription;
 }

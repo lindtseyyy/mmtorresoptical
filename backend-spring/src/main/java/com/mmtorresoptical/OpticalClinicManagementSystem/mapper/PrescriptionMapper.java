@@ -1,6 +1,7 @@
 package com.mmtorresoptical.OpticalClinicManagementSystem.mapper;
 
 import com.mmtorresoptical.OpticalClinicManagementSystem.dto.audit.prescription.PrescriptionAuditDTO;
+import com.mmtorresoptical.OpticalClinicManagementSystem.dto.prescription.LensSpecificationDTO;
 import com.mmtorresoptical.OpticalClinicManagementSystem.dto.prescription.PrescriptionDetailsDTO;
 import com.mmtorresoptical.OpticalClinicManagementSystem.dto.prescription.PrescriptionListDTO;
 import com.mmtorresoptical.OpticalClinicManagementSystem.dto.prescription.PrescriptionResponseDTO;
@@ -10,7 +11,7 @@ import org.mapstruct.Mapping;
 
 @Mapper(
         componentModel = "spring",
-        uses = {UserMapper.class, PrescriptionItemMapper.class}
+        uses = {UserMapper.class, PrescriptionLensDetailMapper.class}
 )
 public interface PrescriptionMapper {
 
@@ -19,6 +20,8 @@ public interface PrescriptionMapper {
     @Mapping(target = "eyeExamNumber", source = "eyeExam.examNumber")
     @Mapping(target = "status",
             expression = "java(prescription.getStatus() != null ? prescription.getStatus().name() : null)")
+    @Mapping(target = "lensSpecifications", source = "prescriptionLensDetails")
+    @Mapping(target = "recommendations", ignore = true)
     PrescriptionResponseDTO entityToResponseDTO(Prescription prescription);
 
     @Mapping(target = "createdByUserId", source = "user.userId")
@@ -32,6 +35,8 @@ public interface PrescriptionMapper {
     @Mapping(target = "eyeExamNumber", source = "eyeExam.examNumber")
     @Mapping(target = "status",
             expression = "java(prescription.getStatus() != null ? prescription.getStatus().name() : null)")
+    @Mapping(target = "lensSpecifications", source = "prescriptionLensDetails")
+    @Mapping(target = "recommendations", ignore = true)
     PrescriptionDetailsDTO entityToDetailsDTO(Prescription prescription);
 
     @Mapping(target = "createdBy", source = "user")

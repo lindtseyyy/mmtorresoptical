@@ -13,6 +13,7 @@ import org.hibernate.annotations.GenerationTime;
 
 import java.time.LocalDate;
 import java.time.LocalDateTime;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.UUID;
 
@@ -79,5 +80,12 @@ public class Prescription {
             cascade = CascadeType.ALL,
             orphanRemoval = true
     )
-    private List<PrescriptionItem> prescriptionItems;
+    private List<PrescriptionLensDetail> prescriptionLensDetails = new ArrayList<>();
+
+    @OneToMany(
+            mappedBy = "prescription",
+            cascade = CascadeType.ALL,
+            orphanRemoval = true
+    )
+    private List<PrescriptionRecommendation> prescriptionRecommendations;
 }

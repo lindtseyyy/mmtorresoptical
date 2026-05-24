@@ -1,10 +1,10 @@
-import { useState, useEffect, useRef } from "react";
+import { useState, useEffect } from "react";
 import { useNavigate, useSearchParams, Link } from "react-router-dom";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
-import { useForm, useFieldArray, type SubmitHandler } from "react-hook-form";
+import { useForm, type SubmitHandler } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
-import { ArrowLeft, Plus, Trash2, ChevronDown } from "lucide-react";
+import { ArrowLeft } from "lucide-react";
 import { Button } from "@/shared/components/ui/button";
 import { Input } from "@/shared/components/ui/input";
 import {
@@ -34,55 +34,15 @@ import { toast } from "sonner";
 import {
   fetchPrescription,
   clonePrescription,
+  type RecommendationResponse,
 } from "@/features/patients/services/prescriptionApi";
-
-const prescriptionItemSchema = z.object({
-  correctionType: z.string().min(1, "Required"),
-  eyeSide: z.string().min(1, "Required"),
-  sph: z.string().optional(),
-  cyl: z.string().optional(),
-  axis: z.string().optional(),
-  addPower: z.string().optional(),
-  pd: z.string().optional(),
-  lensType: z.string().optional(),
-  frameTypePreference: z.string().optional(),
-  lensCoatings: z.string().optional(),
-  lensMaterial: z.string().optional(),
-  lensWearType: z.string().optional(),
-  lensMaterialCl: z.string().optional(),
-  baseCurve: z.string().optional(),
-  diameter: z.string().optional(),
-  notes: z.string().optional(),
-});
 
 const prescriptionFormSchema = z.object({
   issueDate: z.string().min(1, "Issue date is required"),
   notes: z.string().optional(),
-  followUpRequired: z.boolean(),
-  followUpReason: z.string().optional(),
-  items: z.array(prescriptionItemSchema).min(1, "Add at least one prescription item"),
 });
 
 type PrescriptionFormValues = z.infer<typeof prescriptionFormSchema>;
-
-const emptyItem = {
-  correctionType: "",
-  eyeSide: "",
-  sph: "",
-  cyl: "",
-  axis: "",
-  addPower: "",
-  pd: "",
-  lensType: "",
-  frameTypePreference: "",
-  lensCoatings: "",
-  lensMaterial: "",
-  lensWearType: "",
-  lensMaterialCl: "",
-  baseCurve: "",
-  diameter: "",
-  notes: "",
-};
 
 const numStr = (val: number | null | undefined): string =>
   val != null ? String(val) : "";
@@ -95,26 +55,16 @@ const EditPrescription: React.FC = () => {
   const patientId = searchParams.get("patientId") ?? "";
   const patientName = searchParams.get("patientName") ?? "";
 
-  const originalItemIds = useRef<string[]>([]);
+  const [recommendations, setRecommendations] = useState<RecommendationResponse[]>([]);
+  const [dataLoaded, setDataLoaded] = useState(false);
 
   const form = useForm<PrescriptionFormValues>({
     resolver: zodResolver(prescriptionFormSchema),
     defaultValues: {
       issueDate: "",
       notes: "",
-      followUpRequired: false,
-      followUpReason: "",
-      items: [{ ...emptyItem }],
     },
   });
-
-  const { fields, append, remove } = useFieldArray({
-    control: form.control,
-    name: "items",
-  });
-
-  const [expandedItems, setExpandedItems] = useState<Set<number>>(new Set());
-  const [dataLoaded, setDataLoaded] = useState(false);
 
   const { data: prescription, isLoading } = useQuery({
     queryKey: ["prescription", prescriptionId],
@@ -124,52 +74,14 @@ const EditPrescription: React.FC = () => {
 
   useEffect(() => {
     if (prescription && !dataLoaded) {
-      originalItemIds.current = prescription.prescriptionItems.map((item) => item.prescriptionItemId);
       form.reset({
         issueDate: prescription.issueDate,
         notes: prescription.notes ?? "",
-        followUpRequired: false,
-        followUpReason: "",
-        items: prescription.prescriptionItems.map((item) => ({
-          correctionType: item.correctionType,
-          eyeSide: item.eyeSide,
-          sph: numStr(item.sph),
-          cyl: numStr(item.cyl),
-          axis: numStr(item.axis),
-          addPower: numStr(item.addPower),
-          pd: numStr(item.pd),
-          lensType: item.lensType ?? "",
-          frameTypePreference: item.frameTypePreference ?? "",
-          lensCoatings: item.lensCoatings ?? "",
-          lensMaterial: item.lensMaterial ?? "",
-          lensWearType: item.lensWearType ?? "",
-          lensMaterialCl: item.lensMaterialCl ?? "",
-          baseCurve: numStr(item.baseCurve),
-          diameter: numStr(item.diameter),
-          notes: item.notes ?? "",
-        })),
       });
-      setExpandedItems(new Set(prescription.prescriptionItems.map((_, i) => i)));
+      setRecommendations(prescription.recommendations || []);
       setDataLoaded(true);
     }
   }, [prescription, dataLoaded, form]);
-
-  const handleAppend = () => {
-    append({ ...emptyItem });
-    setExpandedItems(new Set([fields.length]));
-  };
-
-  const toggleItem = (index: number) => {
-    setExpandedItems((prev) => {
-      const next = new Set(prev);
-      if (next.has(index)) {
-        next.delete(index);
-      } else {
-        next.add(index);
-      }
-      return next;
-    });
-  };
 
   const handleSubmit: SubmitHandler<PrescriptionFormValues> = async () => {
     toast.error("Editing Disabled", {
@@ -194,12 +106,6 @@ const EditPrescription: React.FC = () => {
     },
   });
 
-  const formatEnum = (value: string) =>
-    value
-      .toLowerCase()
-      .replace(/_/g, " ")
-      .replace(/\b\w/g, (c) => c.toUpperCase());
-
   if (isLoading) {
     return (
       <div className="flex items-center justify-center py-16">
@@ -207,6 +113,8 @@ const EditPrescription: React.FC = () => {
       </div>
     );
   }
+
+  const lensSpecs = prescription?.lensSpecifications ?? [];
 
   return (
     <div className="mx-auto max-w-4xl space-y-6">
@@ -231,10 +139,10 @@ const EditPrescription: React.FC = () => {
             Prescriptions are immutable medical records. Editing is disabled. Use Clone & Re-issue to create a corrected version.
           </div>
           <fieldset disabled className="space-y-6">
-          <Card className="bg-primary/10 border-b-2 border-b-primary/30 rounded-b-none">
+          <Card className="bg-stone-200 border-b-2 border-b-stone-400 rounded-b-none">
             <CardHeader>
               <CardTitle>Prescription Details</CardTitle>
-              <CardDescription>Edit the issue date and notes</CardDescription>
+              <CardDescription>Issue date and notes</CardDescription>
             </CardHeader>
             <CardContent className="space-y-4">
               <div className="grid gap-4 md:grid-cols-2">
@@ -268,332 +176,109 @@ const EditPrescription: React.FC = () => {
             </CardContent>
           </Card>
 
-          <div className="flex items-center gap-3 pt-2">
-            <div className="h-px flex-1 bg-border" />
-            <span className="text-sm font-semibold text-muted-foreground uppercase tracking-wider">
-              Prescription Items ({fields.length})
-            </span>
-            <div className="h-px flex-1 bg-border" />
-          </div>
-
-          {fields.map((field, index) => {
-            const isExpanded = expandedItems.has(index);
-            const correctionType = form.watch(`items.${index}.correctionType`);
-            const eyeSide = form.watch(`items.${index}.eyeSide`);
-            const summary = [correctionType, eyeSide]
-              .filter(Boolean)
-              .map(formatEnum)
-              .join(" — ") || "No details yet";
-
-            return (
-              <Card key={field.id}>
-                <CardHeader
-                  className="cursor-pointer select-none"
-                  onClick={() => toggleItem(index)}
-                >
-                  <div className="flex items-center justify-between">
-                    <div className="flex items-center gap-3">
-                      <ChevronDown
-                        className={`h-4 w-4 text-muted-foreground transition-transform ${
-                          isExpanded ? "rotate-0" : "-rotate-90"
-                        }`}
-                      />
-                      <div>
-                        <CardTitle>Prescription Item {index + 1}</CardTitle>
-                        {!isExpanded && (
-                          <CardDescription>{summary}</CardDescription>
-                        )}
-                      </div>
-                    </div>
-                    <div className="flex items-center gap-1">
-                      {fields.length > 1 && (
-                        <Button
-                          type="button"
-                          variant="ghost"
-                          size="icon"
-                          onClick={(e) => {
-                            e.stopPropagation();
-                            remove(index);
-                          }}
-                          className="text-red-500 hover:text-red-700"
-                        >
-                          <Trash2 className="h-4 w-4" />
-                        </Button>
-                      )}
-                    </div>
-                  </div>
-                </CardHeader>
-                {isExpanded && (
-                  <CardContent className="space-y-4">
-                    <div className="grid gap-4 md:grid-cols-2">
-                      <FormField
-                        control={form.control}
-                        name={`items.${index}.correctionType`}
-                        render={({ field }) => (
-                          <FormItem>
-                            <FormLabel>Correction Type *</FormLabel>
-                            <Select onValueChange={field.onChange} value={field.value}>
-                              <FormControl>
-                                <SelectTrigger>
-                                  <SelectValue placeholder="Select type" />
-                                </SelectTrigger>
-                              </FormControl>
-                              <SelectContent>
-                                <SelectItem value="EYEGLASSES">Eyeglasses</SelectItem>
-                                <SelectItem value="CONTACT_LENS">Contact Lens</SelectItem>
-                              </SelectContent>
-                            </Select>
-                            <FormMessage />
-                          </FormItem>
-                        )}
-                      />
-                      <FormField
-                        control={form.control}
-                        name={`items.${index}.eyeSide`}
-                        render={({ field }) => (
-                          <FormItem>
-                            <FormLabel>Eye Side *</FormLabel>
-                            <Select onValueChange={field.onChange} value={field.value}>
-                              <FormControl>
-                                <SelectTrigger>
-                                  <SelectValue placeholder="Select side" />
-                                </SelectTrigger>
-                              </FormControl>
-                              <SelectContent>
-                                <SelectItem value="LEFT">Left</SelectItem>
-                                <SelectItem value="RIGHT">Right</SelectItem>
-                                <SelectItem value="BOTH">Both</SelectItem>
-                              </SelectContent>
-                            </Select>
-                            <FormMessage />
-                          </FormItem>
-                        )}
-                      />
-                    </div>
-
-                    <div className="grid gap-4 md:grid-cols-3">
-                      <FormField
-                        control={form.control}
-                        name={`items.${index}.sph`}
-                        render={({ field }) => (
-                          <FormItem>
-                            <FormLabel>SPH</FormLabel>
-                            <FormControl>
-                              <Input type="number" step="0.25" placeholder="0.00" {...field} />
-                            </FormControl>
-                            <FormMessage />
-                          </FormItem>
-                        )}
-                      />
-                      <FormField
-                        control={form.control}
-                        name={`items.${index}.cyl`}
-                        render={({ field }) => (
-                          <FormItem>
-                            <FormLabel>CYL</FormLabel>
-                            <FormControl>
-                              <Input type="number" step="0.25" placeholder="0.00" {...field} />
-                            </FormControl>
-                            <FormMessage />
-                          </FormItem>
-                        )}
-                      />
-                      <FormField
-                        control={form.control}
-                        name={`items.${index}.axis`}
-                        render={({ field }) => (
-                          <FormItem>
-                            <FormLabel>Axis</FormLabel>
-                            <FormControl>
-                              <Input type="number" placeholder="0" {...field} />
-                            </FormControl>
-                            <FormMessage />
-                          </FormItem>
-                        )}
-                      />
-                    </div>
-
-                    <div className="grid gap-4 md:grid-cols-3">
-                      <FormField
-                        control={form.control}
-                        name={`items.${index}.addPower`}
-                        render={({ field }) => (
-                          <FormItem>
-                            <FormLabel>Add Power</FormLabel>
-                            <FormControl>
-                              <Input type="number" step="0.25" placeholder="0.00" {...field} />
-                            </FormControl>
-                            <FormMessage />
-                          </FormItem>
-                        )}
-                      />
-                      <FormField
-                        control={form.control}
-                        name={`items.${index}.pd`}
-                        render={({ field }) => (
-                          <FormItem>
-                            <FormLabel>PD</FormLabel>
-                            <FormControl>
-                              <Input type="number" step="0.5" placeholder="0.0" {...field} />
-                            </FormControl>
-                            <FormMessage />
-                          </FormItem>
-                        )}
-                      />
-                      <FormField
-                        control={form.control}
-                        name={`items.${index}.lensType`}
-                        render={({ field }) => (
-                          <FormItem>
-                            <FormLabel>Lens Type</FormLabel>
-                            <Select onValueChange={field.onChange} value={field.value}>
-                              <FormControl>
-                                <SelectTrigger>
-                                  <SelectValue placeholder="Select" />
-                                </SelectTrigger>
-                              </FormControl>
-                              <SelectContent>
-                                <SelectItem value="SINGLE_VISION">Single Vision</SelectItem>
-                                <SelectItem value="DOUBLE_VISION">Double Vision</SelectItem>
-                              </SelectContent>
-                            </Select>
-                            <FormMessage />
-                          </FormItem>
-                        )}
-                      />
-                    </div>
-
-                    <div className="grid gap-4 md:grid-cols-2">
-                      <FormField
-                        control={form.control}
-                        name={`items.${index}.frameTypePreference`}
-                        render={({ field }) => (
-                          <FormItem>
-                            <FormLabel>Frame Type</FormLabel>
-                            <FormControl>
-                              <Input placeholder="e.g. Full-rim" {...field} />
-                            </FormControl>
-                            <FormMessage />
-                          </FormItem>
-                        )}
-                      />
-                      <FormField
-                        control={form.control}
-                        name={`items.${index}.lensMaterial`}
-                        render={({ field }) => (
-                          <FormItem>
-                            <FormLabel>Lens Material</FormLabel>
-                            <FormControl>
-                              <Input placeholder="e.g. Polycarbonate" {...field} />
-                            </FormControl>
-                            <FormMessage />
-                          </FormItem>
-                        )}
-                      />
-                    </div>
-
-                    <div className="grid gap-4 md:grid-cols-2">
-                      <FormField
-                        control={form.control}
-                        name={`items.${index}.lensCoatings`}
-                        render={({ field }) => (
-                          <FormItem>
-                            <FormLabel>Lens Coatings</FormLabel>
-                            <FormControl>
-                              <Input placeholder="e.g. Anti-reflective" {...field} />
-                            </FormControl>
-                            <FormMessage />
-                          </FormItem>
-                        )}
-                      />
-                      <FormField
-                        control={form.control}
-                        name={`items.${index}.lensWearType`}
-                        render={({ field }) => (
-                          <FormItem>
-                            <FormLabel>Lens Wear Type</FormLabel>
-                            <FormControl>
-                              <Input placeholder="e.g. Daily wear" {...field} />
-                            </FormControl>
-                            <FormMessage />
-                          </FormItem>
-                        )}
-                      />
-                    </div>
-
-                    {correctionType === "CONTACT_LENS" && (
-                      <div className="grid gap-4 md:grid-cols-3">
-                        <FormField
-                          control={form.control}
-                          name={`items.${index}.lensMaterialCl`}
-                          render={({ field }) => (
-                            <FormItem>
-                              <FormLabel>CL Material</FormLabel>
-                              <FormControl>
-                                <Input placeholder="e.g. Silicone hydrogel" {...field} />
-                              </FormControl>
-                              <FormMessage />
-                            </FormItem>
-                          )}
-                        />
-                        <FormField
-                          control={form.control}
-                          name={`items.${index}.baseCurve`}
-                          render={({ field }) => (
-                            <FormItem>
-                              <FormLabel>Base Curve</FormLabel>
-                              <FormControl>
-                                <Input type="number" step="0.1" placeholder="0.0" {...field} />
-                              </FormControl>
-                              <FormMessage />
-                            </FormItem>
-                          )}
-                        />
-                        <FormField
-                          control={form.control}
-                          name={`items.${index}.diameter`}
-                          render={({ field }) => (
-                            <FormItem>
-                              <FormLabel>Diameter</FormLabel>
-                              <FormControl>
-                                <Input type="number" step="0.1" placeholder="0.0" {...field} />
-                              </FormControl>
-                              <FormMessage />
-                            </FormItem>
-                          )}
-                        />
+          {lensSpecs.length > 0 && (
+            <Card>
+              <CardHeader>
+                <CardTitle>Eyeglass Specifications ({lensSpecs.length})</CardTitle>
+                <CardDescription>Optical measurements and lens preferences</CardDescription>
+              </CardHeader>
+              <CardContent className="space-y-6">
+                {lensSpecs.map((lens, li) => (
+                  <div key={li} className="space-y-4">
+                    {lens.lensTypePurpose && (
+                      <div className="text-sm font-semibold text-primary">
+                        {lens.lensTypePurpose}
                       </div>
                     )}
+                    {lens.correctionType && (
+                      <div className="text-sm">
+                        <span className="font-medium">Correction Type:</span>{" "}
+                        {lens.correctionType === "EYEGLASSES" ? "Eyeglasses" : "Contact Lens"}
+                      </div>
+                    )}
+                    <div className="grid gap-4 md:grid-cols-2">
+                      <div className="space-y-2 rounded-lg border p-3">
+                        <h4 className="text-sm font-semibold">Right Eye (OD)</h4>
+                        <div className="grid grid-cols-3 gap-x-2 gap-y-1 text-xs">
+                          <span className="text-muted-foreground">SPH</span>
+                          <span className="text-muted-foreground">CYL</span>
+                          <span className="text-muted-foreground">Axis</span>
+                          <span className="font-mono">{lens.rightSph != null ? lens.rightSph : "—"}</span>
+                          <span className="font-mono">{lens.rightCyl != null ? lens.rightCyl : "—"}</span>
+                          <span className="font-mono">{lens.rightAxis != null ? lens.rightAxis : "—"}</span>
+                          <span className="text-muted-foreground">Prism</span>
+                          <span className="text-muted-foreground">Add</span>
+                          <span className="text-muted-foreground">PD</span>
+                          <span className="font-mono">{lens.rightPrism != null ? lens.rightPrism : "—"}</span>
+                          <span className="font-mono">{lens.rightAdd != null ? lens.rightAdd : "—"}</span>
+                          <span className="font-mono">{lens.rightPd != null ? lens.rightPd : "—"}</span>
+                        </div>
+                      </div>
+                      <div className="space-y-2 rounded-lg border p-3">
+                        <h4 className="text-sm font-semibold">Left Eye (OS)</h4>
+                        <div className="grid grid-cols-3 gap-x-2 gap-y-1 text-xs">
+                          <span className="text-muted-foreground">SPH</span>
+                          <span className="text-muted-foreground">CYL</span>
+                          <span className="text-muted-foreground">Axis</span>
+                          <span className="font-mono">{lens.leftSph != null ? lens.leftSph : "—"}</span>
+                          <span className="font-mono">{lens.leftCyl != null ? lens.leftCyl : "—"}</span>
+                          <span className="font-mono">{lens.leftAxis != null ? lens.leftAxis : "—"}</span>
+                          <span className="text-muted-foreground">Prism</span>
+                          <span className="text-muted-foreground">Add</span>
+                          <span className="text-muted-foreground">PD</span>
+                          <span className="font-mono">{lens.leftPrism != null ? lens.leftPrism : "—"}</span>
+                          <span className="font-mono">{lens.leftAdd != null ? lens.leftAdd : "—"}</span>
+                          <span className="font-mono">{lens.leftPd != null ? lens.leftPd : "—"}</span>
+                        </div>
+                      </div>
+                    </div>
+                    <div className="grid grid-cols-2 gap-2 text-sm">
+                      {lens.lensType && <div><span className="text-muted-foreground">Lens Type:</span> {lens.lensType.replace("_", " ").toLowerCase().replace(/\b\w/g, c => c.toUpperCase())}</div>}
+                      {lens.frameTypePreference && <div><span className="text-muted-foreground">Frame Type:</span> {lens.frameTypePreference}</div>}
+                      {lens.lensMaterial && <div><span className="text-muted-foreground">Material:</span> {lens.lensMaterial}</div>}
+                      {lens.lensCoatings && <div><span className="text-muted-foreground">Coatings:</span> {lens.lensCoatings}</div>}
+                      {lens.lensWearType && <div><span className="text-muted-foreground">Wear Type:</span> {lens.lensWearType}</div>}
+                      {lens.lensMaterialCl && <div><span className="text-muted-foreground">CL Material:</span> {lens.lensMaterialCl}</div>}
+                      {lens.baseCurve != null && <div><span className="text-muted-foreground">BC:</span> {lens.baseCurve}</div>}
+                      {lens.diameter != null && <div><span className="text-muted-foreground">DIA:</span> {lens.diameter}</div>}
+                    </div>
+                    {lens.notes && (
+                      <div className="text-sm"><span className="text-muted-foreground">Notes:</span> {lens.notes}</div>
+                    )}
+                    {li < lensSpecs.length - 1 && <hr className="border-dashed" />}
+                  </div>
+                ))}
+              </CardContent>
+            </Card>
+          )}
 
-
-                    <FormField
-                      control={form.control}
-                      name={`items.${index}.notes`}
-                      render={({ field }) => (
-                        <FormItem>
-                          <FormLabel>Item Notes</FormLabel>
-                          <FormControl>
-                            <Textarea placeholder="Item-specific notes..." {...field} />
-                          </FormControl>
-                          <FormMessage />
-                        </FormItem>
-                      )}
-                    />
-                  </CardContent>
-                )}
-              </Card>
-            );
-          })}
-
-          <Button
-            type="button"
-            variant="outline"
-            className="w-full py-3"
-            onClick={handleAppend}
-          >
-            <Plus className="mr-2 h-4 w-4" />
-            Add Another Prescription Item
-          </Button>
+          {recommendations.length > 0 && (
+            <Card>
+              <CardHeader>
+                <CardTitle>Product Recommendations</CardTitle>
+                <CardDescription>Suggested products from this prescription</CardDescription>
+              </CardHeader>
+              <CardContent>
+                <div className="space-y-2">
+                  {recommendations.map((rec) => (
+                    <div key={rec.id} className="flex items-center justify-between rounded-lg border p-3">
+                      <div>
+                        <p className="text-sm font-medium">{rec.productName}</p>
+                        <p className="text-xs text-muted-foreground">{rec.category}</p>
+                        {rec.staffNotes && (
+                          <p className="text-xs text-muted-foreground mt-1 italic">&ldquo;{rec.staffNotes}&rdquo;</p>
+                        )}
+                      </div>
+                      <div className="text-right">
+                        <p className="text-sm font-semibold">₱{rec.unitPrice.toFixed(2)}</p>
+                        <p className="text-xs text-muted-foreground">Qty: {rec.quantity}</p>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              </CardContent>
+            </Card>
+          )}
           </fieldset>
 
           <div className="flex justify-end gap-2 pt-6">

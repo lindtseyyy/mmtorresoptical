@@ -1,6 +1,6 @@
 import api from "@/shared/lib/axiosInstance";
 import type { PageResponse } from "@/shared/types";
-import type { Product, ProductFormData, InventorySummary, ProductMetrics } from "@/features/inventory/types";
+import type { Product, ProductFormData, InventorySummary, ProductMetrics, ProductSummary } from "@/features/inventory/types";
 
 const fetchProducts = async (
   page = 0,
@@ -88,4 +88,11 @@ const adjustStock = async (id: string, data: StockAdjustmentPayload) => {
   return await api.post(`/products/${id}/adjust-stock`, data);
 };
 
-export { fetchProducts, fetchProduct, updateProduct, addProduct, archiveProduct, restoreProduct, adjustStock, fetchInventorySummary, fetchProductMetrics };
+const fetchProductSummaries = async (keyword?: string, category?: string): Promise<ProductSummary[]> => {
+  const { data } = await api.get("/products/summary", {
+    params: { ...(keyword && { keyword }), ...(category && category !== "all" && { category }) },
+  });
+  return data;
+};
+
+export { fetchProducts, fetchProduct, updateProduct, addProduct, archiveProduct, restoreProduct, adjustStock, fetchInventorySummary, fetchProductMetrics, fetchProductSummaries };

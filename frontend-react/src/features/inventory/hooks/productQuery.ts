@@ -1,5 +1,5 @@
-import { queryOptions } from "@tanstack/react-query";
-import { fetchProducts, fetchProduct, addProduct, updateProduct, archiveProduct, restoreProduct, adjustStock, fetchInventorySummary } from "@/features/inventory/services/productApi";
+import { queryOptions, useQuery } from "@tanstack/react-query";
+import { fetchProducts, fetchProduct, addProduct, updateProduct, archiveProduct, restoreProduct, adjustStock, fetchInventorySummary, fetchProductSummaries } from "@/features/inventory/services/productApi";
 import { toast } from "sonner";
 import type { NavigateFunction } from "react-router";
 import type { ProductFormData } from "@/features/inventory/types";
@@ -129,3 +129,10 @@ function createInventorySummaryQueryOptions() {
 }
 
 export {createProductsListQueryOptions, createEditProductQueryOptions, createAddProductMutationOptions, createEditProductMutationOptions, createArchiveProductMutationOptions, createRestoreProductMutationOptions, createAdjustStockMutationOptions, createInventorySummaryQueryOptions}
+
+export const useProductSummaries = (keyword?: string, category?: string) =>
+  useQuery({
+    queryKey: ["products", "summary", keyword ?? "", category ?? ""],
+    queryFn: () => fetchProductSummaries(keyword, category),
+    staleTime: 60_000,
+  });

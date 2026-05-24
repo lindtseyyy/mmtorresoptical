@@ -2,7 +2,6 @@ package com.mmtorresoptical.OpticalClinicManagementSystem.specification;
 
 import com.mmtorresoptical.OpticalClinicManagementSystem.enums.PrescriptionStatus;
 import com.mmtorresoptical.OpticalClinicManagementSystem.model.Prescription;
-import com.mmtorresoptical.OpticalClinicManagementSystem.model.PrescriptionItem;
 import org.springframework.data.jpa.domain.Specification;
 
 import java.time.LocalDate;

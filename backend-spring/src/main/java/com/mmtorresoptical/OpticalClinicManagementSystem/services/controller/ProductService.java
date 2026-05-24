@@ -3,6 +3,7 @@ package com.mmtorresoptical.OpticalClinicManagementSystem.services.controller;
 import com.mmtorresoptical.OpticalClinicManagementSystem.dto.product.CreateProductRequestDTO;
 import com.mmtorresoptical.OpticalClinicManagementSystem.dto.product.ProductDetailsDTO;
 import com.mmtorresoptical.OpticalClinicManagementSystem.dto.product.ProductResponseDTO;
+import com.mmtorresoptical.OpticalClinicManagementSystem.dto.product.ProductSummaryDTO;
 import com.mmtorresoptical.OpticalClinicManagementSystem.dto.product.StockAdjustmentRequestDTO;
 import com.mmtorresoptical.OpticalClinicManagementSystem.dto.product.UpdateProductRequestDTO;
 import com.mmtorresoptical.OpticalClinicManagementSystem.exception.custom.InsufficientStockException;
@@ -27,6 +28,7 @@ import java.math.BigDecimal;
 import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
+import java.util.stream.Collectors;
 
 @Service
 @RequiredArgsConstructor
@@ -242,6 +244,23 @@ public class ProductService {
 
         // Audit Logging
         productAuditHelper.logRestore(retrievedProduct);
+    }
+
+    public List<ProductSummaryDTO> getProductSummaries(String keyword, String category) {
+        Specification<Product> spec = Specification.where(ProductSpecification.hasArchivedStatus("ACTIVE"));
+
+        if (keyword != null && !keyword.isBlank()) {
+            spec = spec.and(ProductSpecification.nameContains(keyword));
+        }
+
+        if (category != null && !category.isBlank()) {
+            spec = spec.and(ProductSpecification.hasCategory(category));
+        }
+
+        List<Product> products = productRepository.findAll(spec, Sort.by("productName"));
+        return products.stream()
+                .map(productMapper::entityToSummaryDTO)
+                .collect(Collectors.toList());
     }
 
 }

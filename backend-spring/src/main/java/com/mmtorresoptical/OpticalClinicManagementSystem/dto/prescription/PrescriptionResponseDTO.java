@@ -1,6 +1,5 @@
 package com.mmtorresoptical.OpticalClinicManagementSystem.dto.prescription;
 
-import com.mmtorresoptical.OpticalClinicManagementSystem.dto.prescriptionitems.PrescriptionItemResponseDTO;
 import com.mmtorresoptical.OpticalClinicManagementSystem.dto.user.UserSummaryDTO;
 import lombok.Data;
 
@@ -23,5 +22,6 @@ public class PrescriptionResponseDTO {
     private String eyeExamNumber;
     private UserSummaryDTO createdBy;
 
-    private List<PrescriptionItemResponseDTO> prescriptionItems;
+    private List<LensSpecificationDTO> lensSpecifications;
+    private List<RecommendationResponseDTO> recommendations;
 }

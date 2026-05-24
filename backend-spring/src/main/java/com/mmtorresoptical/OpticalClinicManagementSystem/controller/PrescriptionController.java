@@ -5,6 +5,7 @@ import com.mmtorresoptical.OpticalClinicManagementSystem.services.controller.Pre
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
@@ -18,49 +19,13 @@ public class PrescriptionController {
 
     private final PrescriptionService prescriptionService;
 
-    /**
-     * Creates a new prescription for a specific patient.
-     *
-     * This endpoint:
-     * - Registers a prescription under the given patient ID
-     * - Associates the prescription with the authenticated user
-     * - Maps and attaches multiple prescription items
-     * - Persists both the prescription and its items using cascade saving
-     * - Returns the created prescription with its item details
-     *
-     * @param id the UUID of the patient receiving the prescription
-     * @param prescriptionRequest the request body containing prescription
-     *                            details and item entries
-     * @return ResponseEntity containing the created PrescriptionResponseDTO
-     */
     @PreAuthorize("hasRole('ADMIN')")
     @PostMapping("/api/admin/patient/{id}/prescriptions")
     public ResponseEntity<PrescriptionResponseDTO> createPrescription(@PathVariable UUID id, @Valid @RequestBody CreatePrescriptionRequestDTO prescriptionRequest) {
-
         PrescriptionResponseDTO prescriptionResponseDTO = prescriptionService.createPrescription(id, prescriptionRequest);
-
-        return ResponseEntity.ok(prescriptionResponseDTO);
+        return ResponseEntity.status(HttpStatus.CREATED).body(prescriptionResponseDTO);
     }
 
-    /**
-     * Retrieves all prescriptions for a specific patient.
-     *
-     * This endpoint:
-     * - Fetches prescriptions associated with the given patient ID
-     * - Supports filtering by archived status (ACTIVE, ARCHIVED, ALL)
-     * - Applies dynamic sorting based on request parameters
-     * - Supports pagination for large result sets
-     * - Returns summarized prescription information
-     *
-     * @param id the UUID of the patient whose prescriptions are being retrieved
-     * @param page the page number (default = 0)
-     * @param size the number of records per page (default = 10)
-     * @param sortBy the field used for sorting (default = issueDate)
-     * @param sortOrder the sorting direction: ascending or descending (default = descending)
-     * @param status filter for prescription records:
-     *                       ACTIVE, VOIDED, or ALL (default = ACTIVE)
-     * @return ResponseEntity containing a page of PrescriptionListDTO
-     */
     @PreAuthorize("hasRole('ADMIN')")
     @GetMapping("/api/admin/patient/{id}/prescriptions")
     public ResponseEntity<Page<PrescriptionListDTO>> getAllPatientPrescriptions(@PathVariable UUID id,
@@ -72,95 +37,60 @@ public class PrescriptionController {
                                                                               @RequestParam(defaultValue = "issueDate") String sortBy,
                                                                               @RequestParam(defaultValue = "desc") String sortOrder,
                                                                               @RequestParam(defaultValue = "ACTIVE") String status) {
-
         Page<PrescriptionListDTO> prescriptionListDTOPage = prescriptionService.getAllPatientPrescriptions(id, keyword, minDate, maxDate, page, size, sortBy, sortOrder, status);
-
         return ResponseEntity.ok(prescriptionListDTOPage);
     }
 
-    /**
-     * Retrieves detailed information of a specific prescription.
-     *
-     * This endpoint:
-     * - Fetches a prescription using its unique identifier
-     * - Throws an exception if the prescription does not exist
-     * - Returns complete prescription details
-     * - Includes associated prescription item information
-     *
-     * @param id the UUID of the prescription to retrieve
-     * @return ResponseEntity containing PrescriptionDetailsDTO
-     */
+    @PreAuthorize("hasAnyRole('ADMIN','STAFF')")
+    @GetMapping("/api/patient/{patientId}/prescriptions")
+    public ResponseEntity<Page<PrescriptionListDTO>> getPatientPrescriptionsForCheckout(
+            @PathVariable UUID patientId,
+            @RequestParam(required = false) String keyword,
+            @RequestParam(required = false) LocalDate minDate,
+            @RequestParam(required = false) LocalDate maxDate,
+            @RequestParam(defaultValue = "0") int page,
+            @RequestParam(defaultValue = "50") int size,
+            @RequestParam(defaultValue = "issueDate") String sortBy,
+            @RequestParam(defaultValue = "desc") String sortOrder,
+            @RequestParam(defaultValue = "ACTIVE") String status) {
+        Page<PrescriptionListDTO> prescriptionListDTOPage = prescriptionService.getAllPatientPrescriptions(
+                patientId, keyword, minDate, maxDate, page, size, sortBy, sortOrder, status);
+        return ResponseEntity.ok(prescriptionListDTOPage);
+    }
+
     @PreAuthorize("hasRole('ADMIN')")
     @GetMapping("/api/admin/prescriptions/{id}")
-    public ResponseEntity<PrescriptionDetailsDTO> getPrescription(@PathVariable UUID id) {
-
+    public ResponseEntity<PrescriptionDetailsDTO> getPrescriptionAdmin(@PathVariable UUID id) {
         PrescriptionDetailsDTO prescriptionDetailsDTO = prescriptionService.getPrescription(id);
         return ResponseEntity.ok(prescriptionDetailsDTO);
     }
 
-    /**
-     * Updates an existing prescription record.
-     *
-     * This endpoint:
-     * - Retrieves the prescription using its unique identifier
-     * - Throws an exception if the prescription does not exist
-     * - Updates editable prescription fields
-     * - Persists the modified prescription data
-     * - Returns the updated prescription details
-     *
-     * @param id the UUID of the prescription to update
-     * @param request the request body containing updated prescription information
-     * @return ResponseEntity containing the updated PrescriptionDetailsDTO
-     */
+    @PreAuthorize("hasRole('ADMIN')")
+    @GetMapping("/api/prescriptions/{id}")
+    public ResponseEntity<PrescriptionDetailsDTO> getPrescription(@PathVariable UUID id) {
+        PrescriptionDetailsDTO prescriptionDetailsDTO = prescriptionService.getPrescription(id);
+        return ResponseEntity.ok(prescriptionDetailsDTO);
+    }
+
     @PreAuthorize("hasRole('ADMIN')")
     @PutMapping("/api/admin/prescriptions/{id}")
     public ResponseEntity<PrescriptionDetailsDTO> updatePrescription(@PathVariable UUID id,
                                                                      @Valid @RequestBody UpdatePrescriptionRequestDTO request) {
-
         PrescriptionDetailsDTO prescriptionDetailsDTO = prescriptionService.updatePrescription(id, request);
-
         return ResponseEntity.ok(prescriptionDetailsDTO);
     }
 
-    /**
-     * Archives a specific prescription record (Soft Delete).
-     *
-     * This endpoint:
-     * - Retrieves the prescription using its unique identifier
-     * - Throws an exception if the prescription does not exist
-     * - Marks the prescription as archived
-     * - Persists the archive update
-     * - Excludes the prescription from active record listings
-     *
-     * @param id the UUID of the prescription to archive
-     * @return ResponseEntity with no content upon successful archival
-     */
     @PreAuthorize("hasRole('ADMIN')")
     @DeleteMapping("/api/admin/prescriptions/{id}")
     public ResponseEntity<Void> archivePrescription(@PathVariable UUID id) {
-
         prescriptionService.archivePrescription(id);
         return ResponseEntity.noContent().build();
     }
 
-    /**
-     * Restores an archived prescription record.
-     *
-     * This endpoint:
-     * - Retrieves the prescription using its unique identifier
-     * - Throws an exception if the prescription does not exist
-     * - Reverses the archive (soft delete) status
-     * - Marks the prescription as active again
-     * - Persists the restoration update
-     *
-     * @param id the UUID of the prescription to restore
-     * @return ResponseEntity with no content upon successful restoration
-     */
     @PreAuthorize("hasRole('ADMIN')")
     @PutMapping("/api/admin/prescriptions/{id}/restore")
     public ResponseEntity<Void> restorePrescription(@PathVariable UUID id) {
         prescriptionService.restorePrescription(id);
-
         return ResponseEntity.noContent().build();
     }
 
@@ -177,5 +107,14 @@ public class PrescriptionController {
     public ResponseEntity<PrescriptionResponseDTO> clonePrescription(@PathVariable UUID id) {
         PrescriptionResponseDTO response = prescriptionService.clonePrescription(id);
         return ResponseEntity.ok(response);
+    }
+
+    @PreAuthorize("hasAnyRole('ADMIN','STAFF')")
+    @PutMapping("/api/prescriptions/{id}/sync")
+    public ResponseEntity<Void> syncBlocks(
+            @PathVariable UUID id,
+            @Valid @RequestBody PrescriptionRecommendationsDTO dto) {
+        prescriptionService.syncPrescriptionBlocks(id, dto);
+        return ResponseEntity.ok().build();
     }
 }

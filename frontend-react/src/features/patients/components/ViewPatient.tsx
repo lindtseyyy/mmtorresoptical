@@ -1,7 +1,7 @@
 import { useState } from "react";
 import { useParams, Link, useNavigate } from "react-router-dom";
 import { useQuery, useMutation, useQueryClient, keepPreviousData } from "@tanstack/react-query";
-import { ArrowLeft, ShoppingCart, Calendar, FileText, Activity, Stethoscope, ChevronLeft, ChevronRight, MoreHorizontal, Pencil, Archive, Clock, Plus, Undo2, Ban, Copy, CheckCircle, UserX, XCircle, Eye } from "lucide-react";
+import { ArrowLeft, ShoppingCart, Calendar, FileText, Activity, Stethoscope, ChevronLeft, ChevronRight, ChevronDown, ChevronUp, MoreHorizontal, Pencil, Archive, Clock, Plus, Undo2, Ban, Copy, CheckCircle, UserX, XCircle, Eye } from "lucide-react";
 import { Button } from "@/shared/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/shared/components/ui/card";
 import { MetricCard } from "@/shared/components/MetricCard";
@@ -101,6 +101,7 @@ const ViewPatient: React.FC = () => {
   const [voiding, setVoiding] = useState(false);
 
   const [viewRxId, setViewRxId] = useState<string | null>(null);
+  const [expandedSections, setExpandedSections] = useState({ lens: false, products: false });
   const { data: viewRxData, isLoading: viewRxLoading } = useQuery({
     queryKey: ["prescription", viewRxId],
     queryFn: () => fetchPrescription(viewRxId!),
@@ -1097,16 +1098,17 @@ const ViewPatient: React.FC = () => {
           <div className="py-16 text-center text-muted-foreground">Failed to load prescription.</div>
         ) : (
           <>
-            <DialogHeader>
-              <DialogTitle>Prescription Details — {viewRxData.rxNumber}</DialogTitle>
-              <DialogDescription>
-                Date Issued: {formatDate(viewRxData.issueDate)}
-                {viewRxData.eyeExamNumber && (
-                  <><br />Linked Exam: {viewRxData.eyeExamNumber}</>
-                )}
-              </DialogDescription>
-            </DialogHeader>
-            <div className="space-y-4">
+            <div className="-mx-6 -mt-6 px-6 pt-6 pb-4 bg-slate-100 border-b space-y-3 mb-4">
+              <div>
+                <h2 className="text-lg font-semibold">Prescription Details — {viewRxData.rxNumber}</h2>
+                <p className="text-sm text-muted-foreground mt-1">
+                  Date Issued: {formatDate(viewRxData.issueDate)}
+                  {viewRxData.eyeExamNumber && (
+                    <><br />Linked Exam: {viewRxData.eyeExamNumber}</>
+                  )}
+                </p>
+              </div>
+
               {/* Status badges */}
               <div className="flex items-center gap-2">
                 {viewRxData.status === "VOIDED" ? (
@@ -1133,48 +1135,126 @@ const ViewPatient: React.FC = () => {
                   {viewRxData.createdBy ? ` by ${viewRxData.createdBy.fullName}` : ""}
                 </p>
               </div>
+            </div>
 
+            <div className="space-y-4">
               {/* Prescription Items */}
               <div>
-                <h4 className="text-sm font-semibold mb-2">
-                  Prescription Items ({viewRxData.prescriptionItems.length})
-                </h4>
-                {viewRxData.prescriptionItems.length === 0 ? (
-                  <p className="text-sm text-muted-foreground">No items.</p>
-                ) : (
-                  <div className="space-y-3">
-                    {viewRxData.prescriptionItems.map((item, idx) => (
-                      <div key={item.prescriptionItemId} className="rounded-lg border p-3 bg-muted/40">
-                        <div className="flex items-center gap-2 mb-2">
-                          <span className="text-sm font-medium">Item {idx + 1}</span>
-                          <Badge variant="outline" className="text-xs">
-                            {item.correctionType.replace(/_/g, " ")}
-                          </Badge>
-                          <Badge variant="outline" className="text-xs">
-                            {item.eyeSide}
-                          </Badge>
+                <button
+                  type="button"
+                  className="flex items-center gap-1.5 text-sm font-semibold mb-2 hover:text-primary transition-colors w-full text-left cursor-pointer"
+                  onClick={() => setExpandedSections(prev => ({ ...prev, lens: !prev.lens }))}
+                >
+                  {expandedSections.lens ? <ChevronDown className="h-4 w-4 shrink-0" /> : <ChevronRight className="h-4 w-4 shrink-0" />}
+                  Eyeglass Specifications ({viewRxData.lensSpecifications?.length ?? 0})
+                </button>
+                {expandedSections.lens && (
+                  (!viewRxData.lensSpecifications || viewRxData.lensSpecifications.length === 0) ? (
+                    <p className="text-sm text-muted-foreground">No lens specifications.</p>
+                  ) : (
+                    <div className="space-y-3">
+                      {viewRxData.lensSpecifications.map((lens, li) => (
+                        <div key={li} className="rounded-lg border p-3 bg-muted/40">
+                          {lens.lensTypePurpose && (
+                            <h5 className="text-sm font-semibold text-primary mb-1">{lens.lensTypePurpose}</h5>
+                          )}
+                          {lens.correctionType && (
+                            <div className="flex items-center gap-2 mb-2">
+                              <Badge variant="outline" className="text-xs">
+                                {lens.correctionType.replace(/_/g, " ")}
+                              </Badge>
+                            </div>
+                          )}
+                          <div className="grid gap-4 md:grid-cols-2">
+                            <div className="space-y-1">
+                              <p className="text-xs font-medium text-muted-foreground">Right Eye (OD)</p>
+                              <div className="grid grid-cols-3 gap-x-2 gap-y-1 text-xs">
+                                <span className="text-muted-foreground">SPH</span>
+                                <span className="text-muted-foreground">CYL</span>
+                                <span className="text-muted-foreground">Axis</span>
+                                <span className="font-mono">{lens.rightSph != null ? lens.rightSph : "—"}</span>
+                                <span className="font-mono">{lens.rightCyl != null ? lens.rightCyl : "—"}</span>
+                                <span className="font-mono">{lens.rightAxis != null ? lens.rightAxis : "—"}</span>
+                                <span className="text-muted-foreground">Prism</span>
+                                <span className="text-muted-foreground">Add</span>
+                                <span className="text-muted-foreground">PD</span>
+                                <span className="font-mono">{lens.rightPrism != null ? lens.rightPrism : "—"}</span>
+                                <span className="font-mono">{lens.rightAdd != null ? lens.rightAdd : "—"}</span>
+                                <span className="font-mono">{lens.rightPd != null ? lens.rightPd : "—"}</span>
+                              </div>
+                            </div>
+                            <div className="space-y-1">
+                              <p className="text-xs font-medium text-muted-foreground">Left Eye (OS)</p>
+                              <div className="grid grid-cols-3 gap-x-2 gap-y-1 text-xs">
+                                <span className="text-muted-foreground">SPH</span>
+                                <span className="text-muted-foreground">CYL</span>
+                                <span className="text-muted-foreground">Axis</span>
+                                <span className="font-mono">{lens.leftSph != null ? lens.leftSph : "—"}</span>
+                                <span className="font-mono">{lens.leftCyl != null ? lens.leftCyl : "—"}</span>
+                                <span className="font-mono">{lens.leftAxis != null ? lens.leftAxis : "—"}</span>
+                                <span className="text-muted-foreground">Prism</span>
+                                <span className="text-muted-foreground">Add</span>
+                                <span className="text-muted-foreground">PD</span>
+                                <span className="font-mono">{lens.leftPrism != null ? lens.leftPrism : "—"}</span>
+                                <span className="font-mono">{lens.leftAdd != null ? lens.leftAdd : "—"}</span>
+                                <span className="font-mono">{lens.leftPd != null ? lens.leftPd : "—"}</span>
+                              </div>
+                            </div>
+                          </div>
+                          {(lens.lensType || lens.frameTypePreference || lens.lensMaterial || lens.lensCoatings || lens.lensWearType || lens.lensMaterialCl || lens.baseCurve != null || lens.diameter != null) && (
+                            <div className="grid grid-cols-2 gap-1 text-xs mt-2">
+                              {lens.lensType && <div><span className="text-muted-foreground">Lens:</span> {lens.lensType.replace(/_/g, " ")}</div>}
+                              {lens.frameTypePreference && <div><span className="text-muted-foreground">Frame:</span> {lens.frameTypePreference}</div>}
+                              {lens.lensMaterial && <div><span className="text-muted-foreground">Material:</span> {lens.lensMaterial}</div>}
+                              {lens.lensCoatings && <div><span className="text-muted-foreground">Coatings:</span> {lens.lensCoatings}</div>}
+                              {lens.lensWearType && <div><span className="text-muted-foreground">Wear:</span> {lens.lensWearType}</div>}
+                              {lens.lensMaterialCl && <div><span className="text-muted-foreground">CL Material:</span> {lens.lensMaterialCl}</div>}
+                              {lens.baseCurve != null && <div><span className="text-muted-foreground">BC:</span> {lens.baseCurve}</div>}
+                              {lens.diameter != null && <div><span className="text-muted-foreground">DIA:</span> {lens.diameter}</div>}
+                            </div>
+                          )}
+                          {lens.notes && (
+                            <p className="text-xs text-muted-foreground mt-2">Notes: {lens.notes}</p>
+                          )}
                         </div>
-                        <div className="grid grid-cols-3 gap-x-4 gap-y-2 text-sm">
-                          {item.sph != null && <div><span className="text-muted-foreground">SPH:</span> {item.sph}</div>}
-                          {item.cyl != null && <div><span className="text-muted-foreground">CYL:</span> {item.cyl}</div>}
-                          {item.axis != null && <div><span className="text-muted-foreground">Axis:</span> {item.axis}</div>}
-                          {item.addPower != null && <div><span className="text-muted-foreground">Add:</span> {item.addPower}</div>}
-                          {item.pd != null && <div><span className="text-muted-foreground">PD:</span> {item.pd}</div>}
-                          {item.lensType && <div><span className="text-muted-foreground">Lens:</span> {item.lensType.replace(/_/g, " ")}</div>}
-                          {item.frameTypePreference && <div className="col-span-2"><span className="text-muted-foreground">Frame:</span> {item.frameTypePreference}</div>}
-                          {item.lensMaterial && <div><span className="text-muted-foreground">Material:</span> {item.lensMaterial}</div>}
-                          {item.lensCoatings && <div><span className="text-muted-foreground">Coatings:</span> {item.lensCoatings}</div>}
-                          {item.lensWearType && <div><span className="text-muted-foreground">Wear:</span> {item.lensWearType}</div>}
-                          {item.lensMaterialCl && <div><span className="text-muted-foreground">CL Material:</span> {item.lensMaterialCl}</div>}
-                          {item.baseCurve != null && <div><span className="text-muted-foreground">Base Curve:</span> {item.baseCurve}</div>}
-                          {item.diameter != null && <div><span className="text-muted-foreground">Diameter:</span> {item.diameter}</div>}
+                      ))}
+                    </div>
+                  )
+                )}
+              </div>
+
+              {/* Product Recommendations */}
+              <div>
+                <button
+                  type="button"
+                  className="flex items-center gap-1.5 text-sm font-semibold mb-2 hover:text-primary transition-colors w-full text-left cursor-pointer"
+                  onClick={() => setExpandedSections(prev => ({ ...prev, products: !prev.products }))}
+                >
+                  {expandedSections.products ? <ChevronDown className="h-4 w-4 shrink-0" /> : <ChevronRight className="h-4 w-4 shrink-0" />}
+                  Medication / Products ({viewRxData.recommendations?.length ?? 0})
+                </button>
+                {expandedSections.products && (
+                  (!viewRxData.recommendations || viewRxData.recommendations.length === 0) ? (
+                    <p className="text-sm text-muted-foreground">No medications or products.</p>
+                  ) : (
+                    <div className="space-y-2">
+                      {viewRxData.recommendations.map((rec) => (
+                        <div key={rec.id} className="flex items-center justify-between rounded-lg border p-3">
+                          <div>
+                            <p className="text-sm font-medium">{rec.productName}</p>
+                            <p className="text-xs text-muted-foreground">{rec.category}</p>
+                            {rec.staffNotes && (
+                              <p className="text-xs text-muted-foreground mt-1 italic">&ldquo;{rec.staffNotes}&rdquo;</p>
+                            )}
+                          </div>
+                          <div className="text-right">
+                            <p className="text-sm font-semibold">₱{rec.unitPrice.toFixed(2)}</p>
+                            <p className="text-xs text-muted-foreground">Qty: {rec.quantity}</p>
+                          </div>
                         </div>
-                        {item.notes && (
-                          <p className="text-xs text-muted-foreground mt-2">Notes: {item.notes}</p>
-                        )}
-                      </div>
-                    ))}
-                  </div>
+                      ))}
+                    </div>
+                  )
                 )}
               </div>
             </div>

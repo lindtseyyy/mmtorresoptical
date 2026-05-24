@@ -1,6 +1,5 @@
 package com.mmtorresoptical.OpticalClinicManagementSystem.dto.prescription;
 
-import com.mmtorresoptical.OpticalClinicManagementSystem.dto.prescriptionitems.CreatePrescriptionItemRequestDTO;
 import jakarta.validation.constraints.NotNull;
 import lombok.Data;
 
@@ -15,11 +14,12 @@ public class CreatePrescriptionRequestDTO {
     private LocalDate issueDate;
     private String notes;
     private Boolean isArchived = false;
-    private Boolean followUpRequired = false;
     private LocalDate followUpScheduledDate;
     private String followUpReason;
 
     private UUID eyeExamId;
 
-    List<CreatePrescriptionItemRequestDTO> itemsRequestDTOList;
+    private List<LensSpecificationDTO> lensSpecifications;
+
+    private List<RecommendationItemDTO> products;
 }

@@ -1,12 +1,13 @@
 import { useState, useCallback, useEffect, useMemo } from "react";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
-import { Loader2, Trash2, UserRound, X } from "lucide-react";
+import { Loader2, Trash2, UserRound, X, FileText } from "lucide-react";
 
 import { Button } from "@/shared/components/ui/button";
 import SegmentedControl from "@/shared/components/ui/segmented-control";
-import { useProductsForSale } from "@/features/sales/hooks/salesQuery";
+import { useProductsForSale, usePatientPrescriptions } from "@/features/sales/hooks/salesQuery";
 import { createTransaction } from "@/features/sales/services/transactionApi";
+import { fetchPrescriptionForCheckout } from "@/features/patients/services/prescriptionApi";
 import ProductDisplay from "@/features/sales/components/ProductDisplay";
 import BillingSection from "@/features/sales/components/BillingSection";
 import PaymentDrawer from "@/features/sales/components/PaymentDrawer";
@@ -41,6 +42,9 @@ const ManageSales: React.FC = () => {
   const [selectedPatient, setSelectedPatient] = useState<SelectedPatient | null>(null);
   const [estimatedReadyDate, setEstimatedReadyDate] = useState("");
   const [isPatientModalOpen, setIsPatientModalOpen] = useState(false);
+  const [selectedPrescriptionId, setSelectedPrescriptionId] = useState("");
+
+  const { data: patientPrescriptions = [] } = usePatientPrescriptions(selectedPatient?.patientId);
 
   const physicalCount = useMemo(
     () => products.filter((p) => p.productType === "PHYSICAL").length,
@@ -169,6 +173,61 @@ const ManageSales: React.FC = () => {
     );
   }, []);
 
+  const loadPrescriptionToCart = useCallback(async (prescriptionId: string) => {
+    try {
+      const details = await fetchPrescriptionForCheckout(prescriptionId);
+      if (!details.recommendations?.length) {
+        toast.info("No recommendations", {
+          description: "This prescription has no product recommendations.",
+        });
+        return;
+      }
+
+      setCart((prev) => {
+        const merged = [...prev];
+        for (const rec of details.recommendations!) {
+          const existing = merged.find(
+            (i) => i.product.productId === rec.productId && !i.isDiscounted
+          );
+          if (existing) {
+            existing.quantity += rec.quantity;
+          } else {
+            merged.push({
+              uid: nextUid(),
+              product: {
+                productId: rec.productId,
+                productName: rec.productName,
+                category: rec.category,
+                supplier: rec.supplier,
+                unitPrice: rec.unitPrice,
+                quantity: rec.stockQuantity,
+                productType: rec.productType as "PHYSICAL" | "SERVICE",
+                imageDir: rec.imageDir,
+                lowLevelThreshold: 0,
+                overstockedThreshold: 0,
+                isArchived: false,
+                createdAt: "",
+              },
+              quantity: rec.quantity,
+              discountType: null,
+              discountValue: 0,
+              isDiscounted: false,
+            });
+          }
+        }
+        return merged;
+      });
+
+      toast.success("Prescription loaded", {
+        description: `${details.recommendations.length} item(s) added to cart.`,
+      });
+    } catch (e: any) {
+      toast.error("Failed to load prescription", {
+        description: e?.response?.data?.message || e?.message,
+      });
+    }
+  }, []);
+
   const handleCompleteSale = useCallback(
     (payment: PaymentData) => {
       const items: TransactionRequest["items"] = cart.map((item) => ({
@@ -270,7 +329,10 @@ const ManageSales: React.FC = () => {
                 variant="ghost"
                 size="icon"
                 className="h-8 w-8 text-destructive hover:text-destructive shrink-0"
-                onClick={() => setSelectedPatient(null)}
+                onClick={() => {
+                  setSelectedPatient(null);
+                  setSelectedPrescriptionId("");
+                }}
               >
                 <X className="h-4 w-4" />
               </Button>
@@ -302,6 +364,39 @@ const ManageSales: React.FC = () => {
               <p className="text-xs text-muted-foreground mt-1">
                 Defaults to 3 days from today if left empty.
               </p>
+            </div>
+          )}
+
+          {selectedPatient && patientPrescriptions.length > 0 && (
+            <div className="mt-3 space-y-2">
+              <label className="text-xs font-medium text-muted-foreground">
+                Load Prescription Recommendations
+              </label>
+              <div className="flex gap-2">
+                <select
+                  value={selectedPrescriptionId}
+                  onChange={(e) => setSelectedPrescriptionId(e.target.value)}
+                  className="flex-1 h-9 rounded-md border border-input bg-transparent px-3 py-1 text-sm shadow-sm"
+                >
+                  <option value="">Select a prescription...</option>
+                  {patientPrescriptions.map((rx: any) => (
+                    <option key={rx.prescriptionId} value={rx.prescriptionId}>
+                      {rx.rxNumber} — {rx.issueDate}
+                    </option>
+                  ))}
+                </select>
+                <Button
+                  type="button"
+                  variant="outline"
+                  size="sm"
+                  className="shrink-0 gap-1.5"
+                  disabled={!selectedPrescriptionId}
+                  onClick={() => loadPrescriptionToCart(selectedPrescriptionId)}
+                >
+                  <FileText className="h-3.5 w-3.5" />
+                  Load to Cart
+                </Button>
+              </div>
             </div>
           )}
         </div>
