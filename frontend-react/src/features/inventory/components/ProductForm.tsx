@@ -37,10 +37,11 @@ import { Upload, X } from "lucide-react";
 
 interface ProductFormProps {
   defaultValues?: ProductFormData;
-  onFormSubmit: (data: ProductFormData) => Promise<void>;
+  onFormSubmit: (data: ProductFormData, imageFile?: File | null) => Promise<void>;
   isLoading: boolean;
   isEditMode: boolean;
   productId?: string;
+  existingImageUrl?: string | null;
 }
 
 const DECIMAL_INPUT_REGEX = /^\d*(?:\.\d*)?$/;

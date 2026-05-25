@@ -24,7 +24,7 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
 } from "@/shared/components/ui/alert-dialog";
-import type { Product, Category } from "@/features/inventory/types";
+import type { Category } from "@/features/inventory/types";
 import { CATEGORY_LABELS } from "@/features/inventory/types";
 import {
   createArchiveProductMutationOptions,
@@ -258,7 +258,7 @@ const InventoryMaintenance: React.FC = () => {
                             <span className="inline-flex items-center gap-2 font-medium">
                               {product.imageDir ? (
                                 <img
-                                  src={getImageUrl(product.imageDir)}
+                                  src={getImageUrl(product.imageDir) ?? undefined}
                                   alt=""
                                   className="h-6 w-6 rounded object-cover"
                                 />

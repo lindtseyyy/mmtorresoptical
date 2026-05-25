@@ -32,7 +32,6 @@ const AGE_GROUP_COLORS = [
   "#6366f1",
 ];
 
-const BAR_COLOR = "var(--chart-3)";
 const AXIS_COLOR = "var(--muted-foreground)";
 const GRID_COLOR = "var(--muted-foreground)";
 
@@ -192,10 +191,10 @@ interface PatientReportProps {
 const PatientReport: React.FC<PatientReportProps> = ({
   report,
   growthTrend,
-  minDate,
-  maxDate,
-  onMinDateChange,
-  onMaxDateChange,
+  minDate: _minDate,
+  maxDate: _maxDate,
+  onMinDateChange: _onMinDateChange,
+  onMaxDateChange: _onMaxDateChange,
 }) => {
   return (
     <>

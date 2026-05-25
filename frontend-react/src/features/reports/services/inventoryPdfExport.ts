@@ -299,7 +299,7 @@ function renderProductTable(
     };
     if (extraCol) {
       row[extraCol.dataKey] = String(
-        (p as Record<string, unknown>)[extraCol.dataKey] ?? "",
+        (p as unknown as Record<string, unknown>)[extraCol.dataKey] ?? "",
       );
     }
     return row;
@@ -319,7 +319,7 @@ function renderProductTable(
     return c.header;
   });
 
-  const colStyles: Record<number, { halign: string }> = {};
+  const colStyles: Record<number, { halign: "right" }> = {};
   for (const idx of rightAlignCols) {
     colStyles[idx] = { halign: "right" };
   }

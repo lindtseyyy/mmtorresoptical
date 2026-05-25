@@ -93,7 +93,7 @@ const ViewProduct: React.FC = () => {
             <div className="flex items-center gap-3">
               {product.imageDir ? (
                 <img
-                  src={getImageUrl(product.imageDir)}
+                  src={getImageUrl(product.imageDir) ?? undefined}
                   alt={product.productName}
                   className="h-12 w-12 rounded-lg object-cover"
                 />

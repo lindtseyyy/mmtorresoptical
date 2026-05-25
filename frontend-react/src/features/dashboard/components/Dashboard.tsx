@@ -326,7 +326,7 @@ export default function Dashboard() {
                     {tx.transactionNumber}
                   </td>
                   <td className="px-5 py-2.5 text-right tabular-nums">
-                    {tx.itemCount}
+                    —
                   </td>
                   <td className="px-5 py-2.5 text-right tabular-nums">
                     {formatCurrency(tx.totalAmount)}

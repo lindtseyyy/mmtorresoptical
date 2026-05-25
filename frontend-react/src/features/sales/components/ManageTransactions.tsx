@@ -35,22 +35,13 @@ import AddPaymentDrawer from "@/features/sales/components/AddPaymentDrawer";
 import { addPayment } from "@/features/sales/services/transactionApi";
 import type { TransactionListItem } from "@/features/sales/types";
 
-const formatDate = (dateStr: string | null) => {
-  if (!dateStr) return "—";
-  return new Date(dateStr).toLocaleDateString("en-US", {
-    year: "numeric",
-    month: "short",
-    day: "numeric",
-  });
-};
-
 const formatDateTime = (dateStr: string | null) => {
   if (!dateStr) return "—";
   return new Date(dateStr).toLocaleString("en-US", {
     year: "numeric",
     month: "short",
     day: "numeric",
-    hour: "2-digit",
+    hour: "numeric",
     minute: "2-digit",
   });
 };

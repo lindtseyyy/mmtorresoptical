@@ -95,7 +95,7 @@ const ProductPickerModal: React.FC<ProductPickerModalProps> = ({ open, onOpenCha
                 <div className="aspect-[4/3] bg-muted/50 flex items-center justify-center overflow-hidden shrink-0">
                   {product.imageDir ? (
                     <img
-                      src={getImageUrl(product.imageDir)}
+                      src={getImageUrl(product.imageDir) ?? undefined}
                       alt={product.productName}
                       className="h-full w-full object-contain"
                     />

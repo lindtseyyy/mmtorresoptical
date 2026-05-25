@@ -254,7 +254,7 @@ const ManageInventory: React.FC = () => {
                             <span className="inline-flex items-center gap-2 font-medium">
                               {product.imageDir ? (
                                 <img
-                                  src={getImageUrl(product.imageDir)}
+                                  src={getImageUrl(product.imageDir) ?? undefined}
                                   alt=""
                                   className="h-6 w-6 rounded object-cover"
                                 />

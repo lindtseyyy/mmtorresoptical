@@ -46,6 +46,7 @@ const EditProduct: React.FC = () => {
         quantity: product.quantity,
         lowLevelThreshold: product.lowLevelThreshold,
         overstockedThreshold: product.overstockedThreshold,
+        leadTimeDays: product.leadTimeDays,
         isArchived: product.isArchived,
         imageDir: product.imageDir || "",
       }

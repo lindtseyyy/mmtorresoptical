@@ -451,15 +451,15 @@ function generateTransactionPdf(
       { content: "Count", styles: { halign: "right" } },
       { content: "Amount", styles: { halign: "right" } },
     ]],
-    body: summaryBody,
+    body: summaryBody as any,
     theme: "plain",
     tableWidth: tableW,
     styles: { fontSize: 8.5, cellPadding: 3 },
     headStyles: { fillColor: [30, 41, 59], textColor: 255, fontStyle: "bold", fontSize: 8 },
     columnStyles: {
-      0: { cellWidth: col0, halign: "left" },
-      1: { cellWidth: col1, halign: "right" },
-      2: { cellWidth: col2, halign: "right" },
+      0: { cellWidth: col0, halign: "left" as const },
+      1: { cellWidth: col1, halign: "right" as const },
+      2: { cellWidth: col2, halign: "right" as const },
     },
   });
 
