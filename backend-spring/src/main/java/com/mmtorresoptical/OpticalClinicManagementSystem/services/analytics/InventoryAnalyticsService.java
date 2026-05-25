@@ -28,6 +28,7 @@ import java.time.LocalDateTime;
 import java.time.YearMonth;
 import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
@@ -267,14 +268,14 @@ public class InventoryAnalyticsService {
     /**
      * Returns monthly inventory values for the last 12 months.
      * Past months use exact snapshots; the current month uses the live value
-     * (inventoryValue() query). Months without a snapshot are skipped.
+     * (inventoryValue() query). Months without a snapshot carry forward the
+     * nearest known value so the trend always spans a full 12 months.
      */
     public List<InventoryValueTrendPoint> getInventoryValueTrend() {
         YearMonth currentMonth = YearMonth.now();
         YearMonth twelveMonthsAgo = currentMonth.minusMonths(11);
         DateTimeFormatter fmt = DateTimeFormatter.ofPattern("yyyy-MM");
 
-        // Load snapshots for the window
         Map<YearMonth, BigDecimal> snapshots = snapshotRepository
                 .findBySnapshotDateBetweenOrderBySnapshotDateAsc(
                         twelveMonthsAgo.atDay(1),
@@ -284,28 +285,29 @@ public class InventoryAnalyticsService {
                         s -> YearMonth.from(s.getSnapshotDate()),
                         InventoryValueSnapshot::getTotalValue));
 
-        // Live value for the current month
         BigDecimal liveValue = inventoryAnalyticsRepository.inventoryValue();
 
         List<InventoryValueTrendPoint> trend = new ArrayList<>();
+        BigDecimal lastKnownValue = liveValue;
 
-        for (int i = 11; i >= 0; i--) {
+        for (int i = 0; i <= 11; i++) {
             YearMonth m = currentMonth.minusMonths(i);
+            BigDecimal value;
 
-            if (m.equals(currentMonth)) {
-                trend.add(InventoryValueTrendPoint.builder()
-                        .month(m.format(fmt))
-                        .value(liveValue)
-                        .build());
-            } else if (snapshots.containsKey(m)) {
-                trend.add(InventoryValueTrendPoint.builder()
-                        .month(m.format(fmt))
-                        .value(snapshots.get(m))
-                        .build());
+            if (snapshots.containsKey(m)) {
+                value = snapshots.get(m);
+                lastKnownValue = value;
+            } else {
+                value = lastKnownValue;
             }
-            // else: no snapshot yet for this month — skip
+
+            trend.add(InventoryValueTrendPoint.builder()
+                    .month(m.format(fmt))
+                    .value(value)
+                    .build());
         }
 
+        Collections.reverse(trend);
         return trend;
     }
 

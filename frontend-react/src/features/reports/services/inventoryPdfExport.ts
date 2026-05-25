@@ -521,7 +521,7 @@ function generateInventoryPdf(
 
   drawSeparator();
 
-  // 3b. Low Stock Products
+  // 3b. Reorder Needed
   if (cursorY + 15 > pageH - margin) {
     doc.addPage();
     cursorY = margin + 2;
@@ -530,12 +530,12 @@ function generateInventoryPdf(
   doc.setFontSize(12);
   doc.setTextColor(30);
   doc.setFont("helvetica", "bold");
-  doc.text(`Low Stock Products (${report.lowStockProducts.length})`, margin, cursorY);
+  doc.text(`Reorder Needed (${report.lowStockProducts.length})`, margin, cursorY);
   cursorY += 5;
 
   cursorY = renderProductTable(
     doc,
-    "Low Stock",
+    "Reorder Needed",
     report.lowStockProducts,
     cursorY,
     pageW,

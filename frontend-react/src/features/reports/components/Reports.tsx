@@ -167,7 +167,13 @@ const Reports: React.FC = () => {
         <CategoryBreakdownChart />
       </div>
 
-      <TopSellingProductsTable products={report.topSellingProducts} />
+      <OutOfStockProductsTable
+        data={outOfStockData}
+        isLoading={outOfStockLoading}
+        page={outOfStockPage}
+        onPageChange={setOutOfStockPage}
+        pageSize={PAGE_SIZE}
+      />
 
       <LowStockProductsTable
         data={lowStockData}
@@ -185,13 +191,7 @@ const Reports: React.FC = () => {
         pageSize={PAGE_SIZE}
       />
 
-      <OutOfStockProductsTable
-        data={outOfStockData}
-        isLoading={outOfStockLoading}
-        page={outOfStockPage}
-        onPageChange={setOutOfStockPage}
-        pageSize={PAGE_SIZE}
-      />
+      <TopSellingProductsTable products={report.topSellingProducts} />
     </div>
   );
 

@@ -25,7 +25,7 @@ const LowStockProductsTable: React.FC<LowStockProductsTableProps> = ({
 }) => (
   <Card>
     <CardHeader className="bg-muted">
-      <CardTitle>Low Stock Products ({data?.totalElements ?? 0})</CardTitle>
+      <CardTitle>Reorder Needed ({data?.totalElements ?? 0})</CardTitle>
     </CardHeader>
     <CardContent>
       {isLoading ? (
@@ -33,7 +33,7 @@ const LowStockProductsTable: React.FC<LowStockProductsTableProps> = ({
           <div className="h-5 w-5 animate-spin rounded-full border-2 border-primary border-t-transparent" />
         </div>
       ) : (data?.content?.length ?? 0) === 0 ? (
-        <p className="py-8 text-center text-sm text-muted-foreground">No low stock products.</p>
+        <p className="py-8 text-center text-sm text-muted-foreground">No products needing reorder.</p>
       ) : (
         <>
           <div className="overflow-x-auto">
