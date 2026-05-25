@@ -4,7 +4,7 @@ import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useForm, useFieldArray, type SubmitHandler } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
-import { ArrowLeft, Trash2, Eye, Package, Copy } from "lucide-react";
+import { ArrowLeft, Eye, Package, Copy } from "lucide-react";
 import { Button } from "@/shared/components/ui/button";
 import { Input } from "@/shared/components/ui/input";
 import {
@@ -37,6 +37,7 @@ import {
   type CreatePrescriptionInput,
   type LensSpecification,
 } from "@/features/patients/services/prescriptionApi";
+import { fetchPatientEyeExams, type EyeExamListItem } from "@/features/patients/services/patientApi";
 import ProductPickerModal from "@/features/patients/components/ProductPickerModal";
 import type { ProductSummary } from "@/features/inventory/types";
 
@@ -52,13 +53,11 @@ const lensSpecSchema = z.object({
   rightSph: z.string().optional(),
   rightCyl: z.string().optional(),
   rightAxis: z.string().optional(),
-  rightPrism: z.string().optional(),
   rightAdd: z.string().optional(),
   rightPd: z.string().optional(),
   leftSph: z.string().optional(),
   leftCyl: z.string().optional(),
   leftAxis: z.string().optional(),
-  leftPrism: z.string().optional(),
   leftAdd: z.string().optional(),
   leftPd: z.string().optional(),
   lensType: z.string().optional(),
@@ -75,6 +74,7 @@ const lensSpecSchema = z.object({
 const prescriptionFormSchema = z.object({
   issueDate: z.string().min(1, "Issue date is required"),
   notes: z.string().optional(),
+  eyeExamId: z.string().optional(),
   followUpScheduledDate: z.string().optional(),
   followUpReason: z.string().optional(),
   lensSpecifications: z.array(lensSpecSchema).default([]),
@@ -93,9 +93,9 @@ const emptyLens = {
   lensTypePurpose: "",
   correctionType: "",
   rightSph: "", rightCyl: "", rightAxis: "",
-  rightPrism: "", rightAdd: "", rightPd: "",
+  rightAdd: "", rightPd: "",
   leftSph: "", leftCyl: "", leftAxis: "",
-  leftPrism: "", leftAdd: "", leftPd: "",
+  leftAdd: "", leftPd: "",
   lensType: "", frameTypePreference: "", lensCoatings: "",
   lensMaterial: "", lensWearType: "", lensMaterialCl: "",
   baseCurve: "", diameter: "", notes: "",
@@ -124,6 +124,7 @@ const AddPrescription: React.FC = () => {
     defaultValues: {
       issueDate: "",
       notes: "",
+      eyeExamId: "",
       followUpScheduledDate: "",
       followUpReason: "",
       lensSpecifications: [],
@@ -158,11 +159,18 @@ const AddPrescription: React.FC = () => {
     enabled: !!cloneFrom,
   });
 
+  const { data: eyeExamsData } = useQuery({
+    queryKey: ["patient-eye-exams", patientId, 0, "ACTIVE"],
+    queryFn: () => fetchPatientEyeExams(patientId, 0, 100, "ACTIVE"),
+    enabled: !!patientId,
+  });
+
   useEffect(() => {
     if (sourceRx) {
       form.reset({
         issueDate: "",
         notes: sourceRx.notes ?? "",
+        eyeExamId: sourceRx.eyeExamId ?? "",
         followUpScheduledDate: "",
         followUpReason: "",
         lensSpecifications: (sourceRx.lensSpecifications || []).map((lens) => ({
@@ -171,13 +179,11 @@ const AddPrescription: React.FC = () => {
           rightSph: lens.rightSph != null ? String(lens.rightSph) : "",
           rightCyl: lens.rightCyl != null ? String(lens.rightCyl) : "",
           rightAxis: lens.rightAxis != null ? String(lens.rightAxis) : "",
-          rightPrism: lens.rightPrism != null ? String(lens.rightPrism) : "",
           rightAdd: lens.rightAdd != null ? String(lens.rightAdd) : "",
           rightPd: lens.rightPd != null ? String(lens.rightPd) : "",
           leftSph: lens.leftSph != null ? String(lens.leftSph) : "",
           leftCyl: lens.leftCyl != null ? String(lens.leftCyl) : "",
           leftAxis: lens.leftAxis != null ? String(lens.leftAxis) : "",
-          leftPrism: lens.leftPrism != null ? String(lens.leftPrism) : "",
           leftAdd: lens.leftAdd != null ? String(lens.leftAdd) : "",
           leftPd: lens.leftPd != null ? String(lens.leftPd) : "",
           lensType: lens.lensType ?? "",
@@ -207,13 +213,11 @@ const AddPrescription: React.FC = () => {
         rightSph: numOrUndef(ls.rightSph ? Number(ls.rightSph) : undefined),
         rightCyl: numOrUndef(ls.rightCyl ? Number(ls.rightCyl) : undefined),
         rightAxis: ls.rightAxis ? Number(ls.rightAxis) : undefined,
-        rightPrism: numOrUndef(ls.rightPrism ? Number(ls.rightPrism) : undefined),
         rightAdd: numOrUndef(ls.rightAdd ? Number(ls.rightAdd) : undefined),
         rightPd: numOrUndef(ls.rightPd ? Number(ls.rightPd) : undefined),
         leftSph: numOrUndef(ls.leftSph ? Number(ls.leftSph) : undefined),
         leftCyl: numOrUndef(ls.leftCyl ? Number(ls.leftCyl) : undefined),
         leftAxis: ls.leftAxis ? Number(ls.leftAxis) : undefined,
-        leftPrism: numOrUndef(ls.leftPrism ? Number(ls.leftPrism) : undefined),
         leftAdd: numOrUndef(ls.leftAdd ? Number(ls.leftAdd) : undefined),
         leftPd: numOrUndef(ls.leftPd ? Number(ls.leftPd) : undefined),
         lensType: strOrUndef(ls.lensType),
@@ -239,6 +243,7 @@ const AddPrescription: React.FC = () => {
         issueDate: data.issueDate,
         notes: strOrUndef(data.notes),
         isArchived: false,
+        eyeExamId: data.eyeExamId || undefined,
         followUpScheduledDate: data.followUpScheduledDate || undefined,
         followUpReason: strOrUndef(data.followUpReason),
         lensSpecifications: lensSpecs,
@@ -310,6 +315,34 @@ const AddPrescription: React.FC = () => {
                       <FormControl>
                         <Input type="date" {...field} />
                       </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+                <FormField
+                  control={form.control}
+                  name="eyeExamId"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Link Eye Exam (Optional)</FormLabel>
+                      <Select
+                        onValueChange={(val) => field.onChange(val === "none" ? "" : val)}
+                        value={field.value || "none"}
+                      >
+                        <FormControl>
+                          <SelectTrigger>
+                            <SelectValue placeholder="None (Outside Rx)" />
+                          </SelectTrigger>
+                        </FormControl>
+                        <SelectContent>
+                          <SelectItem value="none">None (Outside Rx)</SelectItem>
+                          {eyeExamsData?.content.map((ee: EyeExamListItem) => (
+                            <SelectItem key={ee.eyeExamId} value={ee.eyeExamId}>
+                              {ee.examNumber ?? ee.eyeExamId} — {ee.chiefComplaint?.substring(0, 40) ?? ee.createdAt?.substring(0, 10)}
+                            </SelectItem>
+                          ))}
+                        </SelectContent>
+                      </Select>
                       <FormMessage />
                     </FormItem>
                   )}
@@ -427,7 +460,7 @@ const AddPrescription: React.FC = () => {
 
             const copyRightToLeft = (idx: number) => {
               const fields = [
-                "rightSph", "rightCyl", "rightAxis", "rightPrism", "rightAdd", "rightPd",
+                "rightSph", "rightCyl", "rightAxis", "rightAdd", "rightPd",
               ] as const;
               for (const f of fields) {
                 form.setValue(
@@ -439,7 +472,7 @@ const AddPrescription: React.FC = () => {
 
             const copyLeftToRight = (idx: number) => {
               const fields = [
-                "leftSph", "leftCyl", "leftAxis", "leftPrism", "leftAdd", "leftPd",
+                "leftSph", "leftCyl", "leftAxis", "leftAdd", "leftPd",
               ] as const;
               for (const f of fields) {
                 form.setValue(
@@ -461,7 +494,7 @@ const AddPrescription: React.FC = () => {
                       type="button"
                       variant="ghost"
                       size="sm"
-                      className="bg-red-700 text-white hover:bg-red-800"
+                      className="bg-red-700 text-white hover:bg-red-800 hover:text-white"
                       onClick={() => removeLens(index)}
                     >
                       Remove ✕
@@ -529,10 +562,7 @@ const AddPrescription: React.FC = () => {
                           <FormItem><FormLabel>Axis</FormLabel><FormControl><Input {...f} /></FormControl></FormItem>
                         )} />
                       </div>
-                      <div className="grid gap-3 md:grid-cols-3">
-                        <FormField control={form.control} name={`lensSpecifications.${index}.rightPrism`} render={({ field: f }) => (
-                          <FormItem><FormLabel>Prism</FormLabel><FormControl><Input {...f} /></FormControl></FormItem>
-                        )} />
+                      <div className="grid gap-3 md:grid-cols-2">
                         <FormField control={form.control} name={`lensSpecifications.${index}.rightAdd`} render={({ field: f }) => (
                           <FormItem><FormLabel>Add</FormLabel><FormControl><Input {...f} /></FormControl></FormItem>
                         )} />
@@ -567,10 +597,7 @@ const AddPrescription: React.FC = () => {
                           <FormItem><FormLabel>Axis</FormLabel><FormControl><Input {...f} /></FormControl></FormItem>
                         )} />
                       </div>
-                      <div className="grid gap-3 md:grid-cols-3">
-                        <FormField control={form.control} name={`lensSpecifications.${index}.leftPrism`} render={({ field: f }) => (
-                          <FormItem><FormLabel>Prism</FormLabel><FormControl><Input {...f} /></FormControl></FormItem>
-                        )} />
+                      <div className="grid gap-3 md:grid-cols-2">
                         <FormField control={form.control} name={`lensSpecifications.${index}.leftAdd`} render={({ field: f }) => (
                           <FormItem><FormLabel>Add</FormLabel><FormControl><Input {...f} /></FormControl></FormItem>
                         )} />
@@ -630,21 +657,35 @@ const AddPrescription: React.FC = () => {
           {recFields.map((field, index) => {
             const product = productSummariesMap[form.watch(`products.${index}.productId`)];
             return (
-              <div key={field.id} className="flex items-start gap-3 rounded-lg border p-3">
+              <div key={field.id} className="flex items-start gap-3 rounded-lg border bg-card p-3">
                 <div className="flex-1 space-y-3">
-                  <div className="flex items-center gap-2">
-                    <Button
-                      type="button"
-                      variant="outline"
-                      size="sm"
-                      className="gap-1.5"
-                      onClick={() => setPickerIndex(index)}
-                    >
-                      {product ? product.productName : "Select product..."}
-                    </Button>
-                    {product && (
-                      <span className="text-xs text-muted-foreground">{product.category}</span>
-                    )}
+                  <div>
+                    <div className="flex items-center gap-2">
+                      <Button
+                        type="button"
+                        variant="outline"
+                        size="sm"
+                        className="gap-1.5"
+                        onClick={() => setPickerIndex(index)}
+                      >
+                        {product ? product.productName : "Select product..."}
+                      </Button>
+                      {product && (
+                        <span className="text-xs text-muted-foreground">{product.category}</span>
+                      )}
+                    </div>
+                    <FormField
+                      control={form.control}
+                      name={`products.${index}.productId`}
+                      render={({ field: f }) => (
+                        <FormItem>
+                          <FormControl>
+                            <input {...f} type="hidden" />
+                          </FormControl>
+                          <FormMessage />
+                        </FormItem>
+                      )}
+                    />
                   </div>
                   <div className="grid gap-3 md:grid-cols-2">
                     <div>
@@ -687,11 +728,11 @@ const AddPrescription: React.FC = () => {
                 <Button
                   type="button"
                   variant="ghost"
-                  size="icon"
+                  size="sm"
+                  className="bg-red-700 text-white hover:bg-red-800 hover:text-white shrink-0 mt-6"
                   onClick={() => removeRec(index)}
-                  className="text-red-500 hover:text-red-700 shrink-0 mt-6"
                 >
-                  <Trash2 className="h-4 w-4" />
+                  Remove ✕
                 </Button>
               </div>
             );

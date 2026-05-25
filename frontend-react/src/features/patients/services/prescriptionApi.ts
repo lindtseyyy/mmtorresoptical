@@ -6,13 +6,11 @@ export interface LensSpecification {
   rightSph?: number;
   rightCyl?: number;
   rightAxis?: number;
-  rightPrism?: number;
   rightAdd?: number;
   rightPd?: number;
   leftSph?: number;
   leftCyl?: number;
   leftAxis?: number;
-  leftPrism?: number;
   leftAdd?: number;
   leftPd?: number;
   lensType?: string;

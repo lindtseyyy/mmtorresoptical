@@ -13,7 +13,6 @@ public class LensSpecificationDTO {
     private BigDecimal rightSph;
     private BigDecimal rightCyl;
     private Integer rightAxis;
-    private BigDecimal rightPrism;
     private BigDecimal rightAdd;
     private BigDecimal rightPd;
 
@@ -21,7 +20,6 @@ public class LensSpecificationDTO {
     private BigDecimal leftSph;
     private BigDecimal leftCyl;
     private Integer leftAxis;
-    private BigDecimal leftPrism;
     private BigDecimal leftAdd;
     private BigDecimal leftPd;
 

@@ -45,10 +45,6 @@ public class PrescriptionLensDetail {
     private Integer rightAxis;
 
     @Convert(converter = AesBigDecimalConverter.class)
-    @Column(name = "right_prism", columnDefinition = "TEXT")
-    private BigDecimal rightPrism;
-
-    @Convert(converter = AesBigDecimalConverter.class)
     @Column(name = "right_add", columnDefinition = "TEXT")
     private BigDecimal rightAdd;
 
@@ -68,10 +64,6 @@ public class PrescriptionLensDetail {
     @Convert(converter = AesIntegerConverter.class)
     @Column(name = "left_axis", columnDefinition = "TEXT")
     private Integer leftAxis;
-
-    @Convert(converter = AesBigDecimalConverter.class)
-    @Column(name = "left_prism", columnDefinition = "TEXT")
-    private BigDecimal leftPrism;
 
     @Convert(converter = AesBigDecimalConverter.class)
     @Column(name = "left_add", columnDefinition = "TEXT")

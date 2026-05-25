@@ -18,6 +18,7 @@ import com.mmtorresoptical.OpticalClinicManagementSystem.repository.PatientRepos
 import com.mmtorresoptical.OpticalClinicManagementSystem.repository.PatientFollowUpRepository;
 import com.mmtorresoptical.OpticalClinicManagementSystem.repository.PrescriptionRepository;
 import com.mmtorresoptical.OpticalClinicManagementSystem.repository.TransactionRepository;
+import com.mmtorresoptical.OpticalClinicManagementSystem.repository.EyeExamRepository;
 import com.mmtorresoptical.OpticalClinicManagementSystem.security.HmacHashService;
 import com.mmtorresoptical.OpticalClinicManagementSystem.services.auditlog.resources.PatientAuditHelper;
 import com.mmtorresoptical.OpticalClinicManagementSystem.specification.PatientSpecification;
@@ -33,6 +34,7 @@ import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.YearMonth;
 import java.util.*;
+import java.util.stream.Stream;
 
 @Service
 @RequiredArgsConstructor
@@ -44,6 +46,7 @@ public class PatientService {
     private final TransactionRepository transactionRepository;
     private final PrescriptionRepository prescriptionRepository;
     private final PatientFollowUpRepository patientFollowUpRepository;
+    private final EyeExamRepository eyeExamRepository;
 
     public PatientResponseDTO createPatient(PatientRequestDTO patientRequest) {
         if(patientExistsByFirstMiddleLastName(patientRequest.getFirstName(), patientRequest.getMiddleName(), patientRequest.getLastName())) {
@@ -417,7 +420,17 @@ public class PatientService {
                 .orElseThrow(() -> new ResourceNotFoundException("Patient not found with id: " + patientId));
 
         long totalVisits = transactionRepository.countByPatientId(patientId);
-        LocalDateTime lastVisitDate = transactionRepository.findMaxTransactionDateByPatientId(patientId);
+
+        // Last visit = most recent from: transaction, prescription, eye exam, or completed follow-up
+        LocalDateTime lastVisitDate = Stream.of(
+                transactionRepository.findMaxTransactionDateByPatientId(patientId),
+                Optional.ofNullable(prescriptionRepository.findMaxIssueDateByPatientId(patientId))
+                        .map(java.time.LocalDate::atStartOfDay).orElse(null),
+                eyeExamRepository.findMaxCreatedAtByPatientId(patientId),
+                Optional.ofNullable(patientFollowUpRepository.findMaxActualVisitDateByPatientId(patientId))
+                        .map(java.time.LocalDate::atStartOfDay).orElse(null)
+        ).filter(Objects::nonNull).max(LocalDateTime::compareTo).orElse(null);
+
         java.time.LocalDate lastRxDate = prescriptionRepository.findMaxIssueDateByPatientId(patientId);
         LocalDateTime lastPrescriptionDate = lastRxDate != null ? lastRxDate.atStartOfDay() : null;
         long purchasedProducts = transactionRepository.sumQuantityByPatientId(patientId);

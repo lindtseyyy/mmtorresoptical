@@ -36,8 +36,7 @@ public class Prescription {
     @Column(name = "notes", columnDefinition = "TEXT")
     private String notes;
 
-    @Generated(GenerationTime.INSERT)
-    @Column(name = "rx_number", unique = true, insertable = false, updatable = false)
+    @Column(name = "rx_number", unique = true, updatable = false)
     private String rxNumber;
 
     @CreationTimestamp

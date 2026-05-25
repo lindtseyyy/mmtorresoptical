@@ -21,6 +21,7 @@ import com.mmtorresoptical.OpticalClinicManagementSystem.services.auditlog.resou
 import com.mmtorresoptical.OpticalClinicManagementSystem.services.auditlog.resources.PrescriptionAuditHelper;
 import com.mmtorresoptical.OpticalClinicManagementSystem.specification.PrescriptionSpecification;
 import com.mmtorresoptical.OpticalClinicManagementSystem.utils.UUIDUtils;
+import jakarta.persistence.EntityManager;
 import lombok.RequiredArgsConstructor;
 import org.springframework.beans.BeanUtils;
 import org.springframework.data.domain.*;
@@ -52,6 +53,7 @@ public class PrescriptionService {
     private final PatientFollowUpRepository patientFollowUpRepository;
     private final PatientFollowUpAuditHelper patientFollowUpAuditHelper;
     private final EyeExamRepository eyeExamRepository;
+    private final EntityManager entityManager;
 
     @Transactional
     public PrescriptionResponseDTO createPrescription(UUID id, CreatePrescriptionRequestDTO prescriptionRequest) {
@@ -84,6 +86,15 @@ public class PrescriptionService {
             prescription.setEyeExam(eyeExam);
         }
 
+        // Generate rx number — create sequence if first run
+        entityManager.createNativeQuery(
+                "CREATE SEQUENCE IF NOT EXISTS prescription_rx_seq START WITH 10001 INCREMENT BY 1 NO MAXVALUE NO CYCLE"
+        ).executeUpdate();
+        Long nextSeq = (Long) entityManager
+                .createNativeQuery("SELECT nextval('prescription_rx_seq')")
+                .getSingleResult();
+        prescription.setRxNumber("RX-" + nextSeq);
+
         Prescription savedPrescription = prescriptionRepository.save(prescription);
 
         if (hasLens) {
@@ -96,13 +107,11 @@ public class PrescriptionService {
                         ld.setRightSph(lensDTO.getRightSph());
                         ld.setRightCyl(lensDTO.getRightCyl());
                         ld.setRightAxis(lensDTO.getRightAxis());
-                        ld.setRightPrism(lensDTO.getRightPrism());
                         ld.setRightAdd(lensDTO.getRightAdd());
                         ld.setRightPd(lensDTO.getRightPd());
                         ld.setLeftSph(lensDTO.getLeftSph());
                         ld.setLeftCyl(lensDTO.getLeftCyl());
                         ld.setLeftAxis(lensDTO.getLeftAxis());
-                        ld.setLeftPrism(lensDTO.getLeftPrism());
                         ld.setLeftAdd(lensDTO.getLeftAdd());
                         ld.setLeftPd(lensDTO.getLeftPd());
                         ld.setCorrectionType(lensDTO.getCorrectionType());
@@ -346,13 +355,11 @@ public class PrescriptionService {
                         ld.setRightSph(ls.getRightSph());
                         ld.setRightCyl(ls.getRightCyl());
                         ld.setRightAxis(ls.getRightAxis());
-                        ld.setRightPrism(ls.getRightPrism());
                         ld.setRightAdd(ls.getRightAdd());
                         ld.setRightPd(ls.getRightPd());
                         ld.setLeftSph(ls.getLeftSph());
                         ld.setLeftCyl(ls.getLeftCyl());
                         ld.setLeftAxis(ls.getLeftAxis());
-                        ld.setLeftPrism(ls.getLeftPrism());
                         ld.setLeftAdd(ls.getLeftAdd());
                         ld.setLeftPd(ls.getLeftPd());
                         ld.setCorrectionType(ls.getCorrectionType());
