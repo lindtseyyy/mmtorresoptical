@@ -1,11 +1,9 @@
-import { useMemo } from "react";
 import { Card, CardContent, CardHeader } from "@/shared/components/ui/card";
 import { Input } from "@/shared/components/ui/input";
 import AggregatedFinancialSummary from "@/features/reports/components/transaction/AggregatedFinancialSummary";
-import VoidedRefundedLog from "@/features/reports/components/transaction/VoidedRefundedLog";
 import AgingAccountsReceivable from "@/features/reports/components/transaction/AgingAccountsReceivable";
 import TransactionCharts from "@/features/reports/components/transaction/TransactionCharts";
-import type { TransactionHierarchicalReportDataset, TransactionEntry } from "@/features/reports/types";
+import type { TransactionHierarchicalReportDataset } from "@/features/reports/types";
 
 const MIN_DATE_LOCAL = "2020-01-01";
 const MAX_DATE_LOCAL = "2099-12-31";
@@ -25,37 +23,8 @@ const TransactionReport: React.FC<TransactionReportProps> = ({
   onMinDateChange,
   onMaxDateChange,
 }) => {
-  const voidedRefundedEntries = useMemo<TransactionEntry[]>(() => {
-    const entries: TransactionEntry[] = [];
-    // Voided transactions (payment_status = VOIDED)
-    if (report.statusGroups["VOIDED"]) {
-      entries.push(...report.statusGroups["VOIDED"]);
-    }
-    // Refunded transactions (refundStatus = ADJUSTED or RETURNED)
-    for (const group of Object.values(report.statusGroups)) {
-      for (const entry of group) {
-        if (
-          entry.refundStatus === "PARTIAL" ||
-          entry.refundStatus === "FULL"
-        ) {
-          // Avoid double-counting if already added as VOIDED
-          if (!entries.some((e) => e.id === entry.id)) {
-            entries.push(entry);
-          }
-        }
-      }
-    }
-    entries.sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime());
-    return entries;
-  }, [report.statusGroups]);
-
   return (
     <div className="space-y-8">
-      {/* ═══════════════════════════════════════════════════════════
-          12-Month Trend Charts
-          ═══════════════════════════════════════════════════════════ */}
-      <TransactionCharts />
-
       {/* ═══════════════════════════════════════════════════════════
           Date Range — Filtered Analytics
           ═══════════════════════════════════════════════════════════ */}
@@ -88,8 +57,6 @@ const TransactionReport: React.FC<TransactionReportProps> = ({
             minDate={report.minDate}
             maxDate={report.maxDate}
           />
-
-          <VoidedRefundedLog entries={voidedRefundedEntries} />
         </CardContent>
       </Card>
 
@@ -97,6 +64,11 @@ const TransactionReport: React.FC<TransactionReportProps> = ({
           Aging Accounts Receivable
           ═══════════════════════════════════════════════════════════ */}
       <AgingAccountsReceivable />
+
+      {/* ═══════════════════════════════════════════════════════════
+          12-Month Trend Charts
+          ═══════════════════════════════════════════════════════════ */}
+      <TransactionCharts />
     </div>
   );
 };
