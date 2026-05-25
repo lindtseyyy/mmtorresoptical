@@ -119,6 +119,11 @@ const ViewProduct: React.FC = () => {
                       Reorder
                     </Badge>
                   )}
+                  {!product.isArchived && !isService && product.quantity <= 0 && (
+                    <Badge className="bg-red-700 text-white hover:bg-red-700 cursor-default">
+                      Out of Stock
+                    </Badge>
+                  )}
                   {!product.isArchived && !isService && product.quantity >= product.overstockedThreshold && (
                     <Badge className="bg-yellow-700 text-white hover:bg-yellow-700 cursor-default">
                       Overstocked

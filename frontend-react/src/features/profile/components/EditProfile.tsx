@@ -78,7 +78,7 @@ const EditProfile: React.FC = () => {
       queryClient.setQueryData(["ownProfile"], data);
       toast.success("Profile updated successfully");
     },
-    onError: () => toast.error("Failed to update profile"),
+    onError: (error: Error) => toast.error(error.message || "Failed to update profile"),
   });
 
   const onSaveProfile: SubmitHandler<ProfileFormData> = async (data) => {
@@ -101,7 +101,7 @@ const EditProfile: React.FC = () => {
       passwordForm.reset();
       toast.success("Password changed successfully");
     },
-    onError: () => toast.error("Failed to change password"),
+    onError: (error: Error) => toast.error(error.message || "Failed to change password"),
   });
 
   const onChangePassword: SubmitHandler<ChangePasswordFormData> = async (data) => {
@@ -134,7 +134,7 @@ const EditProfile: React.FC = () => {
       securityForm.reset();
       toast.success("Security question updated successfully");
     },
-    onError: () => toast.error("Failed to update security question"),
+    onError: (error: Error) => toast.error(error.message || "Failed to update security question"),
   });
 
   const onSaveSecurity: SubmitHandler<SecurityQuestionFormData> = async (data) => {
