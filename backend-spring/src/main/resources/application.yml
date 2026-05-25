@@ -25,7 +25,7 @@ app:
     expiration-ms: 86400000
 
   upload:
-    product-images-dir: uploads/products
+    product-images-dir: ${APP_UPLOAD_PRODUCT_IMAGES_DIR:uploads/products}
 
   database:
     backup:

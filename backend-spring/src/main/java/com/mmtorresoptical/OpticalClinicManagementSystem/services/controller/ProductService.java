@@ -175,15 +175,19 @@ public class ProductService {
         Product beforeUpdate = new Product();
         BeanUtils.copyProperties(retrievedProduct, beforeUpdate);
 
+        // Preserve existing imageDir before MapStruct overwrites it from the (null) DTO
+        String existingImageDir = retrievedProduct.getImageDir();
+
         productMapper.updateProductFromUpdateRequestDTO(updateProductRequestDTO, retrievedProduct);
 
         // Handle image — new upload replaces old, otherwise keep existing
         if (image != null && !image.isEmpty()) {
             String storedFilename = fileStorageService.store(image);
             retrievedProduct.setImageDir(storedFilename);
+        } else {
+            // MapStruct copied null imageDir from the DTO — restore the existing one
+            retrievedProduct.setImageDir(existingImageDir);
         }
-        // If no new image is uploaded, keep the existing imageDir from the DB.
-        // The DTO's imageDir field is ignored in multipart mode since image comes as a file part.
 
         Product updatedProduct = productRepository.save(retrievedProduct);
 

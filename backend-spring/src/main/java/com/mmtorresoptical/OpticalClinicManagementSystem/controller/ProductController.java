@@ -37,7 +37,7 @@ public class ProductController {
      * (Called from AddProduct.tsx)
      */
     @PreAuthorize("hasRole('ADMIN')")
-    @PostMapping(consumes = {"multipart/form-data"})
+    @PostMapping
     public ResponseEntity<ProductResponseDTO> createProduct(
             @RequestPart("product") @Valid CreateProductRequestDTO productRequest,
             @RequestPart(value = "image", required = false) MultipartFile image) {
@@ -113,7 +113,7 @@ public class ProductController {
      * UPDATE an existing product
      * (Called from EditProduct.tsx)
      */
-    @PutMapping(value = "/{id}", consumes = {"multipart/form-data"})
+    @PutMapping("/{id}")
     public ResponseEntity<ProductDetailsDTO> updateProduct(
             @PathVariable UUID id,
             @RequestPart("product") @Valid UpdateProductRequestDTO productRequest,
