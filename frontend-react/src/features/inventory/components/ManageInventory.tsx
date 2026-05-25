@@ -107,24 +107,18 @@ const ManageInventory: React.FC = () => {
           label="Out of Stock"
           value={summary?.countOutOfStockProducts ?? "—"}
           color="red"
-          size="sm"
-          labelPosition="bottom"
         />
         <MetricCard
           icon={AlertTriangle}
           label="Reorder Needed"
           value={summary?.countReorderNeededProducts ?? "—"}
           color="amber"
-          size="sm"
-          labelPosition="bottom"
         />
         <MetricCard
           icon={TrendingUp}
           label="Overstocked"
           value={summary?.countOverstockedProducts ?? "—"}
           color="blue"
-          size="sm"
-          labelPosition="bottom"
         />
       </div>
 
