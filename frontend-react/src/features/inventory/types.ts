@@ -179,6 +179,7 @@ export interface Product {
   overstockedThreshold: number;
   leadTimeDays: number;
   reorderPoint: number | null;
+  suggestedOrderQuantity: number | null;
   isArchived: boolean;
   imageDir: string | null;
   createdAt: string;

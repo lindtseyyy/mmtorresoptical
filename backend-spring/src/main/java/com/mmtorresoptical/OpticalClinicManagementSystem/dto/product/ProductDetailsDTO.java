@@ -21,6 +21,7 @@ public class ProductDetailsDTO {
     private Integer overstockedThreshold;
     private Integer leadTimeDays;
     private Integer reorderPoint;
+    private Integer suggestedOrderQuantity;
     private Boolean isArchived;
     private LocalDateTime createdAt;
 }

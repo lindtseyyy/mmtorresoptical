@@ -388,12 +388,20 @@ public class InventoryAnalyticsService {
         for (ProductDetailsDTO dto : dtos) {
             if ("SERVICE".equals(dto.getProductType())) {
                 dto.setReorderPoint(null);
+                dto.setSuggestedOrderQuantity(null);
                 continue;
             }
             int leadTime = dto.getLeadTimeDays() != null ? dto.getLeadTimeDays() : 3;
             int rop = computeReorderPoint(dto.getProductId(), leadTime, velocityMap);
             int lowThreshold = dto.getLowLevelThreshold() != null ? dto.getLowLevelThreshold() : 0;
             dto.setReorderPoint(Math.max(lowThreshold, rop));
+
+            // Days-of-supply order quantity: 30-day target, floor = lowLevelThreshold
+            double dailyVelocity = getDailySalesVelocity(dto.getProductId(), velocityMap);
+            int calculatedTargetStock = (int) Math.ceil(dailyVelocity * 30);
+            int finalTargetStock = Math.max(calculatedTargetStock, lowThreshold);
+            int orderQty = finalTargetStock - dto.getQuantity();
+            dto.setSuggestedOrderQuantity(Math.max(orderQty, 0));
         }
     }
 
