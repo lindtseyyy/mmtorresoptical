@@ -178,6 +178,11 @@ public class TransactionService {
         transaction.setAmountPaid(amountPaid);
         transaction.setTransactionStatus(computeStatus(total, amountPaid));
 
+        if (patient == null && transaction.getTransactionStatus() == TransactionStatus.PAID) {
+            transaction.setFulfillmentStatus(FulfillmentStatus.COMPLETED);
+            transaction.setCompletedAt(LocalDateTime.now());
+        }
+
         Transaction savedTransaction = transactionRepository.saveAndFlush(transaction);
 
         // Create initial payment record if money was tendered
