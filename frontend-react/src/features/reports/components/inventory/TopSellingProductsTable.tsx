@@ -24,7 +24,7 @@ const TopSellingProductsTable: React.FC<TopSellingProductsTableProps> = ({ produ
                 <th className="w-[30%] py-3 pr-4 font-medium">Product</th>
                 <th className="w-[20%] py-3 pr-4 font-medium">Category</th>
                 <th className="w-[16%] py-3 pr-4 font-medium text-right">Unit Price</th>
-                <th className="w-[16%] py-3 pr-4 font-medium text-center">Units Sold</th>
+                <th className="w-[16%] py-3 pr-4 font-medium text-right">Units Sold</th>
                 <th className="w-[18%] py-3 pr-4 font-medium text-right">Revenue</th>
               </tr>
             </thead>
@@ -36,7 +36,7 @@ const TopSellingProductsTable: React.FC<TopSellingProductsTableProps> = ({ produ
                     {p.category.replace(/_/g, " ")}
                   </td>
                   <td className="py-3 pr-4 text-right">{currency(p.unitPrice)}</td>
-                  <td className="py-3 pr-4 text-center">{p.totalSold}</td>
+                  <td className="py-3 pr-4 text-right">{p.totalSold}</td>
                   <td className="py-3 pr-4 text-right font-medium">{currency(p.totalRevenue)}</td>
                 </tr>
               ))}

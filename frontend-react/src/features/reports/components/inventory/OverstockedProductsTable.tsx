@@ -42,8 +42,8 @@ const OverstockedProductsTable: React.FC<OverstockedProductsTableProps> = ({
                 <tr className="border-b text-left text-muted-foreground">
                   <th className="w-[35%] py-3 pr-4 font-medium">Product</th>
                   <th className="w-[20%] py-3 pr-4 font-medium">Category</th>
-                  <th className="w-[15%] py-3 pr-4 font-medium text-center">Quantity</th>
-                  <th className="w-[15%] py-3 pr-4 font-medium text-center">Threshold</th>
+                  <th className="w-[15%] py-3 pr-4 font-medium text-right">Quantity</th>
+                  <th className="w-[15%] py-3 pr-4 font-medium text-right">Threshold</th>
                   <th className="w-[15%] py-3 pr-4 font-medium text-right">Unit Price</th>
                 </tr>
               </thead>
@@ -54,8 +54,8 @@ const OverstockedProductsTable: React.FC<OverstockedProductsTableProps> = ({
                     <td className="py-3 pr-4 capitalize text-muted-foreground">
                       {p.category.replace(/_/g, " ")}
                     </td>
-                    <td className="py-3 pr-4 text-center text-blue-600 font-medium">{p.quantity}</td>
-                    <td className="py-3 pr-4 text-center">{p.overstockedThreshold}</td>
+                    <td className="py-3 pr-4 text-right text-blue-600 font-medium">{p.quantity}</td>
+                    <td className="py-3 pr-4 text-right">{p.overstockedThreshold}</td>
                     <td className="py-3 pr-4 text-right">{currency(p.unitPrice)}</td>
                   </tr>
                 ))}

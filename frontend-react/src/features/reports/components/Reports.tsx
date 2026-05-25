@@ -10,11 +10,12 @@ import SegmentedControl from "@/shared/components/ui/segmented-control";
 import { Button } from "@/shared/components/ui/button";
 import { Card, CardContent } from "@/shared/components/ui/card";
 import { useQuery } from "@tanstack/react-query";
-import { useReportData, usePatientGrowthTrend, useLowStockProducts, useOverstockedProducts, useOutOfStockProducts, useTransactionMonthlyTrend } from "@/features/reports/hooks/reportQuery";
+import { useReportData, usePatientGrowthTrend, useLowStockProducts, useOverstockedProducts, useOutOfStockProducts, useTransactionMonthlyTrend, useCategoryBreakdown, useInventoryValueTrend } from "@/features/reports/hooks/reportQuery";
 import { createAccountsReceivableQueryOptions } from "@/features/sales/hooks/transactionQuery";
-import { downloadPdfReport } from "@/features/reports/services/reportApi";
+import { fetchOutOfStockProducts } from "@/features/reports/services/reportApi";
 import { generateTransactionPdf } from "@/features/reports/services/transactionPdfExport";
 import { generatePatientPdf } from "@/features/reports/services/patientPdfExport";
+import { generateInventoryPdf } from "@/features/reports/services/inventoryPdfExport";
 import InventoryValueChart from "@/features/reports/components/inventory/InventoryValueChart";
 import CategoryBreakdownChart from "@/features/reports/components/inventory/CategoryBreakdownChart";
 import TopSellingProductsTable from "@/features/reports/components/inventory/TopSellingProductsTable";
@@ -84,9 +85,11 @@ const Reports: React.FC = () => {
 
   const { data: growthTrend } = usePatientGrowthTrend();
 
-  // Transaction-specific data for client-side PDF export
+  // Data for client-side PDF exports
   const { data: monthlyTrend } = useTransactionMonthlyTrend();
   const { data: receivables } = useQuery(createAccountsReceivableQueryOptions());
+  const { data: valueTrend } = useInventoryValueTrend();
+  const { data: categoryBreakdown } = useCategoryBreakdown();
 
   // ── Export handlers ──────────────────────────────────────────────
 
@@ -103,9 +106,17 @@ const Reports: React.FC = () => {
       } else if (reportType === "PATIENTS" && data && growthTrend) {
         generatePatientPdf(data as PatientReportDataset, growthTrend);
         toast.success("PDF report downloaded.");
-      } else {
-        await downloadPdfReport(reportType, minDate || undefined, maxDate || undefined);
+      } else if (reportType === "INVENTORY_ANALYTICS" && data && valueTrend && categoryBreakdown) {
+        const allOutOfStock = await fetchOutOfStockProducts(0, 1000);
+        generateInventoryPdf(
+          data as ComprehensiveInventoryReportDataset,
+          valueTrend,
+          categoryBreakdown,
+          allOutOfStock.content,
+        );
         toast.success("PDF report downloaded.");
+      } else {
+        toast.error("Required data not yet loaded. Please try again.");
       }
     } catch (err: any) {
       toast.error(err?.message || "Failed to export PDF.");

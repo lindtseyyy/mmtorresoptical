@@ -42,7 +42,7 @@ const OutOfStockProductsTable: React.FC<OutOfStockProductsTableProps> = ({
                 <tr className="border-b text-left text-muted-foreground">
                   <th className="w-[40%] py-3 pr-4 font-medium">Product</th>
                   <th className="w-[20%] py-3 pr-4 font-medium">Category</th>
-                  <th className="w-[15%] py-3 pr-4 font-medium text-center">Quantity</th>
+                  <th className="w-[15%] py-3 pr-4 font-medium text-right">Quantity</th>
                   <th className="w-[25%] py-3 pr-4 font-medium text-right">Unit Price</th>
                 </tr>
               </thead>
@@ -53,7 +53,7 @@ const OutOfStockProductsTable: React.FC<OutOfStockProductsTableProps> = ({
                     <td className="py-3 pr-4 capitalize text-muted-foreground">
                       {p.category.replace(/_/g, " ")}
                     </td>
-                    <td className="py-3 pr-4 text-center text-red-600 font-medium">{p.quantity}</td>
+                    <td className="py-3 pr-4 text-right text-red-600 font-medium">{p.quantity}</td>
                     <td className="py-3 pr-4 text-right">{currency(p.unitPrice)}</td>
                   </tr>
                 ))}
