@@ -84,6 +84,31 @@ function refundDeductionAggregate(
 
 // ── Chart drawing helpers ────────────────────────────────────────────
 
+/** Convert an SVG-style path string (M/L/Z) into the {op,c}[] format jsPDF.path() expects. */
+function parseSvgPath(d: string): { op: string; c: number[] }[] {
+  const cmds: { op: string; c: number[] }[] = [];
+  const tokens = d.match(/[MLZmlz]|[-+]?\d*\.?\d+/g) ?? [];
+  let i = 0;
+  while (i < tokens.length) {
+    const t = tokens[i];
+    if (t === "M" || t === "m") {
+      cmds.push({ op: t.toLowerCase(), c: [+tokens[i + 1], +tokens[i + 2]] });
+      i += 3;
+    } else if (t === "L" || t === "l") {
+      cmds.push({ op: t.toLowerCase(), c: [+tokens[i + 1], +tokens[i + 2]] });
+      i += 3;
+    } else if (t === "Z" || t === "z") {
+      cmds.push({ op: "h", c: [] });
+      i += 1;
+    } else {
+      // bare coordinate pair → implicit L
+      cmds.push({ op: "l", c: [+tokens[i], +tokens[i + 1]] });
+      i += 2;
+    }
+  }
+  return cmds;
+}
+
 interface ChartRect {
   x: number;
   y: number;
@@ -224,7 +249,7 @@ function drawAreaChart(
   pathStr += ` L ${pts[pts.length - 1].px.toFixed(1)} ${baseline.toFixed(1)}`;
   pathStr += ` L ${pts[0].px.toFixed(1)} ${baseline.toFixed(1)} Z`;
 
-  doc.path(pathStr);
+  doc.path(parseSvgPath(pathStr));
   doc.setGState(doc.GState({ opacity: 0.3 }));
   doc.setFillColor(34, 197, 94);
   doc.fill();

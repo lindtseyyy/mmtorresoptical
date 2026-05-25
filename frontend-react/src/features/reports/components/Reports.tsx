@@ -14,6 +14,7 @@ import { useReportData, usePatientGrowthTrend, useLowStockProducts, useOverstock
 import { createAccountsReceivableQueryOptions } from "@/features/sales/hooks/transactionQuery";
 import { downloadPdfReport } from "@/features/reports/services/reportApi";
 import { generateTransactionPdf } from "@/features/reports/services/transactionPdfExport";
+import { generatePatientPdf } from "@/features/reports/services/patientPdfExport";
 import InventoryValueChart from "@/features/reports/components/inventory/InventoryValueChart";
 import CategoryBreakdownChart from "@/features/reports/components/inventory/CategoryBreakdownChart";
 import TopSellingProductsTable from "@/features/reports/components/inventory/TopSellingProductsTable";
@@ -98,6 +99,9 @@ const Reports: React.FC = () => {
           monthlyTrend,
           receivables,
         );
+        toast.success("PDF report downloaded.");
+      } else if (reportType === "PATIENTS" && data && growthTrend) {
+        generatePatientPdf(data as PatientReportDataset, growthTrend);
         toast.success("PDF report downloaded.");
       } else {
         await downloadPdfReport(reportType, minDate || undefined, maxDate || undefined);
