@@ -116,9 +116,9 @@ const ViewProduct: React.FC = () => {
                   >
                     {product.isArchived ? "Archived" : "Active"}
                   </Badge>
-                  {!product.isArchived && !isService && product.quantity <= product.lowLevelThreshold && (
-                    <Badge className="bg-red-700 text-white hover:bg-red-700 cursor-default">
-                      Low Stock
+                  {!product.isArchived && !isService && product.reorderPoint != null && product.quantity > 0 && product.quantity <= product.reorderPoint && (
+                    <Badge className="bg-yellow-700 text-white hover:bg-yellow-700 cursor-default">
+                      Reorder
                     </Badge>
                   )}
                   {!product.isArchived && !isService && product.quantity >= product.overstockedThreshold && (

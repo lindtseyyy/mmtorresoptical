@@ -344,7 +344,8 @@ public class InventoryAnalyticsService {
 
     /**
      * Counts active, non-archived PHYSICAL products with quantity > 0
-     * whose current stock is <= computed ROP (meaning they need reordering).
+     * whose current stock is <= finalReorderThreshold,
+     * where finalReorderThreshold = max(lowLevelThreshold, computed ROP).
      */
     public long getReorderNeededCount() {
         Specification<Product> spec = Specification
@@ -358,16 +359,24 @@ public class InventoryAnalyticsService {
         Map<UUID, Long> velocityMap = fetchSalesVelocityMap();
 
         return candidates.stream()
-                .filter(p -> p.getQuantity() <= computeReorderPoint(
-                        p.getProductId(),
-                        p.getLeadTimeDays() != null ? p.getLeadTimeDays() : 3,
-                        velocityMap
-                ))
+                .filter(p -> {
+                    int rop = computeReorderPoint(
+                            p.getProductId(),
+                            p.getLeadTimeDays() != null ? p.getLeadTimeDays() : 3,
+                            velocityMap
+                    );
+                    int threshold = Math.max(
+                            p.getLowLevelThreshold() != null ? p.getLowLevelThreshold() : 0,
+                            rop
+                    );
+                    return p.getQuantity() <= threshold;
+                })
                 .count();
     }
 
     /**
      * Enriches a list of ProductDetailsDTOs with computed reorderPoint values.
+     * Uses hybrid safety override: finalReorderThreshold = max(lowLevelThreshold, ROP).
      * Called by ProductService after fetching product pages.
      * SERVICE products get reorderPoint = null.
      */
@@ -382,7 +391,9 @@ public class InventoryAnalyticsService {
                 continue;
             }
             int leadTime = dto.getLeadTimeDays() != null ? dto.getLeadTimeDays() : 3;
-            dto.setReorderPoint(computeReorderPoint(dto.getProductId(), leadTime, velocityMap));
+            int rop = computeReorderPoint(dto.getProductId(), leadTime, velocityMap);
+            int lowThreshold = dto.getLowLevelThreshold() != null ? dto.getLowLevelThreshold() : 0;
+            dto.setReorderPoint(Math.max(lowThreshold, rop));
         }
     }
 

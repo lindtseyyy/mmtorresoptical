@@ -165,7 +165,9 @@ public class ProductService {
         Product retrievedProduct = productRepository.findById(id)
                 .orElseThrow(() -> new ResourceNotFoundException("Product not found with id: " + id));
 
-        return productMapper.entityToDetailsDTO(retrievedProduct);
+        ProductDetailsDTO dto = productMapper.entityToDetailsDTO(retrievedProduct);
+        inventoryAnalyticsService.enrichWithReorderPoints(List.of(dto));
+        return dto;
     }
 
     public ProductDetailsDTO updateProduct(UUID id, UpdateProductRequestDTO updateProductRequestDTO) {
@@ -187,7 +189,9 @@ public class ProductService {
         // Audit Logging
         productAuditHelper.logUpdate(beforeUpdate, updatedProduct);
 
-        return productMapper.entityToDetailsDTO(updatedProduct);
+        ProductDetailsDTO dto = productMapper.entityToDetailsDTO(updatedProduct);
+        inventoryAnalyticsService.enrichWithReorderPoints(List.of(dto));
+        return dto;
     }
 
     public void archiveProduct(UUID id) {
@@ -235,7 +239,9 @@ public class ProductService {
 
         productAuditHelper.logAdjustment(beforeProduct, updatedProduct, request);
 
-        return productMapper.entityToDetailsDTO(updatedProduct);
+        ProductDetailsDTO dto = productMapper.entityToDetailsDTO(updatedProduct);
+        inventoryAnalyticsService.enrichWithReorderPoints(List.of(dto));
+        return dto;
     }
 
     public void restoreProduct(UUID id) {
