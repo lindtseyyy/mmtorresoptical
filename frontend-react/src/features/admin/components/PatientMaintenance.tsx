@@ -2,6 +2,7 @@ import { useState, useEffect } from "react";
 import { useQuery, useMutation, useQueryClient, keepPreviousData } from "@tanstack/react-query";
 import { Button } from "@/shared/components/ui/button";
 import { Input } from "@/shared/components/ui/input";
+import { Badge } from "@/shared/components/ui/badge";
 import { Search, Archive, Undo2, ChevronLeft, ChevronRight, ArchiveIcon, ShoppingCart, ClockAlert, ArrowUp, ArrowDown } from "lucide-react";
 import {
   Select,
@@ -207,11 +208,12 @@ const PatientMaintenance: React.FC = () => {
                   <thead>
                     <tr className="border-b text-left text-muted-foreground">
                       <th className="w-[26%] py-3 pr-4 font-medium">Full Name</th>
-                      <th className="w-[26%] py-3 pr-4 font-medium">Email</th>
-                      <th className="w-[10%] py-3 pr-4 text-center font-medium">Gender</th>
-                      <th className="w-[16%] py-3 pr-4 font-medium">Contact Number</th>
-                      <th className="w-[12%] py-3 pr-4 text-center font-medium">Birth Date</th>
-                      <th className="w-[10%] py-3 pr-4 text-center font-medium">Action</th>
+                      <th className="w-[24%] py-3 pr-4 font-medium">Email</th>
+                      <th className="w-[10%] py-3 pr-4 text-left font-medium">Gender</th>
+                      <th className="w-[14%] py-3 pr-4 text-left font-medium">Contact Number</th>
+                      <th className="w-[10%] py-3 pr-4 text-left font-medium">Birth Date</th>
+                      <th className="w-[8%] py-3 pr-4 text-center font-medium">Status</th>
+                      <th className="w-[8%] py-3 pr-4 text-center font-medium">Action</th>
                     </tr>
                   </thead>
                   <tbody>
@@ -228,14 +230,26 @@ const PatientMaintenance: React.FC = () => {
                         <td className="py-3 pr-4 text-muted-foreground">
                           <span className="block truncate">{patient.email}</span>
                         </td>
-                        <td className="py-3 pr-4 text-center capitalize">
+                        <td className="py-3 pr-4 text-left capitalize">
                           <span className="block truncate">{patient.sex}</span>
                         </td>
-                        <td className="py-3 pr-4 text-muted-foreground">
+                        <td className="py-3 pr-4 text-left text-muted-foreground">
                           <span className="block truncate">{patient.contactNumber}</span>
                         </td>
-                        <td className="py-3 pr-4 text-center text-muted-foreground">
+                        <td className="py-3 pr-4 text-left text-muted-foreground">
                           {formatDate(patient.birthDate)}
+                        </td>
+                        <td className="py-3 pr-4 text-center">
+                          <Badge
+                            variant={patient.isArchived ? "outline" : "default"}
+                            className={
+                              patient.isArchived
+                                ? "border-amber-500 text-amber-600"
+                                : "bg-emerald-600 hover:bg-emerald-600 text-white"
+                            }
+                          >
+                            {patient.isArchived ? "Archived" : "Active"}
+                          </Badge>
                         </td>
                         <td className="py-3">
                           <div className="flex justify-center">
@@ -268,7 +282,7 @@ const PatientMaintenance: React.FC = () => {
                     ))}
                     <EmptyTableRows
                       count={PAGE_SIZE - (patients?.length ?? 0)}
-                      colSpan={6}
+                      colSpan={7}
                       className="h-[57px]"
                     />
                   </tbody>
