@@ -96,18 +96,6 @@ const InventoryMaintenance: React.FC = () => {
     }
   }, [products.length, page, isFetching]);
 
-  const getStockStatus = (product: Product) => {
-    if (product.productType === "SERVICE") {
-      return { label: "Service", variant: "default" as const };
-    }
-    if (product.quantity <= product.lowLevelThreshold) {
-      return { label: "Low Stock", variant: "destructive" as const };
-    } else if (product.quantity >= product.overstockedThreshold) {
-      return { label: "Overstocked", variant: "secondary" as const };
-    }
-    return { label: "Active", variant: "default" as const };
-  };
-
   return (
     <div className="space-y-6">
       <div>
@@ -232,15 +220,14 @@ const InventoryMaintenance: React.FC = () => {
                     <tr className="border-b text-left text-muted-foreground">
                       <th className="w-[30%] py-3 pr-4 font-medium">Product Name</th>
                       <th className="w-[18%] py-3 pr-4 font-medium">Category</th>
-                      <th className="w-[12%] py-3 pr-4 text-center font-medium">Quantity</th>
-                      <th className="w-[12%] py-3 pr-4 text-center font-medium">Unit Price</th>
-                      <th className="w-[18%] py-3 pr-4 font-medium">Supplier</th>
+                      <th className="w-[12%] py-3 pr-4 text-right font-medium">Quantity</th>
+                      <th className="w-[12%] py-3 pr-4 text-right font-medium">Unit Price</th>
+                      <th className="w-[18%] py-3 pr-4 text-center font-medium">Status</th>
                       <th className="w-[10%] py-3 pr-4 text-center font-medium">Action</th>
                     </tr>
                   </thead>
                   <tbody>
                     {products.map((product) => {
-                      const stockStatus = getStockStatus(product);
                       return (
                         <tr
                           key={product.productId}
@@ -263,27 +250,28 @@ const InventoryMaintenance: React.FC = () => {
                           <td className="py-3 pr-4">
                             {CATEGORY_LABELS[product.category as Category] ?? product.category}
                           </td>
-                          <td className="py-3 pr-4 text-center">
+                          <td className="py-3 pr-4 text-right">
                             {product.productType === "SERVICE" ? (
                               <span className="text-muted-foreground">—</span>
                             ) : (
-                              <Badge
-                                className={`text-white ${
-                                  stockStatus.variant === "destructive"
-                                    ? "bg-red-700 hover:bg-red-700"
-                                    : stockStatus.variant === "secondary"
-                                      ? "bg-yellow-700 hover:bg-yellow-700"
-                                      : "bg-green-700 hover:bg-green-700"
-                                }`}
-                              >
-                                {product.quantity}
-                              </Badge>
+                              product.quantity
                             )}
                           </td>
-                          <td className="py-3 pr-4 text-center">
+                          <td className="py-3 pr-4 text-right">
                             ₱{product.unitPrice.toFixed(2)}
                           </td>
-                          <td className="py-3 pr-4">{product.supplier}</td>
+                          <td className="py-3 pr-4 text-center">
+                            <Badge
+                              variant={product.isArchived ? "outline" : "default"}
+                              className={
+                                product.isArchived
+                                  ? "border-amber-500 text-amber-600"
+                                  : "bg-emerald-600 hover:bg-emerald-600 text-white"
+                              }
+                            >
+                              {product.isArchived ? "Archived" : "Active"}
+                            </Badge>
+                          </td>
                           <td className="py-3">
                             <div className="flex justify-center">
                               <Button
