@@ -145,6 +145,11 @@ function drawBarChart(
     doc.setLineWidth(0);
     doc.rect(barX, barY, barW, barH, "F");
 
+    // Value label on top of bar
+    doc.setFontSize(5);
+    doc.setTextColor(37, 99, 235);
+    doc.text(number(d.transactionCount), barX + barW / 2, barY - 1, { align: "center" });
+
     // Month label
     const [yr, mo] = d.month.split("-");
     const shortMonth = new Date(+yr, +mo - 1).toLocaleDateString("en-US", { month: "short" });
@@ -230,6 +235,13 @@ function drawAreaChart(
   doc.setLineWidth(0.6);
   for (let i = 0; i < pts.length - 1; i++) {
     doc.line(pts[i].px, pts[i].py, pts[i + 1].px, pts[i + 1].py);
+  }
+
+  // Value labels above data points
+  for (let i = 0; i < data.length; i++) {
+    doc.setFontSize(5);
+    doc.setTextColor(5, 150, 105);
+    doc.text(shortCurrency(data[i].netRevenue), pts[i].px, pts[i].py - 2, { align: "center" });
   }
 
   // Month labels
