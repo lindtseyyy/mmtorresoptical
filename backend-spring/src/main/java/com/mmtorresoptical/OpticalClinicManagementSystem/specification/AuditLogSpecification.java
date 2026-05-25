@@ -31,6 +31,17 @@ public class AuditLogSpecification {
                 cb.equal(root.get("user").get("userId"), userId);
     }
 
+    public static Specification<AuditLog> userNameOrUsernameContains(String search) {
+        return (root, query, cb) -> {
+            String pattern = "%" + search.toLowerCase() + "%";
+            return cb.or(
+                cb.like(cb.lower(root.get("user").get("firstName")), pattern),
+                cb.like(cb.lower(root.get("user").get("lastName")), pattern),
+                cb.like(cb.lower(root.get("user").get("username")), pattern)
+            );
+        };
+    }
+
     public static Specification<AuditLog> dateBetween(LocalDate minDate, LocalDate maxDate) {
         return (root, query, cb) -> {
 

@@ -128,6 +128,10 @@ public class AuditLogService {
 
         Specification<AuditLog> spec = Specification.allOf();
 
+        if (keyword != null && !keyword.isBlank()) {
+            spec = spec.and(AuditLogSpecification.userNameOrUsernameContains(keyword));
+        }
+
         if (actionType != null) {
             spec = spec.and(AuditLogSpecification.hasActionType(actionType));
         }
