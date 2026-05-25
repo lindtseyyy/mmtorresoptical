@@ -22,7 +22,7 @@ const SegmentedControl: React.FC<SegmentedControlProps> = ({
   return (
     <div
       role="radiogroup"
-      className={cn("flex w-full rounded-lg bg-muted p-0.5", className)}
+      className={cn("flex w-full rounded-lg border bg-muted p-0.5 border-muted-foreground/20", className)}
     >
       {options.map((opt) => {
         const isActive = opt.value === value;
@@ -33,7 +33,7 @@ const SegmentedControl: React.FC<SegmentedControlProps> = ({
             aria-checked={isActive}
             onClick={() => onChange(opt.value)}
             className={cn(
-              "flex-1 inline-flex items-center justify-center gap-1.5 rounded-md px-3 py-1.5 text-sm font-medium transition-colors",
+              "flex-1 inline-flex items-center justify-center gap-1.5 rounded-md px-3 py-1.5 text-sm font-medium transition-colors cursor-pointer",
               isActive
                 ? "bg-background text-foreground shadow-sm"
                 : "text-muted-foreground hover:text-foreground"

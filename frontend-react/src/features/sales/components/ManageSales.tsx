@@ -289,7 +289,7 @@ const ManageSales: React.FC = () => {
     <div className="flex h-[calc(100vh-4rem)] gap-4">
       {/* Left column — Products */}
       <div className="flex w-3/5 flex-col rounded-lg border border-border bg-card p-4 min-h-0">
-        <div className="mb-3 border-b pb-2">
+        <div className="mb-3 border-b border-muted-foreground/20 pb-2">
           <SegmentedControl
             className="w-full"
             options={[
