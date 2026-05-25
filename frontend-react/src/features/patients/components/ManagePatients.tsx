@@ -153,6 +153,12 @@ const ManagePatients: React.FC = () => {
             <div className="flex items-center justify-center py-8">
               <div className="h-8 w-8 animate-spin rounded-full border-4 border-primary border-t-transparent"></div>
             </div>
+          ) : patients.length === 0 ? (
+            <div className="flex min-h-[570px] items-center justify-center">
+              <p className="text-center text-muted-foreground">
+                No patients found.
+              </p>
+            </div>
           ) : (
             <div className="space-y-4">
               <div className="overflow-x-auto">
@@ -210,12 +216,6 @@ const ManagePatients: React.FC = () => {
                   </tbody>
                 </table>
               </div>
-
-              {patients.length === 0 && (
-                <p className="py-8 text-center text-muted-foreground">
-                  No patients found.
-                </p>
-              )}
 
               {totalPages > 1 && (
                 <div className="flex items-center justify-between pt-4">
