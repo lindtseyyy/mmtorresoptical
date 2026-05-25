@@ -1,7 +1,7 @@
 import { useState } from "react";
 import { useParams, Link, useNavigate } from "react-router-dom";
-import { useQuery, keepPreviousData } from "@tanstack/react-query";
-import { ArrowLeft, ChevronLeft, ChevronRight, Package, ShoppingCart, Banknote, Calendar, Hash, TrendingUp, Layers } from "lucide-react";
+import { useQuery } from "@tanstack/react-query";
+import { ArrowLeft, Package, ShoppingCart, Banknote, Calendar, Hash, TrendingUp, Layers } from "lucide-react";
 import StockAdjustmentModal from "./StockAdjustmentModal";
 import { Button } from "@/shared/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/shared/components/ui/card";
@@ -57,11 +57,9 @@ const ViewProduct: React.FC = () => {
 
   const [adjustModalOpen, setAdjustModalOpen] = useState(false);
 
-  const [txPage, setTxPage] = useState(0);
   const { data: txData, isFetching: txFetching } = useQuery({
-    queryKey: ["product-transactions", productId, txPage],
-    queryFn: () => fetchProductTransactions(productId, txPage, 10),
-    placeholderData: keepPreviousData,
+    queryKey: ["product-transactions", productId],
+    queryFn: () => fetchProductTransactions(productId, 0, 10),
     enabled: !!productId,
   });
 
@@ -320,7 +318,7 @@ const ViewProduct: React.FC = () => {
                     <div className="space-y-1 flex-1 min-w-0">
                       <div className="flex items-center gap-2 flex-wrap">
                         <span className="font-medium">
-                          {tx.referenceNumber || tx.transactionId.substring(0, 8)}
+                          {tx.transactionNumber}
                         </span>
                         <StatusBadge status={tx.transactionStatus} />
                         {tx.refundStatus !== "NONE" && (
@@ -330,7 +328,6 @@ const ViewProduct: React.FC = () => {
                       <div className="flex items-center gap-4 text-sm text-muted-foreground">
                         <span>{formatDateTime(tx.transactionDate)}</span>
                         <span>₱ {tx.totalAmount.toFixed(2)}</span>
-                        <span className="capitalize">{tx.paymentType?.toLowerCase() ?? "N/A"}</span>
                       </div>
                       {tx.patient && (
                         <p className="text-xs text-muted-foreground">
@@ -341,33 +338,6 @@ const ViewProduct: React.FC = () => {
                   </div>
                 </div>
               ))}
-              {txData.totalPages > 1 && (
-                <div className="flex items-center justify-between pt-2">
-                  <p className="text-xs text-muted-foreground">
-                    Page {txPage + 1} of {txData.totalPages}
-                  </p>
-                  <div className="flex gap-1">
-                    <Button
-                      variant="outline"
-                      size="sm"
-                      onClick={() => setTxPage((p) => p - 1)}
-                      disabled={txPage === 0}
-                    >
-                      <ChevronLeft className="h-4 w-4" />
-                      Previous
-                    </Button>
-                    <Button
-                      variant="outline"
-                      size="sm"
-                      onClick={() => setTxPage((p) => p + 1)}
-                      disabled={txPage >= txData.totalPages - 1}
-                    >
-                      Next
-                      <ChevronRight className="h-4 w-4" />
-                    </Button>
-                  </div>
-                </div>
-              )}
             </div>
           )}
         </CardContent>
