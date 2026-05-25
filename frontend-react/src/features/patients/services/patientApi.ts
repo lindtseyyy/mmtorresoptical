@@ -152,7 +152,40 @@ const fetchPatientEyeExams = async (
   };
 };
 
-export { fetchPatients, fetchPatient, addPatient, updatePatient, archivePatient, restorePatient, fetchPatientMetrics, fetchPatientProfileMetrics, fetchPatientPrescriptions, fetchPatientEyeExams };
+export interface DailyPatientArrival {
+  day: number;
+  count: number;
+}
+
+const fetchDailyPatientArrivals = async (): Promise<DailyPatientArrival[]> => {
+  const { data } = await api.get("/admin/patients/daily-arrivals");
+  return data;
+};
+
+export { fetchPatients, fetchPatient, addPatient, updatePatient, archivePatient, restorePatient, fetchPatientMetrics, fetchPatientProfileMetrics, fetchPatientPrescriptions, fetchPatientEyeExams, fetchDailyPatientArrivals };
+
+export interface DashboardPatientMetrics {
+  totalActivePatients: number;
+  newPatientsThisMonth: number;
+  pendingFollowUps: number;
+  patientsSeenThisMonth: number;
+}
+
+export interface PatientMaintenanceMetrics {
+  archivedPatients: number;
+  patientsWithoutPurchases: number;
+  stalePendingFollowUps: number;
+}
+
+export const fetchDashboardPatientMetrics = async (): Promise<DashboardPatientMetrics> => {
+  const { data } = await api.get("/admin/patients/dashboard-summary");
+  return data;
+};
+
+export const fetchMaintenanceMetrics = async (): Promise<PatientMaintenanceMetrics> => {
+  const { data } = await api.get("/admin/patients/maintenance-summary");
+  return data;
+};
 
 export interface PatientSearchResult {
   patientId: string;

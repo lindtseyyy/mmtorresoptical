@@ -19,11 +19,13 @@ public class TransactionMetricsDTO {
     private long todayTransactions;
     private BigDecimal averageTransactionValue;
     private long totalTransactionsThisMonth;
+    private BigDecimal monthlyNetRevenue;
     private BigDecimal totalRefundedAmount;
     private BigDecimal todayTotalRefundedAmount;
     private BigDecimal totalRefundedAmountThisMonth;
     private BigDecimal todayTotalVoidedAmount;
     private BigDecimal totalAccountsReceivable;
     private long awaitingPickupCount;
+    private long depositsPendingCount;
 
 }

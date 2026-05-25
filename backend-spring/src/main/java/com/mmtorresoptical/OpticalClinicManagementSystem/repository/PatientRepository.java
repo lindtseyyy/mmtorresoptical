@@ -41,4 +41,14 @@ public interface PatientRepository extends JpaRepository<Patient, UUID>, JpaSpec
 
     @Query("SELECT p FROM Patient p WHERE p.createdAt >= :start ORDER BY p.createdAt")
     List<Patient> findByCreatedAtAfter(LocalDateTime start);
+
+    @Query("SELECT FUNCTION('DATE', p.createdAt) as day, COUNT(p) " +
+           "FROM Patient p " +
+           "WHERE p.createdAt >= :start AND p.createdAt < :end " +
+           "GROUP BY FUNCTION('DATE', p.createdAt) " +
+           "ORDER BY FUNCTION('DATE', p.createdAt)")
+    List<Object[]> countPatientsGroupedByDay(LocalDateTime start, LocalDateTime end);
+
+    @Query("SELECT COUNT(p) FROM Patient p WHERE p.isArchived = false AND NOT EXISTS (SELECT t FROM Transaction t WHERE t.patient.patientId = p.patientId)")
+    long countActivePatientsWithNoTransactions();
 }

@@ -1,5 +1,8 @@
 package com.mmtorresoptical.OpticalClinicManagementSystem.controller;
 
+import com.mmtorresoptical.OpticalClinicManagementSystem.dto.metrics.DailyPatientPoint;
+import com.mmtorresoptical.OpticalClinicManagementSystem.dto.metrics.DashboardPatientMetricsDTO;
+import com.mmtorresoptical.OpticalClinicManagementSystem.dto.metrics.PatientMaintenanceMetricsDTO;
 import com.mmtorresoptical.OpticalClinicManagementSystem.dto.metrics.PatientMetricsDTO;
 import com.mmtorresoptical.OpticalClinicManagementSystem.dto.metrics.PatientProfileMetricsDTO;
 import com.mmtorresoptical.OpticalClinicManagementSystem.dto.patient.PatientDetailsDTO;
@@ -15,6 +18,7 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 
+import java.util.List;
 import java.util.UUID;
 
 @RestController
@@ -202,6 +206,24 @@ public class PatientController {
         patientService.restorePatient(id);
 
         return ResponseEntity.noContent().build();
+    }
+
+    @PreAuthorize("hasRole('ADMIN')")
+    @GetMapping("/dashboard-summary")
+    public ResponseEntity<DashboardPatientMetricsDTO> getDashboardPatientMetrics() {
+        return ResponseEntity.ok(patientService.getDashboardPatientMetrics());
+    }
+
+    @PreAuthorize("hasRole('ADMIN')")
+    @GetMapping("/daily-arrivals")
+    public ResponseEntity<List<DailyPatientPoint>> getDailyPatientArrivals() {
+        return ResponseEntity.ok(patientService.getDailyPatientArrivals());
+    }
+
+    @PreAuthorize("hasRole('ADMIN')")
+    @GetMapping("/maintenance-summary")
+    public ResponseEntity<PatientMaintenanceMetricsDTO> getMaintenanceMetrics() {
+        return ResponseEntity.ok(patientService.getMaintenanceMetrics());
     }
 
 }

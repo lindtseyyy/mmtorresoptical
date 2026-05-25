@@ -1,5 +1,6 @@
 package com.mmtorresoptical.OpticalClinicManagementSystem.services.controller;
 
+import com.mmtorresoptical.OpticalClinicManagementSystem.dto.metrics.DailyCashInflowPoint;
 import com.mmtorresoptical.OpticalClinicManagementSystem.dto.metrics.TransactionMetricsDTO;
 import com.mmtorresoptical.OpticalClinicManagementSystem.dto.payment.PaymentRequestDTO;
 import com.mmtorresoptical.OpticalClinicManagementSystem.dto.payment.PaymentResponseDTO;
@@ -39,6 +40,7 @@ import java.math.BigDecimal;
 import java.math.RoundingMode;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
+import java.time.YearMonth;
 import java.time.format.DateTimeFormatter;
 import java.time.temporal.ChronoUnit;
 import java.util.*;
@@ -461,13 +463,18 @@ public class TransactionService {
 
         long totalTransactionsThisMonth = transactionRepository.countByTransactionStatusNotAndTransactionDateBetween(TransactionStatus.VOIDED, startOfMonth, startOfNextMonth);
 
+        BigDecimal monthlyGrossRevenue = transactionRepository.sumTotalAmountByTransactionDateBetweenExcludingStatus(startOfMonth, startOfNextMonth, TransactionStatus.VOIDED);
+
         BigDecimal totalRefundedAmountThisMonth = refundReceiptRepository.sumRefundAmountByCreatedAtBetween(startOfMonth, startOfNextMonth);
+        BigDecimal monthlyNetRevenue = monthlyGrossRevenue.subtract(totalRefundedAmountThisMonth);
 
         BigDecimal todayTotalVoidedAmount = transactionRepository.sumVoidedAmountByTransactionDateBetween(startOfToday, startOfTomorrow);
 
         BigDecimal totalAccountsReceivable = transactionRepository.sumBalanceDueByTransactionStatusPartiallyPaid();
 
         long awaitingPickupCount = transactionRepository.countByFulfillmentStatus(FulfillmentStatus.READY_FOR_PICKUP);
+
+        long depositsPendingCount = transactionRepository.countByTransactionStatus(TransactionStatus.DEPOSIT);
 
         return TransactionMetricsDTO.builder()
                 .totalTransactions(totalTransactions)
@@ -476,13 +483,52 @@ public class TransactionService {
                 .todayTransactions(todayTransactions)
                 .averageTransactionValue(averageTransactionValue)
                 .totalTransactionsThisMonth(totalTransactionsThisMonth)
+                .monthlyNetRevenue(monthlyNetRevenue)
                 .totalRefundedAmount(totalRefundedAmount)
                 .todayTotalRefundedAmount(todayTotalRefundedAmount)
                 .totalRefundedAmountThisMonth(totalRefundedAmountThisMonth)
                 .todayTotalVoidedAmount(todayTotalVoidedAmount)
                 .totalAccountsReceivable(totalAccountsReceivable)
                 .awaitingPickupCount(awaitingPickupCount)
+                .depositsPendingCount(depositsPendingCount)
                 .build();
+    }
+
+    public List<DailyCashInflowPoint> getDailyCashInflow() {
+        YearMonth thisMonth = YearMonth.now();
+        LocalDateTime startOfMonth = thisMonth.atDay(1).atStartOfDay();
+        LocalDateTime startOfNextMonth = thisMonth.plusMonths(1).atDay(1).atStartOfDay();
+
+        List<Object[]> grossRows = transactionRepository.sumGrossRevenueGroupedByDay(
+                startOfMonth, startOfNextMonth, TransactionStatus.VOIDED);
+        List<Object[]> refundRows = refundReceiptRepository.sumRefundsGroupedByDay(
+                startOfMonth, startOfNextMonth);
+
+        Map<Integer, BigDecimal> dailyMap = new LinkedHashMap<>();
+        int daysInMonth = thisMonth.lengthOfMonth();
+        for (int d = 1; d <= daysInMonth; d++) {
+            dailyMap.put(d, BigDecimal.ZERO);
+        }
+
+        for (Object[] row : grossRows) {
+            java.sql.Date sqlDate = (java.sql.Date) row[0];
+            int day = sqlDate.toLocalDate().getDayOfMonth();
+            BigDecimal gross = (BigDecimal) row[1];
+            dailyMap.merge(day, gross, BigDecimal::add);
+        }
+
+        for (Object[] row : refundRows) {
+            java.sql.Date sqlDate = (java.sql.Date) row[0];
+            int day = sqlDate.toLocalDate().getDayOfMonth();
+            BigDecimal refund = (BigDecimal) row[1];
+            dailyMap.merge(day, refund.negate(), BigDecimal::add);
+        }
+
+        List<DailyCashInflowPoint> result = new ArrayList<>();
+        for (Map.Entry<Integer, BigDecimal> entry : dailyMap.entrySet()) {
+            result.add(new DailyCashInflowPoint(entry.getKey(), entry.getValue()));
+        }
+        return result;
     }
 
     public List<AgingReceivableDTO> getAgingAccountsReceivable() {

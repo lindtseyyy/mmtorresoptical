@@ -1,5 +1,8 @@
 package com.mmtorresoptical.OpticalClinicManagementSystem.services.controller;
 
+import com.mmtorresoptical.OpticalClinicManagementSystem.dto.metrics.DailyPatientPoint;
+import com.mmtorresoptical.OpticalClinicManagementSystem.dto.metrics.DashboardPatientMetricsDTO;
+import com.mmtorresoptical.OpticalClinicManagementSystem.dto.metrics.PatientMaintenanceMetricsDTO;
 import com.mmtorresoptical.OpticalClinicManagementSystem.dto.metrics.PatientMetricsDTO;
 import com.mmtorresoptical.OpticalClinicManagementSystem.dto.metrics.PatientProfileMetricsDTO;
 import com.mmtorresoptical.OpticalClinicManagementSystem.dto.patient.PatientDetailsDTO;
@@ -12,6 +15,7 @@ import com.mmtorresoptical.OpticalClinicManagementSystem.exception.custom.Resour
 import com.mmtorresoptical.OpticalClinicManagementSystem.mapper.PatientMapper;
 import com.mmtorresoptical.OpticalClinicManagementSystem.model.Patient;
 import com.mmtorresoptical.OpticalClinicManagementSystem.repository.PatientRepository;
+import com.mmtorresoptical.OpticalClinicManagementSystem.repository.PatientFollowUpRepository;
 import com.mmtorresoptical.OpticalClinicManagementSystem.repository.PrescriptionRepository;
 import com.mmtorresoptical.OpticalClinicManagementSystem.repository.TransactionRepository;
 import com.mmtorresoptical.OpticalClinicManagementSystem.security.HmacHashService;
@@ -25,11 +29,10 @@ import org.springframework.data.domain.*;
 import org.springframework.data.jpa.domain.Specification;
 import org.springframework.stereotype.Service;
 
+import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.YearMonth;
-import java.util.Objects;
-import java.util.Optional;
-import java.util.UUID;
+import java.util.*;
 
 @Service
 @RequiredArgsConstructor
@@ -40,6 +43,7 @@ public class PatientService {
     private final PatientAuditHelper patientAuditHelper;
     private final TransactionRepository transactionRepository;
     private final PrescriptionRepository prescriptionRepository;
+    private final PatientFollowUpRepository patientFollowUpRepository;
 
     public PatientResponseDTO createPatient(PatientRequestDTO patientRequest) {
         if(patientExistsByFirstMiddleLastName(patientRequest.getFirstName(), patientRequest.getMiddleName(), patientRequest.getLastName())) {
@@ -354,10 +358,54 @@ public class PatientService {
 
         long totalPatients = patientRepository.count();
         long newThisMonth = patientRepository.countByCreatedAtBetween(startOfMonth, startOfNextMonth);
-        long pendingFollowUps = patientRepository.countActivePatientsWithPrescriptions();
+        long pendingFollowUps = patientFollowUpRepository.countPendingFollowUps();
         long archivedPatients = patientRepository.countByIsArchived(true);
 
         return new PatientMetricsDTO(totalPatients, newThisMonth, pendingFollowUps, archivedPatients);
+    }
+
+    public DashboardPatientMetricsDTO getDashboardPatientMetrics() {
+        YearMonth thisMonth = YearMonth.now();
+        LocalDateTime startOfMonth = thisMonth.atDay(1).atStartOfDay();
+        LocalDateTime startOfNextMonth = thisMonth.plusMonths(1).atDay(1).atStartOfDay();
+
+        long totalActive = patientRepository.countByIsArchived(false);
+        long newThisMonth = patientRepository.countByCreatedAtBetween(startOfMonth, startOfNextMonth);
+        long pendingFollowUps = patientFollowUpRepository.countPendingFollowUps();
+        long patientsSeen = transactionRepository.countDistinctPatientsByTransactionDateBetween(startOfMonth, startOfNextMonth);
+
+        return new DashboardPatientMetricsDTO(totalActive, newThisMonth, pendingFollowUps, patientsSeen);
+    }
+
+    public List<DailyPatientPoint> getDailyPatientArrivals() {
+        YearMonth thisMonth = YearMonth.now();
+        LocalDateTime startOfMonth = thisMonth.atDay(1).atStartOfDay();
+        LocalDateTime startOfNextMonth = thisMonth.plusMonths(1).atDay(1).atStartOfDay();
+
+        List<Object[]> dayCounts = patientRepository.countPatientsGroupedByDay(startOfMonth, startOfNextMonth);
+
+        Map<Integer, Long> dayMap = new LinkedHashMap<>();
+        for (Object[] row : dayCounts) {
+            java.sql.Date sqlDate = (java.sql.Date) row[0];
+            int day = sqlDate.toLocalDate().getDayOfMonth();
+            long count = ((Number) row[1]).longValue();
+            dayMap.put(day, count);
+        }
+
+        int daysInMonth = thisMonth.lengthOfMonth();
+        List<DailyPatientPoint> result = new ArrayList<>();
+        for (int d = 1; d <= daysInMonth; d++) {
+            result.add(new DailyPatientPoint(d, dayMap.getOrDefault(d, 0L)));
+        }
+        return result;
+    }
+
+    public PatientMaintenanceMetricsDTO getMaintenanceMetrics() {
+        long archived = patientRepository.countByIsArchived(true);
+        long patientsWithoutPurchases = patientRepository.countActivePatientsWithNoTransactions();
+        long stalePendingFollowUps = patientFollowUpRepository.countStalePendingFollowUps(LocalDate.now().minusMonths(6));
+
+        return new PatientMaintenanceMetricsDTO(archived, patientsWithoutPurchases, stalePendingFollowUps);
     }
 
     public PatientProfileMetricsDTO getPatientProfileMetrics(UUID patientId) {

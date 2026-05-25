@@ -7,6 +7,7 @@ import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.JpaSpecificationExecutor;
 import org.springframework.data.jpa.repository.EntityGraph;
 import org.springframework.data.jpa.repository.Query;
+import org.springframework.data.repository.query.Param;
 import org.springframework.data.jpa.domain.Specification;
 import org.springframework.lang.Nullable;
 import org.springframework.data.domain.Sort;
@@ -88,4 +89,15 @@ public interface TransactionRepository extends JpaRepository<Transaction, UUID>,
 
     @Query("SELECT MAX(t.transactionDate) FROM Transaction t")
     LocalDateTime findMaxTransactionDate();
+
+    @Query("SELECT COUNT(DISTINCT t.patient.patientId) FROM Transaction t WHERE t.transactionDate >= :start AND t.transactionDate < :end AND t.patient IS NOT NULL AND t.transactionStatus <> com.mmtorresoptical.OpticalClinicManagementSystem.enums.TransactionStatus.VOIDED")
+    long countDistinctPatientsByTransactionDateBetween(@Param("start") LocalDateTime start, @Param("end") LocalDateTime end);
+
+    @Query("SELECT FUNCTION('DATE', t.transactionDate) as day, COALESCE(SUM(t.totalAmount), 0) " +
+           "FROM Transaction t " +
+           "WHERE t.transactionStatus <> :excludedStatus " +
+           "AND t.transactionDate >= :start AND t.transactionDate < :end " +
+           "GROUP BY FUNCTION('DATE', t.transactionDate) " +
+           "ORDER BY FUNCTION('DATE', t.transactionDate)")
+    List<Object[]> sumGrossRevenueGroupedByDay(LocalDateTime start, LocalDateTime end, TransactionStatus excludedStatus);
 }

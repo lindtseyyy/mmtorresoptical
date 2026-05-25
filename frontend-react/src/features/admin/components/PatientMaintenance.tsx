@@ -2,7 +2,7 @@ import { useState, useEffect } from "react";
 import { useQuery, useMutation, useQueryClient, keepPreviousData } from "@tanstack/react-query";
 import { Button } from "@/shared/components/ui/button";
 import { Input } from "@/shared/components/ui/input";
-import { Search, Archive, Undo2, ChevronLeft, ChevronRight, Users, UserCheck, ArchiveIcon, ArrowUp, ArrowDown } from "lucide-react";
+import { Search, Archive, Undo2, ChevronLeft, ChevronRight, ArchiveIcon, ShoppingCart, ClockAlert, ArrowUp, ArrowDown } from "lucide-react";
 import {
   Select,
   SelectContent,
@@ -28,7 +28,7 @@ import { restorePatient } from "@/features/patients/services/patientApi";
 import {
   createArchivePatientMutationOptions,
   createPatientsListQueryOptions,
-  createPatientMetricsQueryOptions,
+  createMaintenanceMetricsQueryOptions,
 } from "@/features/patients/hooks/patientQuery";
 
 const PAGE_SIZE = 10;
@@ -57,10 +57,7 @@ const PatientMaintenance: React.FC = () => {
   const patients = pageData?.content ?? [];
   const totalPages = pageData?.totalPages ?? 0;
 
-  const { data: metrics } = useQuery(createPatientMetricsQueryOptions());
-  const totalPatients = metrics?.totalPatients ?? 0;
-  const activePatients = (metrics?.totalPatients ?? 0) - (metrics?.archivedPatients ?? 0);
-  const archivedPatients = metrics?.archivedPatients ?? 0;
+  const { data: m } = useQuery(createMaintenanceMetricsQueryOptions());
 
   const [pendingArchive, setPendingArchive] = useState<{ id: string; unarchive: boolean } | null>(null);
 
@@ -73,6 +70,7 @@ const PatientMaintenance: React.FC = () => {
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["patients"] });
       queryClient.invalidateQueries({ queryKey: ["patient-metrics"] });
+      queryClient.invalidateQueries({ queryKey: ["patient-maintenance-metrics"] });
     },
     onError: () => {},
   });
@@ -124,9 +122,9 @@ const PatientMaintenance: React.FC = () => {
       </div>
 
       <div className="grid grid-cols-1 gap-4 sm:grid-cols-3">
-        <MetricCard icon={Users} label="Total Patients" value={totalPatients} color="primary" />
-        <MetricCard icon={UserCheck} label="Active Patients" value={activePatients} color="emerald" />
-        <MetricCard icon={ArchiveIcon} label="Archived Patients" value={archivedPatients} color="muted" />
+        <MetricCard icon={ArchiveIcon} label="Archived Patients" value={m?.archivedPatients ?? 0} color="muted" />
+        <MetricCard icon={ShoppingCart} label="Patients Without Purchases" value={m?.patientsWithoutPurchases ?? 0} color="orange" />
+        <MetricCard icon={ClockAlert} label="Stale Pending Follow-Ups" value={m?.stalePendingFollowUps ?? 0} color="rose" />
       </div>
 
       <Card>

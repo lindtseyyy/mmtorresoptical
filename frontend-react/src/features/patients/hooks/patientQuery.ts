@@ -6,6 +6,9 @@ import {
   updatePatient,
   archivePatient,
   fetchPatientMetrics,
+  fetchDashboardPatientMetrics,
+  fetchMaintenanceMetrics,
+  fetchDailyPatientArrivals,
 } from "@/features/patients/services/patientApi";
 import { toast } from "sonner";
 import type { NavigateFunction } from "react-router-dom";
@@ -53,6 +56,7 @@ function createAddPatientMutationOptions(
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["patients"] });
       queryClient.invalidateQueries({ queryKey: ["patient-metrics"] });
+      queryClient.invalidateQueries({ queryKey: ["patient-maintenance-metrics"] });
       toast.success("Patient Added", {
         description: "The patient has been successfully added.",
       });
@@ -94,6 +98,7 @@ function createArchivePatientMutationOptions(queryClient: any) {
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["patients"] });
       queryClient.invalidateQueries({ queryKey: ["patient-metrics"] });
+      queryClient.invalidateQueries({ queryKey: ["patient-maintenance-metrics"] });
       toast.success("Patient Archived", {
         description: "The patient has been successfully archived.",
       });
@@ -112,6 +117,30 @@ function createPatientMetricsQueryOptions() {
   });
 }
 
+function createDashboardPatientMetricsQueryOptions() {
+  return queryOptions({
+    queryKey: ["dashboard-patient-metrics"],
+    queryFn: fetchDashboardPatientMetrics,
+    staleTime: 5 * 60 * 1000,
+  });
+}
+
+function createMaintenanceMetricsQueryOptions() {
+  return queryOptions({
+    queryKey: ["patient-maintenance-metrics"],
+    queryFn: fetchMaintenanceMetrics,
+    staleTime: 5 * 60 * 1000,
+  });
+}
+
+function createDailyPatientArrivalsQueryOptions() {
+  return queryOptions({
+    queryKey: ["daily-patient-arrivals"],
+    queryFn: fetchDailyPatientArrivals,
+    staleTime: 60_000,
+  });
+}
+
 export {
   createPatientsListQueryOptions,
   createEditPatientQueryOptions,
@@ -119,4 +148,7 @@ export {
   createEditPatientMutationOptions,
   createArchivePatientMutationOptions,
   createPatientMetricsQueryOptions,
+  createDashboardPatientMetricsQueryOptions,
+  createMaintenanceMetricsQueryOptions,
+  createDailyPatientArrivalsQueryOptions,
 };

@@ -20,12 +20,14 @@ export interface TransactionMetrics {
   todayTransactions: number;
   averageTransactionValue: number;
   totalTransactionsThisMonth: number;
+  monthlyNetRevenue: number;
   totalRefundedAmount: number;
   todayTotalRefundedAmount: number;
   totalRefundedAmountThisMonth: number;
   todayTotalVoidedAmount: number;
   totalAccountsReceivable: number;
   awaitingPickupCount: number;
+  depositsPendingCount: number;
 }
 
 export interface TransactionFilters {
@@ -130,4 +132,14 @@ const updateFulfillmentStatus = async (transactionId: string, fulfillmentStatus:
   return data;
 };
 
-export { createTransaction, fetchTransactions, fetchProductTransactions, fetchTransactionMetrics, fetchAccountsReceivable, fetchTransaction, voidTransaction, refundTransaction, addPayment, fetchPayments, updateFulfillmentStatus };
+export interface DailyCashInflow {
+  day: number;
+  amount: number;
+}
+
+const fetchDailyCashInflow = async (): Promise<DailyCashInflow[]> => {
+  const { data } = await api.get("/transactions/daily-cash-inflow");
+  return data;
+};
+
+export { createTransaction, fetchTransactions, fetchProductTransactions, fetchTransactionMetrics, fetchAccountsReceivable, fetchTransaction, voidTransaction, refundTransaction, addPayment, fetchPayments, updateFulfillmentStatus, fetchDailyCashInflow };

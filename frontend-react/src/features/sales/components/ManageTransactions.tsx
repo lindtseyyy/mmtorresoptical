@@ -19,10 +19,10 @@ import {
   ChevronLeft,
   ChevronRight,
   Eye,
-  TrendingUp,
   ArrowUp,
   ArrowDown,
-  Clock,
+  CreditCard,
+  ShoppingCart,
   PackageOpen,
 } from "lucide-react";
 import {
@@ -143,10 +143,10 @@ const ManageTransactions: React.FC = () => {
       </div>
 
       {/* Operational Metrics */}
-      <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
-        <MetricCard icon={TrendingUp} label="Average Transaction Value" value={metrics != null ? formatCurrency(metrics.averageTransactionValue) : "—"} color="amber" />
-        <MetricCard icon={Clock} label="Outstanding Balances — Deposit" value={metrics != null ? formatCurrency(metrics.totalAccountsReceivable) : "—"} color="orange" />
-        <MetricCard icon={PackageOpen} label="Orders Ready for Pickup — Paid, Not Completed" value={metrics?.awaitingPickupCount ?? "—"} color="violet" />
+      <div className="grid grid-cols-1 gap-4 sm:grid-cols-3">
+        <MetricCard icon={ShoppingCart} label="Today's Transactions" value={metrics?.todayTransactions ?? "—"} color="blue" />
+        <MetricCard icon={CreditCard} label="Deposits Awaiting Settlement" value={metrics?.depositsPendingCount ?? "—"} color="amber" />
+        <MetricCard icon={PackageOpen} label="Orders Ready for Pickup" value={metrics?.awaitingPickupCount ?? "—"} color="violet" />
       </div>
 
       {/* Transactions Table */}

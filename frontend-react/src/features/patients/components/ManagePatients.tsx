@@ -2,7 +2,7 @@ import { useState, useEffect } from "react";
 import { useQuery, keepPreviousData } from "@tanstack/react-query";
 import { Button } from "@/shared/components/ui/button";
 import { Input } from "@/shared/components/ui/input";
-import { Plus, Search, Eye, ChevronLeft, ChevronRight, Users, UserCheck, ArchiveIcon, ArrowUp, ArrowDown } from "lucide-react";
+import { Plus, Search, Eye, ChevronLeft, ChevronRight, Users, UserCheck, CalendarClock, UserPlus, ArrowUp, ArrowDown } from "lucide-react";
 import {
   Select,
   SelectContent,
@@ -48,7 +48,6 @@ const ManagePatients: React.FC = () => {
   const { data: metrics } = useQuery(createPatientMetricsQueryOptions());
   const totalPatients = metrics?.totalPatients ?? 0;
   const activePatients = (metrics?.totalPatients ?? 0) - (metrics?.archivedPatients ?? 0);
-  const archivedPatients = metrics?.archivedPatients ?? 0;
 
   useEffect(() => {
     setPage(0);
@@ -87,10 +86,11 @@ const ManagePatients: React.FC = () => {
         </Button>
       </div>
 
-      <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
+      <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4">
         <MetricCard icon={Users} label="Total Patients" value={totalPatients} color="primary" />
         <MetricCard icon={UserCheck} label="Active Patients" value={activePatients} color="emerald" />
-        <MetricCard icon={ArchiveIcon} label="Archived Patients" value={archivedPatients} color="muted" />
+        <MetricCard icon={CalendarClock} label="Pending Follow-Ups" value={metrics?.pendingFollowUps ?? 0} color="amber" />
+        <MetricCard icon={UserPlus} label="New This Month" value={metrics?.newThisMonth ?? 0} color="blue" />
       </div>
 
       <Card>

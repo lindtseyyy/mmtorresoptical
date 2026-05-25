@@ -1,5 +1,5 @@
 import { queryOptions } from "@tanstack/react-query";
-import { fetchTransactions, fetchTransactionMetrics, fetchAccountsReceivable, fetchTransaction } from "@/features/sales/services/transactionApi";
+import { fetchTransactions, fetchTransactionMetrics, fetchAccountsReceivable, fetchTransaction, fetchDailyCashInflow } from "@/features/sales/services/transactionApi";
 import type { TransactionFilters } from "@/features/sales/services/transactionApi";
 
 function createTransactionMetricsQueryOptions() {
@@ -33,4 +33,12 @@ function createTransactionDetailQueryOptions(id: string) {
   });
 }
 
-export { createTransactionMetricsQueryOptions, createAccountsReceivableQueryOptions, createTransactionsListQueryOptions, createTransactionDetailQueryOptions };
+function createDailyCashInflowQueryOptions() {
+  return queryOptions({
+    queryKey: ["daily-cash-inflow"],
+    queryFn: fetchDailyCashInflow,
+    staleTime: 60_000,
+  });
+}
+
+export { createTransactionMetricsQueryOptions, createAccountsReceivableQueryOptions, createTransactionsListQueryOptions, createTransactionDetailQueryOptions, createDailyCashInflowQueryOptions };
