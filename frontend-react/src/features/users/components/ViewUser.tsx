@@ -1,7 +1,6 @@
-import { useState } from "react";
 import { useParams, Link, useNavigate } from "react-router-dom";
-import { useQuery, useMutation, useQueryClient, keepPreviousData } from "@tanstack/react-query";
-import { ArrowLeft, ChevronLeft, ChevronRight, MoreHorizontal, Pencil, Archive, Undo2, User, Calendar, Key, ShoppingCart, ClipboardList } from "lucide-react";
+import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
+import { ArrowLeft, MoreHorizontal, Pencil, Archive, Undo2, User, Calendar, Key, ShoppingCart, ClipboardList } from "lucide-react";
 import { Button } from "@/shared/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/shared/components/ui/card";
 import { MetricCard } from "@/shared/components/MetricCard";
@@ -73,11 +72,9 @@ const ViewUser: React.FC = () => {
     createUserTransactionCountQueryOptions(userId)
   );
 
-  const [auditPage, setAuditPage] = useState(0);
-  const { data: auditData, isFetching: auditFetching } = useQuery({
-    ...createUserAuditLogsQueryOptions(userId, auditPage, 10),
-    placeholderData: keepPreviousData,
-  });
+  const { data: auditData, isFetching: auditFetching } = useQuery(
+    createUserAuditLogsQueryOptions(userId, 0, 10)
+  );
 
   const archiveMutation = useMutation(
     createArchiveUserMutationOptions(queryClient)
@@ -292,7 +289,7 @@ const ViewUser: React.FC = () => {
                 Recent Actions
               </CardTitle>
               <CardDescription>
-                {auditData?.totalElements ?? 0} total action(s)
+                {auditData?.content?.length ?? 0} recent action(s)
               </CardDescription>
             </div>
           </div>
@@ -332,33 +329,6 @@ const ViewUser: React.FC = () => {
                   </div>
                 </div>
               ))}
-              {auditData.totalPages > 1 && (
-                <div className="flex items-center justify-between pt-2">
-                  <p className="text-xs text-muted-foreground">
-                    Page {auditPage + 1} of {auditData.totalPages}
-                  </p>
-                  <div className="flex gap-1">
-                    <Button
-                      variant="outline"
-                      size="sm"
-                      onClick={() => setAuditPage((p) => p - 1)}
-                      disabled={auditPage === 0}
-                    >
-                      <ChevronLeft className="h-4 w-4" />
-                      Previous
-                    </Button>
-                    <Button
-                      variant="outline"
-                      size="sm"
-                      onClick={() => setAuditPage((p) => p + 1)}
-                      disabled={auditPage >= auditData.totalPages - 1}
-                    >
-                      Next
-                      <ChevronRight className="h-4 w-4" />
-                    </Button>
-                  </div>
-                </div>
-              )}
             </div>
           )}
         </CardContent>

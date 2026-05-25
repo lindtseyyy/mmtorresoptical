@@ -1,9 +1,23 @@
 import { z } from "zod";
 
 export const userSchema = z.object({
-  firstName: z.string().min(1, "First name is required").max(50),
-  middleName: z.string().optional(),
-  lastName: z.string().min(1, "Last name is required").max(50),
+  firstName: z
+    .string()
+    .min(1, "First name is required")
+    .max(50)
+    .refine((val) => !/\d/.test(val), "Name must not contain numbers"),
+  middleName: z
+    .string()
+    .optional()
+    .refine(
+      (val) => val === undefined || val === "" || !/\d/.test(val),
+      "Name must not contain numbers"
+    ),
+  lastName: z
+    .string()
+    .min(1, "Last name is required")
+    .max(50)
+    .refine((val) => !/\d/.test(val), "Name must not contain numbers"),
   sex: z.enum(["Male", "Female"]),
   birthDate: z.string().min(1, "Birth date is required"),
   email: z.string().email("Invalid email address"),

@@ -292,7 +292,7 @@ const ViewProduct: React.FC = () => {
                 Recent Transactions
               </CardTitle>
               <CardDescription>
-                {txData?.totalElements ?? 0} total transaction(s)
+                {txData?.content?.length ?? 0} recent transaction(s)
               </CardDescription>
             </div>
           </div>

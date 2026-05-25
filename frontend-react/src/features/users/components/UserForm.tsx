@@ -113,7 +113,7 @@ export const UserForm: React.FC<UserFormProps> = ({
       firstName: "",
       middleName: "",
       lastName: "",
-      sex: undefined,
+      sex: "Male",
       birthDate: "",
       email: "",
       contactNumber: "",
