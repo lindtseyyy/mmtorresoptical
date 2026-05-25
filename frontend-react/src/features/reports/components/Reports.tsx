@@ -9,8 +9,11 @@ import { toast } from "sonner";
 import SegmentedControl from "@/shared/components/ui/segmented-control";
 import { Button } from "@/shared/components/ui/button";
 import { Card, CardContent } from "@/shared/components/ui/card";
-import { useReportData, usePatientGrowthTrend, useLowStockProducts, useOverstockedProducts, useOutOfStockProducts } from "@/features/reports/hooks/reportQuery";
+import { useQuery } from "@tanstack/react-query";
+import { useReportData, usePatientGrowthTrend, useLowStockProducts, useOverstockedProducts, useOutOfStockProducts, useTransactionMonthlyTrend } from "@/features/reports/hooks/reportQuery";
+import { createAccountsReceivableQueryOptions } from "@/features/sales/hooks/transactionQuery";
 import { downloadPdfReport, downloadExcelReport } from "@/features/reports/services/reportApi";
+import { generateTransactionPdf } from "@/features/reports/services/transactionPdfExport";
 import InventoryValueChart from "@/features/reports/components/inventory/InventoryValueChart";
 import CategoryBreakdownChart from "@/features/reports/components/inventory/CategoryBreakdownChart";
 import TopSellingProductsTable from "@/features/reports/components/inventory/TopSellingProductsTable";
@@ -81,6 +84,10 @@ const Reports: React.FC = () => {
 
   const { data: growthTrend } = usePatientGrowthTrend();
 
+  // Transaction-specific data for client-side PDF export
+  const { data: monthlyTrend } = useTransactionMonthlyTrend();
+  const { data: receivables } = useQuery(createAccountsReceivableQueryOptions());
+
   const canExportExcel = reportType !== "INVENTORY_ANALYTICS";
 
   // ── Export handlers ──────────────────────────────────────────────
@@ -88,8 +95,17 @@ const Reports: React.FC = () => {
   const handleExportPdf = async () => {
     setExportingPdf(true);
     try {
-      await downloadPdfReport(reportType, minDate || undefined, maxDate || undefined);
-      toast.success("PDF report downloaded.");
+      if (reportType === "TRANSACTIONS" && data && monthlyTrend && receivables) {
+        generateTransactionPdf(
+          data as TransactionHierarchicalReportDataset,
+          monthlyTrend,
+          receivables,
+        );
+        toast.success("PDF report downloaded.");
+      } else {
+        await downloadPdfReport(reportType, minDate || undefined, maxDate || undefined);
+        toast.success("PDF report downloaded.");
+      }
     } catch (err: any) {
       toast.error(err?.message || "Failed to export PDF.");
     } finally {
