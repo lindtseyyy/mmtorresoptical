@@ -267,10 +267,10 @@ export default function Dashboard() {
             </colgroup>
             <thead>
               <tr className="border-b text-muted-foreground">
-                <th className="text-left font-medium px-5 py-2">Transaction</th>
-                <th className="text-center font-medium px-3 py-2">Items</th>
-                <th className="text-left font-medium px-5 py-2">Amount</th>
                 <th className="text-left font-medium px-5 py-2">Date</th>
+                <th className="text-left font-medium px-5 py-2">Transaction #</th>
+                <th className="text-right font-medium px-3 py-2">Items</th>
+                <th className="text-right font-medium px-5 py-2">Amount</th>
                 <th className="px-5 py-2" />
               </tr>
             </thead>
@@ -280,17 +280,17 @@ export default function Dashboard() {
                   key={tx.transactionId}
                   className="border-b last:border-b-0 hover:bg-muted/50 transition-colors"
                 >
+                  <td className="px-5 py-2.5 text-left text-muted-foreground tabular-nums">
+                    {formatDateTime(tx.transactionDate)}
+                  </td>
                   <td className="px-5 py-2.5 font-medium">
                     {tx.transactionNumber}
                   </td>
-                  <td className="px-5 py-2.5 text-center tabular-nums">
+                  <td className="px-5 py-2.5 text-right tabular-nums">
                     {tx.itemCount}
                   </td>
-                  <td className="px-5 py-2.5 text-left tabular-nums">
+                  <td className="px-5 py-2.5 text-right tabular-nums">
                     {formatCurrency(tx.totalAmount)}
-                  </td>
-                  <td className="px-5 py-2.5 text-left text-muted-foreground tabular-nums">
-                    {formatDateTime(tx.transactionDate)}
                   </td>
                   <td className="px-5 py-2.5 text-right">
                     <Button
