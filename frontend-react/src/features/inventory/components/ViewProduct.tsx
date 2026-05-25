@@ -16,6 +16,7 @@ import { fetchProductTransactions } from "@/features/sales/services/transactionA
 import type { TransactionListItem } from "@/features/sales/types";
 import { CATEGORY_LABELS, type Category } from "@/features/inventory/types";
 import { isAdmin } from "@/shared/lib/auth";
+import { getImageUrl } from "@/shared/lib/utils";
 
 const formatDate = (dateStr: string | null) => {
   if (!dateStr) return "—";
@@ -95,7 +96,7 @@ const ViewProduct: React.FC = () => {
             <div className="flex items-center gap-3">
               {product.imageDir ? (
                 <img
-                  src={product.imageDir}
+                  src={getImageUrl(product.imageDir)}
                   alt={product.productName}
                   className="h-12 w-12 rounded-lg object-cover"
                 />

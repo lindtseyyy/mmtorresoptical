@@ -12,8 +12,8 @@ const AddProduct: React.FC = () => {
     createAddProductMutationOptions(queryClient, navigate)
   );
 
-  const handleFormSubmit = async (data: ProductFormData) => {
-    mutation.mutate(data);
+  const handleFormSubmit = async (data: ProductFormData, imageFile?: File | null) => {
+    mutation.mutate({ data, imageFile });
   };
 
   return (

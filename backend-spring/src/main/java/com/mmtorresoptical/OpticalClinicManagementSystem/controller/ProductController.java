@@ -17,6 +17,7 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.web.multipart.MultipartFile;
 
 import java.math.BigDecimal;
 import java.util.List;
@@ -36,13 +37,14 @@ public class ProductController {
      * (Called from AddProduct.tsx)
      */
     @PreAuthorize("hasRole('ADMIN')")
-    @PostMapping
-    public ResponseEntity<List<ProductResponseDTO>> createProduct(@Valid @RequestBody List<CreateProductRequestDTO> createProductRequestDTOList) {
+    @PostMapping(consumes = {"multipart/form-data"})
+    public ResponseEntity<ProductResponseDTO> createProduct(
+            @RequestPart("product") @Valid CreateProductRequestDTO productRequest,
+            @RequestPart(value = "image", required = false) MultipartFile image) {
 
-        List<ProductResponseDTO> productResponseDTOList = productService.createProduct(createProductRequestDTOList);
+        ProductResponseDTO productResponseDTO = productService.createProduct(productRequest, image);
 
-        // 3. Return 201 Created with the new product object
-        return ResponseEntity.status(HttpStatus.CREATED).body(productResponseDTOList);
+        return ResponseEntity.status(HttpStatus.CREATED).body(productResponseDTO);
     }
 
     /**
@@ -111,10 +113,13 @@ public class ProductController {
      * UPDATE an existing product
      * (Called from EditProduct.tsx)
      */
-    @PutMapping("/{id}")
-    public ResponseEntity<ProductDetailsDTO> updateProduct(@PathVariable UUID id, @Valid @RequestBody UpdateProductRequestDTO productRequest) {
+    @PutMapping(value = "/{id}", consumes = {"multipart/form-data"})
+    public ResponseEntity<ProductDetailsDTO> updateProduct(
+            @PathVariable UUID id,
+            @RequestPart("product") @Valid UpdateProductRequestDTO productRequest,
+            @RequestPart(value = "image", required = false) MultipartFile image) {
 
-        ProductDetailsDTO productDetailsDTO = productService.updateProduct(id, productRequest);
+        ProductDetailsDTO productDetailsDTO = productService.updateProduct(id, productRequest, image);
 
         return ResponseEntity.ok(productDetailsDTO);
     }

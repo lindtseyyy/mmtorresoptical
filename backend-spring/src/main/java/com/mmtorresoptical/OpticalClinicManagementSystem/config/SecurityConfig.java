@@ -6,6 +6,7 @@ import com.mmtorresoptical.OpticalClinicManagementSystem.security.JwtTokenProvid
 import com.mmtorresoptical.OpticalClinicManagementSystem.services.CustomUserDetailsService;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.http.HttpMethod;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
 import org.springframework.security.config.http.SessionCreationPolicy;
@@ -72,6 +73,9 @@ public class SecurityConfig {
                 .csrf(csrf -> csrf.disable())
                 .sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
                 .authorizeHttpRequests(authz -> authz
+                        // Allow all CORS preflight requests
+                        .requestMatchers(HttpMethod.OPTIONS, "/**").permitAll()
+
                         // Auth endpoints (login, forgot-password, change-password)
                         .requestMatchers("/api/auth/login", "/api/auth/forgot-password/**", "/api/auth/change-password").permitAll()
                         // Admin-only auth actions
@@ -88,6 +92,9 @@ public class SecurityConfig {
                                 "/swagger-ui/**",
                                 "/v3/api-docs/**"
                         ).permitAll()
+
+                        // Product images — public streaming
+                        .requestMatchers("/api/products/images/**").permitAll()
 
                         // Staff + Admin
                         .requestMatchers("/api/**").hasAnyRole("ADMIN", "STAFF")

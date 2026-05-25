@@ -1,4 +1,4 @@
-import { useEffect, useMemo } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { useForm, FormProvider } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useNavigate } from "react-router-dom";
@@ -22,6 +22,7 @@ import {
   Card,
   CardContent,
 } from "@/shared/components/ui/card";
+import { Label } from "@/shared/components/ui/label";
 import {
   productSchema,
   productFormSchema,
@@ -32,6 +33,7 @@ import {
   type ProductFormValues,
   type Category,
 } from "@/features/inventory/types";
+import { Upload, X } from "lucide-react";
 
 interface ProductFormProps {
   defaultValues?: ProductFormData;
@@ -90,8 +92,13 @@ export const ProductForm: React.FC<ProductFormProps> = ({
   isLoading,
   isEditMode,
   productId,
+  existingImageUrl,
 }) => {
   const navigate = useNavigate();
+  const fileInputRef = useRef<HTMLInputElement>(null);
+  const [imageFile, setImageFile] = useState<File | null>(null);
+  const [imagePreview, setImagePreview] = useState<string | null>(null);
+  const [isDragOver, setIsDragOver] = useState(false);
 
   const initialFormValues = useMemo(
     () => mapToFormValues(passedDefaultValues),
@@ -137,7 +144,7 @@ export const ProductForm: React.FC<ProductFormProps> = ({
       values.quantity = String(passedDefaultValues?.quantity ?? "");
     }
     const payload = productSchema.parse(values);
-    await onFormSubmit(payload);
+    await onFormSubmit(payload, imageFile);
   });
 
   return (
@@ -404,6 +411,88 @@ export const ProductForm: React.FC<ProductFormProps> = ({
                 />
               </div>
             )}
+
+            {/*
+              ── Image Upload Zone ──
+            */}
+            <div className="space-y-2">
+              <Label className="font-semibold">Product Image</Label>
+              <input
+                ref={fileInputRef}
+                type="file"
+                accept="image/*"
+                className="hidden"
+                onChange={(e) => {
+                  const file = e.target.files?.[0] || null;
+                  setImageFile(file);
+                  if (file) {
+                    setImagePreview(URL.createObjectURL(file));
+                  } else {
+                    setImagePreview(null);
+                  }
+                }}
+              />
+              <div
+                className={`relative flex flex-col items-center justify-center rounded-lg border-2 border-dashed p-6 transition-colors cursor-pointer ${
+                  isDragOver
+                    ? "border-primary bg-primary/5"
+                    : "border-muted-foreground/25 hover:border-muted-foreground/50"
+                }`}
+                onClick={() => fileInputRef.current?.click()}
+                onDragOver={(e) => {
+                  e.preventDefault();
+                  setIsDragOver(true);
+                }}
+                onDragLeave={() => setIsDragOver(false)}
+                onDrop={(e) => {
+                  e.preventDefault();
+                  setIsDragOver(false);
+                  const file = e.dataTransfer.files?.[0];
+                  if (file && file.type.startsWith("image/")) {
+                    setImageFile(file);
+                    setImagePreview(URL.createObjectURL(file));
+                  }
+                }}
+              >
+                {imagePreview ? (
+                  <div className="relative">
+                    <img
+                      src={imagePreview}
+                      alt="Preview"
+                      className="h-32 w-32 rounded-lg object-cover"
+                    />
+                    <button
+                      type="button"
+                      className="absolute -top-2 -right-2 flex h-6 w-6 items-center justify-center rounded-full bg-destructive text-destructive-foreground hover:bg-destructive/90"
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        setImageFile(null);
+                        setImagePreview(null);
+                        if (fileInputRef.current) fileInputRef.current.value = "";
+                      }}
+                    >
+                      <X className="h-3.5 w-3.5" />
+                    </button>
+                  </div>
+                ) : existingImageUrl ? (
+                  <div className="relative">
+                    <img
+                      src={existingImageUrl}
+                      alt="Current"
+                      className="h-32 w-32 rounded-lg object-cover"
+                    />
+                  </div>
+                ) : (
+                  <div className="flex flex-col items-center gap-1 text-muted-foreground">
+                    <Upload className="h-6 w-6" />
+                    <span className="text-sm">Drop image here or click to browse</span>
+                  </div>
+                )}
+              </div>
+              {imageFile && (
+                <p className="text-xs text-muted-foreground truncate">{imageFile.name}</p>
+              )}
+            </div>
 
             <div className="flex justify-end gap-2 pt-4">
               <Button

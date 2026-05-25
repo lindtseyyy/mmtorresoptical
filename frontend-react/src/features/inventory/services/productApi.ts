@@ -42,16 +42,28 @@ const fetchProduct = async (id: string): Promise<Product> => {
 const updateProduct = async ({
   id,
   data,
+  imageFile,
 }: {
   id: string;
   data: ProductFormData;
+  imageFile?: File | null;
 }) => {
-  return await api.put(`/products/${id}`, data);
+  const formData = new FormData();
+  formData.append("product", new Blob([JSON.stringify(data)], { type: "application/json" }));
+  if (imageFile) {
+    formData.append("image", imageFile);
+  }
+  return await api.put(`/products/${id}`, formData);
 };
 
-const addProduct = async (data: ProductFormData) => {
+const addProduct = async (data: ProductFormData, imageFile?: File | null) => {
   try {
-    return await api.post("/products", [data]);
+    const formData = new FormData();
+    formData.append("product", new Blob([JSON.stringify(data)], { type: "application/json" }));
+    if (imageFile) {
+      formData.append("image", imageFile);
+    }
+    return await api.post("/products", formData);
   } catch (error: any) {
     console.error(error.response?.data || error.message);
     throw error;

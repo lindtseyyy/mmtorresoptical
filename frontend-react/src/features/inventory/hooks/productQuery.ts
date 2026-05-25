@@ -30,7 +30,7 @@ function createEditProductQueryOptions(id: string) {
 
 function createAddProductMutationOptions(queryClient: any, navigate: NavigateFunction) {
     return {
-        mutationFn: addProduct,
+        mutationFn: ({ data, imageFile }: { data: ProductFormData; imageFile?: File | null }) => addProduct(data, imageFile),
         onSuccess: () => {
           // Invalidate the "products" query to refetch new data
           queryClient.invalidateQueries({ queryKey: ["products"] });
@@ -50,7 +50,7 @@ function createAddProductMutationOptions(queryClient: any, navigate: NavigateFun
 
 function createEditProductMutationOptions(queryClient: any, navigate: NavigateFunction, id: string) {
     return {
-        mutationFn: (data: ProductFormData) => updateProduct({ id: id!, data }),
+        mutationFn: ({ data, imageFile }: { data: ProductFormData; imageFile?: File | null }) => updateProduct({ id: id!, data, imageFile }),
         onSuccess: () => {
           queryClient.invalidateQueries({ queryKey: ["products"] });
           queryClient.invalidateQueries({ queryKey: ["product", id] });

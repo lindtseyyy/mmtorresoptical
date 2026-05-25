@@ -15,6 +15,7 @@ import com.mmtorresoptical.OpticalClinicManagementSystem.repository.ProductRepos
 import com.mmtorresoptical.OpticalClinicManagementSystem.services.AuthenticatedUserService;
 import com.mmtorresoptical.OpticalClinicManagementSystem.services.analytics.InventoryAnalyticsService;
 import com.mmtorresoptical.OpticalClinicManagementSystem.services.auditlog.resources.ProductAuditHelper;
+import com.mmtorresoptical.OpticalClinicManagementSystem.services.helper.FileStorageService;
 import com.mmtorresoptical.OpticalClinicManagementSystem.services.helper.JSONService;
 import com.mmtorresoptical.OpticalClinicManagementSystem.specification.ProductSpecification;
 import com.mmtorresoptical.OpticalClinicManagementSystem.utils.UUIDUtils;
@@ -24,6 +25,7 @@ import org.springframework.data.domain.*;
 import org.springframework.data.jpa.domain.Specification;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.web.multipart.MultipartFile;
 
 import java.math.BigDecimal;
 import java.util.List;
@@ -41,37 +43,31 @@ public class ProductService {
     private final ProductAuditHelper productAuditHelper;
     private final JSONService jsonService;
     private final InventoryAnalyticsService inventoryAnalyticsService;
+    private final FileStorageService fileStorageService;
 
     @Transactional
-    public List<ProductResponseDTO> createProduct(List<CreateProductRequestDTO> productRequestDTOList) {
+    public ProductResponseDTO createProduct(CreateProductRequestDTO productRequest, MultipartFile image) {
 
         User authenticatedUser = authenticatedUserService.getCurrentUser();
 
-        List<Product> newProducts = productRequestDTOList
-                .stream()
-                .map(productRequest -> {
-                    Product product = productMapper.createRequestDTOToEntity(productRequest);
+        Product product = productMapper.createRequestDTOToEntity(productRequest);
 
-                    // Handle optional image, set default if not provided
-                    product.setImageDir(productRequest.getImageDir() != null ? productRequest.getImageDir() : "/default_product_logo.png");
-
-                    product.setUser(authenticatedUser);
-
-                    return product;
-                }).toList();
-
-        productRepository.saveAllAndFlush(newProducts);
-
-        // Audit Logging
-        int count = newProducts.size();
-
-        if (count == 1) {
-            productAuditHelper.logCreate(newProducts.get(0));
+        // Handle image upload — store file to disk, save filename in entity
+        String storedFilename = fileStorageService.store(image);
+        if (storedFilename != null) {
+            product.setImageDir(storedFilename);
         } else {
-            productAuditHelper.logCreateBatch(newProducts);
+            product.setImageDir("default_product_logo.png");
         }
 
-        return newProducts.stream().map(productMapper::entityToResponseDTO).toList();
+        product.setUser(authenticatedUser);
+
+        productRepository.saveAndFlush(product);
+
+        // Audit Logging
+        productAuditHelper.logCreate(product);
+
+        return productMapper.entityToResponseDTO(product);
     }
 
     public Page<ProductDetailsDTO> getAllProducts(
@@ -170,7 +166,7 @@ public class ProductService {
         return dto;
     }
 
-    public ProductDetailsDTO updateProduct(UUID id, UpdateProductRequestDTO updateProductRequestDTO) {
+    public ProductDetailsDTO updateProduct(UUID id, UpdateProductRequestDTO updateProductRequestDTO, MultipartFile image) {
         // Retrieve prescription or throw exception if not found
         Product retrievedProduct = productRepository.findById(id)
                 .orElseThrow(() -> new ResourceNotFoundException("Product not found with id: " + id));
@@ -181,8 +177,13 @@ public class ProductService {
 
         productMapper.updateProductFromUpdateRequestDTO(updateProductRequestDTO, retrievedProduct);
 
-        // Handle optional image, set default if not provided
-        retrievedProduct.setImageDir(updateProductRequestDTO.getImageDir() != null ? updateProductRequestDTO.getImageDir() : "/default-product.png");
+        // Handle image — new upload replaces old, otherwise keep existing
+        if (image != null && !image.isEmpty()) {
+            String storedFilename = fileStorageService.store(image);
+            retrievedProduct.setImageDir(storedFilename);
+        }
+        // If no new image is uploaded, keep the existing imageDir from the DB.
+        // The DTO's imageDir field is ignored in multipart mode since image comes as a file part.
 
         Product updatedProduct = productRepository.save(retrievedProduct);
 

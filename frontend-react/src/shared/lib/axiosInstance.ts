@@ -22,6 +22,10 @@ api.interceptors.request.use(
       // 💡 If a token exists, add the Authorization header to EVERY request
       config.headers.Authorization = `Bearer ${token}`;
     }
+    // If sending FormData, let the browser set Content-Type with boundary
+    if (config.data instanceof FormData) {
+      delete config.headers["Content-Type"];
+    }
     return config;
   },
   (error) => {

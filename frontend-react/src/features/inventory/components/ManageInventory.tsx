@@ -13,6 +13,7 @@ import { Badge } from "@/shared/components/ui/badge";
 import { Plus, Search, Eye, ChevronLeft, ChevronRight, Glasses, ArrowUp, ArrowDown, PackageX, AlertTriangle, TrendingUp } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { isAdmin } from "@/shared/lib/auth";
+import { getImageUrl } from "@/shared/lib/utils";
 import { Card, CardContent } from "@/shared/components/ui/card";
 import { MetricCard } from "@/shared/components/MetricCard";
 import EmptyTableRows from "@/shared/components/EmptyTableRows";
@@ -233,7 +234,7 @@ const ManageInventory: React.FC = () => {
                             <span className="inline-flex items-center gap-2 font-medium">
                               {product.imageDir ? (
                                 <img
-                                  src={product.imageDir}
+                                  src={getImageUrl(product.imageDir)}
                                   alt=""
                                   className="h-6 w-6 rounded object-cover"
                                 />

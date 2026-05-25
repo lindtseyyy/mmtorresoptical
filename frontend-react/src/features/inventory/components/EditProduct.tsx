@@ -20,8 +20,8 @@ const EditProduct: React.FC = () => {
     createEditProductMutationOptions(queryClient, navigate, id!)
   );
 
-  const handleFormSubmit = async (data: ProductFormData) => {
-    mutation.mutate(data);
+  const handleFormSubmit = async (data: ProductFormData, imageFile?: File | null) => {
+    mutation.mutate({ data, imageFile });
   };
 
   if (isLoadingData) {
@@ -31,6 +31,11 @@ const EditProduct: React.FC = () => {
       </div>
     );
   }
+
+  const BASE_URL = import.meta.env.VITE_API_BASE_URL || "http://localhost:8080/api";
+  const existingImageUrl = product?.imageDir
+    ? `${BASE_URL}/products/images/${product.imageDir}`
+    : null;
 
   // ✅ Map API Product to FormData with proper enum cast
   const defaultValues: ProductFormData | undefined = product
@@ -60,6 +65,7 @@ const EditProduct: React.FC = () => {
         isEditMode={true}
         defaultValues={defaultValues}
         productId={id}
+        existingImageUrl={existingImageUrl}
       />
     </div>
   );

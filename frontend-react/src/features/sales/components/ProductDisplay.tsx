@@ -4,6 +4,7 @@ import { Input } from "@/shared/components/ui/input";
 import { Button } from "@/shared/components/ui/button";
 import { Badge } from "@/shared/components/ui/badge";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/shared/components/ui/select";
+import { getImageUrl } from "@/shared/lib/utils";
 import type { Product } from "@/features/inventory/types";
 import { CATEGORY_LABELS, PHYSICAL_CATEGORIES, SERVICE_CATEGORIES, type Category } from "@/features/inventory/types";
 
@@ -30,7 +31,7 @@ const ProductCard: React.FC<{
       <div className="aspect-[4/3] bg-muted/50 flex items-center justify-center overflow-hidden relative">
         {product.imageDir && !imgFailed ? (
           <img
-            src={product.imageDir}
+            src={getImageUrl(product.imageDir)}
             alt={product.productName}
             className="h-full w-full object-contain"
             onError={() => setImgFailed(true)}

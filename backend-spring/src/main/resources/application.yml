@@ -24,6 +24,9 @@ app:
     secret: ${JWT_SECRET}
     expiration-ms: 86400000
 
+  upload:
+    product-images-dir: uploads/products
+
   database:
     backup:
       use-docker: false

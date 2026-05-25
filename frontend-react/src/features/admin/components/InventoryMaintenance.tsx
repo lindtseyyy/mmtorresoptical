@@ -12,6 +12,7 @@ import {
 } from "@/shared/components/ui/select";
 import { Badge } from "@/shared/components/ui/badge";
 import { Card, CardContent } from "@/shared/components/ui/card";
+import { getImageUrl } from "@/shared/lib/utils";
 import { MetricCard } from "@/shared/components/MetricCard";
 import {
   AlertDialog,
@@ -237,7 +238,7 @@ const InventoryMaintenance: React.FC = () => {
                             <span className="inline-flex items-center gap-2 font-medium">
                               {product.imageDir ? (
                                 <img
-                                  src={product.imageDir}
+                                  src={getImageUrl(product.imageDir)}
                                   alt=""
                                   className="h-6 w-6 rounded object-cover"
                                 />

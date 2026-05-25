@@ -3,6 +3,7 @@ import { Search, Package, ImageOff } from "lucide-react";
 import { Input } from "@/shared/components/ui/input";
 import { Badge } from "@/shared/components/ui/badge";
 import { Dialog, DialogHeader, DialogTitle } from "@/shared/components/ui/dialog";
+import { getImageUrl } from "@/shared/lib/utils";
 import { useProductSummaries } from "@/features/inventory/hooks/productQuery";
 import type { ProductSummary } from "@/features/inventory/types";
 
@@ -94,7 +95,7 @@ const ProductPickerModal: React.FC<ProductPickerModalProps> = ({ open, onOpenCha
                 <div className="aspect-[4/3] bg-muted/50 flex items-center justify-center overflow-hidden shrink-0">
                   {product.imageDir ? (
                     <img
-                      src={product.imageDir}
+                      src={getImageUrl(product.imageDir)}
                       alt={product.productName}
                       className="h-full w-full object-contain"
                     />
