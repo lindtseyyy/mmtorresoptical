@@ -267,8 +267,12 @@ function drawPieChart(
 }
 
 /**
- * Draws a horizontal bar chart with per-category coloring.
- * No axis grid lines — clean bar-only layout.
+ * Draws a horizontal bar chart matching the on-screen Recharts AgeGroupChart.
+ * - Entries sorted by count descending
+ * - Dashed vertical grid lines
+ * - Rounded right-side bar ends
+ * - Numeric X-axis at bottom
+ * - Per-row coloring via AGE_GROUP_COLORS
  */
 function drawHorizontalBarChart(
   doc: jsPDF,
@@ -276,10 +280,10 @@ function drawHorizontalBarChart(
   rect: ChartRect,
 ): number {
   const { x, y, w, h } = rect;
-  const pad = { top: 6, right: 8, bottom: 6, left: 4 };
-  const chartW = w - pad.left - pad.right;
+  const pad = { top: 4, right: 10, bottom: 14, left: 4 };
   const chartH = h - pad.top - pad.bottom;
 
+  // Background card
   doc.setFillColor(248, 250, 252);
   doc.setDrawColor(226, 232, 240);
   doc.setLineWidth(0.2);
@@ -295,35 +299,82 @@ function drawHorizontalBarChart(
   const maxVal = Math.max(...entries.map((e) => e.count), 1);
   const rowCount = entries.length;
   const rowH = chartH / rowCount;
-  const labelWidth = 26;
-  const barOriginX = x + pad.left + labelWidth;
-  const barMaxWidth = chartW - labelWidth - pad.left - pad.right - 10;
-  const barHeight = Math.min(rowH * 0.55, 6);
 
+  // Measure label widths to set a dynamic left margin
+  doc.setFontSize(7);
+  doc.setFont("helvetica", "normal");
+  let labelColW = 0;
+  for (const entry of entries) {
+    const tw = doc.getTextWidth(entry.label);
+    if (tw > labelColW) labelColW = tw;
+  }
+  labelColW = Math.min(labelColW + 3, w * 0.35); // cap at 35% of chart width
+
+  const barOriginX = x + pad.left + labelColW;
+  const barMaxWidth = w - pad.left - pad.right - labelColW;
+  const barHeight = Math.min(rowH * 0.5, 5);
+  const barRadius = 1.5; // rounded right-side radius
+  const baseline = y + pad.top + chartH; // bottom of chart area
+
+  // ── Dashed vertical grid lines (mirrors CartesianGrid horizontal={false}) ──
+  const xSteps = 4;
+  doc.setDrawColor(180);
+  doc.setLineWidth(0.1);
+  for (let i = 1; i <= xSteps; i++) {
+    const gx = barOriginX + (barMaxWidth / xSteps) * i;
+    // Dashed line: segments of 1.5mm with 1mm gap
+    let segY = y + pad.top;
+    while (segY < baseline) {
+      const segEnd = Math.min(segY + 1.5, baseline);
+      doc.line(gx, segY, gx, segEnd);
+      segY = segEnd + 1;
+    }
+  }
+
+  // ── Bars + labels ──
   for (let i = 0; i < entries.length; i++) {
     const entry = entries[i];
     const barW = Math.max(0, (entry.count / maxVal) * barMaxWidth);
-
     const rowY = y + pad.top + i * rowH + rowH / 2;
     const barY = rowY - barHeight / 2;
 
-    // Category label
+    // Category label (left side)
     doc.setFontSize(7);
-    doc.setTextColor(80);
+    doc.setTextColor(100);
     doc.setFont("helvetica", "normal");
-    doc.text(entry.label, x + pad.left, rowY + 1, { align: "left", maxWidth: labelWidth - 2 });
+    doc.text(entry.label, barOriginX - 2, rowY + 1.2, {
+      align: "right",
+      maxWidth: labelColW - 2,
+    });
 
-    // Bar
-    doc.setFillColor(entry.color[0], entry.color[1], entry.color[2]);
-    doc.setDrawColor(entry.color[0], entry.color[1], entry.color[2]);
-    doc.setLineWidth(0);
-    doc.rect(barOriginX, barY, barW, barHeight, "F");
+    // Rounded bar (right side rounded, left side flat)
+    if (barW > 0) {
+      doc.setFillColor(entry.color[0], entry.color[1], entry.color[2]);
+      const r = Math.min(barRadius, barW / 2, barHeight / 2);
+      if (barW > r * 2) {
+        // Flat left + rounded right
+        doc.rect(barOriginX, barY, barW - r, barHeight, "F");
+        doc.roundedRect(barOriginX + barW - r * 2, barY, r * 2, barHeight, r, r, "F");
+      } else {
+        doc.roundedRect(barOriginX, barY, barW, barHeight, r, r, "F");
+      }
+    }
 
-    // Count label
+    // Count label (right of bar)
     doc.setFontSize(6.5);
     doc.setTextColor(entry.color[0], entry.color[1], entry.color[2]);
     doc.setFont("helvetica", "bold");
-    doc.text(number(entry.count), barOriginX + barW + 1.5, rowY + 1, { align: "left" });
+    doc.text(number(entry.count), barOriginX + barW + 1.5, rowY + 1.2, { align: "left" });
+  }
+
+  // ── X-axis tick labels (bottom) ──
+  doc.setFontSize(6);
+  doc.setTextColor(120);
+  doc.setFont("helvetica", "normal");
+  for (let i = 0; i <= xSteps; i++) {
+    const val = Math.round((maxVal / xSteps) * i);
+    const tx = barOriginX + (barMaxWidth / xSteps) * i;
+    doc.text(number(val), tx, baseline + 4, { align: "center" });
   }
 
   return h;
@@ -437,7 +488,6 @@ function generatePatientPdf(
   cursorY += 3;
 
   const sexPieH = 50;
-  const ageBarH = Math.max(sexPieH, report.ageGroupDistribution.length * 9);
   const sexEntries: { label: string; count: number; color: [number, number, number] }[] = [
     { label: "Male", count: report.maleCount, color: SEX_COLORS.Male },
     { label: "Female", count: report.femaleCount, color: SEX_COLORS.Female },
@@ -447,13 +497,17 @@ function generatePatientPdf(
   drawPieChart(doc, sexEntries, sexRect);
 
   // 3b. Age Group Distribution (right column) — Horizontal Bar Chart
+  // Sort descending by count to match the on-screen chart
+  const sortedAgeGroups = [...report.ageGroupDistribution].sort((a, b) => b.count - a.count);
   const ageEntries: { label: string; count: number; color: [number, number, number] }[] =
-    report.ageGroupDistribution.map((ag: AgeGroupStat, i: number) => ({
+    sortedAgeGroups.map((ag: AgeGroupStat, i: number) => ({
       label: ag.groupLabel,
       count: ag.count,
       color: AGE_GROUP_COLORS[i % AGE_GROUP_COLORS.length],
     }));
 
+  // Height: ~7mm per row + padding, matching the UI's spacious layout
+  const ageBarH = Math.max(sexPieH, ageEntries.length * 7 + 18);
   const ageRect: ChartRect = { x: rightX, y: cursorY, w: halfW, h: ageBarH };
   drawHorizontalBarChart(doc, ageEntries, ageRect);
 
