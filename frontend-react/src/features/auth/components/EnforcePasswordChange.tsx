@@ -72,6 +72,7 @@ const EnforcePasswordChange: React.FC = () => {
         securityQuestion: data.securityQuestion,
         securityAnswer: data.securityAnswer,
       });
+      localStorage.removeItem("pwChangeRequired");
       navigate("/");
     } catch (err: any) {
       const msg = err?.response?.data;

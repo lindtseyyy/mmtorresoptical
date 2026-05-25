@@ -15,8 +15,14 @@ function hasValidToken(): boolean {
 const AuthGuard: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   if (!hasValidToken()) {
     localStorage.removeItem("authToken");
+    localStorage.removeItem("pwChangeRequired");
     return <Navigate to="/login" replace />;
   }
+
+  if (localStorage.getItem("pwChangeRequired") === "true") {
+    return <Navigate to="/enforce-password-change" replace />;
+  }
+
   return <>{children}</>;
 };
 

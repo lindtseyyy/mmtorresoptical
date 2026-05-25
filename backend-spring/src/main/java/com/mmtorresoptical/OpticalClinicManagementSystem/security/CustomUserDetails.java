@@ -16,16 +16,22 @@ public class CustomUserDetails
     private String username;
     private String password;
     private String role;
+    private boolean isPwChangeRequired;
 
     public CustomUserDetails(User user) {
         this.userId = user.getUserId();
         this.username = user.getUsername();
         this.password = user.getPasswordHash();
         this.role = String.valueOf(user.getRole());
+        this.isPwChangeRequired = user.isPwChangeRequired();
     }
 
     public UUID getUserId() {
         return userId;
+    }
+
+    public boolean isPwChangeRequired() {
+        return isPwChangeRequired;
     }
 
     @Override

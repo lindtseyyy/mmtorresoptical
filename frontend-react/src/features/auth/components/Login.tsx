@@ -53,10 +53,11 @@ const Login: React.FC = () => {
       // Store the token (e.g., in localStorage)
       localStorage.setItem("authToken", accessToken);
 
-      // Redirect based on password change requirement
       if (isPwChangeRequired) {
+        localStorage.setItem("pwChangeRequired", "true");
         navigate("/enforce-password-change");
       } else {
+        localStorage.removeItem("pwChangeRequired");
         navigate("/");
       }
     } catch (error) {

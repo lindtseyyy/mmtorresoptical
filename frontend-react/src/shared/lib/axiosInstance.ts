@@ -39,8 +39,19 @@ api.interceptors.response.use(
   (error) => {
     if (error.response?.status === 401) {
       localStorage.removeItem("authToken");
+      localStorage.removeItem("pwChangeRequired");
       if (window.location.pathname !== "/login") {
         window.location.href = "/login";
+      }
+    }
+
+    if (error.response?.status === 403) {
+      const data = error.response.data;
+      if (data && (typeof data === "string" ? data : data.error || "").includes("Password change required")) {
+        localStorage.setItem("pwChangeRequired", "true");
+        if (window.location.pathname !== "/enforce-password-change") {
+          window.location.href = "/enforce-password-change";
+        }
       }
     }
 

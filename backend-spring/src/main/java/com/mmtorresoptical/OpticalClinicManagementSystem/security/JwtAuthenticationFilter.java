@@ -1,6 +1,6 @@
 package com.mmtorresoptical.OpticalClinicManagementSystem.security;
 
-import com.mmtorresoptical.OpticalClinicManagementSystem.security.JwtTokenProvider;
+import com.mmtorresoptical.OpticalClinicManagementSystem.security.CustomUserDetails;
 import jakarta.servlet.FilterChain;
 import jakarta.servlet.ServletException;
 import jakarta.servlet.http.HttpServletRequest;
@@ -32,6 +32,8 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
             FilterChain filterChain
     ) throws ServletException, IOException {
 
+        String requestURI = request.getRequestURI();
+
         String header = request.getHeader("Authorization");
         if (header != null && header.startsWith("Bearer ")) {
             String token = header.substring(7);
@@ -39,6 +41,15 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
                 String username = tokenProvider.getUsernameFromToken(token);
                 if (username != null && SecurityContextHolder.getContext().getAuthentication() == null) {
                     UserDetails userDetails = userDetailsService.loadUserByUsername(username);
+
+                    if (userDetails instanceof CustomUserDetails customUser
+                            && customUser.isPwChangeRequired()
+                            && !requestURI.endsWith("/api/auth/enforce-password-change")) {
+                        response.setStatus(HttpServletResponse.SC_FORBIDDEN);
+                        response.setContentType("application/json");
+                        response.getWriter().write("{\"error\": \"Password change required before accessing the system\"}");
+                        return;
+                    }
 
                     UsernamePasswordAuthenticationToken authentication =
                             new UsernamePasswordAuthenticationToken(

@@ -110,6 +110,7 @@ const Sidenav: React.FC = () => {
       // Proceed with local logout even if the API call fails
     }
     localStorage.removeItem("authToken");
+    localStorage.removeItem("pwChangeRequired");
     toast.success("Logged Out", {
       description: "You have been successfully logged out.",
     });
