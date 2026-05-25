@@ -96,6 +96,10 @@ public interface TransactionMapper {
             target = "fulfillmentStatus",
             expression = "java(transaction.getFulfillmentStatus().name())"
     )
+    @Mapping(
+            target = "itemCount",
+            expression = "java(transaction.getTransactionItems() != null ? transaction.getTransactionItems().size() : 0)"
+    )
     TransactionListDTO entityToListDTO(Transaction transaction);
 
     @Mapping(

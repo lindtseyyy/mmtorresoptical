@@ -18,6 +18,7 @@ import java.util.UUID;
 @AllArgsConstructor
 public class TransactionEntry {
     private UUID id;
+    private String transactionNumber;
     private LocalDateTime date;
     private BigDecimal totalAmount;
     private BigDecimal amountPaid;

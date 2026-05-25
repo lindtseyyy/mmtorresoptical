@@ -4,7 +4,6 @@ import { Link } from "react-router-dom";
 import { Eye, ChevronLeft, ChevronRight } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/shared/components/ui/card";
 import { Button } from "@/shared/components/ui/button";
-import StatusBadge from "@/shared/components/ui/StatusBadge";
 import EmptyTableRows from "@/shared/components/EmptyTableRows";
 import type { TransactionEntry } from "@/features/reports/types";
 
@@ -58,27 +57,25 @@ const VoidedRefundedLog: React.FC<VoidedRefundedLogProps> = ({ entries }) => {
               <table className="w-full table-fixed text-sm">
                 <thead>
                   <tr className="border-b text-left text-muted-foreground">
-                    <th className="w-[22%] py-3 pr-2 font-medium">Date</th>
-                    <th className="w-[18%] py-3 pr-2 font-medium">Customer</th>
-                    <th className="w-[18%] py-3 pr-2 font-medium text-center">Amount</th>
-                    <th className="w-[18%] py-3 pr-2 font-medium text-center">Status</th>
-                    <th className="w-[16%] py-3 font-medium">Reason</th>
-                    <th className="w-[8%] py-3" />
+                    <th className="w-1/5 py-3 pr-2 font-medium">Transaction</th>
+                    <th className="w-1/5 py-3 pr-2 font-medium">Amount</th>
+                    <th className="w-1/5 py-3 font-medium">Reason</th>
+                    <th className="w-1/5 py-3 font-medium">Date</th>
+                    <th className="w-1/5 py-3" />
                   </tr>
                 </thead>
                 <tbody>
                   {paginated.map((entry) => (
                     <tr key={entry.id} className="border-b hover:bg-muted">
-                      <td className="py-2 pr-2">{formatDateTime(entry.date)}</td>
-                      <td className="py-2 pr-2 text-xs">{entry.customerName || "—"}</td>
-                      <td className="py-2 pr-2 text-center">{currency(refundedAmount(entry))}</td>
-                      <td className="py-2 pr-2 text-center">
-                        <StatusBadge status={entry.status} />
+                      <td className="py-2 pr-2 font-medium">
+                        {entry.transactionNumber}
                       </td>
+                      <td className="py-2 pr-2">{currency(refundedAmount(entry))}</td>
                       <td className="py-2 text-muted-foreground truncate max-w-[120px]">
                         {entry.voidReason || "—"}
                       </td>
-                      <td className="py-2 text-center">
+                      <td className="py-2 text-muted-foreground">{formatDateTime(entry.date)}</td>
+                      <td className="py-2 text-right">
                         <Button variant="outline" size="sm" asChild>
                           <Link to={`/transactions/${entry.id}`}>
                             <Eye className="h-3.5 w-3.5" />
@@ -88,7 +85,7 @@ const VoidedRefundedLog: React.FC<VoidedRefundedLogProps> = ({ entries }) => {
                       </td>
                     </tr>
                   ))}
-                  <EmptyTableRows count={PAGE_SIZE - paginated.length} colSpan={6} className="h-[49px]"/>
+                  <EmptyTableRows count={PAGE_SIZE - paginated.length} colSpan={5} className="h-[49px]"/>
                 </tbody>
               </table>
             </div>

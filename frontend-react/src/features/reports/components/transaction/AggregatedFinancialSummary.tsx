@@ -74,21 +74,13 @@ const AggregatedFinancialSummary: React.FC<AggregatedFinancialSummaryProps> = ({
   minDate,
   maxDate,
 }) => {
-  const completed = aggregate(statusGroups, "COMPLETED");
   const paid = aggregate(statusGroups, "PAID");
   const partiallyPaid = paidAggregate(statusGroups, "DEPOSIT");
   const voided = aggregate(statusGroups, "VOIDED");
   const refunded = refundDeductionAggregate(statusGroups);
 
-  // Inflow subtotals
-  const grossCount =
-    completed.count +
-    paid.count +
-    partiallyPaid.count;
-  const grossValue =
-    completed.totalValue +
-    paid.totalValue +
-    partiallyPaid.totalValue;
+  const grossCount = paid.count + partiallyPaid.count;
+  const grossValue = paid.totalValue + partiallyPaid.totalValue;
 
   // Deduction subtotals
   const deductionCount =
@@ -118,7 +110,6 @@ const AggregatedFinancialSummary: React.FC<AggregatedFinancialSummaryProps> = ({
                 Inflow
               </td>
             </tr>
-            <InflowRow label="Completed" agg={completed} />
             <InflowRow label="Paid" agg={paid} />
             <InflowRow label="Deposit" agg={partiallyPaid} />
             <SubtotalRow label="Gross Total" agg={{ count: grossCount, totalValue: grossValue }} />
@@ -179,7 +170,9 @@ const InflowRow: React.FC<RowProps> = ({ label, agg }) => (
   <tr className="border-b hover:bg-muted/50">
     <td className="py-2.5 pl-6 pr-4 text-muted-foreground">{label}</td>
     <td className="py-2.5 pr-4 text-right">{number(agg.count)}</td>
-    <td className="py-2.5 pr-6 text-right">{currency(agg.totalValue)}</td>
+    <td className="py-2.5 pr-6 text-right text-green-600">
+      {agg.totalValue > 0 ? `+${currency(agg.totalValue)}` : currency(agg.totalValue)}
+    </td>
   </tr>
 );
 
@@ -187,7 +180,9 @@ const DeductionRow: React.FC<RowProps> = ({ label, agg }) => (
   <tr className="border-b hover:bg-muted/50">
     <td className="py-2.5 pl-6 pr-4 text-muted-foreground">{label}</td>
     <td className="py-2.5 pr-4 text-right text-red-600">{number(agg.count)}</td>
-    <td className="py-2.5 pr-6 text-right text-red-600">-{currency(agg.totalValue)}</td>
+    <td className="py-2.5 pr-6 text-right text-red-600">
+      {agg.totalValue > 0 ? `-${currency(agg.totalValue)}` : currency(agg.totalValue)}
+    </td>
   </tr>
 );
 
@@ -222,9 +217,11 @@ const SubtotalRow: React.FC<SubtotalRowProps> = ({ label, agg, isDeduction }) =>
         isDeduction ? "text-red-700" : "text-emerald-700"
       }`}
     >
-      {isDeduction
-        ? `-${currency(agg.totalValue)}`
-        : `+${currency(agg.totalValue)}`}
+      {agg.totalValue > 0
+        ? isDeduction
+          ? `-${currency(agg.totalValue)}`
+          : `+${currency(agg.totalValue)}`
+        : currency(agg.totalValue)}
     </td>
   </tr>
 );

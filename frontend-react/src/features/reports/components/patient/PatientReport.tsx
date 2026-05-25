@@ -1,10 +1,6 @@
 import { Card, CardContent, CardHeader, CardTitle } from "@/shared/components/ui/card";
-import { Input } from "@/shared/components/ui/input";
 import PatientGrowthChart from "@/features/reports/components/patient/PatientGrowthChart";
 import type { PatientReportDataset, PatientGrowthPoint } from "@/features/reports/types";
-
-const MIN_DATE_LOCAL = "2020-01-01";
-const MAX_DATE_LOCAL = "2099-12-31";
 
 const number = (value: number) => new Intl.NumberFormat("en-PH").format(value);
 
@@ -41,35 +37,12 @@ const PatientReport: React.FC<PatientReportProps> = ({
 
       <Card>
         <CardHeader>
-          <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
-            <CardTitle className="text-lg">Patient Demographics</CardTitle>
-            <div className="flex items-center gap-2">
-              <span className="text-sm font-medium text-muted-foreground">Date Range:</span>
-              <Input
-                type="date"
-                min={MIN_DATE_LOCAL}
-                max={MAX_DATE_LOCAL}
-                value={minDate}
-                onChange={(e) => onMinDateChange(e.target.value)}
-                className="w-auto"
-              />
-              <span className="text-sm text-muted-foreground">to</span>
-              <Input
-                type="date"
-                min={MIN_DATE_LOCAL}
-                max={MAX_DATE_LOCAL}
-                value={maxDate}
-                onChange={(e) => onMaxDateChange(e.target.value)}
-                className="w-auto"
-              />
-            </div>
-          </div>
+          <CardTitle className="text-lg">Patient Demographics</CardTitle>
         </CardHeader>
         <CardContent className="space-y-6">
-          <div className="grid grid-cols-1 gap-6 lg:grid-cols-2">
-            <Card>
-              <CardHeader className="bg-muted">
-                <CardTitle className="text-base">Sex Distribution</CardTitle>
+          <Card>
+            <CardHeader className="bg-muted">
+              <CardTitle className="text-base">Sex Distribution</CardTitle>
               </CardHeader>
               <CardContent className="p-0">
                 <table className="w-full text-sm">
@@ -96,37 +69,6 @@ const PatientReport: React.FC<PatientReportProps> = ({
                 </table>
               </CardContent>
             </Card>
-
-            <Card>
-              <CardHeader className="bg-muted">
-                <CardTitle className="text-base">Visit Statistics</CardTitle>
-              </CardHeader>
-              <CardContent className="p-0">
-                <table className="w-full text-sm">
-                  <thead>
-                    <tr className="border-b text-left text-muted-foreground">
-                      <th className="py-3 pl-6 pr-4 font-medium">Metric</th>
-                      <th className="py-3 pr-6 font-medium text-right">Count</th>
-                    </tr>
-                  </thead>
-                  <tbody>
-                    <tr className="border-b hover:bg-muted/50">
-                      <td className="py-2.5 pl-6 pr-4 text-muted-foreground">Total Visits</td>
-                      <td className="py-2.5 pr-6 text-right font-medium">{number(report.totalVisits)}</td>
-                    </tr>
-                    <tr className="border-b hover:bg-muted/50">
-                      <td className="py-2.5 pl-6 pr-4 text-muted-foreground">Completed</td>
-                      <td className="py-2.5 pr-6 text-right font-medium text-green-600">{number(report.completedVisits)}</td>
-                    </tr>
-                    <tr className="hover:bg-muted/50">
-                      <td className="py-2.5 pl-6 pr-4 text-muted-foreground">Missed / Cancelled</td>
-                      <td className="py-2.5 pr-6 text-right font-medium text-red-600">{number(report.missedOrCancelledVisits)}</td>
-                    </tr>
-                  </tbody>
-                </table>
-              </CardContent>
-            </Card>
-          </div>
 
           <Card>
             <CardHeader className="bg-muted">

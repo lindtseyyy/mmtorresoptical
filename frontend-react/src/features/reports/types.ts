@@ -110,6 +110,7 @@ export interface PaymentMethodEntry {
 
 export interface TransactionEntry {
   id: string;
+  transactionNumber: string;
   date: string;
   totalAmount: number;
   amountPaid: number;

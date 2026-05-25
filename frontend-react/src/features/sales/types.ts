@@ -82,6 +82,7 @@ export interface TransactionResponse {
   change: number;
   completedAt: string | null;
   estimatedReadyDate: string | null;
+  itemCount: number;
   transactionStatus: string;
   refundStatus: string;
   fulfillmentStatus: string;

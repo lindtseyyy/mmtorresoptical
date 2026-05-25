@@ -42,8 +42,8 @@ const AgingAccountsReceivable: React.FC = () => {
               <tbody>
                 {items.map((item) => (
                   <tr key={item.transactionId} className="border-b hover:bg-muted">
-                    <td className="py-3 pr-2 font-mono text-xs">{item.transactionNumber}</td>
-                    <td className="py-3 pr-2 text-xs">{formatDate(item.transactionDate)}</td>
+                    <td className="py-3 pr-2 font-medium">{item.transactionNumber}</td>
+                    <td className="py-3 pr-2 text-muted-foreground">{formatDate(item.transactionDate)}</td>
                     <td className="py-3 pr-2">{item.customerName}</td>
                     <td className="py-3 pr-2 text-right">{currency(item.totalAmount)}</td>
                     <td className="py-3 pr-2 text-right">{currency(item.amountPaid)}</td>

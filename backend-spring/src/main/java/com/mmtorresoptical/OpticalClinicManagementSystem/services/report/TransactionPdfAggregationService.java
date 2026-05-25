@@ -125,6 +125,7 @@ public class TransactionPdfAggregationService {
 
         return TransactionEntry.builder()
                 .id(transaction.getTransactionId())
+                .transactionNumber(transaction.getTransactionNumber())
                 .date(transaction.getTransactionDate())
                 .totalAmount(transaction.getTotalAmount())
                 .amountPaid(transaction.getAmountPaid())

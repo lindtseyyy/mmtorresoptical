@@ -15,7 +15,6 @@ import { useNavigate } from "react-router-dom";
 import { MetricCard } from "@/shared/components/MetricCard";
 import { Card, CardContent, CardHeader, CardTitle } from "@/shared/components/ui/card";
 import { Button } from "@/shared/components/ui/button";
-import StatusBadge from "@/shared/components/ui/StatusBadge";
 import { createInventorySummaryQueryOptions } from "@/features/inventory/hooks/productQuery";
 import {
   createTransactionMetricsQueryOptions,
@@ -258,14 +257,21 @@ export default function Dashboard() {
           </Button>
         </CardHeader>
         <CardContent className="p-0">
-          <table className="w-full text-sm">
+          <table className="w-full table-fixed text-sm">
+            <colgroup>
+              <col className="w-1/5" />
+              <col className="w-1/5" />
+              <col className="w-1/5" />
+              <col className="w-1/5" />
+              <col className="w-1/5" />
+            </colgroup>
             <thead>
               <tr className="border-b text-muted-foreground">
                 <th className="text-left font-medium px-5 py-2">Transaction</th>
-                <th className="text-left font-medium px-5 py-2 hidden sm:table-cell">Status</th>
-                <th className="text-center font-medium px-5 py-2">Amount</th>
-                <th className="text-left font-medium px-5 py-2 hidden md:table-cell">Date</th>
-                <th className="w-10 px-5 py-2" />
+                <th className="text-center font-medium px-3 py-2">Items</th>
+                <th className="text-left font-medium px-5 py-2">Amount</th>
+                <th className="text-left font-medium px-5 py-2">Date</th>
+                <th className="px-5 py-2" />
               </tr>
             </thead>
             <tbody>
@@ -277,18 +283,18 @@ export default function Dashboard() {
                   <td className="px-5 py-2.5 font-medium">
                     {tx.transactionNumber}
                   </td>
-                  <td className="px-5 py-2.5 hidden sm:table-cell">
-                    <StatusBadge status={tx.transactionStatus} />
-                  </td>
                   <td className="px-5 py-2.5 text-center tabular-nums">
+                    {tx.itemCount}
+                  </td>
+                  <td className="px-5 py-2.5 text-left tabular-nums">
                     {formatCurrency(tx.totalAmount)}
                   </td>
-                  <td className="px-5 py-2.5 text-left text-muted-foreground tabular-nums hidden md:table-cell">
+                  <td className="px-5 py-2.5 text-left text-muted-foreground tabular-nums">
                     {formatDateTime(tx.transactionDate)}
                   </td>
                   <td className="px-5 py-2.5 text-right">
                     <Button
-                      variant="ghost"
+                      variant="outline"
                       size="sm"
                       onClick={() => navigate(`/transactions/${tx.transactionId}`)}
                     >

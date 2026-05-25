@@ -25,6 +25,7 @@ public class TransactionListDTO {
     private String refundStatus;
     private String fulfillmentStatus;
     private LocalDate estimatedReadyDate;
+    private int itemCount;
 
     private UserSummaryDTO createdBy;
     private PatientSummaryDTO patient;
