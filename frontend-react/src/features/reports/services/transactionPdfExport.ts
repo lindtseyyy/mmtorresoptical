@@ -102,6 +102,12 @@ function drawBarChart(
   const chartH = h - pad.top - pad.bottom;
   const baseline = y + pad.top + chartH;
 
+  // Chart background
+  doc.setFillColor(248, 250, 252);
+  doc.setDrawColor(226, 232, 240);
+  doc.setLineWidth(0.2);
+  doc.roundedRect(x, y, w, h, 2, 2, "FD");
+
   if (data.length === 0) {
     doc.setFontSize(10);
     doc.setTextColor(130);
@@ -161,10 +167,16 @@ function drawAreaChart(
   rect: ChartRect,
 ) {
   const { x, y, w, h } = rect;
-  const pad = { top: 10, right: 6, bottom: 16, left: 8 };
+  const pad = { top: 10, right: 6, bottom: 16, left: 16 };
   const chartW = w - pad.left - pad.right;
   const chartH = h - pad.top - pad.bottom;
   const baseline = y + pad.top + chartH;
+
+  // Chart background
+  doc.setFillColor(248, 250, 252);
+  doc.setDrawColor(226, 232, 240);
+  doc.setLineWidth(0.2);
+  doc.roundedRect(x, y, w, h, 2, 2, "FD");
 
   if (data.length === 0) {
     doc.setFontSize(10);
