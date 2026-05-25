@@ -161,9 +161,9 @@ const ManagePatients: React.FC = () => {
                     <tr className="border-b text-left text-muted-foreground">
                       <th className="w-[26%] py-3 pr-4 font-medium">Full Name</th>
                       <th className="w-[26%] py-3 pr-4 font-medium">Email</th>
-                      <th className="w-[10%] py-3 pr-4 text-center font-medium">Gender</th>
-                      <th className="w-[16%] py-3 pr-4 font-medium">Contact Number</th>
-                      <th className="w-[12%] py-3 pr-4 text-center font-medium">Birth Date</th>
+                      <th className="w-[10%] py-3 pr-4 text-left font-medium">Gender</th>
+                      <th className="w-[16%] py-3 pr-4 text-left font-medium">Contact Number</th>
+                      <th className="w-[12%] py-3 pr-4 text-left font-medium">Birth Date</th>
                       <th className="w-[10%] py-3 pr-4 font-medium"></th>
                     </tr>
                   </thead>
@@ -181,13 +181,13 @@ const ManagePatients: React.FC = () => {
                         <td className="py-3 pr-4 text-muted-foreground">
                           <span className="block truncate">{patient.email}</span>
                         </td>
-                        <td className="py-3 pr-4 text-center capitalize">
+                        <td className="py-3 pr-4 text-left capitalize">
                           <span className="block truncate">{patient.sex}</span>
                         </td>
-                        <td className="py-3 pr-4 text-muted-foreground">
+                        <td className="py-3 pr-4 text-left text-muted-foreground">
                           <span className="block truncate">{patient.contactNumber}</span>
                         </td>
-                        <td className="py-3 pr-4 text-center text-muted-foreground">
+                        <td className="py-3 pr-4 text-left text-muted-foreground">
                           {formatDate(patient.birthDate)}
                         </td>
                         <td className="py-3 pl-4 text-center">
