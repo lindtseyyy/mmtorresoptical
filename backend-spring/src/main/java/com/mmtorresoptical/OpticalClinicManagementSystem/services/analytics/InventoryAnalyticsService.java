@@ -288,17 +288,15 @@ public class InventoryAnalyticsService {
         BigDecimal liveValue = inventoryAnalyticsRepository.inventoryValue();
 
         List<InventoryValueTrendPoint> trend = new ArrayList<>();
-        BigDecimal lastKnownValue = liveValue;
 
         for (int i = 0; i <= 11; i++) {
             YearMonth m = currentMonth.minusMonths(i);
             BigDecimal value;
 
-            if (snapshots.containsKey(m)) {
-                value = snapshots.get(m);
-                lastKnownValue = value;
+            if (i == 0) {
+                value = liveValue;
             } else {
-                value = lastKnownValue;
+                value = snapshots.getOrDefault(m, BigDecimal.ZERO);
             }
 
             trend.add(InventoryValueTrendPoint.builder()
