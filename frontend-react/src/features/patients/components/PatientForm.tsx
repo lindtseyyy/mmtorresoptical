@@ -58,7 +58,7 @@ export const PatientForm: React.FC<PatientFormProps> = ({
       firstName: "",
       middleName: "",
       lastName: "",
-      sex: undefined,
+      sex: "Male",
       birthDate: "",
       email: "",
       contactNumber: "",
@@ -252,7 +252,7 @@ export const PatientForm: React.FC<PatientFormProps> = ({
                   <FormLabel>Medical History</FormLabel>
                   <FormControl>
                     <Textarea
-                      placeholder="e.g. Diabetes, Hypertension, Penicillin allergy, prior eye surgeries..."
+                      placeholder="Enter medical history (optional)"
                       {...field}
                     />
                   </FormControl>
