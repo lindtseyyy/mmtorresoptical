@@ -118,7 +118,7 @@ export const PatientForm: React.FC<PatientFormProps> = ({
                   <FormItem>
                     <FormLabel>Middle Name</FormLabel>
                     <FormControl>
-                      <Input placeholder="Enter middle name" {...field} />
+                      <Input placeholder="Enter middle name (optional)" {...field} />
                     </FormControl>
                     <FormMessage />
                   </FormItem>
