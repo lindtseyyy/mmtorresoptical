@@ -1,13 +1,12 @@
 import { useState } from "react";
 import { useParams, Link, useNavigate } from "react-router-dom";
 import { useQuery } from "@tanstack/react-query";
-import { ArrowLeft, Package, ShoppingCart, Banknote, Calendar, Hash, TrendingUp, Layers } from "lucide-react";
+import { ArrowLeft, ChevronRight, Package, ShoppingCart, Banknote, Calendar, Hash, TrendingUp, Layers } from "lucide-react";
 import StockAdjustmentModal from "./StockAdjustmentModal";
 import { Button } from "@/shared/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/shared/components/ui/card";
 import { MetricCard } from "@/shared/components/MetricCard";
 import { Badge } from "@/shared/components/ui/badge";
-import StatusBadge from "@/shared/components/ui/StatusBadge";
 import {
   fetchProduct,
   fetchProductMetrics,
@@ -312,19 +311,14 @@ const ViewProduct: React.FC = () => {
               {txData.content.map((tx: TransactionListItem) => (
                 <div
                   key={tx.transactionId}
-                  className="rounded-lg border p-4 transition-colors bg-muted/60 hover:bg-muted"
+                  className="rounded-lg border p-4 transition-colors bg-muted/60 hover:bg-muted cursor-pointer"
+                  onClick={() => navigate(`/transactions/${tx.transactionId}`)}
                 >
-                  <div className="flex items-start justify-between">
+                  <div className="flex items-center justify-between">
                     <div className="space-y-1 flex-1 min-w-0">
-                      <div className="flex items-center gap-2 flex-wrap">
-                        <span className="font-medium">
-                          {tx.transactionNumber}
-                        </span>
-                        <StatusBadge status={tx.transactionStatus} />
-                        {tx.refundStatus !== "NONE" && (
-                          <StatusBadge status={tx.refundStatus} />
-                        )}
-                      </div>
+                      <span className="font-medium">
+                        {tx.transactionNumber}
+                      </span>
                       <div className="flex items-center gap-4 text-sm text-muted-foreground">
                         <span>{formatDateTime(tx.transactionDate)}</span>
                         <span>₱ {tx.totalAmount.toFixed(2)}</span>
@@ -335,6 +329,7 @@ const ViewProduct: React.FC = () => {
                         </p>
                       )}
                     </div>
+                    <ChevronRight className="h-5 w-5 shrink-0 text-muted-foreground" />
                   </div>
                 </div>
               ))}
