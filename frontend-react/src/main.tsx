@@ -90,8 +90,8 @@ const router = createBrowserRouter([
     path: "/",
     element: <AuthGuard><MainLayout /></AuthGuard>,
     children: [
-      { index: true, element: <Navigate to="/dashboard" replace /> },
-      { path: "dashboard", element: <Dashboard /> },
+      { index: true, element: <Navigate to="/inventory" replace /> },
+      { path: "dashboard", element: <AdminGuard><Dashboard /></AdminGuard> },
       { path: "profile", element: <EditProfile /> },
       { path: "help", element: <HelpPage /> },
       { path: "about", element: <AboutPage /> },
