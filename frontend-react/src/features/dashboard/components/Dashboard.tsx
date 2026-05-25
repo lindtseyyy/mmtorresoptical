@@ -136,19 +136,24 @@ export default function Dashboard() {
               : "border-muted bg-card"
           }`}
         >
-          <div className="flex items-center gap-2">
-            <div className={`flex h-9 w-9 items-center justify-center rounded-lg ${
-              (ropAlerts?.count ?? 0) > 0 ? "bg-orange-100" : "bg-muted"
-            }`}>
-              <AlertTriangle className={`h-4 w-4 ${
-                (ropAlerts?.count ?? 0) > 0 ? "text-orange-700" : "text-muted-foreground"
-              }`} />
+          <div className="flex items-center justify-between gap-2">
+            <div className="flex items-center gap-2">
+              <div className={`flex h-9 w-9 items-center justify-center rounded-lg ${
+                (ropAlerts?.count ?? 0) > 0 ? "bg-orange-100" : "bg-muted"
+              }`}>
+                <AlertTriangle className={`h-4 w-4 ${
+                  (ropAlerts?.count ?? 0) > 0 ? "text-orange-700" : "text-muted-foreground"
+                }`} />
+              </div>
+              <p className={`text-xs font-medium ${
+                (ropAlerts?.count ?? 0) > 0 ? "text-orange-800" : "text-muted-foreground"
+              }`}>
+                Needs Reordering
+              </p>
             </div>
-            <p className={`text-xs font-medium ${
-              (ropAlerts?.count ?? 0) > 0 ? "text-orange-800" : "text-muted-foreground"
-            }`}>
-              Needs Reordering
-            </p>
+            <ArrowRight className={`h-4 w-4 ${
+              (ropAlerts?.count ?? 0) > 0 ? "text-orange-700" : "text-muted-foreground"
+            }`} />
           </div>
           <p className={`mt-2 text-2xl font-bold ${
             (ropAlerts?.count ?? 0) > 0 ? "text-orange-900" : "text-foreground"

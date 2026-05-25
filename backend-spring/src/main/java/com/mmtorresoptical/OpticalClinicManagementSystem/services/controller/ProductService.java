@@ -83,7 +83,8 @@ public class ProductService {
             String sortBy,
             String sortOrder,
             String archivedStatus,
-            String stockStatus) {
+            String stockStatus,
+            String productType) {
 
         if (keyword != null && UUIDUtils.isUUID(keyword)) {
 
@@ -143,6 +144,10 @@ public class ProductService {
 
         if (stockStatus != null && !stockStatus.isBlank()) {
             spec = spec.and(ProductSpecification.hasStockStatus(stockStatus));
+        }
+
+        if (productType != null && !productType.isBlank()) {
+            spec = spec.and(ProductSpecification.hasProductType(productType));
         }
 
         // Create pageable configuration with sorting

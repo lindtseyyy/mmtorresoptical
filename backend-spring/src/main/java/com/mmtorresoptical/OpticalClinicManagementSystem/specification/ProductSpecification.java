@@ -1,5 +1,6 @@
 package com.mmtorresoptical.OpticalClinicManagementSystem.specification;
 
+import com.mmtorresoptical.OpticalClinicManagementSystem.enums.ProductType;
 import com.mmtorresoptical.OpticalClinicManagementSystem.model.Product;
 import org.springframework.data.jpa.domain.Specification;
 
@@ -146,6 +147,20 @@ public class ProductSpecification {
 
             // default ACTIVE
             return cb.isFalse(root.get("isArchived"));
+        };
+    }
+
+    public static Specification<Product> hasProductType(String productType) {
+        return (root, query, cb) -> {
+            if (productType == null || productType.isBlank()) {
+                return null;
+            }
+            try {
+                ProductType type = ProductType.valueOf(productType.toUpperCase());
+                return cb.equal(root.get("productType"), type);
+            } catch (IllegalArgumentException e) {
+                return null;
+            }
         };
     }
 }

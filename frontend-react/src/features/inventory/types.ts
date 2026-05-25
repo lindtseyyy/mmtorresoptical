@@ -54,7 +54,7 @@ const decimalString = (label: string) =>
 
 export const productFormSchema = z
   .object({
-    productName: z.string().min(1, "Required"),
+    productName: z.string().min(1, "Name is required"),
     category: z.enum(ALL_CATEGORY_VALUES),
     supplier: z.string().optional(),
     productType: z.enum(["PHYSICAL", "SERVICE"]),

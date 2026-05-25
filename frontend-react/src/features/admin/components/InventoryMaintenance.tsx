@@ -41,6 +41,7 @@ const InventoryMaintenance: React.FC = () => {
   const [debouncedSearchQuery, setDebouncedSearchQuery] = useState(searchQuery);
   const [categoryFilter, setCategoryFilter] = useState<string>("all");
   const [archivedFilter, setArchivedFilter] = useState("ACTIVE");
+  const [productTypeFilter, setProductTypeFilter] = useState("all");
   const [sortBy, setSortBy] = useState("productName");
   const [sortOrder, setSortOrder] = useState<"asc" | "desc">("asc");
   const [page, setPage] = useState(0);
@@ -53,7 +54,7 @@ const InventoryMaintenance: React.FC = () => {
   const queryClient = useQueryClient();
 
   const { data: pageData, isLoading, isFetching } = useQuery({
-    ...createProductsListQueryOptions(page, PAGE_SIZE, debouncedSearchQuery, categoryFilter, sortBy, sortOrder, "all", archivedFilter),
+    ...createProductsListQueryOptions(page, PAGE_SIZE, debouncedSearchQuery, categoryFilter, sortBy, sortOrder, "all", archivedFilter, productTypeFilter),
     placeholderData: keepPreviousData,
   });
 
@@ -89,7 +90,7 @@ const InventoryMaintenance: React.FC = () => {
 
   useEffect(() => {
     setPage(0);
-  }, [debouncedSearchQuery, categoryFilter, sortBy, sortOrder, archivedFilter]);
+  }, [debouncedSearchQuery, categoryFilter, sortBy, sortOrder, archivedFilter, productTypeFilter]);
 
   useEffect(() => {
     if (products.length === 0 && page > 0 && !isFetching) {
@@ -203,6 +204,19 @@ const InventoryMaintenance: React.FC = () => {
                     <SelectItem value="sunglasses">Sunglasses</SelectItem>
                     <SelectItem value="clinical_services">Clinical Services</SelectItem>
                     <SelectItem value="lens_fitting">Lens Fitting</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+              <div className="flex items-center gap-2">
+                <span className="text-sm text-muted-foreground whitespace-nowrap">Type:</span>
+                <Select value={productTypeFilter} onValueChange={setProductTypeFilter}>
+                  <SelectTrigger className="w-[130px]">
+                    <SelectValue placeholder="All" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="all">All</SelectItem>
+                    <SelectItem value="PHYSICAL">Physical</SelectItem>
+                    <SelectItem value="SERVICE">Service</SelectItem>
                   </SelectContent>
                 </Select>
               </div>
