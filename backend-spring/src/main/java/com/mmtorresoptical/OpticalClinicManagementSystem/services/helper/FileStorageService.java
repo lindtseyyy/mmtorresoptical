@@ -90,11 +90,11 @@ public class FileStorageService {
 
     /**
      * Loads a filename as a Spring Resource for streaming.
+     * Falls back to classpath for the default product logo.
      */
     public Resource loadAsResource(String filename) {
         Path filePath = load(filename);
 
-        // Prevent path traversal
         if (!filePath.startsWith(uploadDir)) {
             throw new ResourceNotFoundException("Invalid file path: " + filename);
         }
@@ -104,8 +104,15 @@ public class FileStorageService {
             if (resource.exists() && resource.isReadable()) {
                 return resource;
             }
-        } catch (IOException e) {
-            throw new ResourceNotFoundException("File not found: " + filename);
+        } catch (IOException ignored) {
+        }
+
+        // Fallback: serve default image from classpath
+        if ("default_product_logo.png".equals(filename)) {
+            Resource classpathResource = new org.springframework.core.io.ClassPathResource("static/default_product_logo.png");
+            if (classpathResource.exists()) {
+                return classpathResource;
+            }
         }
 
         throw new ResourceNotFoundException("File not found: " + filename);

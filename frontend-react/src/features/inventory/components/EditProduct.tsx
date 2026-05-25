@@ -2,6 +2,7 @@ import { useNavigate, useParams } from "react-router-dom";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { ProductForm } from "@/features/inventory/components/ProductForm";
 import type { ProductFormData } from "@/features/inventory/types";
+import { getImageUrl } from "@/shared/lib/utils";
 import {
   createEditProductMutationOptions,
   createEditProductQueryOptions,
@@ -32,10 +33,7 @@ const EditProduct: React.FC = () => {
     );
   }
 
-  const BASE_URL = import.meta.env.VITE_API_BASE_URL || "http://localhost:8080/api";
-  const existingImageUrl = product?.imageDir
-    ? `${BASE_URL}/products/images/${product.imageDir}`
-    : null;
+  const existingImageUrl = getImageUrl(product?.imageDir);
 
   // ✅ Map API Product to FormData with proper enum cast
   const defaultValues: ProductFormData | undefined = product
