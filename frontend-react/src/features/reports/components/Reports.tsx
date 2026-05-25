@@ -12,7 +12,7 @@ import { Card, CardContent } from "@/shared/components/ui/card";
 import { useQuery } from "@tanstack/react-query";
 import { useReportData, usePatientGrowthTrend, useLowStockProducts, useOverstockedProducts, useOutOfStockProducts, useTransactionMonthlyTrend } from "@/features/reports/hooks/reportQuery";
 import { createAccountsReceivableQueryOptions } from "@/features/sales/hooks/transactionQuery";
-import { downloadPdfReport, downloadExcelReport } from "@/features/reports/services/reportApi";
+import { downloadPdfReport } from "@/features/reports/services/reportApi";
 import { generateTransactionPdf } from "@/features/reports/services/transactionPdfExport";
 import InventoryValueChart from "@/features/reports/components/inventory/InventoryValueChart";
 import CategoryBreakdownChart from "@/features/reports/components/inventory/CategoryBreakdownChart";
@@ -49,7 +49,6 @@ const Reports: React.FC = () => {
   const [minDate, setMinDate] = useSessionState("reports:minDate", "");
   const [maxDate, setMaxDate] = useSessionState("reports:maxDate", "");
   const [exportingPdf, setExportingPdf] = useState(false);
-  const [exportingExcel, setExportingExcel] = useState(false);
   const [lowStockPage, setLowStockPage] = useState(0);
   const [overstockedPage, setOverstockedPage] = useState(0);
   const [outOfStockPage, setOutOfStockPage] = useState(0);
@@ -88,8 +87,6 @@ const Reports: React.FC = () => {
   const { data: monthlyTrend } = useTransactionMonthlyTrend();
   const { data: receivables } = useQuery(createAccountsReceivableQueryOptions());
 
-  const canExportExcel = reportType !== "INVENTORY_ANALYTICS";
-
   // ── Export handlers ──────────────────────────────────────────────
 
   const handleExportPdf = async () => {
@@ -110,18 +107,6 @@ const Reports: React.FC = () => {
       toast.error(err?.message || "Failed to export PDF.");
     } finally {
       setExportingPdf(false);
-    }
-  };
-
-  const handleExportExcel = async () => {
-    setExportingExcel(true);
-    try {
-      await downloadExcelReport(reportType, minDate || undefined, maxDate || undefined);
-      toast.success("Excel report downloaded.");
-    } catch (err: any) {
-      toast.error(err?.message || "Failed to export Excel.");
-    } finally {
-      setExportingExcel(false);
     }
   };
 
@@ -236,11 +221,23 @@ const Reports: React.FC = () => {
   return (
     <div className="space-y-6">
       {/* Header */}
-      <div>
-        <h2 className="text-3xl font-bold">Reports</h2>
-        <p className="text-muted-foreground">
-          View and export reports for inventory, transactions, and patients.
-        </p>
+      <div className="flex items-start justify-between">
+        <div>
+          <h2 className="text-3xl font-bold">Reports</h2>
+          <p className="text-muted-foreground">
+            View and export reports for inventory, transactions, and patients.
+          </p>
+        </div>
+        {data && !isLoading && (
+          <Button
+            variant="outline"
+            onClick={handleExportPdf}
+            disabled={exportingPdf}
+          >
+            <Download className="mr-2 h-4 w-4" />
+            {exportingPdf ? "Exporting..." : "Export as PDF"}
+          </Button>
+        )}
       </div>
 
       {/* Report type selector */}
@@ -264,30 +261,6 @@ const Reports: React.FC = () => {
         <Card>
           <CardContent className="p-6">{renderReportContent()}</CardContent>
         </Card>
-      )}
-
-      {/* Export action bar */}
-      {data && !isLoading && (
-        <div className="flex items-center justify-end gap-3">
-          <Button
-            variant="outline"
-            onClick={handleExportPdf}
-            disabled={exportingPdf}
-          >
-            <Download className="mr-2 h-4 w-4" />
-            {exportingPdf ? "Exporting..." : "Export as PDF"}
-          </Button>
-          {canExportExcel && (
-            <Button
-              variant="outline"
-              onClick={handleExportExcel}
-              disabled={exportingExcel}
-            >
-              <Download className="mr-2 h-4 w-4" />
-              {exportingExcel ? "Exporting..." : "Export as Excel"}
-            </Button>
-          )}
-        </div>
       )}
     </div>
   );
