@@ -250,8 +250,8 @@ const ManageTransactions: React.FC = () => {
                 <table className="w-full table-fixed text-sm">
                   <thead>
                     <tr className="border-b text-left text-muted-foreground">
-                      <th className="w-[16%] py-3 pr-4 font-medium">Transaction Number</th>
                       <th className="w-[14%] py-3 pr-4 text-left font-medium">Transaction Date</th>
+                      <th className="w-[16%] py-3 pr-4 font-medium">Transaction Number</th>
                       <th className="w-[10%] py-3 pr-4 text-left font-medium">Financial</th>
                       <th className="w-[10%] py-3 pr-4 text-left font-medium">Fulfillment</th>
                       <th className="w-[9%] py-3 pr-4 text-left font-medium">Refund</th>
@@ -265,13 +265,13 @@ const ManageTransactions: React.FC = () => {
                         key={tx.transactionId}
                         className="border-b transition-colors hover:bg-muted"
                       >
+                        <td className="py-3 pr-4 text-left text-muted-foreground">
+                          <span className="block truncate">{formatDateTime(tx.transactionDate)}</span>
+                        </td>
                         <td className="py-3 pr-4">
                           <span className="block truncate font-medium">
                             {tx.transactionNumber}
                           </span>
-                        </td>
-                        <td className="py-3 pr-4 text-left text-muted-foreground">
-                          <span className="block truncate">{formatDateTime(tx.transactionDate)}</span>
                         </td>
                         <td className="py-3 pr-4 text-left">
                           <StatusBadge status={tx.transactionStatus} />
