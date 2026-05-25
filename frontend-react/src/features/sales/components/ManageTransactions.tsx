@@ -25,11 +25,11 @@ import {
   ShoppingCart,
   PackageOpen,
 } from "lucide-react";
+import StatusBadge from "@/shared/components/ui/StatusBadge";
 import {
   createTransactionsListQueryOptions,
   createTransactionMetricsQueryOptions,
 } from "@/features/sales/hooks/transactionQuery";
-import StatusBadge from "@/shared/components/ui/StatusBadge";
 import EmptyTableRows from "@/shared/components/EmptyTableRows";
 import AddPaymentDrawer from "@/features/sales/components/AddPaymentDrawer";
 import { addPayment } from "@/features/sales/services/transactionApi";
@@ -251,13 +251,11 @@ const ManageTransactions: React.FC = () => {
                   <thead>
                     <tr className="border-b text-left text-muted-foreground">
                       <th className="w-[16%] py-3 pr-4 font-medium">Transaction Number</th>
-                      <th className="w-[10%] py-3 pr-4 text-center font-medium">Total Amount</th>
-                      <th className="w-[10%] py-3 pr-4 text-center font-medium">Financial</th>
-                      <th className="w-[10%] py-3 pr-4 text-center font-medium">Fulfillment</th>
-                      <th className="w-[9%] py-3 pr-4 text-center font-medium">Refund</th>
-                      <th className="w-[10%] py-3 pr-4 text-center font-medium">Transaction Date</th>
-                      <th className="w-[9%] py-3 pr-4 text-center font-medium">Pickup By</th>
-                      <th className="w-[11%] py-3 pr-4 font-medium">Processed By</th>
+                      <th className="w-[14%] py-3 pr-4 text-left font-medium">Transaction Date</th>
+                      <th className="w-[10%] py-3 pr-4 text-left font-medium">Financial</th>
+                      <th className="w-[10%] py-3 pr-4 text-left font-medium">Fulfillment</th>
+                      <th className="w-[9%] py-3 pr-4 text-left font-medium">Refund</th>
+                      <th className="w-[10%] py-3 pr-4 text-right font-medium">Total Amount</th>
                       <th className="w-[8%] py-3 text-center font-medium">Action</th>
                     </tr>
                   </thead>
@@ -272,32 +270,26 @@ const ManageTransactions: React.FC = () => {
                             {tx.transactionNumber}
                           </span>
                         </td>
-                        <td className="py-3 pr-4 text-center">
-                          <span className="block truncate">
-                            {formatCurrency(tx.totalAmount)}
-                          </span>
+                        <td className="py-3 pr-4 text-left text-muted-foreground">
+                          <span className="block truncate">{formatDateTime(tx.transactionDate)}</span>
                         </td>
-                        <td className="py-3 pr-4 text-center">
+                        <td className="py-3 pr-4 text-left">
                           <StatusBadge status={tx.transactionStatus} />
                         </td>
-                        <td className="py-3 pr-4 text-center">
+                        <td className="py-3 pr-4 text-left">
                           <StatusBadge status={tx.fulfillmentStatus} />
                         </td>
-                        <td className="py-3 pr-4 text-center">
+                        <td className="py-3 pr-4 text-left">
                           {tx.refundStatus !== "NONE" ? (
                             <StatusBadge status={tx.refundStatus} />
                           ) : (
                             <span className="text-muted-foreground">—</span>
                           )}
                         </td>
-                        <td className="py-3 pr-4 text-center text-muted-foreground">
-                          <span className="block truncate">{formatDateTime(tx.transactionDate)}</span>
-                        </td>
-                        <td className="py-3 pr-4 text-center text-muted-foreground">
-                          {tx.estimatedReadyDate ? formatDate(tx.estimatedReadyDate) : "—"}
-                        </td>
-                        <td className="py-3 pr-4 text-muted-foreground">
-                          <span className="block truncate">{tx.createdBy.fullName}</span>
+                        <td className="py-3 pr-4 text-right">
+                          <span className="block truncate">
+                            {formatCurrency(tx.totalAmount)}
+                          </span>
                         </td>
                         <td className="py-3">
                           <div className="flex justify-center">
@@ -315,7 +307,7 @@ const ManageTransactions: React.FC = () => {
                     ))}
                     <EmptyTableRows
                       count={PAGE_SIZE - (transactions?.length ?? 0)}
-                      colSpan={9}
+                      colSpan={7}
                       className="h-[57px]"
                     />
                   </tbody>

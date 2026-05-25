@@ -30,9 +30,14 @@ const StatusBadge: React.FC<StatusBadgeProps> = ({ status, className = "" }) => 
     FULFILLMENT_STATUS_STYLES[status] ??
     "bg-gray-500 text-white";
 
+  const displayText = status
+    .split("_")
+    .map((word) => word.charAt(0) + word.slice(1).toLowerCase())
+    .join(" ");
+
   return (
     <Badge className={`${style} ${className}`}>
-      {status.replace(/_/g, " ")}
+      {displayText}
     </Badge>
   );
 };
