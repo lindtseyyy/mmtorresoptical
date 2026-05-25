@@ -343,4 +343,22 @@ public interface InventoryAnalyticsRepository extends JpaRepository<Product, UUI
     """)
     long countArchivedWithStock();
 
+    /*
+     * BATCH DAILY SALES VELOCITY — returns [productId, totalNetUnitsSold]
+     * for PAID/DEPOSIT transactions in the past N days.
+     * Net units = quantity sold minus refunded quantity.
+     */
+    @Query("""
+        SELECT ti.product.productId, SUM(ti.quantity - COALESCE(ti.refundedQuantity, 0))
+        FROM TransactionItem ti
+        JOIN ti.transaction t
+        WHERE t.transactionStatus IN (
+            com.mmtorresoptical.OpticalClinicManagementSystem.enums.TransactionStatus.PAID,
+            com.mmtorresoptical.OpticalClinicManagementSystem.enums.TransactionStatus.DEPOSIT
+        )
+          AND t.transactionDate >= :sinceDate
+        GROUP BY ti.product.productId
+    """)
+    List<Object[]> sumUnitsSoldPerProductSince(@Param("sinceDate") LocalDateTime sinceDate);
+
 }

@@ -30,6 +30,9 @@ public interface ProductMapper {
             if (product.getOverstockedThreshold() == null) {
                 product.setOverstockedThreshold(0);
             }
+            if (product.getLeadTimeDays() == null) {
+                product.setLeadTimeDays(0);
+            }
         }
     }
 
@@ -60,6 +63,9 @@ public interface ProductMapper {
             }
             if (product.getOverstockedThreshold() == null) {
                 product.setOverstockedThreshold(0);
+            }
+            if (product.getLeadTimeDays() == null) {
+                product.setLeadTimeDays(0);
             }
         }
     }

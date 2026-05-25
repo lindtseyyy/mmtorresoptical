@@ -62,6 +62,7 @@ export const productFormSchema = z
     quantity: z.string().optional(),
     lowLevelThreshold: z.string().optional(),
     overstockedThreshold: z.string().optional(),
+    leadTimeDays: z.string().optional(),
     isArchived: z.boolean(),
     imageDir: z.string().optional(),
   })
@@ -125,6 +126,20 @@ export const productFormSchema = z
         path: ["overstockedThreshold"],
       });
     }
+
+    if (!data.leadTimeDays || data.leadTimeDays.trim().length === 0) {
+      ctx.addIssue({
+        code: z.ZodIssueCode.custom,
+        message: "Lead time is required",
+        path: ["leadTimeDays"],
+      });
+    } else if (!/^\d+$/.test(data.leadTimeDays) || Number(data.leadTimeDays) < 0) {
+      ctx.addIssue({
+        code: z.ZodIssueCode.custom,
+        message: "Lead time must be a non-negative whole number",
+        path: ["leadTimeDays"],
+      });
+    }
   });
 
 // ── Transform (form values → submission payload) ────────────────────
@@ -142,6 +157,8 @@ export const productSchema = productFormSchema.transform((data) => ({
     data.productType === "SERVICE"
       ? 0
       : Number(data.overstockedThreshold || "0"),
+  leadTimeDays:
+    data.productType === "SERVICE" ? 0 : Number(data.leadTimeDays || "3"),
   supplier: data.productType === "SERVICE" ? "In-House" : (data.supplier || ""),
 }));
 
@@ -160,6 +177,8 @@ export interface Product {
   productType: "PHYSICAL" | "SERVICE";
   lowLevelThreshold: number;
   overstockedThreshold: number;
+  leadTimeDays: number;
+  reorderPoint: number | null;
   isArchived: boolean;
   imageDir: string | null;
   createdAt: string;
@@ -186,6 +205,7 @@ export interface InventorySummary {
   inventoryValue: number;
   countLowStockProducts: number;
   countOverstockedProducts: number;
+  countReorderNeededProducts: number;
   countOutOfStockProducts: number;
   countArchivedProducts: number;
   archivedInventoryValue: number;

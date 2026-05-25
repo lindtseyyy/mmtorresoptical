@@ -30,6 +30,8 @@ public class CreateProductRequestDTO implements ProductRequest {
 
     private Integer overstockedThreshold;
 
+    private Integer leadTimeDays = 3;
+
     private ProductType productType;
 
     private Boolean isArchived = false;

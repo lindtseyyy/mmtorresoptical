@@ -122,6 +122,13 @@ public class ProductSpecification {
                     cb.lessThan(cb.diff(root.get("quantity"), root.get("overstockedThreshold")), 0)
                 );
             }
+            if ("REORDER_NEEDED".equals(upper)) {
+                return cb.and(
+                    cb.equal(root.get("isArchived"), false),
+                    cb.notEqual(root.get("productType"), "SERVICE"),
+                    cb.greaterThan(root.get("quantity"), 0)
+                );
+            }
             return null;
         };
     }

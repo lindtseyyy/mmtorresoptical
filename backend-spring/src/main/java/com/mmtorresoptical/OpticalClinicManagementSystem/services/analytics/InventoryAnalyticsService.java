@@ -5,17 +5,21 @@ import com.mmtorresoptical.OpticalClinicManagementSystem.dto.metrics.InventoryAn
 import com.mmtorresoptical.OpticalClinicManagementSystem.dto.metrics.InventoryValueTrendPoint;
 import com.mmtorresoptical.OpticalClinicManagementSystem.dto.metrics.ProductMetricsDTO;
 import com.mmtorresoptical.OpticalClinicManagementSystem.dto.product.ProductDetailsDTO;
+import com.mmtorresoptical.OpticalClinicManagementSystem.enums.ProductType;
 import com.mmtorresoptical.OpticalClinicManagementSystem.mapper.ProductMapper;
 import com.mmtorresoptical.OpticalClinicManagementSystem.model.InventoryValueSnapshot;
 import com.mmtorresoptical.OpticalClinicManagementSystem.model.Product;
 import com.mmtorresoptical.OpticalClinicManagementSystem.objects.TopSellingProductDTO;
 import com.mmtorresoptical.OpticalClinicManagementSystem.repository.InventoryValueSnapshotRepository;
+import com.mmtorresoptical.OpticalClinicManagementSystem.repository.ProductRepository;
 import com.mmtorresoptical.OpticalClinicManagementSystem.repository.analytics.InventoryAnalyticsRepository;
+import com.mmtorresoptical.OpticalClinicManagementSystem.specification.ProductSpecification;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
+import org.springframework.data.jpa.domain.Specification;
 import org.springframework.stereotype.Service;
 
 import java.math.BigDecimal;
@@ -37,6 +41,7 @@ public class InventoryAnalyticsService {
     private final InventoryAnalyticsRepository inventoryAnalyticsRepository;
     private final InventoryValueSnapshotRepository snapshotRepository;
     private final ProductMapper productMapper;
+    private final ProductRepository productRepository;
 
     public InventoryAnalyticsDTO getInventoryAnalytics() {
         long totalProducts = inventoryAnalyticsRepository.countActiveProducts();
@@ -44,6 +49,7 @@ public class InventoryAnalyticsService {
         BigDecimal inventoryValue = inventoryAnalyticsRepository.inventoryValue();
         long countLowStockProducts = inventoryAnalyticsRepository.countLowStockProducts();
         long countOverStockedProducts = inventoryAnalyticsRepository.countOverstockedProducts();
+        long countReorderNeededProducts = getReorderNeededCount();
         long countOutOfStockProducts = inventoryAnalyticsRepository.countOutOfStockProducts();
         long countArchivedProducts = inventoryAnalyticsRepository.countArchivedProducts();
         BigDecimal archivedInventoryValue = inventoryAnalyticsRepository.archivedInventoryValue();
@@ -55,6 +61,7 @@ public class InventoryAnalyticsService {
                 .inventoryValue(inventoryValue)
                 .countLowStockProducts(countLowStockProducts)
                 .countOverstockedProducts(countOverStockedProducts)
+                .countReorderNeededProducts(countReorderNeededProducts)
                 .countOutOfStockProducts(countOutOfStockProducts)
                 .countArchivedProducts(countArchivedProducts)
                 .archivedInventoryValue(archivedInventoryValue)
@@ -300,6 +307,83 @@ public class InventoryAnalyticsService {
         }
 
         return trend;
+    }
+
+    // ── Reorder Point (ROP) Engine ──────────────────────────────────
+
+    /**
+     * Builds a map of productId → total net units sold over the past 30 days
+     * from PAID/DEPOSIT transactions (net of refunded quantities).
+     */
+    private Map<UUID, Long> fetchSalesVelocityMap() {
+        LocalDateTime thirtyDaysAgo = LocalDateTime.now().minusDays(30);
+        return inventoryAnalyticsRepository.sumUnitsSoldPerProductSince(thirtyDaysAgo)
+                .stream()
+                .collect(Collectors.toMap(
+                        row -> (UUID) row[0],
+                        row -> (Long) row[1]
+                ));
+    }
+
+    /**
+     * Daily sales velocity: D = totalSold / 30.0
+     */
+    private double getDailySalesVelocity(UUID productId, Map<UUID, Long> velocityMap) {
+        long totalSold = velocityMap.getOrDefault(productId, 0L);
+        return totalSold / 30.0;
+    }
+
+    /**
+     * ROP = (D × leadTimeDays) + 2 (safety stock buffer).
+     * Rounded to nearest integer.
+     */
+    public int computeReorderPoint(UUID productId, int leadTimeDays, Map<UUID, Long> velocityMap) {
+        double dailyVelocity = getDailySalesVelocity(productId, velocityMap);
+        return (int) Math.round(dailyVelocity * leadTimeDays) + 2;
+    }
+
+    /**
+     * Counts active, non-archived PHYSICAL products with quantity > 0
+     * whose current stock is <= computed ROP (meaning they need reordering).
+     */
+    public long getReorderNeededCount() {
+        Specification<Product> spec = Specification
+                .where(ProductSpecification.hasArchivedStatus("ACTIVE"))
+                .and((root, query, cb) -> cb.equal(root.get("productType"), ProductType.PHYSICAL))
+                .and((root, query, cb) -> cb.greaterThan(root.get("quantity"), 0));
+
+        List<Product> candidates = productRepository.findAll(spec);
+        if (candidates.isEmpty()) return 0;
+
+        Map<UUID, Long> velocityMap = fetchSalesVelocityMap();
+
+        return candidates.stream()
+                .filter(p -> p.getQuantity() <= computeReorderPoint(
+                        p.getProductId(),
+                        p.getLeadTimeDays() != null ? p.getLeadTimeDays() : 3,
+                        velocityMap
+                ))
+                .count();
+    }
+
+    /**
+     * Enriches a list of ProductDetailsDTOs with computed reorderPoint values.
+     * Called by ProductService after fetching product pages.
+     * SERVICE products get reorderPoint = null.
+     */
+    public void enrichWithReorderPoints(List<ProductDetailsDTO> dtos) {
+        if (dtos.isEmpty()) return;
+
+        Map<UUID, Long> velocityMap = fetchSalesVelocityMap();
+
+        for (ProductDetailsDTO dto : dtos) {
+            if ("SERVICE".equals(dto.getProductType())) {
+                dto.setReorderPoint(null);
+                continue;
+            }
+            int leadTime = dto.getLeadTimeDays() != null ? dto.getLeadTimeDays() : 3;
+            dto.setReorderPoint(computeReorderPoint(dto.getProductId(), leadTime, velocityMap));
+        }
     }
 
 }

@@ -48,6 +48,9 @@ public class Product {
     @Column(nullable = false)
     private Integer overstockedThreshold;
 
+    @Column(nullable = false, columnDefinition = "INTEGER NOT NULL DEFAULT 3")
+    private Integer leadTimeDays = 3;
+
     @CreationTimestamp
     @Column(updatable = false)
     private LocalDateTime createdAt;

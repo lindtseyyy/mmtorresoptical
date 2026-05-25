@@ -31,5 +31,7 @@ public class UpdateProductRequestDTO implements ProductRequest {
 
     private Integer overstockedThreshold;
 
+    private Integer leadTimeDays;
+
     private ProductType productType;
 }

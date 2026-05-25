@@ -19,6 +19,8 @@ public class ProductDetailsDTO {
     private String productType;
     private Integer lowLevelThreshold;
     private Integer overstockedThreshold;
+    private Integer leadTimeDays;
+    private Integer reorderPoint;
     private Boolean isArchived;
     private LocalDateTime createdAt;
 }

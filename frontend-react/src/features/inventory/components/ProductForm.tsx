@@ -73,6 +73,12 @@ const mapToFormValues = (values?: ProductFormData): ProductFormValues => {
         : values && values.overstockedThreshold !== undefined && values.overstockedThreshold !== 0
           ? String(values.overstockedThreshold)
           : "",
+    leadTimeDays:
+      isService
+        ? ""
+        : values && values.leadTimeDays !== undefined
+          ? String(values.leadTimeDays)
+          : "3",
     imageDir: values?.imageDir ?? "",
     isArchived: values?.isArchived ?? false,
   };
@@ -124,6 +130,7 @@ export const ProductForm: React.FC<ProductFormProps> = ({
       values.quantity = "";
       values.lowLevelThreshold = "";
       values.overstockedThreshold = "";
+      values.leadTimeDays = "";
     }
     // Preserve quantity from original data when editing (field is not shown in edit mode)
     if (isEditMode && !isService) {
@@ -299,6 +306,40 @@ export const ProductForm: React.FC<ProductFormProps> = ({
                 />
               )}
             </div>
+
+            {!isService && (
+              <div className="grid gap-4 md:grid-cols-1">
+                <FormField
+                  control={form.control}
+                  name="leadTimeDays"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel className="font-semibold">
+                        Estimated Lead Time (Days)
+                      </FormLabel>
+                      <FormControl>
+                        <Input
+                          type="text"
+                          inputMode="numeric"
+                          placeholder="Enter supplier lead time in days (default: 3)"
+                          value={field.value ?? ""}
+                          name={field.name}
+                          ref={field.ref}
+                          onBlur={field.onBlur}
+                          onChange={(e) => {
+                            const value = e.target.value.trimStart();
+                            if (INTEGER_INPUT_REGEX.test(value)) {
+                              field.onChange(value);
+                            }
+                          }}
+                        />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+              </div>
+            )}
 
             {!isService && (
               <div className="grid gap-4 md:grid-cols-2">

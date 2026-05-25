@@ -1,5 +1,5 @@
 import { queryOptions, useQuery } from "@tanstack/react-query";
-import { fetchProducts, fetchProduct, addProduct, updateProduct, archiveProduct, restoreProduct, adjustStock, fetchInventorySummary, fetchProductSummaries } from "@/features/inventory/services/productApi";
+import { fetchProducts, fetchProduct, addProduct, updateProduct, archiveProduct, restoreProduct, adjustStock, fetchInventorySummary, fetchProductSummaries, fetchRopAlertsCount } from "@/features/inventory/services/productApi";
 import { toast } from "sonner";
 import type { NavigateFunction } from "react-router";
 import type { ProductFormData } from "@/features/inventory/types";
@@ -128,7 +128,15 @@ function createInventorySummaryQueryOptions() {
   })
 }
 
-export {createProductsListQueryOptions, createEditProductQueryOptions, createAddProductMutationOptions, createEditProductMutationOptions, createArchiveProductMutationOptions, createRestoreProductMutationOptions, createAdjustStockMutationOptions, createInventorySummaryQueryOptions}
+function createRopAlertsCountQueryOptions() {
+  return queryOptions({
+    queryKey: ["rop-alerts-count"],
+    queryFn: fetchRopAlertsCount,
+    staleTime: 30_000,
+  });
+}
+
+export {createProductsListQueryOptions, createEditProductQueryOptions, createAddProductMutationOptions, createEditProductMutationOptions, createArchiveProductMutationOptions, createRestoreProductMutationOptions, createAdjustStockMutationOptions, createInventorySummaryQueryOptions, createRopAlertsCountQueryOptions}
 
 export const useProductSummaries = (keyword?: string, category?: string) =>
   useQuery({

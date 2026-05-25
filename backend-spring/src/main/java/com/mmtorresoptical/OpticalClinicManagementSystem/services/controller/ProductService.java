@@ -13,6 +13,7 @@ import com.mmtorresoptical.OpticalClinicManagementSystem.model.Product;
 import com.mmtorresoptical.OpticalClinicManagementSystem.model.User;
 import com.mmtorresoptical.OpticalClinicManagementSystem.repository.ProductRepository;
 import com.mmtorresoptical.OpticalClinicManagementSystem.services.AuthenticatedUserService;
+import com.mmtorresoptical.OpticalClinicManagementSystem.services.analytics.InventoryAnalyticsService;
 import com.mmtorresoptical.OpticalClinicManagementSystem.services.auditlog.resources.ProductAuditHelper;
 import com.mmtorresoptical.OpticalClinicManagementSystem.services.helper.JSONService;
 import com.mmtorresoptical.OpticalClinicManagementSystem.specification.ProductSpecification;
@@ -39,6 +40,7 @@ public class ProductService {
     private final AuthenticatedUserService authenticatedUserService;
     private final ProductAuditHelper productAuditHelper;
     private final JSONService jsonService;
+    private final InventoryAnalyticsService inventoryAnalyticsService;
 
     @Transactional
     public List<ProductResponseDTO> createProduct(List<CreateProductRequestDTO> productRequestDTOList) {
@@ -152,7 +154,10 @@ public class ProductService {
 
         Page<Product> products = productRepository.findAll(spec, pageable);
 
-        return products.map(productMapper::entityToDetailsDTO);
+        Page<ProductDetailsDTO> dtoPage = products.map(productMapper::entityToDetailsDTO);
+        inventoryAnalyticsService.enrichWithReorderPoints(dtoPage.getContent());
+
+        return dtoPage;
     }
 
     public ProductDetailsDTO getProduct(UUID id) {

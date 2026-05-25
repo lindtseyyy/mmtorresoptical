@@ -95,4 +95,9 @@ const fetchProductSummaries = async (keyword?: string, category?: string): Promi
   return data;
 };
 
-export { fetchProducts, fetchProduct, updateProduct, addProduct, archiveProduct, restoreProduct, adjustStock, fetchInventorySummary, fetchProductMetrics, fetchProductSummaries };
+const fetchRopAlertsCount = async (): Promise<{ count: number }> => {
+  const { data } = await api.get("/dashboard/rop-alerts-count");
+  return data;
+};
+
+export { fetchProducts, fetchProduct, updateProduct, addProduct, archiveProduct, restoreProduct, adjustStock, fetchInventorySummary, fetchProductMetrics, fetchProductSummaries, fetchRopAlertsCount };

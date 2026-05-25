@@ -1,6 +1,7 @@
 import {
   PackageOpen,
   CircleDollarSign,
+  AlertTriangle,
   Banknote,
   Clock,
   DollarSign,
@@ -15,7 +16,7 @@ import { useNavigate } from "react-router-dom";
 import { MetricCard } from "@/shared/components/MetricCard";
 import { Card, CardContent, CardHeader, CardTitle } from "@/shared/components/ui/card";
 import { Button } from "@/shared/components/ui/button";
-import { createInventorySummaryQueryOptions } from "@/features/inventory/hooks/productQuery";
+import { createInventorySummaryQueryOptions, createRopAlertsCountQueryOptions } from "@/features/inventory/hooks/productQuery";
 import {
   createTransactionMetricsQueryOptions,
   createDailyCashInflowQueryOptions,
@@ -76,6 +77,9 @@ export default function Dashboard() {
   const { data: dailyCashInflow } = useQuery(
     createDailyCashInflowQueryOptions()
   );
+  const { data: ropAlerts } = useQuery(
+    createRopAlertsCountQueryOptions()
+  );
   const { data: recentTransactions } = useQuery(
     createTransactionsListQueryOptions({ size: 10 })
   );
@@ -90,7 +94,7 @@ export default function Dashboard() {
       </div>
 
       {/* Hero Row */}
-      <div className="grid grid-cols-1 gap-4 lg:grid-cols-2">
+      <div className="grid grid-cols-1 gap-4 lg:grid-cols-3">
         {/* Today's Revenue */}
         <div className="rounded-xl border border-emerald-200 bg-emerald-50 p-4 shadow-sm">
           <div className="flex items-center gap-2">
@@ -120,6 +124,36 @@ export default function Dashboard() {
           </div>
           <p className="mt-2 text-2xl font-bold text-amber-900">
             {metrics?.awaitingPickupCount ?? "—"}
+          </p>
+        </div>
+
+        {/* Needs Reordering */}
+        <div
+          onClick={() => navigate("/inventory")}
+          className={`rounded-xl border p-4 shadow-sm cursor-pointer transition-colors hover:opacity-90 ${
+            (ropAlerts?.count ?? 0) > 0
+              ? "border-orange-200 bg-orange-50"
+              : "border-muted bg-card"
+          }`}
+        >
+          <div className="flex items-center gap-2">
+            <div className={`flex h-9 w-9 items-center justify-center rounded-lg ${
+              (ropAlerts?.count ?? 0) > 0 ? "bg-orange-100" : "bg-muted"
+            }`}>
+              <AlertTriangle className={`h-4 w-4 ${
+                (ropAlerts?.count ?? 0) > 0 ? "text-orange-700" : "text-muted-foreground"
+              }`} />
+            </div>
+            <p className={`text-xs font-medium ${
+              (ropAlerts?.count ?? 0) > 0 ? "text-orange-800" : "text-muted-foreground"
+            }`}>
+              Needs Reordering
+            </p>
+          </div>
+          <p className={`mt-2 text-2xl font-bold ${
+            (ropAlerts?.count ?? 0) > 0 ? "text-orange-900" : "text-foreground"
+          }`}>
+            {ropAlerts?.count ?? "—"}
           </p>
         </div>
       </div>

@@ -10,7 +10,7 @@ import {
   SelectValue,
 } from "@/shared/components/ui/select";
 import { Badge } from "@/shared/components/ui/badge";
-import { Plus, Search, Eye, ChevronLeft, ChevronRight, Glasses, ArrowUp, ArrowDown, PackageX, TrendingDown, TrendingUp } from "lucide-react";
+import { Plus, Search, Eye, ChevronLeft, ChevronRight, Glasses, ArrowUp, ArrowDown, PackageX, AlertTriangle, TrendingUp } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { isAdmin } from "@/shared/lib/auth";
 import { Card, CardContent } from "@/shared/components/ui/card";
@@ -65,20 +65,21 @@ const ManageInventory: React.FC = () => {
     }
   }, [products.length, page, isFetching]);
 
-  // Helper function from your reference
+  // Helper function using ROP-based logic
   const getStockStatus = (product: Product) => {
     if (product.productType === "SERVICE") {
       return { label: "Service", variant: "default" as const };
     }
     if (product.quantity === 0) {
-      return { label: "No Stock", variant: "destructive" as const };
+      return { label: "Out of Stock", variant: "destructive" as const };
     }
-    if (product.quantity <= product.lowLevelThreshold) {
-      return { label: "Low Stock", variant: "destructive" as const };
-    } else if (product.quantity >= product.overstockedThreshold) {
+    if (product.reorderPoint != null && product.quantity <= product.reorderPoint) {
+      return { label: "Reorder", variant: "secondary" as const };
+    }
+    if (product.quantity >= product.overstockedThreshold) {
       return { label: "Overstocked", variant: "secondary" as const };
     }
-    return { label: "Active", variant: "default" as const };
+    return { label: "Normal", variant: "default" as const };
   };
 
   return (
@@ -110,16 +111,16 @@ const ManageInventory: React.FC = () => {
           labelPosition="bottom"
         />
         <MetricCard
-          icon={TrendingDown}
-          label="Low Stock — Needs Reorder"
-          value={summary?.countLowStockProducts ?? "—"}
+          icon={AlertTriangle}
+          label="Reorder Needed"
+          value={summary?.countReorderNeededProducts ?? "—"}
           color="amber"
           size="sm"
           labelPosition="bottom"
         />
         <MetricCard
           icon={TrendingUp}
-          label="Overstocked — Excess Capital"
+          label="Overstocked"
           value={summary?.countOverstockedProducts ?? "—"}
           color="blue"
           size="sm"
@@ -198,7 +199,7 @@ const ManageInventory: React.FC = () => {
                     <SelectItem value="all">All Stock</SelectItem>
                     <SelectItem value="NORMAL">Normal</SelectItem>
                     <SelectItem value="OUT_OF_STOCK">No Stock</SelectItem>
-                    <SelectItem value="LOW_STOCK">Low Stock</SelectItem>
+                    <SelectItem value="LOW_STOCK">Reorder</SelectItem>
                     <SelectItem value="OVERSTOCKED">Overstocked</SelectItem>
                   </SelectContent>
                 </Select>
@@ -217,11 +218,12 @@ const ManageInventory: React.FC = () => {
                 <table className="w-full table-fixed text-sm">
                   <thead>
                     <tr className="border-b text-left text-muted-foreground">
-                      <th className="w-[36%] py-3 pr-4 font-medium">Product Name</th>
+                      <th className="w-[32%] py-3 pr-4 font-medium">Product Name</th>
                       <th className="w-[12%] py-3 pr-4 font-medium">Category</th>
-                      <th className="w-[12%] py-3 pr-4 text-center font-medium">Quantity</th>
+                      <th className="w-[10%] py-3 pr-4 text-center font-medium">Quantity</th>
                       <th className="w-[12%] py-3 pr-4 text-center font-medium">Unit Price</th>
-                      <th className="w-[20%] py-3 pr-4 font-medium">Supplier</th>
+                      <th className="w-[14%] py-3 pr-4 text-center font-medium">Stock Status</th>
+                      <th className="w-[12%] py-3 pr-4 text-center font-medium">Lead Time</th>
                       <th className="w-[8%] py-3 text-center font-medium">Action</th>
                     </tr>
                   </thead>
@@ -254,6 +256,16 @@ const ManageInventory: React.FC = () => {
                             {product.productType === "SERVICE" ? (
                               <span className="text-muted-foreground">—</span>
                             ) : (
+                              product.quantity
+                            )}
+                          </td>
+                          <td className="py-3 pr-4 text-center">
+                            ₱{product.unitPrice.toFixed(2)}
+                          </td>
+                          <td className="py-3 pr-4 text-center">
+                            {product.productType === "SERVICE" ? (
+                              <span className="text-muted-foreground">—</span>
+                            ) : (
                               <Badge
                                 className={`text-white ${
                                   stockStatus.variant === "destructive"
@@ -263,14 +275,17 @@ const ManageInventory: React.FC = () => {
                                       : "bg-green-700 hover:bg-green-700"
                                 }`}
                               >
-                                {product.quantity}
+                                {stockStatus.label}
                               </Badge>
                             )}
                           </td>
                           <td className="py-3 pr-4 text-center">
-                            ₱{product.unitPrice.toFixed(2)}
+                            {product.productType === "SERVICE" ? (
+                              <span className="text-muted-foreground">—</span>
+                            ) : (
+                              `${product.leadTimeDays} days`
+                            )}
                           </td>
-                          <td className="py-3 pr-4">{product.supplier}</td>
                           <td className="py-3">
                             <div className="flex justify-center">
                               <Button
@@ -288,7 +303,7 @@ const ManageInventory: React.FC = () => {
                     })}
                     <EmptyTableRows
                       count={PAGE_SIZE - (products?.length ?? 0)}
-                      colSpan={6}
+                      colSpan={7}
                       className="h-[57px]"
                     />
                   </tbody>
