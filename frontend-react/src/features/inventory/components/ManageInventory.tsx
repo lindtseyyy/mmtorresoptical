@@ -220,10 +220,10 @@ const ManageInventory: React.FC = () => {
                     <tr className="border-b text-left text-muted-foreground">
                       <th className="w-[32%] py-3 pr-4 font-medium">Product Name</th>
                       <th className="w-[12%] py-3 pr-4 font-medium">Category</th>
-                      <th className="w-[10%] py-3 pr-4 text-center font-medium">Quantity</th>
-                      <th className="w-[12%] py-3 pr-4 text-center font-medium">Unit Price</th>
+                      <th className="w-[10%] py-3 pr-4 text-right font-medium">Quantity</th>
+                      <th className="w-[12%] py-3 pr-4 text-right font-medium">Unit Price</th>
+                      <th className="w-[12%] py-3 pr-4 text-right font-medium">Lead Time</th>
                       <th className="w-[14%] py-3 pr-4 text-center font-medium">Stock Status</th>
-                      <th className="w-[12%] py-3 pr-4 text-center font-medium">Lead Time</th>
                       <th className="w-[8%] py-3 text-center font-medium">Action</th>
                     </tr>
                   </thead>
@@ -252,15 +252,22 @@ const ManageInventory: React.FC = () => {
                           <td className="py-3 pr-4">
                             {CATEGORY_LABELS[product.category as Category] ?? product.category}
                           </td>
-                          <td className="py-3 pr-4 text-center">
+                          <td className="py-3 pr-4 text-right">
                             {product.productType === "SERVICE" ? (
                               <span className="text-muted-foreground">—</span>
                             ) : (
                               product.quantity
                             )}
                           </td>
-                          <td className="py-3 pr-4 text-center">
+                          <td className="py-3 pr-4 text-right">
                             ₱{product.unitPrice.toFixed(2)}
+                          </td>
+                          <td className="py-3 pr-4 text-right">
+                            {product.productType === "SERVICE" ? (
+                              <span className="text-muted-foreground">—</span>
+                            ) : (
+                              `${product.leadTimeDays} days`
+                            )}
                           </td>
                           <td className="py-3 pr-4 text-center">
                             {product.productType === "SERVICE" ? (
@@ -277,13 +284,6 @@ const ManageInventory: React.FC = () => {
                               >
                                 {stockStatus.label}
                               </Badge>
-                            )}
-                          </td>
-                          <td className="py-3 pr-4 text-center">
-                            {product.productType === "SERVICE" ? (
-                              <span className="text-muted-foreground">—</span>
-                            ) : (
-                              `${product.leadTimeDays} days`
                             )}
                           </td>
                           <td className="py-3">
