@@ -58,7 +58,9 @@ const Login: React.FC = () => {
         navigate("/enforce-password-change");
       } else {
         localStorage.removeItem("pwChangeRequired");
-        navigate("/");
+        const payload = JSON.parse(atob(accessToken.split(".")[1]));
+        const role = payload.role as string;
+        navigate(role === "ADMIN" ? "/dashboard" : "/inventory");
       }
     } catch (error) {
       // --- FAILURE ---

@@ -95,6 +95,9 @@ public class PatientService {
         // Set patient address
         patient.setAddress(patientRequest.getAddress());
 
+        // Set medical history
+        patient.setMedicalHistory(patientRequest.getMedicalHistory());
+
         // Set archive status
         patient.setIsArchived(patientRequest.getIsArchived());
 
