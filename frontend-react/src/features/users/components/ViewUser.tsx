@@ -1,16 +1,10 @@
 import { useParams, Link, useNavigate } from "react-router-dom";
-import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
-import { ArrowLeft, MoreHorizontal, Pencil, Archive, Undo2, User, Calendar, Key, ShoppingCart, ClipboardList } from "lucide-react";
+import { useQuery } from "@tanstack/react-query";
+import { ArrowLeft, Pencil, User, Calendar, Key, ShoppingCart, ClipboardList } from "lucide-react";
 import { Button } from "@/shared/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/shared/components/ui/card";
 import { MetricCard } from "@/shared/components/MetricCard";
 import { Badge } from "@/shared/components/ui/badge";
-import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuTrigger,
-} from "@/shared/components/ui/dropdown-menu";
 import { fetchUser } from "@/features/users/services/userApi";
 import type { AuditLogEntry } from "@/features/users/services/auditApi";
 import {
@@ -18,10 +12,6 @@ import {
   createUserLastLoginQueryOptions,
   createUserTransactionCountQueryOptions,
 } from "@/features/users/hooks/auditQuery";
-import {
-  createArchiveUserMutationOptions,
-  createRestoreUserMutationOptions,
-} from "@/features/users/hooks/userQuery";
 
 const formatDate = (dateStr: string | null) => {
   if (!dateStr) return "—";
@@ -55,7 +45,6 @@ const formatActionLabel = (actionType: string, resourceType: string) => {
 const ViewUser: React.FC = () => {
   const { id } = useParams<{ id: string }>();
   const userId = id!;
-  const queryClient = useQueryClient();
   const navigate = useNavigate();
 
   const { data: user, isLoading: userLoading } = useQuery({
@@ -75,30 +64,6 @@ const ViewUser: React.FC = () => {
   const { data: auditData, isFetching: auditFetching } = useQuery(
     createUserAuditLogsQueryOptions(userId, 0, 10)
   );
-
-  const archiveMutation = useMutation(
-    createArchiveUserMutationOptions(queryClient)
-  );
-
-  const restoreMutation = useMutation(
-    createRestoreUserMutationOptions(queryClient)
-  );
-
-  const handleArchive = () => {
-    if (user?.isArchived) {
-      restoreMutation.mutate(userId, {
-        onSuccess: () => {
-          queryClient.invalidateQueries({ queryKey: ["user", userId] });
-        },
-      });
-    } else {
-      archiveMutation.mutate(userId, {
-        onSuccess: () => {
-          queryClient.invalidateQueries({ queryKey: ["user", userId] });
-        },
-      });
-    }
-  };
 
   if (userLoading) {
     return (
@@ -208,37 +173,14 @@ const ViewUser: React.FC = () => {
               <CardTitle>Overview</CardTitle>
               <CardDescription>User information</CardDescription>
             </div>
-            <DropdownMenu>
-              <DropdownMenuTrigger asChild>
-                <Button variant="ghost" className="h-10 w-10 shrink-0 p-0 [&_svg]:size-auto focus-visible:ring-0">
-                  <MoreHorizontal className="h-8 w-8" />
-                </Button>
-              </DropdownMenuTrigger>
-              <DropdownMenuContent align="end" className="bg-gray-100 dark:bg-gray-800 border-gray-300 dark:border-gray-700">
-                <DropdownMenuItem
-                  onClick={() => navigate(`/users/edit/${userId}`)}
-                >
-                  <Pencil className="mr-2 h-4 w-4" />
-                  Edit
-                </DropdownMenuItem>
-                <DropdownMenuItem
-                  onClick={handleArchive}
-                  disabled={archiveMutation.isPending || restoreMutation.isPending}
-                >
-                  {user.isArchived ? (
-                    <>
-                      <Undo2 className="mr-2 h-4 w-4" />
-                      Unarchive
-                    </>
-                  ) : (
-                    <>
-                      <Archive className="mr-2 h-4 w-4" />
-                      Archive
-                    </>
-                  )}
-                </DropdownMenuItem>
-              </DropdownMenuContent>
-            </DropdownMenu>
+            <Button
+              variant="default"
+              size="sm"
+              onClick={() => navigate(`/users/edit/${userId}`)}
+            >
+              <Pencil className="mr-2 h-4 w-4" />
+              Edit User
+            </Button>
           </div>
         </CardHeader>
         <CardContent>
