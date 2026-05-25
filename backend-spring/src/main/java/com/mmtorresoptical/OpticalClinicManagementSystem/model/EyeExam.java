@@ -30,7 +30,7 @@ public class EyeExam {
     @JoinColumn(name = "performed_by_id", nullable = false)
     private User performedBy;
 
-    @Column(name = "exam_number", nullable = false, unique = true, insertable = false, updatable = false)
+    @Column(name = "exam_number", nullable = false, unique = true, updatable = false)
     private String examNumber;
 
     @CreationTimestamp

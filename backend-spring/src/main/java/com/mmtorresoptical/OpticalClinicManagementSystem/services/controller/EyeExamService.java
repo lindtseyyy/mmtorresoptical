@@ -50,6 +50,15 @@ public class EyeExamService {
 
         EyeExam eyeExam = eyeExamMapper.createDTOToEntity(requestDTO);
 
+        // Generate exam number — create sequence if first run
+        entityManager.createNativeQuery(
+                "CREATE SEQUENCE IF NOT EXISTS eye_exam_exam_seq START WITH 10001 INCREMENT BY 1 NO MAXVALUE NO CYCLE"
+        ).executeUpdate();
+        Long nextSeq = (Long) entityManager
+                .createNativeQuery("SELECT nextval('eye_exam_exam_seq')")
+                .getSingleResult();
+        eyeExam.setExamNumber("EXAM-" + nextSeq);
+
         // Snapshot the patient's current medical history into this exam
         eyeExam.setMedicalHistorySnapshot(retrievedPatient.getMedicalHistory());
 
@@ -57,7 +66,6 @@ public class EyeExamService {
         eyeExam.setPerformedBy(authenticatedUser);
 
         EyeExam savedExam = eyeExamRepository.saveAndFlush(eyeExam);
-        entityManager.refresh(savedExam);
 
         eyeExamAuditHelper.logCreate(savedExam);
 
