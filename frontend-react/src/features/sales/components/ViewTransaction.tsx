@@ -675,7 +675,7 @@ const ViewTransaction: React.FC = () => {
                 </h3>
               </div>
               <div className="mt-2 space-y-4">
-                {tx.refundReceipts.map((receipt: RefundReceiptData) => (
+                {[...tx.refundReceipts].reverse().map((receipt: RefundReceiptData) => (
                   <div
                     key={receipt.refundReceiptId}
                     className="rounded-lg border border-border bg-muted/30 p-4"

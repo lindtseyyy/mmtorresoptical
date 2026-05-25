@@ -320,7 +320,7 @@ const ManageSales: React.FC = () => {
               <div className="flex items-center gap-3">
                 <button
                   type="button"
-                  className="flex items-center gap-3 flex-1 min-w-0 text-left"
+                  className="flex items-center gap-3 flex-1 min-w-0 text-left cursor-pointer"
                   onClick={() => setPatientExpanded((p) => !p)}
                 >
                   <div className="flex h-9 w-9 items-center justify-center rounded-full bg-primary/10 shrink-0">
@@ -412,7 +412,7 @@ const ManageSales: React.FC = () => {
             <Button
               variant="outline"
               size="sm"
-              className="w-full gap-2"
+              className="w-full gap-2 cursor-pointer"
               onClick={() => setIsPatientModalOpen(true)}
             >
               <UserRound className="h-4 w-4" />
