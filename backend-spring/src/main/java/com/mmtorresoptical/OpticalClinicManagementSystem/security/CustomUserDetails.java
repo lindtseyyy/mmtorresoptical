@@ -17,6 +17,7 @@ public class CustomUserDetails
     private String password;
     private String role;
     private boolean isPwChangeRequired;
+    private boolean isArchived;
 
     public CustomUserDetails(User user) {
         this.userId = user.getUserId();
@@ -24,6 +25,7 @@ public class CustomUserDetails
         this.password = user.getPasswordHash();
         this.role = String.valueOf(user.getRole());
         this.isPwChangeRequired = user.isPwChangeRequired();
+        this.isArchived = Boolean.TRUE.equals(user.getIsArchived());
     }
 
     public UUID getUserId() {
@@ -55,5 +57,5 @@ public class CustomUserDetails
     @Override public boolean isAccountNonExpired() { return true; }
     @Override public boolean isAccountNonLocked() { return true; }
     @Override public boolean isCredentialsNonExpired() { return true; }
-    @Override public boolean isEnabled() { return true; }
+    @Override public boolean isEnabled() { return !isArchived; }
 }

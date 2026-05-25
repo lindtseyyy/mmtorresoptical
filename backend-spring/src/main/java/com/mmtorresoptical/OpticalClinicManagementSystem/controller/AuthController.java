@@ -64,6 +64,10 @@ public class AuthController {
             return ResponseEntity.status(401).body("Invalid credentials");
         }
 
+        if (Boolean.TRUE.equals(user.getIsArchived())) {
+            return ResponseEntity.status(401).body("Account has been deactivated. Contact an administrator.");
+        }
+
         // 3. If yes, generate a JWT token
         String token = jwtTokenProvider.generateToken(user.getUsername(), user.getUserId(), user.getRole().name());
 
