@@ -344,6 +344,32 @@ const AddPrescription: React.FC = () => {
                     </FormItem>
                   )}
                 />
+                <div className="flex gap-2">
+                  <Button
+                    type="button"
+                    size="sm"
+                    variant="outline"
+                    onClick={() => {
+                      const d = new Date();
+                      d.setMonth(d.getMonth() + 3);
+                      form.setValue("followUpScheduledDate", d.toISOString().split("T")[0]);
+                    }}
+                  >
+                    +3 Months
+                  </Button>
+                  <Button
+                    type="button"
+                    size="sm"
+                    variant="outline"
+                    onClick={() => {
+                      const d = new Date();
+                      d.setMonth(d.getMonth() + 6);
+                      form.setValue("followUpScheduledDate", d.toISOString().split("T")[0]);
+                    }}
+                  >
+                    +6 Months
+                  </Button>
+                </div>
                 {form.watch("followUpScheduledDate") && (
                   <FormField
                     control={form.control}
