@@ -1,5 +1,5 @@
 // src/components/forms/UserForm.tsx
-import { useState } from "react";
+import { useState, useMemo } from "react";
 import { useForm, type SubmitHandler } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { userSchema, type UserFormData } from "@/features/users/types";
@@ -99,6 +99,12 @@ export const UserForm: React.FC<UserFormProps> = ({
       setResettingPw(false);
     }
   };
+
+  const maxBirthDate = useMemo(() => {
+    const d = new Date();
+    d.setFullYear(d.getFullYear() - 18);
+    return d.toISOString().split("T")[0];
+  }, []);
 
   const formSchema = isEditMode
     ? userSchema.partial() // everything optional, including password
@@ -234,7 +240,7 @@ export const UserForm: React.FC<UserFormProps> = ({
                   <FormItem>
                     <FormLabel>Birth Date *</FormLabel>
                     <FormControl>
-                      <Input type="date" {...field} />
+                      <Input type="date" max={maxBirthDate} {...field} />
                     </FormControl>
                     <FormMessage />
                   </FormItem>

@@ -19,7 +19,16 @@ export const userSchema = z.object({
     .max(50)
     .refine((val) => !/\d/.test(val), "Name must not contain numbers"),
   sex: z.enum(["Male", "Female"]),
-  birthDate: z.string().min(1, "Birth date is required"),
+  birthDate: z.string().min(1, "Birth date is required").refine((val) => {
+    const birth = new Date(val);
+    const today = new Date();
+    let age = today.getFullYear() - birth.getFullYear();
+    const m = today.getMonth() - birth.getMonth();
+    if (m < 0 || (m === 0 && today.getDate() < birth.getDate())) {
+      age--;
+    }
+    return age >= 18;
+  }, "Must be at least 18 years old"),
   email: z.string().email("Invalid email address"),
   contactNumber: z.string().min(10, "Must be at least 10 digits"),
   username: z.string().min(3, "Username must be at least 3 characters"),
