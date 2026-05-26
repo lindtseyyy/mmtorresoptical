@@ -196,10 +196,8 @@ const EditPrescription: React.FC = () => {
                           <span className="font-mono">{lens.rightSph != null ? lens.rightSph : "—"}</span>
                           <span className="font-mono">{lens.rightCyl != null ? lens.rightCyl : "—"}</span>
                           <span className="font-mono">{lens.rightAxis != null ? lens.rightAxis : "—"}</span>
-                          <span className="text-muted-foreground">Prism</span>
                           <span className="text-muted-foreground">Add</span>
                           <span className="text-muted-foreground">PD</span>
-                          <span className="font-mono">{lens.rightPrism != null ? lens.rightPrism : "—"}</span>
                           <span className="font-mono">{lens.rightAdd != null ? lens.rightAdd : "—"}</span>
                           <span className="font-mono">{lens.rightPd != null ? lens.rightPd : "—"}</span>
                         </div>
@@ -213,10 +211,8 @@ const EditPrescription: React.FC = () => {
                           <span className="font-mono">{lens.leftSph != null ? lens.leftSph : "—"}</span>
                           <span className="font-mono">{lens.leftCyl != null ? lens.leftCyl : "—"}</span>
                           <span className="font-mono">{lens.leftAxis != null ? lens.leftAxis : "—"}</span>
-                          <span className="text-muted-foreground">Prism</span>
                           <span className="text-muted-foreground">Add</span>
                           <span className="text-muted-foreground">PD</span>
-                          <span className="font-mono">{lens.leftPrism != null ? lens.leftPrism : "—"}</span>
                           <span className="font-mono">{lens.leftAdd != null ? lens.leftAdd : "—"}</span>
                           <span className="font-mono">{lens.leftPd != null ? lens.leftPd : "—"}</span>
                         </div>
