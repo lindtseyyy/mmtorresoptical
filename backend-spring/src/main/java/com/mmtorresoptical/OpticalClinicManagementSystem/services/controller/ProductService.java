@@ -112,11 +112,45 @@ public class ProductService {
             direction = Sort.Direction.DESC;
         }
 
-        Specification<Product> spec = Specification.allOf();
-
+        // Fuzzy search path — Levenshtein-based matching when keyword is present
         if (keyword != null && !keyword.isBlank()) {
-            spec = spec.and(ProductSpecification.nameContains(keyword));
+            Boolean mappedArchivedStatus;
+            if ("ARCHIVED".equalsIgnoreCase(archivedStatus)) {
+                mappedArchivedStatus = true;
+            } else if ("ACTIVE".equalsIgnoreCase(archivedStatus)) {
+                mappedArchivedStatus = false;
+            } else {
+                mappedArchivedStatus = null;
+            }
+
+            String effectiveCategory = (category != null && !category.isBlank()) ? category : null;
+            String effectiveSupplier = (supplier != null && !supplier.isBlank()) ? supplier : null;
+            String effectiveProductType = (productType != null && !productType.isBlank()) ? productType : null;
+            String effectiveStockStatus = (stockStatus != null && !stockStatus.isBlank()) ? stockStatus : null;
+
+            Pageable pageable = PageRequest.of(page, size);
+
+            Page<Product> products = productRepository.fuzzySearchProducts(
+                    keyword,
+                    3,
+                    effectiveCategory,
+                    effectiveSupplier,
+                    effectiveProductType,
+                    minPrice,
+                    maxPrice,
+                    minQty,
+                    maxQty,
+                    mappedArchivedStatus,
+                    effectiveStockStatus,
+                    pageable
+            );
+
+            Page<ProductDetailsDTO> dtoPage = products.map(productMapper::entityToDetailsDTO);
+            inventoryAnalyticsService.enrichWithReorderPoints(dtoPage.getContent());
+            return dtoPage;
         }
+
+        Specification<Product> spec = Specification.allOf();
 
         if (category != null && !category.isBlank()) {
             spec = spec.and(ProductSpecification.hasCategory(category));
