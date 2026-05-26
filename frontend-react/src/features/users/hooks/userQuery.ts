@@ -30,8 +30,9 @@ function createAddUserMutationOptions(queryClient: QueryClient, navigate: Naviga
           navigate("/users");
         },
         onError: (error: any) => {
+          const message = error?.response?.data?.message || error?.response?.data || "Failed to create user. Please try again.";
           toast.error("Error", {
-            description: "Failed to create user. Please try again.",
+            description: typeof message === "string" ? message : "Failed to create user. Please try again.",
           });
           console.error(error);
         },
