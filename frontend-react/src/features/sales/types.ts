@@ -53,6 +53,8 @@ export interface RefundReceiptData {
   receiptNumber: string;
   actualCashback: number;
   refundMethod: string;
+  gcashNumber?: string;
+  referenceNumber?: string;
   createdAt: string;
   issuedByFullName: string;
   refundItems: RefundItemData[];
@@ -133,6 +135,9 @@ export interface RefundReceiptSummary {
   refundReceiptId: string;
   receiptNumber: string;
   cashReturnedAmount: number;
+  refundMethod?: string;
+  gcashNumber?: string;
+  referenceNumber?: string;
   dateIssued: string;
   issuedByFullName: string;
 }

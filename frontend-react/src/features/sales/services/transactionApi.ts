@@ -112,6 +112,8 @@ const voidTransaction = async (id: string, reason: string, password: string): Pr
 const refundTransaction = async (data: {
   items: { transactionItemId: string; refundQuantity: number; refundReason: string }[];
   refundMethod: string;
+  gcashNumber?: string;
+  referenceNumber?: string;
 }): Promise<ItemRefundResponse> => {
   const { data: response } = await api.post("/transactions/refund", data);
   return response;

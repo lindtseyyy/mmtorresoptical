@@ -29,6 +29,9 @@ public class ItemRefundResponseDTO {
         private UUID refundReceiptId;
         private String receiptNumber;
         private BigDecimal cashReturnedAmount;
+        private String refundMethod;
+        private String gcashNumber;
+        private String referenceNumber;
         private LocalDateTime dateIssued;
         private String issuedByFullName;
     }

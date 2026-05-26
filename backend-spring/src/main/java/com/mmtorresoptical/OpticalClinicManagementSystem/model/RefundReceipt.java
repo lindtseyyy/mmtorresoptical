@@ -30,6 +30,12 @@ public class RefundReceipt {
     @Column(name = "refund_method", length = 20)
     private String refundMethod;
 
+    @Column(name = "gcash_number", length = 20)
+    private String gcashNumber;
+
+    @Column(name = "reference_number", length = 100)
+    private String referenceNumber;
+
     @Column(name = "created_at", nullable = false)
     private LocalDateTime createdAt;
 

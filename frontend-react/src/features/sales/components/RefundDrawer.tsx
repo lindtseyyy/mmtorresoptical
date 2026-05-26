@@ -40,7 +40,7 @@ interface Props {
   open: boolean;
   onOpenChange: (open: boolean) => void;
   items: RefundStateItem[];
-  onComplete: (items: RefundStateItem[], refundMethod: RefundMethod) => Promise<ItemRefundResponse>;
+  onComplete: (items: RefundStateItem[], refundMethod: RefundMethod, gcashNumber?: string, referenceNumber?: string) => Promise<ItemRefundResponse>;
   onRefundSuccess?: (response: ItemRefundResponse) => void;
   isPending: boolean;
   amountPaid?: number;
@@ -66,6 +66,9 @@ const RefundDrawer: React.FC<Props> = ({
   const [reasons, setReasons] = useState<Record<string, string>>({});
   const [quantities, setQuantities] = useState<Record<string, number>>({});
   const [refundMethod, setRefundMethod] = useState<RefundMethod>("CASH");
+  const [gcashNumber, setGcashNumber] = useState("");
+  const [referenceNumber, setReferenceNumber] = useState("");
+  const [showConfirm, setShowConfirm] = useState(false);
 
   // Initialize state when items change (drawer opens)
   useEffect(() => {
@@ -79,6 +82,8 @@ const RefundDrawer: React.FC<Props> = ({
     setReasons(initReasons);
     setQuantities(initQtys);
     setRefundMethod("CASH");
+    setGcashNumber("");
+    setReferenceNumber("");
   }, [open, items]);
 
   const allReasonsFilled = useMemo(
@@ -164,7 +169,7 @@ const RefundDrawer: React.FC<Props> = ({
       refundQuantity: quantities[item.transactionItemId] ?? item.refundQuantity,
     }));
     try {
-      const response = await onComplete(updatedItems, refundMethod);
+      const response = await onComplete(updatedItems, refundMethod, gcashNumber || undefined, referenceNumber || undefined);
       if (onRefundSuccess) {
         onRefundSuccess(response);
       }
@@ -173,9 +178,12 @@ const RefundDrawer: React.FC<Props> = ({
     }
   };
 
+  const openConfirmModal = () => setShowConfirm(true);
+
   return (
-    <Sheet open={open} onOpenChange={onOpenChange}>
-      <SheetContent side="right" className="flex w-full flex-col sm:max-w-lg">
+    <>
+      <Sheet open={open} onOpenChange={onOpenChange}>
+        <SheetContent side="right" className="flex w-full flex-col sm:max-w-lg">
         <SheetHeader>
           <SheetTitle className="flex items-center gap-2">
             <RotateCcw className="h-5 w-5" />
@@ -307,7 +315,7 @@ const RefundDrawer: React.FC<Props> = ({
               <span className="font-medium">{formatCurrency(accountingPreview.newRemainingDue)}</span>
             </div>
             <div className="flex items-center justify-between py-1.5 px-3">
-              <span className="text-red-600 font-medium text-[15px]">Cash to Return:</span>
+              <span className="text-red-600 font-medium text-[15px]">Amount to Return:</span>
               <span className="font-bold text-red-600 text-[15px]">{formatCurrency(accountingPreview.cashToReturn)}</span>
             </div>
           </div>
@@ -346,7 +354,31 @@ const RefundDrawer: React.FC<Props> = ({
           </div>
         )}
 
-        {/* Confirmation text — only when cash is returned */}
+        {/* GCash fields — only when GCash is selected and cash is actually being returned */}
+        {(!accountingPreview || accountingPreview.cashToReturn > 0) && refundMethod === "GCASH" && (
+          <div className="mt-3 space-y-3">
+            <div>
+              <label className="text-sm font-medium">GCash Number</label>
+              <input
+                type="text"
+                className="w-full rounded-md border border-gray-300 bg-background px-3 py-2 text-sm ring-offset-background mt-1 focus:border-gray-400 focus:outline-none"
+                placeholder="Enter GCash number (e.g. 09XX-XXX-XXXX)"
+                value={gcashNumber}
+                onChange={(e) => setGcashNumber(e.target.value)}
+              />
+            </div>
+            <div>
+              <label className="text-sm font-medium">Reference Number</label>
+              <input
+                type="text"
+                className="w-full rounded-md border border-gray-300 bg-background px-3 py-2 text-sm ring-offset-background mt-1 focus:border-gray-400 focus:outline-none"
+                placeholder="Enter reference number (optional)"
+                value={referenceNumber}
+                onChange={(e) => setReferenceNumber(e.target.value)}
+              />
+            </div>
+          </div>
+        )}
         {accountingPreview && accountingPreview.cashToReturn > 0 && (
           <div className="mt-3 rounded-md bg-muted p-3">
             <p className="text-sm text-muted-foreground">
@@ -370,7 +402,7 @@ const RefundDrawer: React.FC<Props> = ({
               ? "bg-red-600 hover:bg-red-700 text-white"
               : "bg-indigo-600 hover:bg-indigo-700 text-white"}`}
             disabled={!allReasonsFilled || isPending}
-            onClick={handleComplete}
+            onClick={openConfirmModal}
           >
             {isPending ? (
               <>
@@ -390,8 +422,81 @@ const RefundDrawer: React.FC<Props> = ({
             )}
           </Button>
         </div>
+
+        {/* Confirmation Overlay */}
+        {showConfirm && (
+          <div className="absolute inset-0 z-50 flex items-center justify-center bg-black/50">
+            <div className="w-full max-w-md max-h-[85vh] overflow-y-auto rounded-lg border bg-background p-6 shadow-lg m-4">
+              <div className="mb-4 pr-8">
+                <h2 className="text-lg font-semibold">Confirm Refund</h2>
+                <p className="text-sm text-muted-foreground mt-1">
+                  Please review the refund details before proceeding.
+                </p>
+              </div>
+              <div className="space-y-3">
+                <div className="rounded-md bg-muted p-3 text-sm space-y-1.5">
+                  <div className="flex items-center justify-between">
+                    <span className="text-muted-foreground">Items to refund</span>
+                    <span className="font-medium">{items.length}</span>
+                  </div>
+                  <div className="flex items-center justify-between">
+                    <span className="text-muted-foreground">Total refund amount</span>
+                    <span className="font-semibold text-red-600">
+                      {formatCurrency(accountingPreview ? accountingPreview.cashToReturn : refundTotal)}
+                    </span>
+                  </div>
+                  <div className="flex items-center justify-between">
+                    <span className="text-muted-foreground">Refund method</span>
+                    <span className="font-medium">
+                      {REFUND_METHODS.find((m) => m.value === refundMethod)?.label ?? refundMethod}
+                    </span>
+                  </div>
+                  {refundMethod === "GCASH" && gcashNumber && (
+                    <div className="flex items-center justify-between">
+                      <span className="text-muted-foreground">GCash Number</span>
+                      <span className="font-medium">{gcashNumber}</span>
+                    </div>
+                  )}
+                  {refundMethod === "GCASH" && referenceNumber && (
+                    <div className="flex items-center justify-between">
+                      <span className="text-muted-foreground">Reference Number</span>
+                      <span className="font-medium">{referenceNumber}</span>
+                    </div>
+                  )}
+                </div>
+                <p className="text-sm text-muted-foreground">
+                  This action will update the transaction balance, restore inventory for physical items, and generate a refund receipt. It cannot be undone.
+                </p>
+              </div>
+              <div className="flex justify-end gap-2 pt-4">
+                <Button variant="outline" onClick={() => setShowConfirm(false)}>
+                  Cancel
+                </Button>
+                <Button
+                  variant="destructive"
+                  className="bg-red-600 hover:bg-red-700 text-white"
+                  disabled={isPending}
+                  onClick={() => {
+                    setShowConfirm(false);
+                    handleComplete();
+                  }}
+                >
+                  {isPending ? (
+                    <>
+                      <div className="mr-2 h-4 w-4 animate-spin rounded-full border-2 border-background border-t-transparent" />
+                      Processing…
+                    </>
+                  ) : (
+                    "Confirm Refund"
+                  )}
+                </Button>
+              </div>
+            </div>
+          </div>
+        )}
       </SheetContent>
     </Sheet>
+    </>
   );
 };
 

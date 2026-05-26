@@ -14,6 +14,8 @@ public class RefundReceiptDTO {
     private String receiptNumber;
     private BigDecimal actualCashback;
     private String refundMethod;
+    private String gcashNumber;
+    private String referenceNumber;
     private LocalDateTime createdAt;
     private String issuedByFullName;
     private List<RefundItemDataDTO> refundItems;

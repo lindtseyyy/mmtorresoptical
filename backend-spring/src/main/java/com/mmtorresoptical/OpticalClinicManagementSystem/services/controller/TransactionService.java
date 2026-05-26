@@ -784,6 +784,8 @@ public class TransactionService {
         receipt.setTransaction(transaction);
         receipt.setActualCashback(batchActualCashback);
         receipt.setRefundMethod(batchRefundMethod);
+        receipt.setGcashNumber(request.getGcashNumber());
+        receipt.setReferenceNumber(request.getReferenceNumber());
         receipt.setCreatedAt(LocalDateTime.now());
         receipt.setIssuedBy(currentUser);
 
@@ -871,6 +873,9 @@ public class TransactionService {
                         .refundReceiptId(receipt.getRefundReceiptId())
                         .receiptNumber(receipt.getReceiptNumber())
                         .cashReturnedAmount(receipt.getActualCashback())
+                        .refundMethod(receipt.getRefundMethod())
+                        .gcashNumber(receipt.getGcashNumber())
+                        .referenceNumber(receipt.getReferenceNumber())
                         .dateIssued(receipt.getCreatedAt())
                         .issuedByFullName(currentUser.getFirstName() + " " + currentUser.getLastName())
                         .build())

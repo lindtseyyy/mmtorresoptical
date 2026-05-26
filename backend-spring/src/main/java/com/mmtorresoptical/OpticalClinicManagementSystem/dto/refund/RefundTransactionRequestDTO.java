@@ -11,4 +11,8 @@ public class RefundTransactionRequestDTO {
 
     private String refundMethod; // CASH, GCASH
 
+    private String gcashNumber;
+
+    private String referenceNumber;
+
 }

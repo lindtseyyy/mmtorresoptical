@@ -229,7 +229,9 @@ const ViewTransaction: React.FC = () => {
 
   const handleCompleteRefund = (
     finalItems: RefundStateItem[],
-    refundMethod: RefundMethod
+    refundMethod: RefundMethod,
+    gcashNumber?: string,
+    referenceNumber?: string
   ): Promise<ItemRefundResponse> => {
     return new Promise((resolve, reject) => {
       refundMutation.mutate(
@@ -240,6 +242,8 @@ const ViewTransaction: React.FC = () => {
             refundReason: i.refundReason,
           })),
           refundMethod,
+          gcashNumber,
+          referenceNumber,
         },
         {
           onSuccess: (data: ItemRefundResponse) => {
@@ -732,24 +736,40 @@ const ViewTransaction: React.FC = () => {
                     </div>
 
                     {/* Event Footer */}
-                    <div className="mt-3 flex items-center justify-between border-t border-border pt-2">
-                      <div className="text-xs text-muted-foreground">
-                        <span className="font-medium">Method:</span>{" "}
-                        {receipt.refundMethod === "BALANCE_ADJUSTMENT"
-                          ? "Balance Adjustment"
-                          : receipt.refundMethod}
+                    <div className="mt-3 flex flex-col gap-1.5 border-t border-border pt-2">
+                      <div className="flex items-center justify-between">
+                        <div className="text-xs text-muted-foreground">
+                          <span className="font-medium">Method:</span>{" "}
+                          {receipt.refundMethod === "BALANCE_ADJUSTMENT"
+                            ? "Balance Adjustment"
+                            : receipt.refundMethod}
+                        </div>
+                        <div className="text-sm font-semibold">
+                          {receipt.actualCashback > 0 ? (
+                            <span className="text-red-600">
+                              Amount Returned: {formatCurrency(receipt.actualCashback)}
+                            </span>
+                          ) : (
+                            <span className="text-muted-foreground">
+                              Balance Adjustment
+                            </span>
+                          )}
+                        </div>
                       </div>
-                      <div className="text-sm font-semibold">
-                        {receipt.actualCashback > 0 ? (
-                          <span className="text-red-600">
-                            Cash Returned: {formatCurrency(receipt.actualCashback)}
-                          </span>
-                        ) : (
-                          <span className="text-muted-foreground">
-                            Balance Adjustment
-                          </span>
-                        )}
-                      </div>
+                      {receipt.refundMethod === "GCASH" && (receipt.gcashNumber || receipt.referenceNumber) && (
+                        <div className="flex items-center gap-4 text-xs text-muted-foreground">
+                          {receipt.gcashNumber && (
+                            <span>
+                              <span className="font-medium">GCash No:</span> {receipt.gcashNumber}
+                            </span>
+                          )}
+                          {receipt.referenceNumber && (
+                            <span>
+                              <span className="font-medium">Ref:</span> {receipt.referenceNumber}
+                            </span>
+                          )}
+                        </div>
+                      )}
                     </div>
                   </div>
                 ))}
