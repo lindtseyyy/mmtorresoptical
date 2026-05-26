@@ -18,21 +18,25 @@ const ProductPickerModal: React.FC<ProductPickerModalProps> = ({ open, onOpenCha
   const [categoryFilter, setCategoryFilter] = useState<string>("all");
   const { data: products = [] } = useProductSummaries(search || undefined);
 
+  const nonServiceProducts = useMemo(() => {
+    return products.filter((p) => p.productType !== "SERVICE");
+  }, [products]);
+
   const categoryCounts = useMemo(() => {
     const counts: Record<string, number> = {};
-    products.forEach((p) => {
+    nonServiceProducts.forEach((p) => {
       counts[p.category] = (counts[p.category] ?? 0) + 1;
     });
     return counts;
-  }, [products]);
+  }, [nonServiceProducts]);
 
   const filtered = useMemo(() => {
-    return products.filter((p) => {
+    return nonServiceProducts.filter((p) => {
       if (categoryFilter !== "all" && p.category !== categoryFilter) return false;
       if (!search) return true;
       return p.productName.toLowerCase().includes(search.toLowerCase());
     });
-  }, [products, search, categoryFilter]);
+  }, [nonServiceProducts, search, categoryFilter]);
 
   const handleSelect = (product: ProductSummary) => {
     onSelect(product);
@@ -65,7 +69,7 @@ const ProductPickerModal: React.FC<ProductPickerModalProps> = ({ open, onOpenCha
             className="cursor-pointer text-[11px]"
             onClick={() => setCategoryFilter("all")}
           >
-            All ({products.length})
+            All ({nonServiceProducts.length})
           </Badge>
           {Object.entries(categoryCounts).map(([cat, count]) => (
             <Badge
