@@ -313,7 +313,7 @@ const AddPrescription: React.FC = () => {
                     <FormItem>
                       <FormLabel>Date Issued *</FormLabel>
                       <FormControl>
-                        <Input type="date" {...field} />
+                        <Input type="date" min={new Date().toISOString().split("T")[0]} {...field} />
                       </FormControl>
                       <FormMessage />
                     </FormItem>
@@ -371,7 +371,7 @@ const AddPrescription: React.FC = () => {
                     <FormItem>
                       <FormLabel>Target Date</FormLabel>
                       <FormControl>
-                        <Input type="date" {...field} />
+                        <Input type="date" min={new Date().toISOString().split("T")[0]} {...field} />
                       </FormControl>
                       <FormMessage />
                     </FormItem>

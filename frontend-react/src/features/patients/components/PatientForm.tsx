@@ -170,7 +170,7 @@ export const PatientForm: React.FC<PatientFormProps> = ({
                   <FormItem>
                     <FormLabel>Birth Date *</FormLabel>
                     <FormControl>
-                      <Input type="date" {...field} />
+                      <Input type="date" max={new Date().toISOString().split("T")[0]} {...field} />
                     </FormControl>
                     <FormMessage />
                   </FormItem>
