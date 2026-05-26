@@ -32,7 +32,13 @@ export const userSchema = z.object({
   email: z.string().email("Invalid email address"),
   contactNumber: z.string().min(10, "Must be at least 10 digits"),
   username: z.string().min(3, "Username must be at least 3 characters"),
-  password: z.string().min(8, "Password must be at least 8 characters"),
+  password: z
+    .string()
+    .min(8, "Password must be at least 8 characters")
+    .regex(/[a-z]/, "Password must contain at least one lowercase letter")
+    .regex(/[A-Z]/, "Password must contain at least one uppercase letter")
+    .regex(/[0-9]/, "Password must contain at least one number")
+    .regex(/[!@#$%^&*()_+\-=\[\]{};':"\\|,.<>\/?`~]/, "Password must contain at least one special character"),
   confirmPassword: z.string().min(1, "Please confirm your password"),
   securityQuestion: z.string().optional(),
   securityAnswer: z.string().optional(),

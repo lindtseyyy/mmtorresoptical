@@ -25,8 +25,11 @@ public interface UserRepository extends JpaRepository<User, UUID>, JpaSpecificat
     Optional<User> findByUsernameOrEmail(String username, String email);
 
     Boolean existsByFirstNameAndMiddleNameAndLastName(String firstName, String middleName, String lastName);
-    Boolean existsByEmail(String email);
-    Boolean existsByContactNumber(String contactNumber);
+    @Query("SELECT COUNT(u) > 0 FROM User u WHERE u.email = :email")
+    Boolean existsByEmail(@Param("email") String email);
+
+    @Query("SELECT COUNT(u) > 0 FROM User u WHERE u.contactNumber = :contactNumber")
+    Boolean existsByContactNumber(@Param("contactNumber") String contactNumber);
     Boolean existsByUsername(String userName);
 
     // Summary counts

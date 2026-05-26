@@ -360,6 +360,9 @@ const EditProfile: React.FC = () => {
                         </button>
                       </div>
                       <FormMessage />
+                      <p className="text-xs text-muted-foreground mt-1">
+                        Must be at least 8 characters including uppercase, lowercase, number, and special character.
+                      </p>
                     </FormItem>
                   )}
                 />

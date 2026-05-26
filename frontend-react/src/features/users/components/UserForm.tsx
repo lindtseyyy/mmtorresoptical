@@ -69,6 +69,16 @@ export const UserForm: React.FC<UserFormProps> = ({
   const [pwRequired, setPwRequired] = useState(isPwChangeRequired);
   const [resetDialogOpen, setResetDialogOpen] = useState(false);
   const [temporaryPassword, setTemporaryPassword] = useState("");
+  const [tempPwError, setTempPwError] = useState("");
+
+  const validatePasswordComplexity = (pw: string) => {
+    if (pw.length < 8) return "Password must be at least 8 characters";
+    if (!/[a-z]/.test(pw)) return "Password must contain a lowercase letter";
+    if (!/[A-Z]/.test(pw)) return "Password must contain an uppercase letter";
+    if (!/[0-9]/.test(pw)) return "Password must contain a number";
+    if (!/[!@#$%^&*()_+\-=\[\]{};':\"\\|,.<>\/?`~]/.test(pw)) return "Password must contain a special character";
+    return "";
+  };
 
   const handleResetPassword = () => {
     if (!userId) return;
@@ -79,11 +89,17 @@ export const UserForm: React.FC<UserFormProps> = ({
       return;
     }
     setTemporaryPassword("");
+    setTempPwError("");
     setResetDialogOpen(true);
   };
 
   const handleConfirmReset = async () => {
-    if (!userId || temporaryPassword.length < 8) return;
+    const error = validatePasswordComplexity(temporaryPassword);
+    if (error) {
+      setTempPwError(error);
+      return;
+    }
+    if (!userId) return;
     setResettingPw(true);
     try {
       await resetPassword(userId, temporaryPassword);
@@ -361,6 +377,9 @@ export const UserForm: React.FC<UserFormProps> = ({
                         </button>
                       </div>
                       <FormMessage />
+                      <p className="text-xs text-muted-foreground mt-1">
+                        Must be at least 8 characters including uppercase, lowercase, number, and special character.
+                      </p>
                     </FormItem>
                   )}
                 />
@@ -477,10 +496,16 @@ export const UserForm: React.FC<UserFormProps> = ({
             <Input
               id="temporaryPassword"
               type="text"
-              placeholder="Enter temporary password (min. 8 characters)"
+              placeholder="Enter temporary password"
               value={temporaryPassword}
-              onChange={(e) => setTemporaryPassword(e.target.value)}
+              onChange={(e) => { setTemporaryPassword(e.target.value); setTempPwError(""); }}
             />
+            <p className="text-xs text-muted-foreground">
+              Must be at least 8 characters including uppercase, lowercase, number, and special character.
+            </p>
+            {tempPwError && (
+              <p className="text-xs text-red-600">{tempPwError}</p>
+            )}
           </div>
           <AlertDialogFooter>
             <AlertDialogCancel disabled={resettingPw}>Cancel</AlertDialogCancel>

@@ -47,15 +47,12 @@ public class UserService {
     public UserResponseDTO createUser(CreateUserRequestDTO userRequest) {
         // 1. Check if username or email or contact number already exists
         if (userRepository.existsByUsername(userRequest.getUsername())) {
-            // This String body is now allowed
             throw new ConflictException("Username is already taken");
         }
         if (userRepository.existsByEmail(userRequest.getEmail())) {
-            // This String body is now allowed
             throw new ConflictException("Email is already in use");
         }
         if (userRepository.existsByContactNumber(userRequest.getContactNumber())) {
-            // This String body is now allowed
             throw new ConflictException("Contact number is already in use");
         }
 

@@ -55,12 +55,6 @@ public class PatientService {
             );
         }
 
-        if(patientExistsByEmail(patientRequest.getEmail())) {
-            throw new ConflictException(
-                    "Patient's email is already existing in the records."
-            );
-        }
-
         Patient patient = new Patient();
 
         // Set patient names
@@ -220,19 +214,6 @@ public class PatientService {
                     .orElse(null);
             retrievedPatient.setMiddleNameHash(middleNameHash);
             retrievedPatient.setLastNameHash(hmacHashService.hash(last));
-        }
-
-        /* -----------------------------
-           Validate email uniqueness
-        ----------------------------- */
-        if(!retrievedPatient.getEmail().equals(patientRequest.getEmail())) {
-
-            boolean isEmailExisting = patientExistsByEmail(patientRequest.getEmail());
-
-            if (isEmailExisting) {
-                throw new ConflictException("Email is already in use");
-            }
-
         }
 
         /* -----------------------------

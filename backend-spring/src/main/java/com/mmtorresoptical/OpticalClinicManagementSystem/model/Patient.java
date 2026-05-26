@@ -69,7 +69,7 @@ public class Patient {
     @Email
     @Size(max = 100)
     @NotNull
-    @Column(name = "email", nullable = false, length = 100, unique = true, columnDefinition = "TEXT")
+    @Column(name = "email", nullable = false, length = 100, columnDefinition = "TEXT")
     private String email;
 
     @NotNull
