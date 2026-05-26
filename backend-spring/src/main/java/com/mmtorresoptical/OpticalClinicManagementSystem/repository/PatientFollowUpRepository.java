@@ -29,4 +29,7 @@ public interface PatientFollowUpRepository
 
     @Query("SELECT MAX(f.actualVisitDate) FROM PatientFollowUp f WHERE f.patient.patientId = :patientId AND f.status = 'COMPLETED'")
     LocalDate findMaxActualVisitDateByPatientId(UUID patientId);
+
+    @Query("SELECT f FROM PatientFollowUp f WHERE f.status = 'PENDING' AND f.scheduledDate < :cutoffDate AND f.isArchived = false")
+    List<PatientFollowUp> findStalePendingFollowUps(@Param("cutoffDate") LocalDate cutoffDate);
 }

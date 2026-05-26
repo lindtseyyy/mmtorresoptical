@@ -1,7 +1,7 @@
 import { useState } from "react";
 import { useParams, Link, useNavigate } from "react-router-dom";
 import { useQuery, useMutation, useQueryClient, keepPreviousData } from "@tanstack/react-query";
-import { ArrowLeft, ShoppingCart, Calendar, FileText, Activity, Stethoscope, ChevronLeft, ChevronRight, ChevronDown, MoreHorizontal, Pencil, Archive, Clock, Plus, Undo2, Ban, Copy, CheckCircle, UserX, XCircle, Eye } from "lucide-react";
+import { ArrowLeft, ShoppingCart, Calendar, FileText, Activity, Stethoscope, ChevronLeft, ChevronRight, ChevronDown, MoreHorizontal, Pencil, Archive, Clock, Plus, Undo2, Ban, Copy, CheckCircle, UserX, XCircle, Eye, Footprints } from "lucide-react";
 import { Button } from "@/shared/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/shared/components/ui/card";
 import { MetricCard } from "@/shared/components/MetricCard";
@@ -33,6 +33,7 @@ import {
 import { voidPrescription, fetchPrescription } from "@/features/patients/services/prescriptionApi";
 import { getEyeExam, voidEyeExam } from "@/features/patients/services/eyeExamApi";
 import { fetchFollowUpsByPatient, updateFollowUpStatus, createFollowUp, updateFollowUp, archiveFollowUp, restoreFollowUp, type PatientFollowUp, type CreateFollowUpInput } from "@/features/patients/services/followUpApi";
+import { logVisit, fetchVisitsByPatient, type PatientVisit, type LogVisitInput } from "@/features/patients/services/visitApi";
 
 const formatDate = (dateStr: string | null) => {
   if (!dateStr) return "—";
@@ -45,11 +46,14 @@ const formatDate = (dateStr: string | null) => {
 
 const formatDateTime = (dateStr: string | null) => {
   if (!dateStr) return "—";
-  return new Date(dateStr).toLocaleDateString("en-US", {
+  const d = new Date(dateStr);
+  const date = d.toLocaleDateString("en-US", {
     year: "numeric",
     month: "short",
     day: "numeric",
   });
+  const time = d.toLocaleTimeString("en-US", { hour: "numeric", minute: "2-digit", hour12: true });
+  return `${date} • ${time}`;
 };
 
 const formatEyeExamDateTime = (dateStr: string | null) => {
@@ -137,6 +141,69 @@ const ViewPatient: React.FC = () => {
 
   const [fuModal, setFuModal] = useState<{ open: boolean; edit: PatientFollowUp | null }>({ open: false, edit: null });
   const [fuForm, setFuForm] = useState({ scheduledDate: "", followUpReason: "", prescriptionId: "", eyeExamId: "" });
+
+  const getCurrentLocalDate = () => {
+    const now = new Date();
+    const year = now.getFullYear();
+    const month = String(now.getMonth() + 1).padStart(2, '0');
+    const day = String(now.getDate()).padStart(2, '0');
+    return `${year}-${month}-${day}`;
+  };
+
+  const getCurrentLocalTime = () => {
+    const now = new Date();
+    const hours = String(now.getHours()).padStart(2, '0');
+    const minutes = String(now.getMinutes()).padStart(2, '0');
+    return `${hours}:${minutes}`;
+  };
+
+  const [logVisitOpen, setLogVisitOpen] = useState(false);
+  const [logVisitDate, setLogVisitDate] = useState(getCurrentLocalDate());
+  const [logVisitTime, setLogVisitTime] = useState(getCurrentLocalTime());
+  const [logVisitPurpose, setLogVisitPurpose] = useState("");
+  const [logVisitNotes, setLogVisitNotes] = useState("");
+  const [logVisitFollowUp, setLogVisitFollowUp] = useState("");
+
+  const resetLogVisitForm = () => {
+    setLogVisitDate(getCurrentLocalDate());
+    setLogVisitTime(getCurrentLocalTime());
+    setLogVisitPurpose("");
+    setLogVisitNotes("");
+    setLogVisitFollowUp("");
+  };
+
+  const { data: pendingFollowUps } = useQuery({
+    queryKey: ["patient-pending-follow-ups", patientId],
+    queryFn: () => fetchFollowUpsByPatient(patientId, "PENDING", "ACTIVE", 0, 100),
+    enabled: logVisitOpen,
+    select: (data) => data.content,
+  });
+
+  const { data: visits, isLoading: visitsLoading } = useQuery({
+    queryKey: ["patient-visits", patientId],
+    queryFn: () => fetchVisitsByPatient(patientId),
+    enabled: !!patientId,
+  });
+
+  const logVisitMutation = useMutation({
+    mutationFn: (data: LogVisitInput) => logVisit(patientId, data),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["patient-visits", patientId] });
+      queryClient.invalidateQueries({ queryKey: ["patient-follow-ups", patientId] });
+      queryClient.invalidateQueries({ queryKey: ["patient-profile-metrics", patientId] });
+      toast.success("Visit logged successfully");
+      setLogVisitOpen(false);
+      resetLogVisitForm();
+    },
+    onError: (err: any) => {
+      const message = typeof err?.response?.data?.message === "string"
+        ? err.response.data.message
+        : typeof err?.response?.data === "string"
+          ? err.response.data
+          : "Failed to log visit";
+      toast.error(message);
+    },
+  });
 
   const updateFollowUpMutation = useMutation({
     mutationFn: ({ followUpId, status }: { followUpId: string; status: string }) =>
@@ -227,12 +294,22 @@ const ViewPatient: React.FC = () => {
           </div>
           <p className="text-muted-foreground">Patient profile and records</p>
         </div>
-        <Button variant="secondary" size="sm" asChild>
-          <Link to="/patients">
-            <ArrowLeft className="mr-1 h-4 w-4" />
-            Back to Patients
-          </Link>
-        </Button>
+        <div className="flex items-center gap-2">
+          <Button
+            className="bg-indigo-700 text-white hover:bg-indigo-800"
+            size="sm"
+            onClick={() => setLogVisitOpen(true)}
+          >
+            <Footprints className="mr-1.5 h-4 w-4" />
+            Log Visit
+          </Button>
+          <Button variant="secondary" size="sm" asChild>
+            <Link to="/patients">
+              <ArrowLeft className="mr-1 h-4 w-4" />
+              Back to Patients
+            </Link>
+          </Button>
+        </div>
       </div>
 
       {/* Card Metrics — 2 rows × 3 cards */}
@@ -720,15 +797,7 @@ const ViewPatient: React.FC = () => {
                           Restore
                         </Button>
                       ) : fu.status === "PENDING" ? (
-                        <Button
-                          size="sm"
-                          className="bg-green-700 text-white hover:bg-green-800"
-                          onClick={() => updateFollowUpMutation.mutate({ followUpId: fu.followUpId, status: "COMPLETED" })}
-                          disabled={updateFollowUpMutation.isPending}
-                        >
-                          <CheckCircle className="mr-1 h-4 w-4" />
-                          Complete
-                        </Button>
+                        <div className="w-[90px]" />
                       ) : (fu.status === "NO_SHOW" || fu.status === "CANCELLED") && (
                         <Button
                           size="sm"
@@ -819,6 +888,60 @@ const ViewPatient: React.FC = () => {
                   </div>
                 </div>
               )}
+            </div>
+          )}
+        </CardContent>
+      </Card>
+
+      {/* Visit Timeline */}
+      <Card>
+        <CardHeader>
+          <div className="flex items-center justify-between">
+            <div>
+              <CardTitle className="flex items-center gap-2">
+                <Footprints className="h-5 w-5" />
+                Visit Timeline
+              </CardTitle>
+              <CardDescription>
+                {visits?.length ?? 0} recorded visit(s)
+              </CardDescription>
+            </div>
+          </div>
+        </CardHeader>
+        <CardContent>
+          {visitsLoading ? (
+            <p className="py-4 text-center text-sm text-muted-foreground">Loading visits...</p>
+          ) : !visits || visits.length === 0 ? (
+            <p className="py-4 text-center text-sm text-muted-foreground">No visits recorded.</p>
+          ) : (
+            <div className="space-y-3">
+              {visits.map((v: PatientVisit) => (
+                <div
+                  key={v.visitId}
+                  className="rounded-lg border p-4 transition-colors bg-muted/60 hover:bg-muted"
+                >
+                  <div className="flex items-center justify-between">
+                    <div className="min-w-0">
+                      <p className="text-sm font-medium">{formatDateTime(v.visitTimestamp)}</p>
+                      {v.purpose && (
+                        <Badge className="mt-1 bg-indigo-700 text-white">
+                          {v.purpose}
+                        </Badge>
+                      )}
+                      {v.notes && (
+                        <p className="mt-1 text-sm text-muted-foreground line-clamp-2">{v.notes}</p>
+                      )}
+                    </div>
+                    <div className="shrink-0 ml-4">
+                      {v.loggedBy && (
+                        <p className="text-xs text-muted-foreground text-right">
+                          Logged by {v.loggedBy.fullName}
+                        </p>
+                      )}
+                    </div>
+                  </div>
+                </div>
+              ))}
             </div>
           )}
         </CardContent>
@@ -1036,6 +1159,7 @@ const ViewPatient: React.FC = () => {
               type="date"
               className="w-full rounded-md border border-gray-300 bg-background px-3 py-2 text-sm ring-offset-background mt-1 focus:border-gray-400 focus:outline-none"
               value={fuForm.scheduledDate}
+              min={getCurrentLocalDate()}
               onChange={(e) => setFuForm((f) => ({ ...f, scheduledDate: e.target.value }))}
             />
           </div>
@@ -1097,6 +1221,101 @@ const ViewPatient: React.FC = () => {
             }}
           >
             {saveFuMutation.isPending ? "Saving..." : fuModal.edit ? "Save Changes" : "Create Follow-Up"}
+          </Button>
+        </div>
+      </Dialog>
+
+      {/* Log Visit Modal */}
+      <Dialog open={logVisitOpen} onOpenChange={(open) => { if (!open) { setLogVisitOpen(false); resetLogVisitForm(); } }}>
+        <DialogHeader>
+          <DialogTitle>Log Visit</DialogTitle>
+          <DialogDescription>
+            Record a walk-in visit for {fullName}
+          </DialogDescription>
+        </DialogHeader>
+        <div className="space-y-4">
+          <div>
+            <label className="text-sm font-medium">Arrival Time</label>
+            <div className="flex gap-2 mt-1">
+              <input
+                type="date"
+                className="flex-1 rounded-md border border-gray-300 bg-background px-3 py-2 text-sm ring-offset-background focus:border-gray-400 focus:outline-none"
+                value={logVisitDate}
+                max={getCurrentLocalDate()}
+                onChange={(e) => setLogVisitDate(e.target.value)}
+              />
+              <input
+                type="time"
+                className="w-36 rounded-md border border-gray-300 bg-background px-3 py-2 text-sm ring-offset-background focus:border-gray-400 focus:outline-none"
+                style={{ WebkitAppearance: "auto", appearance: "auto" } as React.CSSProperties}
+                value={logVisitTime}
+                step="60"
+                onChange={(e) => setLogVisitTime(e.target.value)}
+              />
+            </div>
+          </div>
+          <div>
+            <label className="text-sm font-medium">Purpose</label>
+            <select
+              className="w-full rounded-md border border-gray-300 bg-background px-3 py-2 text-sm ring-offset-background mt-1 focus:border-gray-400 focus:outline-none"
+              value={logVisitPurpose}
+              onChange={(e) => setLogVisitPurpose(e.target.value)}
+            >
+              <option value="">Select purpose...</option>
+              <option value="Eye Check-up">Eye Check-up</option>
+              <option value="Frame Fitting">Frame Fitting</option>
+              <option value="Pick-up">Pick-up</option>
+              <option value="Consultation">Consultation</option>
+              <option value="Follow-up Visit">Follow-up Visit</option>
+              <option value="Adjustment/Repair">Adjustment/Repair</option>
+              <option value="Other">Other</option>
+            </select>
+          </div>
+          <div>
+            <label className="text-sm font-medium">Notes</label>
+            <textarea
+              className="w-full rounded-md border border-gray-300 bg-background px-3 py-2 text-sm ring-offset-background mt-1 focus:border-gray-400 focus:outline-none"
+              placeholder="Any relevant notes..."
+              rows={3}
+              value={logVisitNotes}
+              onChange={(e) => setLogVisitNotes(e.target.value)}
+            />
+          </div>
+          {pendingFollowUps && pendingFollowUps.length > 0 && (
+            <div>
+              <label className="text-sm font-medium">Link to Pending Follow-Up (Optional)</label>
+              <select
+                className="w-full rounded-md border border-gray-300 bg-background px-3 py-2 text-sm ring-offset-background mt-1 focus:border-gray-400 focus:outline-none"
+                value={logVisitFollowUp}
+                onChange={(e) => setLogVisitFollowUp(e.target.value)}
+              >
+                <option value="">None</option>
+                {pendingFollowUps.map((fu: PatientFollowUp) => (
+                  <option key={fu.followUpId} value={fu.followUpId}>
+                    {formatDate(fu.scheduledDate)}{fu.followUpReason ? ` — ${fu.followUpReason}` : ""}
+                  </option>
+                ))}
+              </select>
+            </div>
+          )}
+        </div>
+        <div className="flex justify-end gap-2 pt-4">
+          <Button variant="outline" onClick={() => { setLogVisitOpen(false); resetLogVisitForm(); }}>
+            Cancel
+          </Button>
+          <Button
+            className="bg-indigo-700 text-white hover:bg-indigo-800"
+            disabled={logVisitMutation.isPending}
+            onClick={() => {
+              logVisitMutation.mutate({
+                visitTimestamp: new Date(`${logVisitDate}T${logVisitTime}:00`).toISOString(),
+                purpose: logVisitPurpose || undefined,
+                notes: logVisitNotes || undefined,
+                followUpId: logVisitFollowUp || undefined,
+              });
+            }}
+          >
+            {logVisitMutation.isPending ? "Logging..." : "Log Visit"}
           </Button>
         </div>
       </Dialog>

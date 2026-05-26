@@ -152,6 +152,11 @@ public class JSONService {
                 }
             }
 
+            // ── CREATE Patient Visit: hide UUIDs, resolve names ──
+            if ("CREATE".equals(actionType) && node.has("visitId") && node.has("visitTimestamp")) {
+                return sanitizeVisitAuditJson(node);
+            }
+
             // ── UPDATE Patient: only return fields that actually changed ──
             if ("UPDATE".equals(actionType) && node.has("before") && node.has("after")) {
                 ObjectNode after = (ObjectNode) node.get("after");
@@ -781,6 +786,46 @@ public class JSONService {
         }
 
         return objectMapper.writeValueAsString(clean);
+    }
+
+    private String sanitizeVisitAuditJson(ObjectNode node) throws JsonProcessingException {
+        ObjectNode clean = objectMapper.createObjectNode();
+
+        if (node.has("visitTimestamp") && !node.get("visitTimestamp").isNull()) {
+            clean.put("visitTimestamp", formatCreatedAt(node.get("visitTimestamp").asText()));
+        }
+        copyField(clean, node, "purpose");
+        copyField(clean, node, "notes");
+
+        String patientName = resolvePatientName(node);
+        if (patientName != null) {
+            clean.put("patientName", patientName);
+        }
+
+        String loggedBy = resolveLoggedBy(node);
+        if (loggedBy != null) {
+            clean.put("loggedBy", loggedBy);
+        }
+
+        return objectMapper.writeValueAsString(clean);
+    }
+
+    private String resolveLoggedBy(ObjectNode node) {
+        if (node.has("loggedByUserId") && !node.get("loggedByUserId").isNull()) {
+            try {
+                UUID id = UUID.fromString(node.get("loggedByUserId").asText());
+                Optional<User> user = userRepository.findById(id);
+                if (user.isPresent()) {
+                    String name = user.get().getFirstName() + " " + user.get().getLastName();
+                    if (user.get().getRole() != null) {
+                        name += " (" + capitalizeWord(user.get().getRole().name()) + ")";
+                    }
+                    return name;
+                }
+            } catch (Exception ignored) {}
+            return node.get("loggedByUserId").asText();
+        }
+        return null;
     }
 
     private String resolvePatientName(ObjectNode node) {

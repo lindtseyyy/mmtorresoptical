@@ -181,6 +181,21 @@ public class PatientFollowUpService {
         return toDTO(saved);
     }
 
+    public void completeAndLinkToVisit(UUID followUpId, UUID visitId) {
+        PatientFollowUp followUp = patientFollowUpRepository.findById(followUpId)
+                .orElseThrow(() -> new ResourceNotFoundException("Follow-up not found: " + followUpId));
+
+        PatientFollowUp before = copyForAudit(followUp);
+
+        followUp.setStatus(FollowUpStatus.COMPLETED);
+        followUp.setActualVisitDate(LocalDate.now());
+        followUp.setCompletedByVisitId(visitId);
+        followUp.setUpdatedBy(authenticatedUserService.getCurrentUser());
+
+        PatientFollowUp saved = patientFollowUpRepository.save(followUp);
+        patientFollowUpAuditHelper.logUpdate(before, saved);
+    }
+
     private PatientFollowUp copyForAudit(PatientFollowUp source) {
         PatientFollowUp copy = new PatientFollowUp();
         copy.setFollowUpId(source.getFollowUpId());

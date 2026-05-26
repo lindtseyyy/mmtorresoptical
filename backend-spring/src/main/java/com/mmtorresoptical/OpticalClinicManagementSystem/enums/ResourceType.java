@@ -11,5 +11,6 @@ public enum ResourceType {
     TRANSACTION_ITEMS,
     PRODUCT,
     REPORT,
-    DATABASE
+    DATABASE,
+    PATIENT_VISIT
 }

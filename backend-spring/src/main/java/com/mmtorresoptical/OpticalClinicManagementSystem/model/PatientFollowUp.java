@@ -42,6 +42,9 @@ public class PatientFollowUp {
     @Column(name = "actual_visit_date")
     private LocalDate actualVisitDate;
 
+    @Column(name = "completed_by_visit_id")
+    private UUID completedByVisitId;
+
     @Enumerated(EnumType.STRING)
     @NotNull
     @Column(name = "status", nullable = false)
