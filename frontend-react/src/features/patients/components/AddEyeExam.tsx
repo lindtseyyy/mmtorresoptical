@@ -202,7 +202,7 @@ const AddEyeExam: React.FC = () => {
           <Card>
             <CardHeader>
               <CardTitle>Visual Acuity</CardTitle>
-              <CardDescription>Record uncorrected and aided visual acuity</CardDescription>
+              <CardDescription>Record naked eye and RX visual acuity</CardDescription>
             </CardHeader>
             <CardContent className="space-y-4">
               <div className="grid gap-4 md:grid-cols-2">
@@ -211,7 +211,7 @@ const AddEyeExam: React.FC = () => {
                   name="vaUnconvertedOd"
                   render={({ field }) => (
                     <FormItem>
-                      <FormLabel>VA Uncorrected (OD)</FormLabel>
+                      <FormLabel>VA Naked Eye (OD)</FormLabel>
                       <FormControl>
                         <Input placeholder="e.g. 20/40" {...field} />
                       </FormControl>
@@ -224,7 +224,7 @@ const AddEyeExam: React.FC = () => {
                   name="vaUnconvertedOs"
                   render={({ field }) => (
                     <FormItem>
-                      <FormLabel>VA Uncorrected (OS)</FormLabel>
+                      <FormLabel>VA Naked Eye (OS)</FormLabel>
                       <FormControl>
                         <Input placeholder="e.g. 20/50" {...field} />
                       </FormControl>
@@ -239,7 +239,7 @@ const AddEyeExam: React.FC = () => {
                   name="vaAidedOd"
                   render={({ field }) => (
                     <FormItem>
-                      <FormLabel>VA Aided (OD)</FormLabel>
+                      <FormLabel>VA RX (OD)</FormLabel>
                       <FormControl>
                         <Input placeholder="e.g. 20/20" {...field} />
                       </FormControl>
@@ -252,7 +252,7 @@ const AddEyeExam: React.FC = () => {
                   name="vaAidedOs"
                   render={({ field }) => (
                     <FormItem>
-                      <FormLabel>VA Aided (OS)</FormLabel>
+                      <FormLabel>VA RX (OS)</FormLabel>
                       <FormControl>
                         <Input placeholder="e.g. 20/20" {...field} />
                       </FormControl>
@@ -415,3 +415,5 @@ const AddEyeExam: React.FC = () => {
 };
 
 export default AddEyeExam;
+
+
