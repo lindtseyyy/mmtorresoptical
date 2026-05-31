@@ -187,7 +187,7 @@ public interface InventoryAnalyticsRepository extends JpaRepository<Product, UUI
     SELECT new com.mmtorresoptical.OpticalClinicManagementSystem.objects.TopSellingProductDTO(
         p.productId,
         p.productName,
-        p.category,
+        c.name,
         p.unitPrice,
         SUM(ti.quantity - COALESCE(ti.refundedQuantity, 0)),
         SUM(
@@ -204,13 +204,14 @@ public interface InventoryAnalyticsRepository extends JpaRepository<Product, UUI
     FROM TransactionItem ti
     JOIN ti.transaction t
     JOIN ti.product p
+    JOIN p.category c
     WHERE t.transactionStatus IN (
         com.mmtorresoptical.OpticalClinicManagementSystem.enums.TransactionStatus.PAID,
         com.mmtorresoptical.OpticalClinicManagementSystem.enums.TransactionStatus.DEPOSIT
     )
       AND t.transactionDate >= :startDate
       AND t.transactionDate < :endDate
-    GROUP BY p.productId, p.productName, p.category, p.unitPrice
+    GROUP BY p.productId, p.productName, c.name, p.unitPrice
     ORDER BY SUM(
         ti.subtotal
         -
@@ -237,7 +238,7 @@ public interface InventoryAnalyticsRepository extends JpaRepository<Product, UUI
     SELECT new com.mmtorresoptical.OpticalClinicManagementSystem.objects.TopSellingProductDTO(
         p.productId,
         p.productName,
-        p.category,
+        c.name,
         p.unitPrice,
         SUM(ti.quantity - COALESCE(ti.refundedQuantity, 0)),
         SUM(
@@ -254,13 +255,14 @@ public interface InventoryAnalyticsRepository extends JpaRepository<Product, UUI
     FROM TransactionItem ti
     JOIN ti.transaction t
     JOIN ti.product p
+    JOIN p.category c
     WHERE t.transactionStatus IN (
         com.mmtorresoptical.OpticalClinicManagementSystem.enums.TransactionStatus.PAID,
         com.mmtorresoptical.OpticalClinicManagementSystem.enums.TransactionStatus.DEPOSIT
     )
       AND t.transactionDate >= :startDate
       AND t.transactionDate < :endDate
-    GROUP BY p.productId, p.productName, p.category, p.unitPrice
+    GROUP BY p.productId, p.productName, c.name, p.unitPrice
     ORDER BY SUM(
         ti.subtotal
         -
@@ -308,14 +310,15 @@ public interface InventoryAnalyticsRepository extends JpaRepository<Product, UUI
      */
     @Query("""
         SELECT new com.mmtorresoptical.OpticalClinicManagementSystem.dto.metrics.CategoryBreakdownDTO(
-            p.category,
+            c.name,
             COUNT(p),
             COALESCE(SUM(p.unitPrice * p.quantity), 0)
         )
         FROM Product p
+        JOIN p.category c
         WHERE p.isArchived = false
           AND p.productType = com.mmtorresoptical.OpticalClinicManagementSystem.enums.ProductType.PHYSICAL
-        GROUP BY p.category
+        GROUP BY c.name
         ORDER BY SUM(p.unitPrice * p.quantity) DESC
     """)
     List<CategoryBreakdownDTO> findCategoryBreakdown();

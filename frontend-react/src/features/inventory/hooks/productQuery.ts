@@ -41,8 +41,13 @@ function createAddProductMutationOptions(queryClient: any, navigate: NavigateFun
           navigate("/inventory");
         },
         onError: (error: any) => {
+          const message = typeof error?.response?.data?.message === "string"
+            ? error.response.data.message
+            : typeof error?.response?.data === "string"
+              ? error.response.data
+              : undefined;
           toast.error("Error", {
-            description: "Failed to add item. Please try again.",
+            description: message || "Failed to add item. Please try again.",
           });
           console.error(error);
         },
@@ -60,8 +65,15 @@ function createEditProductMutationOptions(queryClient: any, navigate: NavigateFu
           });
           navigate(`/inventory/view/${id}`);
         },
-        onError: () => {
-          toast.error("Error", { description: "Failed to update product." });
+        onError: (error: any) => {
+          const message = typeof error?.response?.data?.message === "string"
+            ? error.response.data.message
+            : typeof error?.response?.data === "string"
+              ? error.response.data
+              : undefined;
+          toast.error("Error", {
+            description: message || "Failed to update product.",
+          });
         },
       }
     }

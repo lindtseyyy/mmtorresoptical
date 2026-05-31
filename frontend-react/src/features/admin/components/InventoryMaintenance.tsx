@@ -24,8 +24,6 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
 } from "@/shared/components/ui/alert-dialog";
-import type { Category } from "@/features/inventory/types";
-import { CATEGORY_LABELS } from "@/features/inventory/types";
 import {
   createArchiveProductMutationOptions,
   createRestoreProductMutationOptions,
@@ -269,7 +267,7 @@ const InventoryMaintenance: React.FC = () => {
                             </span>
                           </td>
                           <td className="py-3 pr-4">
-                            {CATEGORY_LABELS[product.category as Category] ?? product.category}
+                            {product.categoryName}
                           </td>
                           <td className="py-3 pr-4 text-right">
                             {product.productType === "SERVICE" ? (

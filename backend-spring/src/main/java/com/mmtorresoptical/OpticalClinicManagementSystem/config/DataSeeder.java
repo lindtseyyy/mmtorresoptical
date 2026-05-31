@@ -3,27 +3,44 @@ package com.mmtorresoptical.OpticalClinicManagementSystem.config;
 import com.mmtorresoptical.OpticalClinicManagementSystem.enums.Sex;
 import com.mmtorresoptical.OpticalClinicManagementSystem.enums.Role;
 import com.mmtorresoptical.OpticalClinicManagementSystem.model.User;
+import com.mmtorresoptical.OpticalClinicManagementSystem.model.Category;
+import com.mmtorresoptical.OpticalClinicManagementSystem.repository.CategoryRepository;
 import com.mmtorresoptical.OpticalClinicManagementSystem.repository.UserRepository;
 import com.mmtorresoptical.OpticalClinicManagementSystem.utils.NameUtils;
 import org.springframework.boot.CommandLineRunner;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Component;
 import java.time.LocalDate;
+import java.util.List;
 
 @Component
 public class DataSeeder implements CommandLineRunner {
 
     private final UserRepository userRepository;
     private final PasswordEncoder passwordEncoder;
+    private final CategoryRepository categoryRepository;
 
     // Use constructor injection to get the beans
-    public DataSeeder(UserRepository userRepository, PasswordEncoder passwordEncoder) {
+    public DataSeeder(UserRepository userRepository, PasswordEncoder passwordEncoder, CategoryRepository categoryRepository) {
         this.userRepository = userRepository;
         this.passwordEncoder = passwordEncoder;
+        this.categoryRepository = categoryRepository;
     }
 
     @Override
     public void run(String... args) throws Exception {
+        // Seed default categories if none exist
+        if (categoryRepository.count() == 0) {
+            System.out.println("Seeding default categories...");
+            List<String> defaultCategories = List.of("Frames", "Lenses", "Contact Lenses", "Accessories", "Solutions");
+            for (String name : defaultCategories) {
+                Category category = new Category();
+                category.setName(name);
+                categoryRepository.save(category);
+            }
+            System.out.println("Default categories seeded.");
+        }
+
         // Check if the admin user already exists
         if (userRepository.findByUsername("admin").isEmpty()) {
 

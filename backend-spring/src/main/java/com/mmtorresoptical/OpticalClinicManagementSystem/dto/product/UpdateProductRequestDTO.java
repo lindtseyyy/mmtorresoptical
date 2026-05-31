@@ -9,6 +9,7 @@ import jakarta.validation.constraints.NotNull;
 import lombok.Data;
 
 import java.math.BigDecimal;
+import java.util.UUID;
 
 @Data
 @ValidProductRequest
@@ -18,8 +19,9 @@ public class UpdateProductRequestDTO implements ProductRequest {
 
     private String imageDir; // Optional
 
-    @NotEmpty(message = "Category is required")
-    private String category;
+    private UUID categoryId;
+
+    private String newCategoryName;
 
     private String supplier;
 

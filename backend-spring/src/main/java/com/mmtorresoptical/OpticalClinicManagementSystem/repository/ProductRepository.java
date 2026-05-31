@@ -29,7 +29,7 @@ public interface ProductRepository extends JpaRepository<Product, UUID>, JpaSpec
                 LOWER(p.product_name) LIKE LOWER(CONCAT('%', :keyword, '%'))
                 OR levenshtein(LOWER(p.product_name), LOWER(:keyword)) <= :maxDistance
             )
-            AND (:category IS NULL OR p.category = :category)
+            AND (:categoryId IS NULL OR p.category_id = CAST(:categoryId AS UUID))
             AND (:supplier IS NULL OR p.supplier = :supplier)
             AND (:productType IS NULL OR p.product_type = :productType)
             AND (:minPrice IS NULL OR p.unit_price >= :minPrice)
@@ -55,7 +55,7 @@ public interface ProductRepository extends JpaRepository<Product, UUID>, JpaSpec
             LOWER(p.product_name) LIKE LOWER(CONCAT('%', :keyword, '%'))
             OR levenshtein(LOWER(p.product_name), LOWER(:keyword)) <= :maxDistance
         )
-        AND (:category IS NULL OR p.category = :category)
+        AND (:categoryId IS NULL OR p.category_id = CAST(:categoryId AS UUID))
         AND (:supplier IS NULL OR p.supplier = :supplier)
         AND (:productType IS NULL OR p.product_type = :productType)
         AND (:minPrice IS NULL OR p.unit_price >= :minPrice)
@@ -75,7 +75,7 @@ public interface ProductRepository extends JpaRepository<Product, UUID>, JpaSpec
     Page<Product> fuzzySearchProducts(
         @Param("keyword") String keyword,
         @Param("maxDistance") int maxDistance,
-        @Param("category") String category,
+        @Param("categoryId") UUID categoryId,
         @Param("supplier") String supplier,
         @Param("productType") String productType,
         @Param("minPrice") BigDecimal minPrice,

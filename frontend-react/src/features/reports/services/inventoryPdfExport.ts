@@ -228,7 +228,7 @@ function drawHorizontalBarChart(
     doc.setFontSize(7);
     doc.setTextColor(100);
     doc.setFont("helvetica", "normal");
-    doc.text(d.category, barOriginX - 2, rowY + 1.2, {
+    doc.text(d.categoryName, barOriginX - 2, rowY + 1.2, {
       align: "right",
       maxWidth: labelColW - 2,
     });
@@ -475,7 +475,7 @@ function generateInventoryPdf(
   cursorY += 3;
 
   const sortedCategories = [...categoryBreakdown]
-    .map((d) => ({ ...d, category: formatCategory(d.category) }))
+    .map((d) => ({ ...d, categoryName: formatCategory(d.categoryName) }))
     .sort((a, b) => b.totalValue - a.totalValue);
   const barChartH = Math.max(chartTargetH, sortedCategories.length * 6.5 + 18);
   const barRect: ChartRect = { x: margin, y: cursorY, w: fullChartW, h: barChartH };

@@ -6,6 +6,7 @@ import com.mmtorresoptical.OpticalClinicManagementSystem.validation.ValidProduct
 import jakarta.validation.constraints.*;
 import lombok.Data;
 import java.math.BigDecimal;
+import java.util.UUID;
 
 @Data
 @ValidProductRequest
@@ -15,8 +16,9 @@ public class CreateProductRequestDTO implements ProductRequest {
 
     private String imageDir; // Optional
 
-    @NotEmpty(message = "Category is required")
-    private String category;
+    private UUID categoryId;
+
+    private String newCategoryName;
 
     private String supplier;
 

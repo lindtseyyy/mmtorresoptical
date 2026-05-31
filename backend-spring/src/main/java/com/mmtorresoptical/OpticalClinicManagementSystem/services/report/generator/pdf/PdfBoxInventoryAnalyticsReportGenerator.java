@@ -291,10 +291,10 @@ public class PdfBoxInventoryAnalyticsReportGenerator {
     }
 
     private String resolveCategory(ProductDetailsDTO product) {
-        if (product == null || product.getCategory() == null || product.getCategory().isBlank()) {
+        if (product == null || product.getCategoryName() == null || product.getCategoryName().isBlank()) {
             return "N/A";
         }
-        return product.getCategory();
+        return product.getCategoryName();
     }
 
     private String resolveQuantity(ProductDetailsDTO product) {
@@ -322,10 +322,10 @@ public class PdfBoxInventoryAnalyticsReportGenerator {
     }
 
     private String resolveTopSellingCategory(TopSellingProductDTO product) {
-        if (product == null || product.category() == null || product.category().isBlank()) {
+        if (product == null || product.categoryName() == null || product.categoryName().isBlank()) {
             return "N/A";
         }
-        return product.category();
+        return product.categoryName();
     }
 
     private String resolveTotalSold(TopSellingProductDTO product) {

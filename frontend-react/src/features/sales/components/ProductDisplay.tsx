@@ -5,8 +5,8 @@ import { Button } from "@/shared/components/ui/button";
 import { Badge } from "@/shared/components/ui/badge";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/shared/components/ui/select";
 import { getImageUrl } from "@/shared/lib/utils";
-import type { Product } from "@/features/inventory/types";
-import { CATEGORY_LABELS, PHYSICAL_CATEGORIES, SERVICE_CATEGORIES, type Category } from "@/features/inventory/types";
+import type { Product, CategoryDTO } from "@/features/inventory/types";
+import { fetchCategories } from "@/features/inventory/services/productApi";
 
 interface ProductDisplayProps {
   products: Product[];
@@ -70,7 +70,7 @@ const ProductCard: React.FC<{
         </div>
 
         <span className="mb-1 text-[11px] text-muted-foreground/70">
-          {CATEGORY_LABELS[product.category as Category] ?? product.category}
+          {product.categoryName}
         </span>
 
         {isService ? (
@@ -110,12 +110,16 @@ const ProductDisplay: React.FC<ProductDisplayProps> = ({
   const [categoryFilter, setCategoryFilter] = useState<string>("all");
   const [sortBy, setSortBy] = useState<"name" | "price" | "quantity">("name");
   const [sortAsc, setSortAsc] = useState(true);
+  const [categories, setCategories] = useState<CategoryDTO[]>([]);
+
+  useEffect(() => {
+    fetchCategories().then(setCategories).catch(() => setCategories([]));
+  }, []);
 
   const isPhysical = productTypeFilter === "PHYSICAL";
   const segmentTotal = isPhysical
     ? products.filter((p) => p.productType === "PHYSICAL").length
     : products.filter((p) => p.productType === "SERVICE").length;
-  const filteredCategories = isPhysical ? PHYSICAL_CATEGORIES : SERVICE_CATEGORIES;
   const availableSortOptions = isPhysical
     ? (["name", "price", "quantity"] as const)
     : (["name", "price"] as const);
@@ -127,7 +131,7 @@ const ProductDisplay: React.FC<ProductDisplayProps> = ({
   const categoryCounts = useMemo(() => {
     const counts: Record<string, number> = {};
     products.forEach((p) => {
-      counts[p.category] = (counts[p.category] ?? 0) + 1;
+      counts[p.categoryId] = (counts[p.categoryId] ?? 0) + 1;
     });
     return counts;
   }, [products]);
@@ -151,7 +155,7 @@ const ProductDisplay: React.FC<ProductDisplayProps> = ({
         p.productName.toLowerCase().includes(search.toLowerCase());
       const matchCategory =
         categoryFilter === "all" ||
-        categoryFilter === p.category ||
+        categoryFilter === p.categoryId ||
         (isPhysical && categoryFilter === "low_stock" && p.quantity <= p.lowLevelThreshold && p.quantity > 0) ||
         (isPhysical && categoryFilter === "overstocked" && p.quantity >= p.overstockedThreshold && p.quantity > 0);
       return matchSearch && matchCategory;
@@ -227,14 +231,14 @@ const ProductDisplay: React.FC<ProductDisplayProps> = ({
           >
             All ({segmentTotal})
           </Badge>
-          {filteredCategories.map((cat) => (
+          {categories.map((cat) => (
             <Badge
-              key={cat}
-              variant={categoryFilter === cat ? "default" : "outline"}
+              key={cat.categoryId}
+              variant={categoryFilter === cat.categoryId ? "default" : "outline"}
               className="cursor-pointer text-[11px]"
-              onClick={() => setCategoryFilter(cat)}
+              onClick={() => setCategoryFilter(cat.categoryId)}
             >
-              {CATEGORY_LABELS[cat]} ({categoryCounts[cat] ?? 0})
+              {cat.name} ({categoryCounts[cat.categoryId] ?? 0})
             </Badge>
           ))}
           {isPhysical && (

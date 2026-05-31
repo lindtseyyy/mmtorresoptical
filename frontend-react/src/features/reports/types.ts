@@ -138,7 +138,7 @@ export interface TransactionHierarchicalReportDataset {
 // ── Chart data types ───────────────────────────────────────────────────
 
 export interface CategoryBreakdownDTO {
-  category: string;
+  categoryName: string;
   productCount: number;
   totalValue: number;
 }

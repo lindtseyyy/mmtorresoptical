@@ -5,6 +5,7 @@ import com.mmtorresoptical.OpticalClinicManagementSystem.model.Product;
 import org.springframework.data.jpa.domain.Specification;
 
 import java.math.BigDecimal;
+import java.util.UUID;
 
 public class ProductSpecification {
     public static Specification<Product> nameContains(String keyword) {
@@ -15,9 +16,9 @@ public class ProductSpecification {
                 );
     }
 
-    public static Specification<Product> hasCategory(String category) {
+    public static Specification<Product> hasCategory(UUID categoryId) {
         return (root, query, cb) ->
-                cb.equal(root.get("category"), category);
+                cb.equal(root.get("category").get("categoryId"), categoryId);
     }
 
     public static Specification<Product> hasSupplier(String supplier) {

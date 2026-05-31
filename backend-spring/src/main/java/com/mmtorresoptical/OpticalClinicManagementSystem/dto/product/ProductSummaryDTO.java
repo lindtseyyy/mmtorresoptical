@@ -10,7 +10,8 @@ public class ProductSummaryDTO {
     private UUID productId;
     private String productName;
     private String imageDir;
-    private String category;
+    private UUID categoryId;
+    private String categoryName;
     private String supplier;
     private String productType;
 }

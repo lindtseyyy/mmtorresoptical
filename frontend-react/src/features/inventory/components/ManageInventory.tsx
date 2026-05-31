@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useMemo, useState, useEffect } from "react";
 import { useQuery, keepPreviousData } from "@tanstack/react-query";
 import { Button } from "@/shared/components/ui/button";
 import { Input } from "@/shared/components/ui/input";
@@ -17,8 +17,8 @@ import { getImageUrl } from "@/shared/lib/utils";
 import { Card, CardContent } from "@/shared/components/ui/card";
 import { MetricCard } from "@/shared/components/MetricCard";
 import EmptyTableRows from "@/shared/components/EmptyTableRows";
-import type { Product, Category } from "@/features/inventory/types";
-import { CATEGORY_LABELS } from "@/features/inventory/types";
+import type { Product, CategoryDTO } from "@/features/inventory/types";
+import { fetchCategories } from "@/features/inventory/services/productApi";
 import {
   createProductsListQueryOptions,
   createInventorySummaryQueryOptions,
@@ -29,6 +29,11 @@ const ManageInventory: React.FC = () => {
   const [searchQuery, setSearchQuery] = useState("");
   const [debouncedSearchQuery, setDebouncedSearchQuery] = useState(searchQuery);
   const [categoryFilter, setCategoryFilter] = useState<string>("all");
+  const [categories, setCategories] = useState<CategoryDTO[]>([]);
+
+  useEffect(() => {
+    fetchCategories().then(setCategories).catch(() => setCategories([]));
+  }, []);
   const [stockFilter, setStockFilter] = useState("all");
   const [productTypeFilter, setProductTypeFilter] = useState("all");
   const [sortBy, setSortBy] = useState("productName");
@@ -168,20 +173,16 @@ const ManageInventory: React.FC = () => {
               <div className="flex items-center gap-2">
                 <span className="text-sm text-muted-foreground whitespace-nowrap">Category:</span>
                 <Select value={categoryFilter} onValueChange={setCategoryFilter}>
-                  <SelectTrigger className="w-[150px]">
+                  <SelectTrigger className="w-[180px]">
                     <SelectValue placeholder="All Categories" />
                   </SelectTrigger>
                   <SelectContent>
                     <SelectItem value="all">All Categories</SelectItem>
-                    <SelectItem value="eyeglasses">Eyeglasses</SelectItem>
-                    <SelectItem value="frames">Frames</SelectItem>
-                    <SelectItem value="lens">Lens</SelectItem>
-                    <SelectItem value="goggles">Goggles</SelectItem>
-                    <SelectItem value="prisms">Prisms</SelectItem>
-                    <SelectItem value="eyedrop">Eyedrop</SelectItem>
-                    <SelectItem value="sunglasses">Sunglasses</SelectItem>
-                    <SelectItem value="clinical_services">Clinical Services</SelectItem>
-                    <SelectItem value="lens_fitting">Lens Fitting</SelectItem>
+                    {categories.map((cat) => (
+                      <SelectItem key={cat.categoryId} value={cat.categoryId}>
+                        {cat.name}
+                      </SelectItem>
+                    ))}
                   </SelectContent>
                 </Select>
               </div>
@@ -265,7 +266,7 @@ const ManageInventory: React.FC = () => {
                             </span>
                           </td>
                           <td className="py-3 pr-4">
-                            {CATEGORY_LABELS[product.category as Category] ?? product.category}
+                            {product.categoryName}
                           </td>
                           <td className="py-3 pr-4 text-right">
                             {product.productType === "SERVICE" ? (

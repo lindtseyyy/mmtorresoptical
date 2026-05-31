@@ -11,7 +11,7 @@ public class ProductAuditDTO {
     private UUID productId;
     private String productName;
     private String imageDir;
-    private String category;
+    private String categoryName;
     private String supplier;
     private BigDecimal unitPrice;
     private Integer quantity;

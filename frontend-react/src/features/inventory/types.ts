@@ -1,42 +1,18 @@
 import { z } from "zod";
 
-// ── Category constants ──────────────────────────────────────────────
+// ── Category types ─────────────────────────────────────────────────
 
-export const PHYSICAL_CATEGORIES = [
-  "eyeglasses",
-  "frames",
-  "lens",
-  "goggles",
-  "prisms",
-  "eyedrop",
-  "sunglasses",
-] as const;
+export interface CategoryDTO {
+  categoryId: string;
+  name: string;
+}
 
-export const SERVICE_CATEGORIES = [
-  "clinical_services",
-  "lens_fitting",
-] as const;
-
-const ALL_CATEGORY_VALUES = [
-  ...PHYSICAL_CATEGORIES,
-  ...SERVICE_CATEGORIES,
-] as unknown as [string, ...string[]];
-
-export type PhysicalCategory = (typeof PHYSICAL_CATEGORIES)[number];
-export type ServiceCategory = (typeof SERVICE_CATEGORIES)[number];
-export type Category = PhysicalCategory | ServiceCategory;
-
-export const CATEGORY_LABELS: Record<Category, string> = {
-  eyeglasses: "Eyeglasses",
-  frames: "Frames",
-  lens: "Lens",
-  goggles: "Goggles",
-  prisms: "Prisms",
-  eyedrop: "Eyedrop",
-  sunglasses: "Sunglasses",
-  clinical_services: "Clinical Services",
-  lens_fitting: "Lens Fitting",
-};
+export interface CategoryWithProductCountDTO {
+  categoryId: string;
+  name: string;
+  isActive: boolean;
+  productCount: number;
+}
 
 // ── Field validators ────────────────────────────────────────────────
 
@@ -55,7 +31,8 @@ const decimalString = (label: string) =>
 export const productFormSchema = z
   .object({
     productName: z.string().min(1, "Name is required"),
-    category: z.enum(ALL_CATEGORY_VALUES),
+    categoryId: z.string().uuid().optional(),
+    newCategoryName: z.string().optional(),
     supplier: z.string().optional(),
     productType: z.enum(["PHYSICAL", "SERVICE"]),
     unitPrice: decimalString("Unit price"),
@@ -67,6 +44,14 @@ export const productFormSchema = z
     imageDir: z.string().optional(),
   })
   .superRefine((data, ctx) => {
+    if (!data.categoryId && (!data.newCategoryName || data.newCategoryName.trim().length === 0)) {
+      ctx.addIssue({
+        code: z.ZodIssueCode.custom,
+        message: "Category is required",
+        path: ["categoryId"],
+      });
+    }
+
     if (data.productType !== "PHYSICAL") return;
 
     if (!data.supplier || data.supplier.trim().length === 0) {
@@ -145,7 +130,9 @@ export const productFormSchema = z
 // ── Transform (form values → submission payload) ────────────────────
 
 export const productSchema = productFormSchema.transform((data) => ({
-  ...data,
+  productName: data.productName,
+  categoryId: data.categoryId || undefined,
+  newCategoryName: data.newCategoryName || undefined,
   unitPrice: Number(data.unitPrice),
   quantity:
     data.productType === "SERVICE" ? 0 : Number(data.quantity || "0"),
@@ -160,6 +147,9 @@ export const productSchema = productFormSchema.transform((data) => ({
   leadTimeDays:
     data.productType === "SERVICE" ? 0 : Number(data.leadTimeDays || "3"),
   supplier: data.productType === "SERVICE" ? "In-House" : (data.supplier || ""),
+  productType: data.productType,
+  isArchived: data.isArchived,
+  imageDir: data.imageDir,
 }));
 
 export type ProductFormValues = z.infer<typeof productFormSchema>;
@@ -170,7 +160,8 @@ export type ProductFormData = z.infer<typeof productSchema>;
 export interface Product {
   productId: string;
   productName: string;
-  category: string;
+  categoryId: string;
+  categoryName: string;
   supplier: string;
   unitPrice: number;
   quantity: number;
@@ -189,7 +180,8 @@ export interface ProductSummary {
   productId: string;
   productName: string;
   imageDir: string;
-  category: string;
+  categoryId: string;
+  categoryName: string;
   supplier: string;
   productType: string;
 }

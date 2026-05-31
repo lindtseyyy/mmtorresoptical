@@ -9,8 +9,10 @@ import com.mmtorresoptical.OpticalClinicManagementSystem.dto.product.UpdateProdu
 import com.mmtorresoptical.OpticalClinicManagementSystem.exception.custom.InsufficientStockException;
 import com.mmtorresoptical.OpticalClinicManagementSystem.exception.custom.ResourceNotFoundException;
 import com.mmtorresoptical.OpticalClinicManagementSystem.mapper.ProductMapper;
+import com.mmtorresoptical.OpticalClinicManagementSystem.model.Category;
 import com.mmtorresoptical.OpticalClinicManagementSystem.model.Product;
 import com.mmtorresoptical.OpticalClinicManagementSystem.model.User;
+import com.mmtorresoptical.OpticalClinicManagementSystem.repository.CategoryRepository;
 import com.mmtorresoptical.OpticalClinicManagementSystem.repository.ProductRepository;
 import com.mmtorresoptical.OpticalClinicManagementSystem.services.AuthenticatedUserService;
 import com.mmtorresoptical.OpticalClinicManagementSystem.services.analytics.InventoryAnalyticsService;
@@ -44,6 +46,8 @@ public class ProductService {
     private final JSONService jsonService;
     private final InventoryAnalyticsService inventoryAnalyticsService;
     private final FileStorageService fileStorageService;
+    private final CategoryService categoryService;
+    private final CategoryRepository categoryRepository;
 
     @Transactional
     public ProductResponseDTO createProduct(CreateProductRequestDTO productRequest, MultipartFile image) {
@@ -51,6 +55,8 @@ public class ProductService {
         User authenticatedUser = authenticatedUserService.getCurrentUser();
 
         Product product = productMapper.createRequestDTOToEntity(productRequest);
+
+        product.setCategory(resolveCategory(productRequest.getCategoryId(), productRequest.getNewCategoryName()));
 
         // Handle image upload — store file to disk, save filename in entity
         String storedFilename = fileStorageService.store(image);
@@ -72,7 +78,7 @@ public class ProductService {
 
     public Page<ProductDetailsDTO> getAllProducts(
             String keyword,
-            String category,
+            UUID categoryId,
             String supplier,
             BigDecimal minPrice,
             BigDecimal maxPrice,
@@ -123,7 +129,6 @@ public class ProductService {
                 mappedArchivedStatus = null;
             }
 
-            String effectiveCategory = (category != null && !category.isBlank()) ? category : null;
             String effectiveSupplier = (supplier != null && !supplier.isBlank()) ? supplier : null;
             String effectiveProductType = (productType != null && !productType.isBlank()) ? productType : null;
             String effectiveStockStatus = (stockStatus != null && !stockStatus.isBlank()) ? stockStatus : null;
@@ -133,7 +138,7 @@ public class ProductService {
             Page<Product> products = productRepository.fuzzySearchProducts(
                     keyword,
                     3,
-                    effectiveCategory,
+                    categoryId,
                     effectiveSupplier,
                     effectiveProductType,
                     minPrice,
@@ -152,8 +157,8 @@ public class ProductService {
 
         Specification<Product> spec = Specification.allOf();
 
-        if (category != null && !category.isBlank()) {
-            spec = spec.and(ProductSpecification.hasCategory(category));
+        if (categoryId != null) {
+            spec = spec.and(ProductSpecification.hasCategory(categoryId));
         }
 
         if (supplier != null && !supplier.isBlank()) {
@@ -218,6 +223,10 @@ public class ProductService {
         String existingImageDir = retrievedProduct.getImageDir();
 
         productMapper.updateProductFromUpdateRequestDTO(updateProductRequestDTO, retrievedProduct);
+
+        if (updateProductRequestDTO.getCategoryId() != null || updateProductRequestDTO.getNewCategoryName() != null) {
+            retrievedProduct.setCategory(resolveCategory(updateProductRequestDTO.getCategoryId(), updateProductRequestDTO.getNewCategoryName()));
+        }
 
         // Handle image — new upload replaces old, otherwise keep existing
         if (image != null && !image.isEmpty()) {
@@ -301,21 +310,35 @@ public class ProductService {
         productAuditHelper.logRestore(retrievedProduct);
     }
 
-    public List<ProductSummaryDTO> getProductSummaries(String keyword, String category) {
+    public List<ProductSummaryDTO> getProductSummaries(String keyword, UUID categoryId) {
         Specification<Product> spec = Specification.where(ProductSpecification.hasArchivedStatus("ACTIVE"));
 
         if (keyword != null && !keyword.isBlank()) {
             spec = spec.and(ProductSpecification.nameContains(keyword));
         }
 
-        if (category != null && !category.isBlank()) {
-            spec = spec.and(ProductSpecification.hasCategory(category));
+        if (categoryId != null) {
+            spec = spec.and(ProductSpecification.hasCategory(categoryId));
         }
 
         List<Product> products = productRepository.findAll(spec, Sort.by("productName"));
         return products.stream()
                 .map(productMapper::entityToSummaryDTO)
                 .collect(Collectors.toList());
+    }
+
+    private Category resolveCategory(UUID categoryId, String newCategoryName) {
+        System.out.println(">>> resolveCategory called: categoryId=" + categoryId + ", newCategoryName=" + newCategoryName);
+        if (categoryId != null) {
+            return categoryRepository.findById(categoryId)
+                    .orElseThrow(() -> new IllegalArgumentException("Category not found with id: " + categoryId));
+        }
+        if (newCategoryName != null && !newCategoryName.isBlank()) {
+            Category result = categoryService.findOrCreate(newCategoryName.trim());
+            System.out.println(">>> Created/found category: " + result.getCategoryId() + " = " + result.getName());
+            return result;
+        }
+        throw new IllegalArgumentException("Either categoryId or newCategoryName must be provided");
     }
 
 }

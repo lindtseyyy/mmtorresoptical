@@ -12,7 +12,7 @@ import java.math.BigDecimal;
 @NoArgsConstructor
 @AllArgsConstructor
 public class CategoryBreakdownDTO {
-    private String category;
+    private String categoryName;
     private long productCount;
     private BigDecimal totalValue;
 }

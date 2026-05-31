@@ -56,7 +56,7 @@ public class ProductController {
     public ResponseEntity<Page<ProductDetailsDTO>> getAllProducts(
                                                                   @RequestParam(required = false) String keyword,
 
-                                                                  @RequestParam(required = false) String category,
+                                                                  @RequestParam(required = false) UUID categoryId,
                                                                   @RequestParam(required = false) String supplier,
 
                                                                   @RequestParam(required = false) BigDecimal minPrice,
@@ -84,7 +84,7 @@ public class ProductController {
 
         Page<ProductDetailsDTO> productDetailsDTOPage = productService.getAllProducts(
                 keyword,
-                category,
+                categoryId,
                 supplier,
                 minPrice,
                 maxPrice,
@@ -187,8 +187,8 @@ public class ProductController {
     @GetMapping("/summary")
     public ResponseEntity<List<ProductSummaryDTO>> getProductSummaries(
             @RequestParam(required = false) String keyword,
-            @RequestParam(required = false) String category) {
-        List<ProductSummaryDTO> summaries = productService.getProductSummaries(keyword, category);
+            @RequestParam(required = false) UUID categoryId) {
+        List<ProductSummaryDTO> summaries = productService.getProductSummaries(keyword, categoryId);
         return ResponseEntity.ok(summaries);
     }
 }

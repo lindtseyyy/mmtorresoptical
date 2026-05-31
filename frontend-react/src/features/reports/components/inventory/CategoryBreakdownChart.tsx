@@ -40,7 +40,7 @@ const CategoryBreakdownChart: React.FC = () => {
   const chartData =
     data
       ?.map((d) => ({
-        name: formatCategory(d.category),
+        name: formatCategory(d.categoryName),
         value: d.totalValue,
       }))
       .sort((a, b) => b.value - a.value) ?? [];

@@ -1,6 +1,6 @@
 import api from "@/shared/lib/axiosInstance";
 import type { PageResponse } from "@/shared/types";
-import type { Product, ProductFormData, InventorySummary, ProductMetrics, ProductSummary } from "@/features/inventory/types";
+import type { Product, ProductFormData, InventorySummary, ProductMetrics, ProductSummary, CategoryDTO } from "@/features/inventory/types";
 
 const fetchProducts = async (
   page = 0,
@@ -21,7 +21,7 @@ const fetchProducts = async (
       sortOrder,
       archivedStatus,
       ...(keyword && { keyword }),
-      ...(category && category !== "all" && { category }),
+      ...(category && category !== "all" && { categoryId: category }),
       ...(stockStatus && stockStatus !== "all" && { stockStatus }),
       ...(productType && productType !== "all" && { productType }),
     },
@@ -104,9 +104,28 @@ const adjustStock = async (id: string, data: StockAdjustmentPayload) => {
 
 const fetchProductSummaries = async (keyword?: string, category?: string): Promise<ProductSummary[]> => {
   const { data } = await api.get("/products/summary", {
-    params: { ...(keyword && { keyword }), ...(category && category !== "all" && { category }) },
+    params: { ...(keyword && { keyword }), ...(category && category !== "all" && { categoryId: category }) },
   });
   return data;
+};
+
+const fetchCategories = async (): Promise<CategoryDTO[]> => {
+  const { data } = await api.get("/categories");
+  return data;
+};
+
+const fetchCategoriesWithProductCounts = async (): Promise<CategoryWithProductCountDTO[]> => {
+  const { data } = await api.get("/categories/all");
+  return data;
+};
+
+const toggleCategoryActive = async (categoryId: string): Promise<CategoryDTO> => {
+  const { data } = await api.patch(`/categories/${categoryId}/toggle-active`);
+  return data;
+};
+
+const deleteCategory = async (categoryId: string): Promise<void> => {
+  await api.delete(`/categories/${categoryId}`);
 };
 
 const fetchRopAlertsCount = async (): Promise<{ count: number }> => {
@@ -114,4 +133,4 @@ const fetchRopAlertsCount = async (): Promise<{ count: number }> => {
   return data;
 };
 
-export { fetchProducts, fetchProduct, updateProduct, addProduct, archiveProduct, restoreProduct, adjustStock, fetchInventorySummary, fetchProductMetrics, fetchProductSummaries, fetchRopAlertsCount };
+export { fetchProducts, fetchProduct, updateProduct, addProduct, archiveProduct, restoreProduct, adjustStock, fetchInventorySummary, fetchProductMetrics, fetchProductSummaries, fetchCategories, fetchCategoriesWithProductCounts, toggleCategoryActive, deleteCategory, fetchRopAlertsCount };

@@ -13,7 +13,6 @@ import {
 } from "@/features/inventory/services/productApi";
 import { fetchProductTransactions } from "@/features/sales/services/transactionApi";
 import type { TransactionListItem } from "@/features/sales/types";
-import { CATEGORY_LABELS, type Category } from "@/features/inventory/types";
 import { isAdmin } from "@/shared/lib/auth";
 import { getImageUrl } from "@/shared/lib/utils";
 
@@ -251,7 +250,7 @@ const ViewProduct: React.FC = () => {
             </div>
             <div>
               <p className="text-xs text-muted-foreground">Category</p>
-              <p className="font-medium">{CATEGORY_LABELS[product.category as Category] ?? product.category}</p>
+              <p className="font-medium">{product.categoryName}</p>
             </div>
             <div>
               <p className="text-xs text-muted-foreground">Supplier</p>

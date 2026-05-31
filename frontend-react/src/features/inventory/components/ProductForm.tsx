@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useRef, useState } from "react";
+import { useEffect, useMemo, useRef, useState, useCallback } from "react";
 import { useForm, FormProvider } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useNavigate } from "react-router-dom";
@@ -23,17 +23,15 @@ import {
   CardContent,
 } from "@/shared/components/ui/card";
 import { Label } from "@/shared/components/ui/label";
+import CategoryCombobox from "@/features/inventory/components/CategoryCombobox";
+import CategoryManagementModal from "@/features/inventory/components/CategoryManagementModal";
 import {
   productSchema,
   productFormSchema,
-  PHYSICAL_CATEGORIES,
-  SERVICE_CATEGORIES,
-  CATEGORY_LABELS,
   type ProductFormData,
   type ProductFormValues,
-  type Category,
 } from "@/features/inventory/types";
-import { Upload, X } from "lucide-react";
+import { Upload, X, Settings } from "lucide-react";
 
 interface ProductFormProps {
   defaultValues?: ProductFormData;
@@ -53,7 +51,8 @@ const mapToFormValues = (values?: ProductFormData): ProductFormValues => {
 
   return {
     productName: values?.productName ?? "",
-    category: values?.category ?? (isService ? "clinical_services" : "eyeglasses"),
+    categoryId: values?.categoryId ?? undefined,
+    newCategoryName: undefined,
     supplier: isService ? "" : (values?.supplier ?? ""),
     productType,
     unitPrice:
@@ -100,6 +99,13 @@ export const ProductForm: React.FC<ProductFormProps> = ({
   const [imageFile, setImageFile] = useState<File | null>(null);
   const [imagePreview, setImagePreview] = useState<string | null>(null);
   const [isDragOver, setIsDragOver] = useState(false);
+  const [selectedCategoryId, setSelectedCategoryId] = useState<string | null>(
+    passedDefaultValues?.categoryId ?? null
+  );
+  const [selectedCategoryName, setSelectedCategoryName] = useState<string | null>(null);
+  const [newCategoryName, setNewCategoryName] = useState<string | null>(null);
+  const [categoryModalOpen, setCategoryModalOpen] = useState(false);
+  const [categoryRefreshKey, setCategoryRefreshKey] = useState(0);
 
   const initialFormValues = useMemo(
     () => mapToFormValues(passedDefaultValues),
@@ -116,23 +122,11 @@ export const ProductForm: React.FC<ProductFormProps> = ({
 
   useEffect(() => {
     form.reset(initialFormValues);
-  }, [initialFormValues, form]);
-
-  // Reset category to a valid option when product type changes
-  useEffect(() => {
-    const currentCategory = form.getValues("category");
-    const validCategories = isService ? SERVICE_CATEGORIES : PHYSICAL_CATEGORIES;
-    if (!(validCategories as readonly string[]).includes(currentCategory)) {
-      form.setValue(
-        "category",
-        isService ? "clinical_services" : "eyeglasses",
-        { shouldValidate: false }
-      );
-    }
-  }, [isService, form]);
+    setSelectedCategoryId(passedDefaultValues?.categoryId ?? null);
+    setNewCategoryName(null);
+  }, [initialFormValues, form, passedDefaultValues]);
 
   const handleSubmit = form.handleSubmit(async (values) => {
-    // Clear PHYSICAL-only fields for services so the transform receives clean values
     if (values.productType === "SERVICE") {
       values.supplier = "";
       values.quantity = "";
@@ -140,11 +134,17 @@ export const ProductForm: React.FC<ProductFormProps> = ({
       values.overstockedThreshold = "";
       values.leadTimeDays = "";
     }
-    // Preserve quantity from original data when editing (field is not shown in edit mode)
     if (isEditMode && !isService) {
       values.quantity = String(passedDefaultValues?.quantity ?? "");
     }
-    const payload = productSchema.parse(values);
+
+    const mergedValues = {
+      ...values,
+      categoryId: selectedCategoryId ?? undefined,
+      newCategoryName: newCategoryName ?? undefined,
+    };
+
+    const payload = productSchema.parse(mergedValues);
     await onFormSubmit(payload, imageFile);
   });
 
@@ -220,38 +220,43 @@ export const ProductForm: React.FC<ProductFormProps> = ({
               )}
             </div>
 
-            <FormField
-              control={form.control}
-              name="category"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel className="font-semibold">Category</FormLabel>
-                  <Select
-                    value={field.value}
-                    onValueChange={(value) => {
-                      field.onChange(value);
-                      field.onBlur();
-                    }}
-                  >
-                    <FormControl>
-                      <SelectTrigger>
-                        <SelectValue placeholder="Select category" />
-                      </SelectTrigger>
-                    </FormControl>
-                    <SelectContent>
-                      {(isService ? SERVICE_CATEGORIES : PHYSICAL_CATEGORIES).map(
-                        (cat) => (
-                          <SelectItem key={cat} value={cat}>
-                            {CATEGORY_LABELS[cat as Category]}
-                          </SelectItem>
-                        )
-                      )}
-                    </SelectContent>
-                  </Select>
-                  <FormMessage />
-                </FormItem>
+            <div className="space-y-2">
+              <div className="flex items-center gap-1">
+                <Label className="font-semibold">Category</Label>
+                <Button
+                  type="button"
+                  variant="ghost"
+                  size="icon"
+                  className="h-6 w-6 ml-1"
+                  title="Manage categories"
+                  onClick={() => setCategoryModalOpen(true)}
+                >
+                  <Settings className="h-3.5 w-3.5" />
+                </Button>
+              </div>
+              <CategoryCombobox
+                value={selectedCategoryId}
+                onChange={(id, name) => {
+                  setSelectedCategoryId(id);
+                  setSelectedCategoryName(name);
+                  setNewCategoryName(null);
+                  form.setValue("categoryId", id, { shouldValidate: true });
+                }}
+                onCreate={(name) => {
+                  setNewCategoryName(name);
+                  setSelectedCategoryId(null);
+                  setSelectedCategoryName(null);
+                  form.setValue("newCategoryName", name, { shouldValidate: true });
+                }}
+                disabled={isLoading}
+                refreshKey={categoryRefreshKey}
+              />
+              {form.formState.errors.categoryId && (
+                <p className="text-sm font-medium text-destructive">
+                  {form.formState.errors.categoryId.message}
+                </p>
               )}
-            />
+            </div>
 
             <div className="grid gap-4 md:grid-cols-2">
               <FormField
@@ -520,6 +525,12 @@ export const ProductForm: React.FC<ProductFormProps> = ({
           </CardContent>
         </Card>
       </form>
+
+      <CategoryManagementModal
+        open={categoryModalOpen}
+        onOpenChange={setCategoryModalOpen}
+        onCategoriesChanged={() => setCategoryRefreshKey((k) => k + 1)}
+      />
     </FormProvider>
   );
 };
