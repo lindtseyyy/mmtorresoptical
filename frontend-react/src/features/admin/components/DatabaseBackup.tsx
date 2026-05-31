@@ -321,6 +321,7 @@ const DatabaseBackup: React.FC = () => {
 
       {/* ── Backup Password Dialog ── */}
       <Dialog open={backupDialogOpen} onOpenChange={setBackupDialogOpen}>
+        <DialogContent>
         <DialogHeader>
           <DialogTitle>Download Backup</DialogTitle>
           <DialogDescription>
@@ -380,6 +381,7 @@ const DatabaseBackup: React.FC = () => {
 
       {/* ── Restore Confirmation Dialog ── */}
       <Dialog open={restoreDialogOpen} onOpenChange={setRestoreDialogOpen}>
+        <DialogContent>
         <DialogHeader>
           <div className="flex items-center gap-2">
             <TriangleAlert className="h-5 w-5 text-red-500" />
