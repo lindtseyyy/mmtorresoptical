@@ -1,5 +1,6 @@
-import { useNavigate, useParams } from "react-router-dom";
+import { Link, useNavigate, useParams } from "react-router-dom";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
+import { ArrowLeft } from "lucide-react";
 import { ProductForm } from "@/features/inventory/components/ProductForm";
 import type { ProductFormData } from "@/features/inventory/types";
 import { getImageUrl } from "@/shared/lib/utils";
@@ -7,6 +8,7 @@ import {
   createEditProductMutationOptions,
   createEditProductQueryOptions,
 } from "@/features/inventory/hooks/productQuery";
+import { Button } from "@/shared/components/ui/button";
 
 const EditProduct: React.FC = () => {
   const navigate = useNavigate();
@@ -54,9 +56,17 @@ const EditProduct: React.FC = () => {
 
   return (
     <div className="mx-auto max-w-2xl space-y-6">
-      <div>
-        <h2 className="text-3xl font-bold">Edit Product</h2>
-        <p className="text-muted-foreground">Update item details</p>
+      <div className="flex items-start justify-between">
+        <div>
+          <h2 className="text-3xl font-bold">Edit Product</h2>
+          <p className="text-muted-foreground">Update item details</p>
+        </div>
+        <Button variant="secondary" size="sm" className="text-xs" asChild>
+          <Link to={`/inventory/view/${id}`}>
+            <ArrowLeft className="mr-1 h-4 w-4" />
+            Back to View Product
+          </Link>
+        </Button>
       </div>
       <ProductForm
         onFormSubmit={handleFormSubmit}
