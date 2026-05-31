@@ -59,18 +59,34 @@ const EditProfile: React.FC = () => {
   // --- Profile form ---
   const profileForm = useForm<ProfileFormData>({
     resolver: zodResolver(profileSchema),
-    values: profile
-      ? {
-          firstName: profile.firstName,
-          middleName: profile.middleName ?? "",
-          lastName: profile.lastName,
-          sex: profile.sex as "Male" | "Female",
-          birthDate: profile.birthDate,
-          email: profile.email,
-          contactNumber: profile.contactNumber,
-        }
-      : undefined,
+    defaultValues: {
+      firstName: "",
+      middleName: "",
+      lastName: "",
+      sex: "Male",
+      birthDate: "",
+      email: "",
+      contactNumber: "",
+    },
   });
+
+  const { reset: resetProfile } = profileForm;
+  const [formKey, setFormKey] = useState(0);
+
+  useEffect(() => {
+    if (profile) {
+      resetProfile({
+        firstName: profile.firstName,
+        middleName: profile.middleName ?? "",
+        lastName: profile.lastName,
+        sex: profile.sex?.toUpperCase() === "FEMALE" ? "Female" : "Male",
+        birthDate: profile.birthDate,
+        email: profile.email,
+        contactNumber: profile.contactNumber,
+      });
+      setFormKey((k) => k + 1);
+    }
+  }, [profile, resetProfile]);
 
   const { isPending: isSavingProfile, mutateAsync: saveProfile } = useMutation({
     mutationFn: updateOwnProfile,
@@ -214,7 +230,7 @@ const EditProfile: React.FC = () => {
                   render={({ field }) => (
                     <FormItem>
                       <FormLabel>Sex *</FormLabel>
-                      <Select onValueChange={field.onChange} value={field.value}>
+                      <Select key={`sex-${formKey}`} onValueChange={field.onChange} value={field.value}>
                         <FormControl>
                           <SelectTrigger>
                             <SelectValue placeholder="Select sex" />
