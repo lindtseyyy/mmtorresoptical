@@ -33,7 +33,7 @@ const ProductCard: React.FC<{
           <img
             src={getImageUrl(product.imageDir) ?? undefined}
             alt={product.productName}
-            className="h-full w-full object-contain"
+            className="h-full w-full object-cover"
             onError={() => setImgFailed(true)}
           />
         ) : (
