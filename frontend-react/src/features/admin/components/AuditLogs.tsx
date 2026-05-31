@@ -9,11 +9,11 @@ import {
   ChevronRight,
 } from "lucide-react";
 import { Button } from "@/shared/components/ui/button";
-import { Card, CardContent } from "@/shared/components/ui/card";
+import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/shared/components/ui/card";
 import { Input } from "@/shared/components/ui/input";
 import { Label } from "@/shared/components/ui/label";
 import { Badge } from "@/shared/components/ui/badge";
-import { Dialog, DialogHeader, DialogTitle, DialogDescription } from "@/shared/components/ui/dialog";
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from "@/shared/components/ui/dialog";
 import {
   Select,
   SelectContent,
@@ -318,7 +318,8 @@ const AuditLogs: React.FC = () => {
 
       {/* Audit Log View Dialog */}
       <Dialog open={!!viewingEntry} onOpenChange={(open) => !open && setViewingEntry(null)}>
-        <DialogHeader>
+        <DialogContent>
+          <DialogHeader>
           <div className="flex items-start justify-between">
             <div>
               <DialogTitle>Audit Log Details</DialogTitle>
@@ -397,6 +398,7 @@ const AuditLogs: React.FC = () => {
             })()}
           </div>
         )}
+        </DialogContent>
       </Dialog>
     </div>
   );
