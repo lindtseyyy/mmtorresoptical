@@ -148,48 +148,6 @@ export default function HelpPage() {
         ),
       },
       {
-        title: "System Setup",
-        content: (
-          <div className="space-y-3">
-            <div>
-              <h4 className="font-semibold">Prerequisites</h4>
-              <ul className="list-disc space-y-1 pl-6">
-                <li>Java 17 or later (for the backend server)</li>
-                <li>PostgreSQL 14 or later</li>
-                <li>Node.js 20 or later (for building the frontend)</li>
-                <li>A modern web browser (see Compatibility Guide)</li>
-              </ul>
-            </div>
-            <div>
-              <h4 className="font-semibold">Backend Setup</h4>
-              <ol className="list-decimal space-y-1 pl-6">
-                <li>Create a PostgreSQL database named <code className="rounded bg-muted px-1 py-0.5 text-sm">mmtorres_optical</code>.</li>
-                <li>Configure database credentials in the <code className="rounded bg-muted px-1 py-0.5 text-sm">.env</code> file at the project root.</li>
-                <li>Run the Spring Boot application using <code className="rounded bg-muted px-1 py-0.5 text-sm">mvn spring-boot:run</code> from the <code className="rounded bg-muted px-1 py-0.5 text-sm">backend-spring</code> directory.</li>
-                <li>The server starts on port <code className="rounded bg-muted px-1 py-0.5 text-sm">8080</code> by default.</li>
-              </ol>
-            </div>
-            <div>
-              <h4 className="font-semibold">Frontend Setup</h4>
-              <ol className="list-decimal space-y-1 pl-6">
-                <li>Navigate to the <code className="rounded bg-muted px-1 py-0.5 text-sm">frontend-react</code> directory.</li>
-                <li>Run <code className="rounded bg-muted px-1 py-0.5 text-sm">npm install</code> to install dependencies.</li>
-                <li>Run <code className="rounded bg-muted px-1 py-0.5 text-sm">npm run dev</code> to start the development server.</li>
-                <li>Access the application at <code className="rounded bg-muted px-1 py-0.5 text-sm">http://localhost:5174</code>.</li>
-              </ol>
-            </div>
-            <div>
-              <h4 className="font-semibold">Initial Admin Account</h4>
-              <p className="text-muted-foreground">
-                An administrator account must be created directly in the database for first-time access.
-                Use the default credentials provided by your system administrator and change the password
-                on first login.
-              </p>
-            </div>
-          </div>
-        ),
-      },
-      {
         title: "Compatibility Guide",
         content: (
           <div className="space-y-3">
@@ -221,8 +179,8 @@ export default function HelpPage() {
             <div>
               <h4 className="font-semibold">Printing</h4>
               <p className="text-muted-foreground">
-                The user manual is designed for printing. Use the <em>Print Manual</em> button at the top of
-                this page. For best results, enable background graphics in your browser&apos;s print settings.
+                The user manual is available as a PDF. Use the <em>Open User Manual (PDF)</em> button at the top of
+                this page to view or download it.
               </p>
             </div>
           </div>
