@@ -5,11 +5,12 @@ import com.mmtorresoptical.OpticalClinicManagementSystem.dto.backup.BackupReques
 import com.mmtorresoptical.OpticalClinicManagementSystem.enums.ActionType;
 import com.mmtorresoptical.OpticalClinicManagementSystem.enums.ResourceType;
 import com.mmtorresoptical.OpticalClinicManagementSystem.repository.AuditLogRepository;
+import com.mmtorresoptical.OpticalClinicManagementSystem.security.AesEncryptionService;
 import com.mmtorresoptical.OpticalClinicManagementSystem.services.controller.DatabaseBackupService;
+import jakarta.servlet.http.HttpServletResponse;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.http.HttpHeaders;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -19,9 +20,10 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.multipart.MultipartFile;
-import org.springframework.web.servlet.mvc.method.annotation.StreamingResponseBody;
 
 import java.io.File;
+import java.io.FileInputStream;
+import java.io.OutputStream;
 import java.nio.file.Files;
 import java.time.Instant;
 import java.time.ZoneId;
@@ -37,6 +39,9 @@ public class DatabaseBackupController {
     private final DatabaseBackupService databaseBackupService;
     private final AuditLogRepository auditLogRepository;
     private final ObjectMapper objectMapper;
+    private final AesEncryptionService aesEncryptionService;
+
+    private static final String ENC_PREFIX = "ENC:";
 
     @GetMapping("/last-backup")
     public ResponseEntity<Map<String, String>> getLastBackup() {
@@ -69,7 +74,11 @@ public class DatabaseBackupController {
                     String backupTs = "";
                     String backupBy = "";
                     try {
-                        var node = objectMapper.readTree(auditLog.getDetailsJson());
+                        String json = auditLog.getDetailsJson();
+                        if (json != null && json.startsWith(ENC_PREFIX)) {
+                            json = aesEncryptionService.decrypt(json.substring(ENC_PREFIX.length()));
+                        }
+                        var node = objectMapper.readTree(json);
                         if (node.has("backupTimestamp")) {
                             backupTs = node.get("backupTimestamp").asText();
                         }
@@ -98,8 +107,9 @@ public class DatabaseBackupController {
     }
 
     @PostMapping("/backup")
-    public ResponseEntity<StreamingResponseBody> downloadBackup(
-            @Valid @RequestBody BackupRequestDTO request) {
+    public void downloadBackup(
+            @Valid @RequestBody BackupRequestDTO request,
+            HttpServletResponse response) throws Exception {
 
         File backupFile = databaseBackupService.generateBackup(request.currentPassword());
 
@@ -108,21 +118,21 @@ public class DatabaseBackupController {
                 .format(Instant.now());
         String downloadFilename = "backup_" + timestamp + ".dump";
 
-        StreamingResponseBody stream = outputStream -> {
-            try {
-                Files.copy(backupFile.toPath(), outputStream);
-                outputStream.flush();
-            } finally {
-                Files.deleteIfExists(backupFile.toPath());
-            }
-        };
+        response.setContentType(MediaType.APPLICATION_OCTET_STREAM_VALUE);
+        response.setHeader("Content-Disposition", "attachment; filename=\"" + downloadFilename + "\"");
+        response.setContentLengthLong(backupFile.length());
 
-        return ResponseEntity.ok()
-                .header(HttpHeaders.CONTENT_DISPOSITION,
-                        "attachment; filename=\"" + downloadFilename + "\"")
-                .contentType(MediaType.APPLICATION_OCTET_STREAM)
-                .contentLength(backupFile.length())
-                .body(stream);
+        try (FileInputStream fis = new FileInputStream(backupFile);
+             OutputStream os = response.getOutputStream()) {
+            byte[] buffer = new byte[8192];
+            int bytesRead;
+            while ((bytesRead = fis.read(buffer)) != -1) {
+                os.write(buffer, 0, bytesRead);
+            }
+            os.flush();
+        } finally {
+            Files.deleteIfExists(backupFile.toPath());
+        }
     }
 
     @PostMapping(value = "/restore", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
