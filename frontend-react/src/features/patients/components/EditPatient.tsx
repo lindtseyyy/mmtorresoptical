@@ -31,6 +31,7 @@ const EditPatient: React.FC = () => {
         email: patient.email,
         contactNumber: patient.contactNumber,
         address: patient.address,
+        medicalHistory: patient.medicalHistory ?? undefined,
         isArchived: patient.isArchived,
       }
     : undefined;
