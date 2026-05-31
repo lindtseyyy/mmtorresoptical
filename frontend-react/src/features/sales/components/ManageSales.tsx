@@ -184,47 +184,61 @@ const ManageSales: React.FC = () => {
         return;
       }
 
+      const skipped: string[] = [];
+      let addedCount = 0;
+
       setCart((prev) => {
         const merged = [...prev];
         for (const rec of details.recommendations!) {
-          const existing = merged.find(
-            (i) => i.product.productId === rec.productId && !i.isDiscounted
+          const alreadyInCart = merged.some(
+            (i) => i.product.productId === rec.productId
           );
-          if (existing) {
-            existing.quantity += rec.quantity;
-          } else {
-            merged.push({
-              uid: nextUid(),
-              product: {
-                productId: rec.productId,
-                productName: rec.productName,
-                category: rec.category,
-                supplier: rec.supplierName,
-                unitPrice: rec.unitPrice,
-                quantity: rec.stockQuantity,
-                productType: rec.productType as "PHYSICAL" | "SERVICE",
-                imageDir: rec.imageDir,
-                lowLevelThreshold: 0,
-                overstockedThreshold: 0,
-                leadTimeDays: 0,
-                reorderPoint: null,
-                suggestedOrderQuantity: null,
-                isArchived: false,
-                createdAt: "",
-              },
-              quantity: rec.quantity,
-              discountType: null,
-              discountValue: 0,
-              isDiscounted: false,
-            });
+          if (alreadyInCart) {
+            skipped.push(rec.productName);
+            continue;
           }
+          merged.push({
+            uid: nextUid(),
+            product: {
+              productId: rec.productId,
+              productName: rec.productName,
+              category: rec.category,
+              supplier: rec.supplierName,
+              unitPrice: rec.unitPrice,
+              quantity: rec.stockQuantity,
+              productType: rec.productType as "PHYSICAL" | "SERVICE",
+              imageDir: rec.imageDir,
+              lowLevelThreshold: 0,
+              overstockedThreshold: 0,
+              leadTimeDays: 0,
+              reorderPoint: null,
+              suggestedOrderQuantity: null,
+              isArchived: false,
+              createdAt: "",
+            },
+            quantity: rec.quantity,
+            discountType: null,
+            discountValue: 0,
+            isDiscounted: false,
+          });
+          addedCount++;
         }
         return merged;
       });
 
-      toast.success("Prescription loaded", {
-        description: `${details.recommendations.length} item(s) added to cart.`,
-      });
+      if (skipped.length > 0 && addedCount > 0) {
+        toast.warning("Some items skipped", {
+          description: `Already in cart: ${skipped.join(", ")}. ${addedCount} new item(s) added.`,
+        });
+      } else if (skipped.length > 0 && addedCount === 0) {
+        toast.info("Already in cart", {
+          description: `All items from this prescription are already in the cart: ${skipped.join(", ")}.`,
+        });
+      } else {
+        toast.success("Prescription loaded", {
+          description: `${addedCount} item(s) added to cart.`,
+        });
+      }
     } catch (e: any) {
       toast.error("Failed to load prescription", {
         description: e?.response?.data?.message || e?.message,
