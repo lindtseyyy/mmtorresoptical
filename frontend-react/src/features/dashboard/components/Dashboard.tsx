@@ -191,7 +191,7 @@ export default function Dashboard() {
         />
         <MetricCard
           icon={DollarSign}
-          label="Revenue MTD"
+          label="Revenue Month-to-Date"
           value={
             metrics?.monthlyNetRevenue != null
               ? formatCurrency(metrics.monthlyNetRevenue)
