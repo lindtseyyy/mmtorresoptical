@@ -25,7 +25,7 @@ import StatusBadge from "@/shared/components/ui/StatusBadge";
 import { Checkbox } from "@/shared/components/ui/checkbox";
 import { Input } from "@/shared/components/ui/input";
 import { Label } from "@/shared/components/ui/label";
-import { Dialog, DialogHeader, DialogTitle, DialogDescription } from "@/shared/components/ui/dialog";
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from "@/shared/components/ui/dialog";
 import { fetchTransaction, refundTransaction, voidTransaction, addPayment, updateFulfillmentStatus } from "@/features/sales/services/transactionApi";
 import { toast } from "sonner";
 import type { TransactionItemResponse, RefundStateItem, RefundMethod, PaymentResponse, ItemRefundResponse, RefundReceiptData } from "@/features/sales/types";

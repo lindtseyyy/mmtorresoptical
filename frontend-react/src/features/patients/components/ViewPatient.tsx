@@ -7,7 +7,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/sha
 import { MetricCard } from "@/shared/components/MetricCard";
 import { Badge } from "@/shared/components/ui/badge";
 import SegmentedControl from "@/shared/components/ui/segmented-control";
-import { Dialog, DialogHeader, DialogTitle, DialogDescription } from "@/shared/components/ui/dialog";
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from "@/shared/components/ui/dialog";
 import { toast } from "sonner";
 import {
   fetchPatient,
@@ -315,8 +315,9 @@ const ViewPatient: React.FC = () => {
 
       {/* Log Visit Modal */}
       <Dialog open={logVisitOpen} onOpenChange={(open) => { if (!open) { setLogVisitOpen(false); resetLogVisitForm(); } }}>
-        <DialogHeader>
-          <DialogTitle>Log Visit</DialogTitle>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Log Visit</DialogTitle>
           <DialogDescription>
             Record a walk-in visit for {fullName}
           </DialogDescription>
@@ -406,6 +407,7 @@ const ViewPatient: React.FC = () => {
             {logVisitMutation.isPending ? "Logging..." : "Log Visit"}
           </Button>
         </div>
+        </DialogContent>
       </Dialog>
     </div>
   );

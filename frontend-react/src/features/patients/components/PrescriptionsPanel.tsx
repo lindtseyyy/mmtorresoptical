@@ -18,7 +18,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/shared/components/ui/select";
-import { Dialog, DialogHeader, DialogTitle, DialogDescription } from "@/shared/components/ui/dialog";
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from "@/shared/components/ui/dialog";
 import { toast } from "sonner";
 import {
   fetchPatientPrescriptions,
@@ -197,8 +197,9 @@ const PrescriptionsPanel: React.FC<PrescriptionsPanelProps> = ({ patientId, full
 
       {/* Void Prescription Confirmation Dialog */}
       <Dialog open={voidRxDialog !== null} onOpenChange={(open) => { if (!open) { setVoidRxDialog(null); setVoidReason(""); } }}>
-        <DialogHeader>
-          <DialogTitle>Void Prescription</DialogTitle>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Void Prescription</DialogTitle>
           <DialogDescription>
             Are you sure you want to void{" "}
             <strong>{voidRxDialog ? voidRxDialog.rxNumber : "this prescription"}</strong>{" "}
@@ -246,11 +247,13 @@ const PrescriptionsPanel: React.FC<PrescriptionsPanelProps> = ({ patientId, full
             </Button>
           </div>
         </div>
+        </DialogContent>
       </Dialog>
 
       {/* View Prescription Dialog */}
       <Dialog open={viewRxId !== null} onOpenChange={(open) => { if (!open) setViewRxId(null); }}>
-        {viewRxLoading ? (
+        <DialogContent>
+          {viewRxLoading ? (
           <div className="flex items-center justify-center py-16">
             <div className="h-8 w-8 animate-spin rounded-full border-4 border-primary border-t-transparent" />
           </div>
@@ -418,6 +421,7 @@ const PrescriptionsPanel: React.FC<PrescriptionsPanelProps> = ({ patientId, full
             </div>
           </>
         )}
+        </DialogContent>
       </Dialog>
     </>
   );

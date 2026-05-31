@@ -18,7 +18,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/shared/components/ui/select";
-import { Dialog, DialogHeader, DialogTitle, DialogDescription } from "@/shared/components/ui/dialog";
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from "@/shared/components/ui/dialog";
 import { toast } from "sonner";
 import {
   fetchPatientEyeExams,
@@ -198,8 +198,9 @@ const EyeExamsPanel: React.FC<EyeExamsPanelProps> = ({ patientId, fullName, isAc
 
       {/* Void Eye Exam Confirmation Dialog */}
       <Dialog open={voidEeDialog !== null} onOpenChange={(open) => { if (!open) { setVoidEeDialog(null); setVoidEeReason(""); } }}>
-        <DialogHeader>
-          <DialogTitle>Void Eye Exam</DialogTitle>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Void Eye Exam</DialogTitle>
           <DialogDescription>
             Are you sure you want to void {voidEeDialog ? voidEeDialog.examNumber : ""}? This action cannot be undone.
           </DialogDescription>
@@ -243,11 +244,13 @@ const EyeExamsPanel: React.FC<EyeExamsPanelProps> = ({ patientId, fullName, isAc
             </Button>
           </div>
         </div>
+        </DialogContent>
       </Dialog>
 
       {/* View Eye Exam Dialog */}
       <Dialog open={viewEeId !== null} onOpenChange={(open) => { if (!open) setViewEeId(null); }}>
-        {viewEeLoading ? (
+        <DialogContent>
+          {viewEeLoading ? (
           <div className="flex items-center justify-center py-16">
             <div className="h-8 w-8 animate-spin rounded-full border-4 border-primary border-t-transparent" />
           </div>
@@ -331,13 +334,14 @@ const EyeExamsPanel: React.FC<EyeExamsPanelProps> = ({ patientId, fullName, isAc
                 </p>
               )}
             </div>
-            <div className="flex justify-end pt-4">
-              <Button variant="outline" onClick={() => setViewEeId(null)}>
-                Close
-              </Button>
-            </div>
-          </>
-        )}
+              <div className="flex justify-end pt-4">
+                <Button variant="outline" onClick={() => setViewEeId(null)}>
+                  Close
+                </Button>
+              </div>
+            </>
+          )}
+        </DialogContent>
       </Dialog>
     </>
   );

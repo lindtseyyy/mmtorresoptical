@@ -132,9 +132,9 @@ const AddEyeExam: React.FC = () => {
           </p>
         </div>
         <Button variant="secondary" size="sm" className="text-sm" asChild>
-          <Link to="/patients">
+          <Link to={`/patients/view/${patientId}`}>
             <ArrowLeft className="mr-1 h-4 w-4" />
-            Back to Patients
+            Back to Patient
           </Link>
         </Button>
       </div>

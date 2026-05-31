@@ -38,7 +38,8 @@ const PaymentReceipt: React.FC<PaymentReceiptProps> = ({
 
   return (
     <Dialog open={open} onOpenChange={onClose}>
-      <div className="font-mono text-xs leading-relaxed text-foreground max-h-[65vh] overflow-y-auto print:max-h-none print:overflow-visible">
+      <DialogContent>
+        <div className="font-mono text-xs leading-relaxed text-foreground max-h-[65vh] overflow-y-auto print:max-h-none print:overflow-visible">
         {/* Header */}
         <div className="text-center mb-4">
           <h2 className="text-xs font-bold tracking-wide uppercase text-muted-foreground mb-1">
@@ -150,6 +151,7 @@ const PaymentReceipt: React.FC<PaymentReceiptProps> = ({
           Close
         </Button>
       </div>
+      </DialogContent>
     </Dialog>
   );
 };

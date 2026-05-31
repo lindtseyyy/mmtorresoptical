@@ -18,7 +18,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/shared/components/ui/select";
-import { Dialog, DialogHeader, DialogTitle, DialogDescription } from "@/shared/components/ui/dialog";
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from "@/shared/components/ui/dialog";
 import { toast } from "sonner";
 import {
   fetchFollowUpsByPatient,
@@ -343,83 +343,85 @@ const FollowUpsPanel: React.FC<FollowUpsPanelProps> = ({ patientId, isActive }) 
 
       {/* Follow-Up Management Modal */}
       <Dialog open={fuModal.open} onOpenChange={(open) => { if (!open) setFuModal({ open: false, edit: null }); }}>
-        <DialogHeader>
-          <DialogTitle>{fuModal.edit ? "Edit Follow-Up" : "Add Follow-Up"}</DialogTitle>
-          <DialogDescription>
-            {fuModal.edit ? "Modify the follow-up details" : "Schedule a new follow-up visit"}
-          </DialogDescription>
-        </DialogHeader>
-        <div className="space-y-4">
-          <div>
-            <label className="text-sm font-medium">Target Date *</label>
-            <input
-              type="date"
-              className="w-full rounded-md border border-gray-300 bg-background px-3 py-2 text-sm ring-offset-background mt-1 focus:border-gray-400 focus:outline-none"
-              value={fuForm.scheduledDate}
-              min={getCurrentLocalDate()}
-              onChange={(e) => setFuForm((f) => ({ ...f, scheduledDate: e.target.value }))}
-            />
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>{fuModal.edit ? "Edit Follow-Up" : "Add Follow-Up"}</DialogTitle>
+            <DialogDescription>
+              {fuModal.edit ? "Modify the follow-up details" : "Schedule a new follow-up visit"}
+            </DialogDescription>
+          </DialogHeader>
+          <div className="space-y-4">
+            <div>
+              <label className="text-sm font-medium">Target Date *</label>
+              <input
+                type="date"
+                className="w-full rounded-md border border-gray-300 bg-background px-3 py-2 text-sm ring-offset-background mt-1 focus:border-gray-400 focus:outline-none"
+                value={fuForm.scheduledDate}
+                min={getCurrentLocalDate()}
+                onChange={(e) => setFuForm((f) => ({ ...f, scheduledDate: e.target.value }))}
+              />
+            </div>
+            <div>
+              <label className="text-sm font-medium">Follow-up Reason</label>
+              <textarea
+                className="w-full rounded-md border border-gray-300 bg-background px-3 py-2 text-sm ring-offset-background mt-1 focus:border-gray-400 focus:outline-none"
+                placeholder="e.g. Routine check-up, monitor progress..."
+                rows={3}
+                value={fuForm.followUpReason}
+                onChange={(e) => setFuForm((f) => ({ ...f, followUpReason: e.target.value }))}
+              />
+            </div>
+            <div>
+              <label className="text-sm font-medium">Link to Prescription (Optional)</label>
+              <select
+                className="w-full rounded-md border border-gray-300 bg-background px-3 py-2 text-sm ring-offset-background mt-1 focus:border-gray-400 focus:outline-none"
+                value={fuForm.prescriptionId}
+                onChange={(e) => setFuForm((f) => ({ ...f, prescriptionId: e.target.value }))}
+              >
+                <option value="">None</option>
+                {rxList?.map((rx: PrescriptionListItem) => (
+                  <option key={rx.prescriptionId} value={rx.prescriptionId}>
+                    {formatDate(rx.issueDate)} {rx.notes ? `— ${rx.notes.substring(0, 40)}` : ""}
+                  </option>
+                ))}
+              </select>
+            </div>
+            <div>
+              <label className="text-sm font-medium">Link to Eye Exam (Optional)</label>
+              <select
+                className="w-full rounded-md border border-gray-300 bg-background px-3 py-2 text-sm ring-offset-background mt-1 focus:border-gray-400 focus:outline-none"
+                value={fuForm.eyeExamId}
+                onChange={(e) => setFuForm((f) => ({ ...f, eyeExamId: e.target.value }))}
+              >
+                <option value="">None</option>
+                {eeList?.map((ee: EyeExamListItem) => (
+                  <option key={ee.eyeExamId} value={ee.eyeExamId}>
+                    {formatDateTime(ee.createdAt)} {ee.chiefComplaint ? `— ${ee.chiefComplaint.substring(0, 40)}` : ""}
+                  </option>
+                ))}
+              </select>
+            </div>
           </div>
-          <div>
-            <label className="text-sm font-medium">Follow-up Reason</label>
-            <textarea
-              className="w-full rounded-md border border-gray-300 bg-background px-3 py-2 text-sm ring-offset-background mt-1 focus:border-gray-400 focus:outline-none"
-              placeholder="e.g. Routine check-up, monitor progress..."
-              rows={3}
-              value={fuForm.followUpReason}
-              onChange={(e) => setFuForm((f) => ({ ...f, followUpReason: e.target.value }))}
-            />
-          </div>
-          <div>
-            <label className="text-sm font-medium">Link to Prescription (Optional)</label>
-            <select
-              className="w-full rounded-md border border-gray-300 bg-background px-3 py-2 text-sm ring-offset-background mt-1 focus:border-gray-400 focus:outline-none"
-              value={fuForm.prescriptionId}
-              onChange={(e) => setFuForm((f) => ({ ...f, prescriptionId: e.target.value }))}
+          <div className="flex justify-end gap-2 pt-4">
+            <Button variant="outline" onClick={() => setFuModal({ open: false, edit: null })}>
+              Cancel
+            </Button>
+            <Button
+              disabled={!fuForm.scheduledDate || saveFuMutation.isPending}
+              onClick={() => {
+                saveFuMutation.mutate({
+                  patientId,
+                  scheduledDate: fuForm.scheduledDate,
+                  followUpReason: fuForm.followUpReason || undefined,
+                  prescriptionId: fuForm.prescriptionId || undefined,
+                  eyeExamId: fuForm.eyeExamId || undefined,
+                });
+              }}
             >
-              <option value="">None</option>
-              {rxList?.map((rx: PrescriptionListItem) => (
-                <option key={rx.prescriptionId} value={rx.prescriptionId}>
-                  {formatDate(rx.issueDate)} {rx.notes ? `— ${rx.notes.substring(0, 40)}` : ""}
-                </option>
-              ))}
-            </select>
+              {saveFuMutation.isPending ? "Saving..." : fuModal.edit ? "Save Changes" : "Create Follow-Up"}
+            </Button>
           </div>
-          <div>
-            <label className="text-sm font-medium">Link to Eye Exam (Optional)</label>
-            <select
-              className="w-full rounded-md border border-gray-300 bg-background px-3 py-2 text-sm ring-offset-background mt-1 focus:border-gray-400 focus:outline-none"
-              value={fuForm.eyeExamId}
-              onChange={(e) => setFuForm((f) => ({ ...f, eyeExamId: e.target.value }))}
-            >
-              <option value="">None</option>
-              {eeList?.map((ee: EyeExamListItem) => (
-                <option key={ee.eyeExamId} value={ee.eyeExamId}>
-                  {formatDateTime(ee.createdAt)} {ee.chiefComplaint ? `— ${ee.chiefComplaint.substring(0, 40)}` : ""}
-                </option>
-              ))}
-            </select>
-          </div>
-        </div>
-        <div className="flex justify-end gap-2 pt-4">
-          <Button variant="outline" onClick={() => setFuModal({ open: false, edit: null })}>
-            Cancel
-          </Button>
-          <Button
-            disabled={!fuForm.scheduledDate || saveFuMutation.isPending}
-            onClick={() => {
-              saveFuMutation.mutate({
-                patientId,
-                scheduledDate: fuForm.scheduledDate,
-                followUpReason: fuForm.followUpReason || undefined,
-                prescriptionId: fuForm.prescriptionId || undefined,
-                eyeExamId: fuForm.eyeExamId || undefined,
-              });
-            }}
-          >
-            {saveFuMutation.isPending ? "Saving..." : fuModal.edit ? "Save Changes" : "Create Follow-Up"}
-          </Button>
-        </div>
+        </DialogContent>
       </Dialog>
     </>
   );

@@ -331,6 +331,7 @@ const AuditLogs: React.FC = () => {
               <Button
                 variant="outline"
                 size="sm"
+                className="mr-6"
                 onClick={() => {
                   const url = getResourceViewUrl(viewingEntry.resourceType, viewingEntry.resourceId);
                   if (url) navigate(url);

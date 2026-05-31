@@ -2,7 +2,7 @@ import { useState, useMemo } from "react";
 import { Search, Package, ImageOff } from "lucide-react";
 import { Input } from "@/shared/components/ui/input";
 import { Badge } from "@/shared/components/ui/badge";
-import { Dialog, DialogHeader, DialogTitle } from "@/shared/components/ui/dialog";
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/shared/components/ui/dialog";
 import { getImageUrl } from "@/shared/lib/utils";
 import { useProductSummaries } from "@/features/inventory/hooks/productQuery";
 import type { ProductSummary } from "@/features/inventory/types";
@@ -46,10 +46,11 @@ const ProductPickerModal: React.FC<ProductPickerModalProps> = ({ open, onOpenCha
   };
 
   return (
-    <Dialog open={open} onOpenChange={onOpenChange} className="w-[950px] max-w-[95vw]">
-      <DialogHeader>
-        <DialogTitle>Select Product</DialogTitle>
-      </DialogHeader>
+    <Dialog open={open} onOpenChange={onOpenChange}>
+      <DialogContent className="w-[950px] max-w-[95vw]">
+        <DialogHeader>
+          <DialogTitle>Select Product</DialogTitle>
+        </DialogHeader>
 
       <div className="space-y-3">
         <div className="relative">
@@ -120,6 +121,7 @@ const ProductPickerModal: React.FC<ProductPickerModalProps> = ({ open, onOpenCha
           </div>
         )}
       </div>
+      </DialogContent>
     </Dialog>
   );
 };

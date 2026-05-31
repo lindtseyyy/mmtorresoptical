@@ -1,5 +1,5 @@
 import { useRef } from "react";
-import { Dialog } from "@/shared/components/ui/dialog";
+import { Dialog, DialogContent } from "@/shared/components/ui/dialog";
 import { Button } from "@/shared/components/ui/button";
 import { Printer } from "lucide-react";
 import type { ItemRefundResponse, TransactionResponse } from "@/features/sales/types";
@@ -35,8 +35,9 @@ const RefundReceipt: React.FC<RefundReceiptProps> = ({ open, onClose, refundData
   const r = refundData;
 
   return (
-    <Dialog open={open} onOpenChange={onClose} hideCloseButton>
-      <div ref={receiptRef} className="font-mono text-xs leading-relaxed text-foreground max-h-[65vh] overflow-y-auto print:max-h-none print:overflow-visible">
+    <Dialog open={open} onOpenChange={onClose}>
+      <DialogContent>
+        <div ref={receiptRef} className="font-mono text-xs leading-relaxed text-foreground max-h-[65vh] overflow-y-auto print:max-h-none print:overflow-visible">
         {/* ---- Header ---- */}
         <div className="text-center mb-4">
           <h2 className="text-sm font-bold tracking-wide uppercase">{BUSINESS_NAME}</h2>
@@ -140,8 +141,10 @@ const RefundReceipt: React.FC<RefundReceiptProps> = ({ open, onClose, refundData
           </Button>
         </div>
       </div>
+      </DialogContent>
     </Dialog>
   );
 };
 
 export default RefundReceipt;
+

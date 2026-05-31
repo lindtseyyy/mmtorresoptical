@@ -547,26 +547,28 @@ const PrintableReceipt: React.FC<PrintableReceiptProps> = ({
 
   return (
     <Dialog open={open} onOpenChange={onClose}>
-      {isUpdated ? (
-        <UpdatedStatement transaction={transaction} />
-      ) : (
-        <OriginalReceipt transaction={transaction} isReprint={isReprint} />
-      )}
+      <DialogContent>
+        {isUpdated ? (
+          <UpdatedStatement transaction={transaction} />
+        ) : (
+          <OriginalReceipt transaction={transaction} isReprint={isReprint} />
+        )}
 
-      {/* Action buttons */}
-      <div className="flex gap-2 mt-4 print:hidden">
-        <Button className="flex-1" onClick={handlePrint}>
-          <Printer className="mr-2 h-4 w-4" />
-          {isUpdated ? "Print Statement" : "Print Receipt"}
-        </Button>
-        <Button
-          variant="outline"
-          className="flex-1 border-2 border-gray-400 dark:border-gray-500"
-          onClick={onClose}
-        >
-          Close
-        </Button>
-      </div>
+        {/* Action buttons */}
+        <div className="flex gap-2 mt-4 print:hidden">
+          <Button className="flex-1" onClick={handlePrint}>
+            <Printer className="mr-2 h-4 w-4" />
+            {isUpdated ? "Print Statement" : "Print Receipt"}
+          </Button>
+          <Button
+            variant="outline"
+            className="flex-1 border-2 border-gray-400 dark:border-gray-500"
+            onClick={onClose}
+          >
+            Close
+          </Button>
+        </div>
+      </DialogContent>
     </Dialog>
   );
 };

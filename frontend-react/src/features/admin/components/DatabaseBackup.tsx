@@ -375,6 +375,7 @@ const DatabaseBackup: React.FC = () => {
             </Button>
           </div>
         </div>
+        </DialogContent>
       </Dialog>
 
       {/* ── Restore Confirmation Dialog ── */}
@@ -458,6 +459,7 @@ const DatabaseBackup: React.FC = () => {
             </Button>
           </div>
         </div>
+        </DialogContent>
       </Dialog>
 
       {/* ── Restore Loading Overlay ── */}

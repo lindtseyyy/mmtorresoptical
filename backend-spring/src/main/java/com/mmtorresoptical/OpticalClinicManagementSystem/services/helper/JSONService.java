@@ -112,16 +112,32 @@ public class JSONService {
                 return sanitizeUserAuditJson(node);
             }
 
+            // ── UPDATE User: only return fields that actually changed ──
+            if ("UPDATE".equals(actionType) && node.has("before") && node.has("after")) {
+                ObjectNode after = (ObjectNode) node.get("after");
+                if (after.has("userId") && after.has("username")) {
+                    return sanitizeUpdateUserAuditJson(node);
+                }
+            }
+
             // ── CREATE / ARCHIVE / RESTORE Patient: remove internal IDs, strip sensitive PII ──
             if (("CREATE".equals(actionType) || "ARCHIVE".equals(actionType) || "RESTORE".equals(actionType))
                     && node.has("patientId") && node.has("firstName")) {
                 return sanitizePatientAuditJson(node);
             }
 
-            // ── Eye Exam (all action types): drop UUIDs, resolve performedBy, format timestamps ──
-            if (node.has("eyeExamId") && node.has("examNumber")
+            // ── Eye Exam (CREATE / ARCHIVE / RESTORE / VOID): drop UUIDs, resolve performedBy, format timestamps ──
+            if (!"UPDATE".equals(actionType) && node.has("eyeExamId") && node.has("examNumber")
                     && node.has("chiefComplaint")) {
                 return sanitizeEyeExamAuditJson(node);
+            }
+
+            // ── UPDATE Eye Exam: only return fields that actually changed ──
+            if ("UPDATE".equals(actionType) && node.has("before") && node.has("after")) {
+                ObjectNode after = (ObjectNode) node.get("after");
+                if (after.has("eyeExamId") && after.has("examNumber")) {
+                    return sanitizeUpdateEyeExamAuditJson(node);
+                }
             }
 
             // ── VOID Prescription: minimal fields only ──
@@ -136,6 +152,14 @@ public class JSONService {
                     && node.has("prescriptionId") && node.has("issueDate")
                     && (node.has("rightEye") || node.has("leftEye") || node.has("bothEyes"))) {
                 return sanitizePrescriptionAuditJson(node, true);
+            }
+
+            // ── UPDATE Prescription: only return fields that actually changed ──
+            if ("UPDATE".equals(actionType) && node.has("before") && node.has("after")) {
+                ObjectNode after = (ObjectNode) node.get("after");
+                if (after.has("prescriptionId") && after.has("rxNumber")) {
+                    return sanitizeUpdatePrescriptionAuditJson(node);
+                }
             }
 
             // ── CREATE / ARCHIVE / RESTORE Follow-Up: transform UUIDs, omit internal fields ──
@@ -163,6 +187,25 @@ public class JSONService {
                 if (after.has("firstName")) {
                     return sanitizeUpdatePatientAuditJson(node);
                 }
+            }
+
+            // ── ADJUSTMENT Product: stock adjustment with before/after quantities ──
+            if ("ADJUSTMENT".equals(actionType) && node.has("productId") && node.has("adjustmentType")) {
+                return sanitizeProductAdjustmentAuditJson(node);
+            }
+
+            // ── UPDATE Product: only return fields that actually changed ──
+            if ("UPDATE".equals(actionType) && node.has("before") && node.has("after")) {
+                ObjectNode after = (ObjectNode) node.get("after");
+                if (after.has("productId") && after.has("productName")) {
+                    return sanitizeProductUpdateAuditJson(node);
+                }
+            }
+
+            // ── CREATE / ARCHIVE / RESTORE Product: remove internal IDs and paths ──
+            if (("CREATE".equals(actionType) || "ARCHIVE".equals(actionType) || "RESTORE".equals(actionType))
+                    && node.has("productId") && node.has("productName")) {
+                return sanitizeProductAuditJson(node);
             }
 
             return objectMapper.writeValueAsString(node);
@@ -694,6 +737,129 @@ public class JSONService {
         return objectMapper.writeValueAsString(result);
     }
 
+    private String sanitizeUpdateUserAuditJson(ObjectNode node) throws JsonProcessingException {
+        ObjectNode before = (ObjectNode) node.get("before");
+        ObjectNode after = (ObjectNode) node.get("after");
+
+        ObjectNode filteredBefore = objectMapper.createObjectNode();
+        ObjectNode filteredAfter = objectMapper.createObjectNode();
+
+        var it = after.fieldNames();
+        while (it.hasNext()) {
+            String field = it.next();
+
+            if ("userId".equals(field) || "isArchived".equals(field)) {
+                continue;
+            }
+
+            String beforeVal = before.has(field) ? before.get(field).toString() : "";
+            String afterVal = after.get(field).toString();
+
+            if (!beforeVal.equals(afterVal)) {
+                filteredBefore.set(field, before.get(field));
+                filteredAfter.set(field, after.get(field));
+            }
+        }
+
+        formatDisplayFields(filteredBefore);
+        formatDisplayFields(filteredAfter);
+
+        if (filteredBefore.has("role") && !filteredBefore.get("role").isNull()) {
+            filteredBefore.put("role", formatRole(filteredBefore.get("role").asText()));
+        }
+        if (filteredAfter.has("role") && !filteredAfter.get("role").isNull()) {
+            filteredAfter.put("role", formatRole(filteredAfter.get("role").asText()));
+        }
+
+        ObjectNode result = objectMapper.createObjectNode();
+        result.set("before", filteredBefore);
+        result.set("after", filteredAfter);
+        return objectMapper.writeValueAsString(result);
+    }
+
+    private String sanitizeUpdateEyeExamAuditJson(ObjectNode node) throws JsonProcessingException {
+        ObjectNode before = (ObjectNode) node.get("before");
+        ObjectNode after = (ObjectNode) node.get("after");
+
+        ObjectNode filteredBefore = objectMapper.createObjectNode();
+        ObjectNode filteredAfter = objectMapper.createObjectNode();
+
+        var it = after.fieldNames();
+        while (it.hasNext()) {
+            String field = it.next();
+
+            if ("eyeExamId".equals(field) || "isArchived".equals(field) || "createdAt".equals(field)) {
+                continue;
+            }
+
+            String beforeVal = before.has(field) ? before.get(field).toString() : "";
+            String afterVal = after.get(field).toString();
+
+            if (!beforeVal.equals(afterVal)) {
+                if ("performedByUserId".equals(field)) {
+                    String beforeName = resolveUserId(before, field);
+                    String afterName = resolveUserId(after, field);
+                    filteredBefore.put("performedBy", beforeName != null ? beforeName : beforeVal);
+                    filteredAfter.put("performedBy", afterName != null ? afterName : afterVal);
+                } else if ("status".equals(field)) {
+                    filteredBefore.put(field, before.has(field) && !before.get(field).isNull()
+                            ? capitalizeWord(before.get(field).asText()) : beforeVal);
+                    filteredAfter.put(field, capitalizeWord(after.get(field).asText()));
+                } else {
+                    filteredBefore.set(field, before.get(field));
+                    filteredAfter.set(field, after.get(field));
+                }
+            }
+        }
+
+        ObjectNode result = objectMapper.createObjectNode();
+        result.set("before", filteredBefore);
+        result.set("after", filteredAfter);
+        return objectMapper.writeValueAsString(result);
+    }
+
+    private String sanitizeUpdatePrescriptionAuditJson(ObjectNode node) throws JsonProcessingException {
+        ObjectNode before = (ObjectNode) node.get("before");
+        ObjectNode after = (ObjectNode) node.get("after");
+
+        ObjectNode filteredBefore = objectMapper.createObjectNode();
+        ObjectNode filteredAfter = objectMapper.createObjectNode();
+
+        var it = after.fieldNames();
+        while (it.hasNext()) {
+            String field = it.next();
+
+            if ("prescriptionId".equals(field) || "eyeExamId".equals(field)
+                    || "createdByUserId".equals(field) || "isArchived".equals(field)
+                    || "createdAt".equals(field)) {
+                continue;
+            }
+
+            String beforeVal = before.has(field) ? before.get(field).toString() : "";
+            String afterVal = after.get(field).toString();
+
+            if (!beforeVal.equals(afterVal)) {
+                if ("issueDate".equals(field)) {
+                    filteredBefore.put(field, before.has(field) && !before.get(field).isNull()
+                            ? formatBirthDate(before.get(field).asText()) : beforeVal);
+                    filteredAfter.put(field, formatBirthDate(after.get(field).asText()));
+                } else if ("status".equals(field)) {
+                    filteredBefore.put(field, before.has(field) && !before.get(field).isNull()
+                            ? capitalizeWord(before.get(field).asText()) : beforeVal);
+                    filteredAfter.put(field, capitalizeWord(after.get(field).asText()));
+                } else {
+                    filteredBefore.set(field, before.get(field));
+                    filteredAfter.set(field, after.get(field));
+                }
+            }
+        }
+
+        ObjectNode result = objectMapper.createObjectNode();
+        result.set("before", filteredBefore);
+        result.set("after", filteredAfter);
+        return objectMapper.writeValueAsString(result);
+    }
+
     private void formatDisplayFields(ObjectNode node) {
         var it = node.fieldNames();
         while (it.hasNext()) {
@@ -806,6 +972,81 @@ public class JSONService {
         if (loggedBy != null) {
             clean.put("loggedBy", loggedBy);
         }
+
+        return objectMapper.writeValueAsString(clean);
+    }
+
+    private String sanitizeProductAuditJson(ObjectNode node) throws JsonProcessingException {
+        ObjectNode clean = objectMapper.createObjectNode();
+
+        copyField(clean, node, "productName");
+        copyField(clean, node, "categoryName");
+        copyField(clean, node, "supplierName");
+
+        if (node.has("unitPrice") && !node.get("unitPrice").isNull() && node.get("unitPrice").isNumber()) {
+            clean.put("unitPrice", formatPeso(node.get("unitPrice").asDouble()));
+        }
+
+        copyField(clean, node, "quantity");
+        copyField(clean, node, "lowLevelThreshold");
+        copyField(clean, node, "overstockedThreshold");
+
+        return objectMapper.writeValueAsString(clean);
+    }
+
+    private String sanitizeProductUpdateAuditJson(ObjectNode node) throws JsonProcessingException {
+        ObjectNode before = (ObjectNode) node.get("before");
+        ObjectNode after = (ObjectNode) node.get("after");
+
+        ObjectNode filteredBefore = objectMapper.createObjectNode();
+        ObjectNode filteredAfter = objectMapper.createObjectNode();
+
+        var it = after.fieldNames();
+        while (it.hasNext()) {
+            String field = it.next();
+
+            if ("productId".equals(field) || "imageDir".equals(field) || "createdAt".equals(field)) {
+                continue;
+            }
+
+            String beforeVal = before.has(field) ? before.get(field).toString() : "";
+            String afterVal = after.get(field).toString();
+
+            if (!beforeVal.equals(afterVal)) {
+                if ("unitPrice".equals(field) && after.get(field).isNumber()) {
+                    filteredBefore.put(field, before.has(field) && before.get(field).isNumber()
+                            ? formatPeso(before.get(field).asDouble()) : beforeVal);
+                    filteredAfter.put(field, formatPeso(after.get(field).asDouble()));
+                } else {
+                    filteredBefore.set(field, before.get(field));
+                    filteredAfter.set(field, after.get(field));
+                }
+            }
+        }
+
+        ObjectNode result = objectMapper.createObjectNode();
+        result.set("before", filteredBefore);
+        result.set("after", filteredAfter);
+        return objectMapper.writeValueAsString(result);
+    }
+
+    private String sanitizeProductAdjustmentAuditJson(ObjectNode node) throws JsonProcessingException {
+        ObjectNode clean = objectMapper.createObjectNode();
+
+        copyField(clean, node, "productName");
+
+        if (node.has("adjustmentType") && !node.get("adjustmentType").isNull()) {
+            String type = node.get("adjustmentType").asText();
+            String humanized = "ADD_STOCK".equals(type) ? "Added Stock"
+                    : "REMOVE_STOCK".equals(type) ? "Removed Stock"
+                    : capitalizeWord(type.replace("_", " "));
+            clean.put("adjustmentType", humanized);
+        }
+
+        copyField(clean, node, "amount");
+        copyField(clean, node, "reason");
+        copyField(clean, node, "quantityBefore");
+        copyField(clean, node, "quantityAfter");
 
         return objectMapper.writeValueAsString(clean);
     }
