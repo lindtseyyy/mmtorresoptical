@@ -94,6 +94,8 @@ export interface TransactionResponse {
   voidedBy?: { userId: string; username: string; role: string; fullName: string } | null;
   voidedAt?: string;
   voidReason?: string;
+  prescriptionId?: string | null;
+  rxNumber?: string | null;
   transactionItems: TransactionItemResponse[];
   payments: PaymentResponse[];
   refundReceipts: RefundReceiptData[];

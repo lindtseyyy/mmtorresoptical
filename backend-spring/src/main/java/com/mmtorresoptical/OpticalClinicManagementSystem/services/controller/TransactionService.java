@@ -748,17 +748,17 @@ public class TransactionService {
         FulfillmentStatus previousFulfillmentStatus = transaction.getFulfillmentStatus();
         RefundStatus previousRefundStatus = transaction.getRefundStatus();
 
-        if (amountPaid.compareTo(newOrderTotal) > 0) {
-            cashToReturn = amountPaid.subtract(newOrderTotal).min(maxRefundable);
+        BigDecimal totalCashShouldReturn = amountPaid.subtract(newOrderTotal).max(BigDecimal.ZERO);
+        cashToReturn = totalCashShouldReturn.subtract(previousRefundedCash).max(BigDecimal.ZERO);
+
+        if (cashToReturn.compareTo(BigDecimal.ZERO) > 0) {
             BigDecimal newTotalRefundedCash = previousRefundedCash.add(cashToReturn);
             transaction.setTotalRefundedCash(newTotalRefundedCash);
-            BigDecimal effectivePaid = amountPaid.subtract(newTotalRefundedCash);
-            transaction.setTransactionStatus(computeStatus(newOrderTotal, effectivePaid));
-        } else {
-            cashToReturn = BigDecimal.ZERO;
-            BigDecimal effectivePaid = amountPaid.subtract(previousRefundedCash);
-            transaction.setTransactionStatus(computeStatus(newOrderTotal, effectivePaid));
         }
+
+        BigDecimal effectivePaid = amountPaid.subtract(
+                transaction.getTotalRefundedCash() != null ? transaction.getTotalRefundedCash() : previousRefundedCash);
+        transaction.setTransactionStatus(computeStatus(newOrderTotal, effectivePaid));
 
         // Determine batch-level refund method and actual cashback
         String batchRefundMethod;
@@ -790,6 +790,7 @@ public class TransactionService {
         if (allItemsFullyRefunded) {
             transaction.setRefundStatus(RefundStatus.FULL);
             transaction.setTransactionStatus(TransactionStatus.REFUNDED);
+            transaction.setFulfillmentStatus(FulfillmentStatus.COMPLETED);
         } else {
             transaction.setRefundStatus(RefundStatus.PARTIAL);
         }
@@ -837,7 +838,7 @@ public class TransactionService {
         transactionRepository.save(transaction);
 
         // ── Audit logging ──
-        int itemCount = refundItems.size();
+        int itemCount = pendingItems.stream().mapToInt(RefundItem::getQuantityRefunded).sum();
         String productNames = refundItems.stream()
                 .map(i -> i.getProduct().getProductName())
                 .reduce((a, b) -> a + ", " + b).orElse("");
@@ -866,10 +867,7 @@ public class TransactionService {
                 com.mmtorresoptical.OpticalClinicManagementSystem.enums.ActionType.REFUND,
                 com.mmtorresoptical.OpticalClinicManagementSystem.enums.ResourceType.TRANSACTION,
                 transaction.getTransactionId(),
-                "Refund (" + itemCount + " item(s)): " + productNames
-                        + " | Total refund value: " + actualRefundValue
-                        + " | Cash returned: " + cashToReturn
-                        + " | New total: " + newOrderTotal,
+                "Refunded " + itemCount + (itemCount == 1 ? " item" : " items"),
                 jsonService.toJson(auditData)
         );
 

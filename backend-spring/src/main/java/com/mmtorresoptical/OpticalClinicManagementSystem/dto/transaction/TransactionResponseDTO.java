@@ -28,6 +28,9 @@ public class TransactionResponseDTO {
     private String fulfillmentStatus;
     private LocalDate estimatedReadyDate;
 
+    private UUID prescriptionId;
+    private String rxNumber;
+
     private UserSummaryDTO createdBy;
     private PatientSummaryDTO patient;
 

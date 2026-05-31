@@ -397,7 +397,7 @@ const ViewTransaction: React.FC = () => {
                   Add Payment
                 </Button>
               )}
-              {isAdmin() && tx.fulfillmentStatus === "PENDING_LAB" && (
+              {isAdmin() && tx.fulfillmentStatus === "PENDING_LAB" && tx.refundStatus !== "FULL" && (
                 <Button
                   size="sm"
                   className="h-8 bg-yellow-600 hover:bg-yellow-700 text-white"
@@ -408,7 +408,7 @@ const ViewTransaction: React.FC = () => {
                   Mark as Ready for Pickup
                 </Button>
               )}
-              {isAdmin() && tx.fulfillmentStatus === "READY_FOR_PICKUP" && (
+              {isAdmin() && tx.fulfillmentStatus === "READY_FOR_PICKUP" && tx.refundStatus !== "FULL" && (
                 <Button
                   size="sm"
                   className="h-8 bg-teal-600 hover:bg-teal-700 text-white disabled:opacity-50"
@@ -479,6 +479,16 @@ const ViewTransaction: React.FC = () => {
               <div>
                 <p className="text-xs text-muted-foreground">Patient</p>
                 <p className="font-medium">{tx.patient.fullName}</p>
+              </div>
+            )}
+            {tx.rxNumber && (
+              <div>
+                <p className="text-xs text-muted-foreground">Prescription</p>
+                <p className="font-medium">
+                  <Link to={`/patients/view/${tx.patient?.id}?tab=prescriptions`} className="text-primary hover:underline">
+                    {tx.rxNumber}
+                  </Link>
+                </p>
               </div>
             )}
             {tx.estimatedReadyDate && (

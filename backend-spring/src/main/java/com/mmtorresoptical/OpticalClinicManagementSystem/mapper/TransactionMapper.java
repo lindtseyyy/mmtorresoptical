@@ -64,6 +64,14 @@ public interface TransactionMapper {
             source = "patient"
     )
     @Mapping(
+            target = "prescriptionId",
+            source = "prescription.prescriptionId"
+    )
+    @Mapping(
+            target = "rxNumber",
+            source = "prescription.rxNumber"
+    )
+    @Mapping(
             target = "transactionStatus",
             expression = "java(transaction.getTransactionStatus().name())"
     )
