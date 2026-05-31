@@ -40,7 +40,13 @@ function refundDeductionAggregate(
 ): StatusAggregate {
   let count = 0;
   let totalValue = 0;
-  for (const entries of Object.values(statusGroups)) {
+  // Only count refunds from inflow groups (PAID and DEPOSIT) —
+  // REFUNDED entries never contributed to gross, and VOIDED entries
+  // are already deducted separately, so counting refunds from those
+  // groups would double-deduct or subtract phantom revenue.
+  for (const key of ["PAID", "DEPOSIT"]) {
+    const entries = statusGroups[key];
+    if (!entries) continue;
     for (const e of entries) {
       if (
         e.refundStatus === "PARTIAL" ||
