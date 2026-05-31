@@ -625,7 +625,7 @@ public class TransactionService {
         }
 
         transaction.setTransactionStatus(TransactionStatus.VOIDED);
-        transaction.setFulfillmentStatus(FulfillmentStatus.PENDING_LAB);
+        transaction.setFulfillmentStatus(FulfillmentStatus.COMPLETED);
         transaction.setVoidedBy(authenticatedUser);
         transaction.setVoidedAt(LocalDateTime.now());
         transaction.setVoidReason(voidTransactionRequestDTO.getReason());

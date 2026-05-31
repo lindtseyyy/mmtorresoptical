@@ -470,8 +470,10 @@ public class JSONService {
         node.remove("transactionId");
         node.remove("createdByUserId");
 
-        if (performedBy != null && !performedBy.isBlank()) {
-            node.put("processedBy", performedBy);
+        String patientName = resolvePatientName(node);
+        if (patientName != null) {
+            node.remove("patientId");
+            node.put("patientName", patientName);
         }
 
         formatPesoField(node, "totalAmount");

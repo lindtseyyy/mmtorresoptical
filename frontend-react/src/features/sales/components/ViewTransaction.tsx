@@ -397,7 +397,7 @@ const ViewTransaction: React.FC = () => {
                   Add Payment
                 </Button>
               )}
-              {isAdmin() && tx.fulfillmentStatus === "PENDING_LAB" && tx.refundStatus !== "FULL" && (
+              {isAdmin() && tx.fulfillmentStatus === "PENDING_LAB" && tx.refundStatus !== "FULL" && tx.transactionStatus !== "VOIDED" && (
                 <Button
                   size="sm"
                   className="h-8 bg-yellow-600 hover:bg-yellow-700 text-white"
@@ -408,7 +408,7 @@ const ViewTransaction: React.FC = () => {
                   Mark as Ready for Pickup
                 </Button>
               )}
-              {isAdmin() && tx.fulfillmentStatus === "READY_FOR_PICKUP" && tx.refundStatus !== "FULL" && (
+              {isAdmin() && tx.fulfillmentStatus === "READY_FOR_PICKUP" && tx.refundStatus !== "FULL" && tx.transactionStatus !== "VOIDED" && (
                 <Button
                   size="sm"
                   className="h-8 bg-teal-600 hover:bg-teal-700 text-white disabled:opacity-50"
