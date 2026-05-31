@@ -463,6 +463,7 @@ const ManageSales: React.FC = () => {
         onComplete={handleCompleteSale}
         pending={transactionMutation.isPending}
         hasPatient={selectedPatient !== null}
+        hasPrescription={!!selectedPrescriptionId}
       />
 
       <ReceiptDialog

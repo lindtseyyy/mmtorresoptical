@@ -15,6 +15,7 @@ interface PaymentDrawerProps {
   onComplete: (data: PaymentData) => void;
   pending: boolean;
   hasPatient: boolean;
+  hasPrescription: boolean;
 }
 
 const PaymentDrawer: React.FC<PaymentDrawerProps> = ({
@@ -25,6 +26,7 @@ const PaymentDrawer: React.FC<PaymentDrawerProps> = ({
   onComplete,
   pending,
   hasPatient,
+  hasPrescription,
 }) => {
   const [paymentMethod, setPaymentMethod] = useState<"CASH" | "GCASH">("CASH");
   const [amountTenderedStr, setAmountTenderedStr] = useState("");
@@ -39,11 +41,13 @@ const PaymentDrawer: React.FC<PaymentDrawerProps> = ({
   const belowMinDeposit = amountTendered < minDeposit;
   const depositAllowed = amountTendered < grandTotal && amountTendered > 0;
 
+  const depositBlocked = depositAllowed && (!hasPatient || !hasPrescription);
+
   const canComplete =
     items.length > 0 &&
     amountTendered > 0 &&
     !belowMinDeposit &&
-    !(depositAllowed && !hasPatient) &&
+    !depositBlocked &&
     !pending &&
     (paymentMethod === "GCASH"
       ? referenceNumber.trim().length > 0
@@ -289,14 +293,14 @@ const PaymentDrawer: React.FC<PaymentDrawerProps> = ({
                 </div>
               )}
 
-              {isPartial && !belowMinDeposit && hasPatient && (
+              {isPartial && !belowMinDeposit && hasPatient && hasPrescription && (
                 <div className="flex items-center gap-1.5 text-xs text-amber-600">
                   <AlertTriangle className="h-3.5 w-3.5" />
                   Partial payment — ₱{remainingBalance.toFixed(2)} will remain as balance due.
                 </div>
               )}
 
-              {belowMinDeposit && hasPatient && (
+              {belowMinDeposit && hasPatient && hasPrescription && (
                 <div className="flex items-center gap-1.5 text-xs text-red-600">
                   <AlertTriangle className="h-3.5 w-3.5" />
                   Minimum deposit required: <span className="font-bold">₱{minDeposit.toFixed(2)}</span> (50% of total)
@@ -310,7 +314,14 @@ const PaymentDrawer: React.FC<PaymentDrawerProps> = ({
                 </div>
               )}
 
-              {belowMinDeposit && amountTendered > 0 && hasPatient && (
+              {depositAllowed && hasPatient && !hasPrescription && (
+                <div className="flex items-center gap-1.5 text-xs text-red-600">
+                  <AlertTriangle className="h-3.5 w-3.5" />
+                  Deposits require a linked prescription. Please select a prescription before making a partial payment.
+                </div>
+              )}
+
+              {belowMinDeposit && amountTendered > 0 && hasPatient && hasPrescription && (
                 <div className="text-xs text-red-600">
                   Deposit must be at least 50% of the total. Add <span className="font-bold">₱{(minDeposit - amountTendered).toFixed(2)}</span> more.
                 </div>
