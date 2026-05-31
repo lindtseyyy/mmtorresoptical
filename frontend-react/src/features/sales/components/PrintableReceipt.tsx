@@ -1,6 +1,6 @@
 import { Printer } from "lucide-react";
 
-import { Dialog } from "@/shared/components/ui/dialog";
+import { Dialog, DialogContent } from "@/shared/components/ui/dialog";
 import { Button } from "@/shared/components/ui/button";
 import type { TransactionResponse, TransactionItemResponse, RefundReceiptData } from "@/features/sales/types";
 
