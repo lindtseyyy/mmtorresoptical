@@ -1,8 +1,15 @@
 import { useState, useEffect } from "react";
-import { X, Banknote, Smartphone, Loader2, CreditCard } from "lucide-react";
+import { Banknote, Smartphone, Loader2, CreditCard } from "lucide-react";
 import { Button } from "@/shared/components/ui/button";
 import { Input } from "@/shared/components/ui/input";
 import { Label } from "@/shared/components/ui/label";
+import {
+  Sheet,
+  SheetContent,
+  SheetHeader,
+  SheetTitle,
+  SheetDescription,
+} from "@/shared/components/ui/sheet";
 import { toast } from "sonner";
 
 interface AddPaymentDrawerProps {
@@ -56,31 +63,17 @@ const AddPaymentDrawer: React.FC<AddPaymentDrawerProps> = ({
     });
   };
 
-  if (!open) return null;
-
   return (
-    <>
-      <div
-        className="fixed inset-0 z-40 bg-black/80 transition-opacity"
-        onClick={onClose}
-      />
-      <div className="fixed inset-y-0 right-0 z-50 w-full max-w-md flex flex-col bg-card border-l border-border shadow-2xl animate-in slide-in-from-right">
-        <div className="flex items-center justify-between border-b border-border px-5 py-4">
-          <h2 className="text-base font-semibold text-card-foreground">
-            Add Payment
-          </h2>
-          <Button
-            variant="ghost"
-            size="icon"
-            className="h-8 w-8"
-            onClick={onClose}
-            disabled={pending}
-          >
-            <X className="h-4 w-4" />
-          </Button>
-        </div>
+    <Sheet open={open} onOpenChange={(v) => !v && onClose()}>
+      <SheetContent side="right" className="flex w-full flex-col sm:max-w-md">
+        <SheetHeader>
+          <SheetTitle>Add Payment</SheetTitle>
+          <SheetDescription>
+            Settle the remaining balance for this transaction.
+          </SheetDescription>
+        </SheetHeader>
 
-        <div className="flex-1 min-h-0 flex flex-col px-5 py-4 space-y-5">
+        <div className="flex-1 min-h-0 flex flex-col mt-4 space-y-5">
           {/* Current status */}
           <div className="rounded-lg border border-border bg-muted/50 p-3 space-y-1.5 text-sm">
             <div className="flex justify-between">
@@ -164,7 +157,7 @@ const AddPaymentDrawer: React.FC<AddPaymentDrawerProps> = ({
         </div>
 
         {/* Footer */}
-        <div className="border-t border-border px-5 py-4">
+        <div className="border-t border-border pt-4 mt-4">
           <Button
             className="w-full gap-2"
             size="lg"
@@ -184,8 +177,8 @@ const AddPaymentDrawer: React.FC<AddPaymentDrawerProps> = ({
             )}
           </Button>
         </div>
-      </div>
-    </>
+      </SheetContent>
+    </Sheet>
   );
 };
 
