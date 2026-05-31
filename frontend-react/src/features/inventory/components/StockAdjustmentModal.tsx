@@ -1,7 +1,7 @@
 import { useState, useCallback } from "react";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { Plus, Minus } from "lucide-react";
-import { Dialog, DialogHeader, DialogTitle, DialogDescription } from "@/shared/components/ui/dialog";
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from "@/shared/components/ui/dialog";
 import { Button } from "@/shared/components/ui/button";
 import { Input } from "@/shared/components/ui/input";
 import { Label } from "@/shared/components/ui/label";
@@ -92,14 +92,15 @@ const StockAdjustmentModal: React.FC<StockAdjustmentModalProps> = ({
 
   return (
     <Dialog open={open} onOpenChange={handleOpenChange}>
-      <DialogHeader>
-        <DialogTitle>Adjust Stock</DialogTitle>
-        <DialogDescription>
-          {product.productName} — Current quantity: <strong>{product.quantity}</strong>
-        </DialogDescription>
-      </DialogHeader>
+      <DialogContent>
+        <DialogHeader>
+          <DialogTitle>Adjust Stock</DialogTitle>
+          <DialogDescription>
+            {product.productName} — Current quantity: <strong>{product.quantity}</strong>
+          </DialogDescription>
+        </DialogHeader>
 
-      <div className="space-y-5 mt-4">
+        <div className="space-y-5 mt-4">
         {/* Mode toggle */}
         <div>
           <Label className="font-semibold">Mode</Label>
@@ -206,6 +207,7 @@ const StockAdjustmentModal: React.FC<StockAdjustmentModalProps> = ({
           </Button>
         </div>
       </div>
+      </DialogContent>
     </Dialog>
   );
 };

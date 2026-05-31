@@ -111,7 +111,12 @@ const CategoryManagementModal: React.FC<CategoryManagementModalProps> = ({
                 </tr>
               </thead>
               <tbody>
-                {categories.map((cat) => (
+                {[...categories]
+                  .sort((a, b) => {
+                    if (a.isActive !== b.isActive) return a.isActive ? -1 : 1;
+                    return a.name.localeCompare(b.name);
+                  })
+                  .map((cat) => (
                   <tr key={cat.categoryId} className="border-b last:border-0">
                     <td className="py-2 pr-4">{cat.name}</td>
                     <td className="py-2 pr-4 text-center">{cat.productCount}</td>
@@ -149,9 +154,7 @@ const CategoryManagementModal: React.FC<CategoryManagementModalProps> = ({
                           )}
                         </Button>
                       ) : (
-                        <span className="text-xs text-muted-foreground">
-                          Protected
-                        </span>
+                        <span className="text-gray-400">—</span>
                       )}
                     </td>
                   </tr>
