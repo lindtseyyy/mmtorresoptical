@@ -140,17 +140,24 @@ public class JSONService {
                 }
             }
 
-            // ── VOID Prescription: minimal fields only ──
+            // ── VOID Prescription: return only rxNumber, issueDate, notes ──
             if ("VOID".equals(actionType)
                     && node.has("prescriptionId") && node.has("issueDate")
-                    && (node.has("rightEye") || node.has("leftEye") || node.has("bothEyes"))) {
-                return sanitizePrescriptionAuditJson(node, false);
+                    && (node.has("lensSpecifications") || node.has("rightEye") || node.has("leftEye") || node.has("bothEyes") || node.has("recommendations"))) {
+                return sanitizeCreatePrescriptionAuditJson(node);
             }
 
-            // ── CREATE / ARCHIVE / RESTORE Prescription: include rxNumber + eye groups, hide UUIDs ──
-            if (("CREATE".equals(actionType) || "ARCHIVE".equals(actionType) || "RESTORE".equals(actionType))
+            // ── CREATE Prescription: return only rxNumber, issueDate, notes ──
+            if ("CREATE".equals(actionType)
                     && node.has("prescriptionId") && node.has("issueDate")
-                    && (node.has("rightEye") || node.has("leftEye") || node.has("bothEyes"))) {
+                    && (node.has("lensSpecifications") || node.has("rightEye") || node.has("leftEye") || node.has("bothEyes") || node.has("recommendations"))) {
+                return sanitizeCreatePrescriptionAuditJson(node);
+            }
+
+            // ── ARCHIVE / RESTORE Prescription: include rxNumber + eye groups + recommendations, hide UUIDs ──
+            if (("ARCHIVE".equals(actionType) || "RESTORE".equals(actionType))
+                    && node.has("prescriptionId") && node.has("issueDate")
+                    && (node.has("lensSpecifications") || node.has("rightEye") || node.has("leftEye") || node.has("bothEyes") || node.has("recommendations"))) {
                 return sanitizePrescriptionAuditJson(node, true);
             }
 
@@ -955,6 +962,25 @@ public class JSONService {
         target.put("fullName", fullName.trim());
     }
 
+    private String sanitizeCreatePrescriptionAuditJson(ObjectNode node) throws JsonProcessingException {
+        ObjectNode clean = objectMapper.createObjectNode();
+
+        if (node.has("patientId") && !node.get("patientId").isNull()) {
+            clean.put("patientId", node.get("patientId").asText());
+        }
+        if (node.has("rxNumber") && !node.get("rxNumber").isNull()) {
+            clean.put("rxNumber", node.get("rxNumber").asText());
+        }
+        if (node.has("issueDate") && !node.get("issueDate").isNull()) {
+            clean.put("issueDate", formatBirthDate(node.get("issueDate").asText()));
+        }
+        if (node.has("notes")) {
+            clean.put("notes", dashIfBlank(node.get("notes").asText(), "Notes"));
+        }
+
+        return objectMapper.writeValueAsString(clean);
+    }
+
     private String sanitizePrescriptionAuditJson(ObjectNode node, boolean includeRxNumber) throws JsonProcessingException {
         ObjectNode clean = objectMapper.createObjectNode();
 
@@ -974,6 +1000,78 @@ public class JSONService {
         sanitizeEyeGroup(clean, node, "rightEye");
         sanitizeEyeGroup(clean, node, "leftEye");
         sanitizeEyeGroup(clean, node, "bothEyes");
+
+        // New lensSpecifications array format
+        if (node.has("lensSpecifications") && node.get("lensSpecifications").isArray()) {
+            var specs = node.get("lensSpecifications");
+            var cleanSpecs = objectMapper.createArrayNode();
+            for (var spec : specs) {
+                if (spec.isObject()) {
+                    ObjectNode specNode = (ObjectNode) spec;
+                    ObjectNode cleanSpec = objectMapper.createObjectNode();
+
+                    copyField(cleanSpec, specNode, "correctionType");
+                    copyField(cleanSpec, specNode, "lensTypePurpose");
+                    copyField(cleanSpec, specNode, "notes");
+
+                    if (cleanSpec.has("correctionType")) {
+                        cleanSpec.put("correctionType", capitalizeWord(cleanSpec.get("correctionType").asText()));
+                    }
+
+                    if (specNode.has("rightEye") && specNode.get("rightEye").isObject()) {
+                        cleanSpec.set("rightEye", sanitizeEyeObject((ObjectNode) specNode.get("rightEye")));
+                    }
+                    if (specNode.has("leftEye") && specNode.get("leftEye").isObject()) {
+                        cleanSpec.set("leftEye", sanitizeEyeObject((ObjectNode) specNode.get("leftEye")));
+                    }
+                    if (specNode.has("lensMeta") && specNode.get("lensMeta").isObject()) {
+                        ObjectNode metaNode = (ObjectNode) specNode.get("lensMeta");
+                        ObjectNode cleanMeta = objectMapper.createObjectNode();
+                        metaNode.fieldNames().forEachRemaining(field -> {
+                            if (!metaNode.get(field).isNull() && !metaNode.get(field).asText().isBlank()) {
+                                cleanMeta.set(field, metaNode.get(field));
+                            }
+                        });
+                        if (cleanMeta.size() > 0) {
+                            cleanSpec.set("lensMeta", cleanMeta);
+                        }
+                    }
+
+                    cleanSpecs.add(cleanSpec);
+                }
+            }
+            if (cleanSpecs.size() > 0) {
+                clean.set("lensSpecifications", cleanSpecs);
+            }
+        }
+
+        // Include product recommendations — product name, quantity, staff notes only
+        if (node.has("recommendations") && node.get("recommendations").isArray()) {
+            var recs = node.get("recommendations");
+            var cleanRecs = objectMapper.createArrayNode();
+            for (var rec : recs) {
+                if (rec.isObject()) {
+                    ObjectNode recNode = (ObjectNode) rec;
+                    ObjectNode cleanRec = objectMapper.createObjectNode();
+                    if (recNode.has("productName") && !recNode.get("productName").isNull()) {
+                        cleanRec.put("productName", recNode.get("productName").asText());
+                    }
+                    if (recNode.has("quantity") && !recNode.get("quantity").isNull()) {
+                        cleanRec.put("quantity", recNode.get("quantity").asInt());
+                    }
+                    if (recNode.has("staffNotes") && !recNode.get("staffNotes").isNull()
+                            && !recNode.get("staffNotes").asText().isBlank()) {
+                        cleanRec.put("staffNotes", recNode.get("staffNotes").asText());
+                    }
+                    if (cleanRec.size() > 0) {
+                        cleanRecs.add(cleanRec);
+                    }
+                }
+            }
+            if (cleanRecs.size() > 0) {
+                clean.set("recommendations", cleanRecs);
+            }
+        }
 
         return objectMapper.writeValueAsString(clean);
     }
@@ -1015,11 +1113,6 @@ public class JSONService {
         String patientName = resolvePatientName(node);
         if (patientName != null) {
             clean.put("patientName", patientName);
-        }
-
-        String loggedBy = resolveLoggedBy(node);
-        if (loggedBy != null) {
-            clean.put("loggedBy", loggedBy);
         }
 
         return objectMapper.writeValueAsString(clean);
@@ -1233,6 +1326,16 @@ public class JSONService {
         }
     }
 
+    private ObjectNode sanitizeEyeObject(ObjectNode node) {
+        ObjectNode clean = objectMapper.createObjectNode();
+        copyField(clean, node, "sph");
+        copyField(clean, node, "cyl");
+        copyField(clean, node, "axis");
+        copyField(clean, node, "addPower");
+        copyField(clean, node, "pd");
+        return clean;
+    }
+
     private ObjectNode sanitizePrescriptionItemJson(ObjectNode node) {
         ObjectNode clean = objectMapper.createObjectNode();
 
@@ -1242,10 +1345,6 @@ public class JSONService {
         copyField(clean, node, "axis");
         copyField(clean, node, "addPower");
         copyField(clean, node, "pd");
-        copyField(clean, node, "baseCurve");
-        copyField(clean, node, "diameter");
-        copyField(clean, node, "lensWearType");
-        copyField(clean, node, "frameTypePreference");
 
         if (clean.has("correctionType")) {
             clean.put("correctionType", capitalizeWord(clean.get("correctionType").asText()));
@@ -1253,20 +1352,6 @@ public class JSONService {
 
         if (node.has("eyeSide") && !node.get("eyeSide").isNull()) {
             clean.put("eyeSide", formatEyeSide(node.get("eyeSide").asText()));
-        }
-
-        String lensCustomizations = buildLensCustomizations(node);
-        if (!lensCustomizations.isEmpty()) {
-            clean.put("lensCustomizations", lensCustomizations);
-        }
-
-        if (node.has("followUpRequired") && node.get("followUpRequired").isBoolean()) {
-            if (node.get("followUpRequired").asBoolean()) {
-                String followUp = buildScheduledFollowUp(node);
-                if (!followUp.isEmpty()) {
-                    clean.put("scheduledFollowUp", followUp);
-                }
-            }
         }
 
         if (node.has("notes")) {
@@ -1283,27 +1368,6 @@ public class JSONService {
             case "BOTH" -> "Both (OU)";
             default -> capitalizeWord(raw);
         };
-    }
-
-    private String buildLensCustomizations(ObjectNode node) {
-        var parts = new java.util.ArrayList<String>();
-        if (node.has("lensType") && !node.get("lensType").isNull()) {
-            String val = node.get("lensType").asText();
-            if (!val.isBlank()) parts.add(capitalizeWord(val));
-        }
-        if (node.has("lensMaterial") && !node.get("lensMaterial").isNull()) {
-            String val = node.get("lensMaterial").asText();
-            if (!val.isBlank()) parts.add(val);
-        }
-        if (node.has("lensCoatings") && !node.get("lensCoatings").isNull()) {
-            String val = node.get("lensCoatings").asText();
-            if (!val.isBlank()) parts.add(val);
-        }
-        if (node.has("lensMaterialCl") && !node.get("lensMaterialCl").isNull()) {
-            String val = node.get("lensMaterialCl").asText();
-            if (!val.isBlank()) parts.add("CL: " + val);
-        }
-        return String.join(", ", parts);
     }
 
     private String buildScheduledFollowUp(ObjectNode node) {
@@ -1325,7 +1389,7 @@ public class JSONService {
     private String formatCreatedAt(String raw) {
         try {
             java.time.LocalDateTime dateTime = java.time.LocalDateTime.parse(raw);
-            return dateTime.format(java.time.format.DateTimeFormatter.ofPattern("MMM dd, yyyy, hh:mm a"));
+            return dateTime.format(java.time.format.DateTimeFormatter.ofPattern("MMM dd, yyyy, hh:mm a", java.util.Locale.ENGLISH));
         } catch (Exception e) {
             return raw;
         }

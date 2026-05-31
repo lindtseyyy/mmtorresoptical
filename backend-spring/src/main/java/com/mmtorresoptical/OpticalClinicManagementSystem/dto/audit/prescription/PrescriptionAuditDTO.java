@@ -11,6 +11,7 @@ import java.util.UUID;
 public class PrescriptionAuditDTO {
 
     private UUID prescriptionId;
+    private UUID patientId;
     private String rxNumber;
     private LocalDate issueDate;
     private String notes;

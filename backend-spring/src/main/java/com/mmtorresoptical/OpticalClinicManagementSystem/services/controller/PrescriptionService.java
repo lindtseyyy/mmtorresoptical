@@ -148,6 +148,7 @@ public class PrescriptionService {
                     }).collect(Collectors.toList());
 
             recommendationRepository.saveAll(recs);
+            finalSavedPrescription.setPrescriptionRecommendations(recs);
         }
 
         if (prescriptionRequest.getFollowUpScheduledDate() != null) {

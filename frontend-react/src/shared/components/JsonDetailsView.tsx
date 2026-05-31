@@ -134,7 +134,8 @@ const isUpdateEvent = (
 const EYE_GROUP_KEYS = ["rightEye", "leftEye", "bothEyes"];
 
 const isPrescriptionEvent = (obj: Record<string, unknown>): boolean =>
-  "issueDate" in obj && EYE_GROUP_KEYS.some((k) => k in obj);
+  ("issueDate" in obj && EYE_GROUP_KEYS.some((k) => k in obj))
+  || ("issueDate" in obj && "prescriptionId" in obj && ("recommendations" in obj || "lensSpecifications" in obj));
 
 const isEyeExamEvent = (obj: Record<string, unknown>): boolean =>
   "examNumber" in obj && "chiefComplaint" in obj && "clinicalMetrics" in obj;
@@ -226,12 +227,19 @@ const CreateTransactionView: React.FC<{ obj: Record<string, unknown> }> = ({ obj
 // ── Prescription event view ──
 
 const PrescriptionEventView: React.FC<{ obj: Record<string, unknown> }> = ({ obj }) => {
+  const lensSpecs = Array.isArray(obj.lensSpecifications)
+    ? (obj.lensSpecifications as Record<string, unknown>[])
+    : [];
+
+  const recommendations = Array.isArray(obj.recommendations)
+    ? (obj.recommendations as Record<string, unknown>[])
+    : [];
+
   const mainFields = Object.entries(obj).filter(
-    ([key]) => !EYE_GROUP_KEYS.includes(key),
+    ([key]) => !EYE_GROUP_KEYS.includes(key) && key !== "recommendations" && key !== "lensSpecifications",
   );
-  const eyeGroups = EYE_GROUP_KEYS.filter(
-    (key) => Array.isArray(obj[key]) && (obj[key] as unknown[]).length > 0,
-  );
+
+  const SPEC_COLS = new Set(["sph", "cyl", "axis", "addPower", "pd"]);
 
   return (
     <div className="space-y-4">
@@ -248,60 +256,120 @@ const PrescriptionEventView: React.FC<{ obj: Record<string, unknown> }> = ({ obj
         ))}
       </div>
 
-      {eyeGroups.map((groupKey) => {
-        const items = obj[groupKey] as Record<string, unknown>[];
-        if (items.length === 0) return null;
-        const columns = Object.keys(items[0]).filter(
-          (col) => col !== "eyeSide" && col !== "notes",
-        );
-        const hasNotes = "notes" in items[0];
+      {lensSpecs.map((spec, specIdx) => {
+        const correctionType = spec.correctionType != null ? formatValue(spec.correctionType) : null;
+        const purpose = spec.lensTypePurpose != null ? formatValue(spec.lensTypePurpose) : null;
+        const headerText = [correctionType, purpose].filter(Boolean).join(" — ");
+
+        const rightEye = spec.rightEye as Record<string, unknown> | undefined;
+        const leftEye = spec.leftEye as Record<string, unknown> | undefined;
+        const lensMeta = spec.lensMeta as Record<string, unknown> | undefined;
 
         return (
-          <div key={groupKey}>
-            <h4 className="text-xs font-semibold text-muted-foreground mb-1.5">
-              {formatFieldName(groupKey)}
-            </h4>
-            <div className="overflow-x-auto rounded border">
+          <div key={specIdx} className="rounded border bg-background/50 overflow-hidden">
+            <div className="px-2.5 py-1.5 border-b bg-muted/30">
+              <span className="text-xs font-medium">
+                {headerText || `Specification ${specIdx + 1}`}
+              </span>
+            </div>
+
+            {(rightEye && Object.keys(rightEye).some(k => SPEC_COLS.has(k))) || (leftEye && Object.keys(leftEye).some(k => SPEC_COLS.has(k))) ? (
               <table className="w-full text-xs">
                 <thead>
-                  <tr className="border-b bg-muted/50 text-left">
-                    {columns.map((col) => (
-                      <th key={col} className="py-1.5 px-2 font-medium whitespace-nowrap">
+                  <tr className="border-b bg-muted/20 text-left">
+                    <th className="py-1 px-2.5 font-medium text-muted-foreground w-16"></th>
+                    {[...SPEC_COLS].filter(k => (rightEye && rightEye[k] != null) || (leftEye && leftEye[k] != null)).map(col => (
+                      <th key={col} className="py-1 px-2.5 font-medium text-muted-foreground whitespace-nowrap">
                         {formatFieldName(col)}
                       </th>
                     ))}
                   </tr>
                 </thead>
                 <tbody>
-                  {items.map((item, idx) => (
-                    <React.Fragment key={idx}>
-                      <tr className="border-b last:border-b-0">
-                        {columns.map((col) => (
-                          <td key={col} className="py-1.5 px-2 align-top max-w-[200px] whitespace-pre-wrap break-words">
-                            <JsonValue value={item[col]} />
-                          </td>
-                        ))}
-                      </tr>
-                      {hasNotes && (
-                        <tr className="border-b last:border-b-0 bg-muted/30">
-                          <td colSpan={columns.length} className="py-1.5 px-2 align-top">
-                            <span className="text-xs text-muted-foreground font-medium">
-                              Notes:{" "}
-                            </span>
-                            <span className="text-xs whitespace-pre-wrap break-words">
-                              <JsonValue value={item.notes} />
-                            </span>
-                          </td>
-                        </tr>
-                      )}
-                    </React.Fragment>
-                  ))}
+                  {rightEye && Object.keys(rightEye).some(k => SPEC_COLS.has(k)) && (
+                    <tr className="border-b last:border-b-0">
+                      <td className="py-1 px-2.5 font-medium text-muted-foreground">Right Eye</td>
+                      {[...SPEC_COLS].filter(k => (rightEye && rightEye[k] != null) || (leftEye && leftEye[k] != null)).map(col => (
+                        <td key={col} className="py-1 px-2.5 align-top max-w-[150px] whitespace-pre-wrap break-words">
+                          <JsonValue value={rightEye?.[col] ?? null} />
+                        </td>
+                      ))}
+                    </tr>
+                  )}
+                  {leftEye && Object.keys(leftEye).some(k => SPEC_COLS.has(k)) && (
+                    <tr className="border-b last:border-b-0">
+                      <td className="py-1 px-2.5 font-medium text-muted-foreground">Left Eye</td>
+                      {[...SPEC_COLS].filter(k => (rightEye && rightEye[k] != null) || (leftEye && leftEye[k] != null)).map(col => (
+                        <td key={col} className="py-1 px-2.5 align-top max-w-[150px] whitespace-pre-wrap break-words">
+                          <JsonValue value={leftEye?.[col] ?? null} />
+                        </td>
+                      ))}
+                    </tr>
+                  )}
                 </tbody>
               </table>
-            </div>
+            ) : null}
+
+            {lensMeta && Object.keys(lensMeta).filter(k => lensMeta[k] != null && lensMeta[k] !== "").length > 0 && (
+              <div className="px-2.5 py-1.5 border-t bg-muted/10 grid grid-cols-[auto_1fr] gap-x-3 gap-y-1">
+                {Object.entries(lensMeta).filter(([, v]) => v != null && v !== "").map(([key, value]) => (
+                  <React.Fragment key={key}>
+                    <span className="text-[11px] text-muted-foreground font-medium whitespace-nowrap self-start">
+                      {formatFieldName(key)}:
+                    </span>
+                    <span className="text-[11px] min-w-0 whitespace-pre-wrap break-words">
+                      <JsonValue value={value} />
+                    </span>
+                  </React.Fragment>
+                ))}
+              </div>
+            )}
+
+            {spec.notes && String(spec.notes) !== "" && (
+              <div className="px-2.5 py-1.5 border-t bg-muted/20">
+                <span className="text-[11px] text-muted-foreground font-medium">Notes: </span>
+                <span className="text-[11px] whitespace-pre-wrap break-words">
+                  <JsonValue value={spec.notes} />
+                </span>
+              </div>
+            )}
           </div>
         );
       })}
+
+      {recommendations.length > 0 && (
+        <div>
+          <h4 className="text-xs font-semibold text-muted-foreground mb-1.5">
+            Product Recommendations
+          </h4>
+          <div className="space-y-1.5">
+            {recommendations.map((rec, idx) => (
+              <div key={idx} className="rounded border bg-background/50 px-2.5 py-1.5 text-xs">
+                <div className="grid grid-cols-[auto_1fr] gap-x-3 gap-y-1">
+                  {rec.productName != null && (
+                    <>
+                      <span className="text-muted-foreground font-medium whitespace-nowrap">Product Name:</span>
+                      <span className="min-w-0"><JsonValue value={rec.productName} /></span>
+                    </>
+                  )}
+                  {rec.quantity != null && (
+                    <>
+                      <span className="text-muted-foreground font-medium whitespace-nowrap">Quantity:</span>
+                      <span className="min-w-0"><JsonValue value={rec.quantity} /></span>
+                    </>
+                  )}
+                  {rec.staffNotes != null && String(rec.staffNotes) !== "" && (
+                    <>
+                      <span className="text-muted-foreground font-medium whitespace-nowrap">Usage Notes:</span>
+                      <span className="min-w-0 whitespace-pre-wrap break-words"><JsonValue value={rec.staffNotes} /></span>
+                    </>
+                  )}
+                </div>
+              </div>
+            ))}
+          </div>
+        </div>
+      )}
     </div>
   );
 };

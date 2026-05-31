@@ -58,7 +58,16 @@ const RESOURCE_VIEW_ROUTES: Record<string, string> = {
   TRANSACTION: "/transactions/",
 };
 
-const getResourceViewUrl = (resourceType: string, resourceId: string | null): string | null => {
+const getResourceViewUrl = (resourceType: string, resourceId: string | null, detailsJson: string | null): string | null => {
+  if (resourceType === "PRESCRIPTION" && detailsJson) {
+    try {
+      const parsed = JSON.parse(detailsJson);
+      if (parsed.patientId) {
+        return "/patients/view/" + parsed.patientId;
+      }
+    } catch {}
+    return null;
+  }
   const base = RESOURCE_VIEW_ROUTES[resourceType];
   if (!base || !resourceId) return null;
   return base + resourceId;
@@ -327,13 +336,13 @@ const AuditLogs: React.FC = () => {
                 Full details of the selected audit log entry.
               </DialogDescription>
             </div>
-            {viewingEntry && getResourceViewUrl(viewingEntry.resourceType, viewingEntry.resourceId) && (
+            {viewingEntry && getResourceViewUrl(viewingEntry.resourceType, viewingEntry.resourceId, viewingEntry.detailsJson) && (
               <Button
                 variant="outline"
                 size="sm"
                 className="mr-6"
                 onClick={() => {
-                  const url = getResourceViewUrl(viewingEntry.resourceType, viewingEntry.resourceId);
+                  const url = getResourceViewUrl(viewingEntry.resourceType, viewingEntry.resourceId, viewingEntry.detailsJson);
                   if (url) navigate(url);
                 }}
               >

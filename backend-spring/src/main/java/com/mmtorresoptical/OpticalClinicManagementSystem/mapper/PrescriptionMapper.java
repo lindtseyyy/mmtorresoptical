@@ -24,6 +24,7 @@ public interface PrescriptionMapper {
     @Mapping(target = "recommendations", ignore = true)
     PrescriptionResponseDTO entityToResponseDTO(Prescription prescription);
 
+    @Mapping(target = "patientId", source = "patient.patientId")
     @Mapping(target = "createdByUserId", source = "user.userId")
     @Mapping(target = "eyeExamId", source = "eyeExam.eyeExamId")
     @Mapping(target = "status",
