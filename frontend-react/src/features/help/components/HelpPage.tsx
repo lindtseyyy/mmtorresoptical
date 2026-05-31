@@ -1,14 +1,15 @@
 import { useState, useMemo } from "react";
-import { Printer, BookOpen, HelpCircle, ChevronDown, ChevronUp } from "lucide-react";
+import { ExternalLink, ChevronDown, ChevronUp } from "lucide-react";
 import { Button } from "@/shared/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/shared/components/ui/card";
+import SegmentedControl from "@/shared/components/ui/segmented-control";
 import { getUserRole } from "@/shared/lib/auth";
 
 type Tab = "manual" | "faq";
 
 export default function HelpPage() {
   const role = getUserRole();
-  const [activeTab, setActiveTab] = useState<Tab>("manual");
+  const [activeTab, setActiveTab] = useState<Tab>("faq");
   const [openFaqs, setOpenFaqs] = useState<Set<number>>(new Set());
 
   const toggleFaq = (index: number) => {
@@ -21,7 +22,7 @@ export default function HelpPage() {
   };
 
   const handlePrint = () => {
-    window.print();
+    window.open("/MM Torres Optical User Manual.pdf", "_blank");
   };
 
   const manualSections = useMemo(() => {
@@ -335,44 +336,31 @@ export default function HelpPage() {
   return (
     <div className="mx-auto max-w-4xl space-y-6 p-6">
       {/* Header */}
-      <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between print:hidden">
-        <div>
-          <h1 className="text-2xl font-bold tracking-tight">Help Center</h1>
-          <p className="text-muted-foreground">User manual and frequently asked questions</p>
-        </div>
-        {activeTab === "manual" && (
-          <Button onClick={handlePrint} variant="outline" className="gap-2">
-            <Printer className="h-4 w-4" />
-            Print Manual
-          </Button>
-        )}
+      <div className="print:hidden">
+        <h1 className="text-2xl font-bold tracking-tight">Help Center</h1>
+        <p className="text-muted-foreground">User manual and frequently asked questions</p>
       </div>
 
-      {/* Tabs */}
-      <div className="flex gap-1 rounded-lg bg-muted p-1 print:hidden">
-        <button
-          onClick={() => setActiveTab("manual")}
-          className={`flex flex-1 items-center justify-center gap-2 rounded-md px-4 py-2 text-sm font-medium transition-colors ${
-            activeTab === "manual"
-              ? "bg-background text-foreground shadow-sm"
-              : "text-muted-foreground hover:text-foreground"
-          }`}
-        >
-          <BookOpen className="h-4 w-4" />
-          User Manual
-        </button>
-        <button
-          onClick={() => setActiveTab("faq")}
-          className={`flex flex-1 items-center justify-center gap-2 rounded-md px-4 py-2 text-sm font-medium transition-colors ${
-            activeTab === "faq"
-              ? "bg-background text-foreground shadow-sm"
-              : "text-muted-foreground hover:text-foreground"
-          }`}
-        >
-          <HelpCircle className="h-4 w-4" />
-          Frequently Asked Questions
-        </button>
-      </div>
+      {/* Segmented control */}
+      <SegmentedControl
+        options={[
+          { value: "faq", label: "Frequently Asked Questions" },
+          { value: "manual", label: "User Manual" },
+        ]}
+        value={activeTab}
+        onChange={(value) => setActiveTab(value as Tab)}
+        className="print:hidden"
+      />
+
+      {/* Open PDF button */}
+      {activeTab === "manual" && (
+        <div className="print:hidden flex justify-end">
+          <Button onClick={handlePrint} variant="outline" className="gap-2">
+            <ExternalLink className="h-4 w-4" />
+            Open User Manual (PDF)
+          </Button>
+        </div>
+      )}
 
       {/* Print-only header */}
       <div className="hidden print:block print:mb-8">
