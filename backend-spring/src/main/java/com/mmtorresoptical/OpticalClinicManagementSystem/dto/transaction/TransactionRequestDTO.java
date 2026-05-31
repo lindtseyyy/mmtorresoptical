@@ -14,6 +14,8 @@ public class TransactionRequestDTO {
 
     private UUID patientId;
 
+    private UUID prescriptionId;
+
     // Required — the amount the customer is paying now. Must be > 0 (partial or full).
     private BigDecimal amountTendered;
 

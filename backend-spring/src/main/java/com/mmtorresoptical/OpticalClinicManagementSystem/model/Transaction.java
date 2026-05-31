@@ -89,6 +89,10 @@ public class Transaction {
     @JoinColumn(name = "patient_id")
     private Patient patient;
 
+    @ManyToOne
+    @JoinColumn(name = "prescription_id")
+    private Prescription prescription;
+
     @OneToMany(mappedBy = "transaction",
             cascade = CascadeType.ALL,
             orphanRemoval = true)

@@ -30,6 +30,7 @@ public interface TransactionMapper {
     @Mapping(target = "patient", ignore = true)
     @Mapping(target = "transactionItems", ignore = true)
     @Mapping(target = "payments", ignore = true)
+    @Mapping(target = "prescription", ignore = true)
     Transaction requestDTOtoEntity(TransactionRequestDTO transactionRequestDTO);
 
     @Mapping(

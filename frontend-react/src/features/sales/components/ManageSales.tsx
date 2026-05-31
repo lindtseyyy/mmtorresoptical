@@ -251,6 +251,7 @@ const ManageSales: React.FC = () => {
         items,
         ...(selectedPatient && { patientId: selectedPatient.patientId }),
         ...(selectedPatient && estimatedReadyDate && { estimatedReadyDate }),
+        ...(selectedPrescriptionId && { prescriptionId: selectedPrescriptionId }),
         ...(payment.referenceNumber && {
           referenceNumber: payment.referenceNumber,
         }),
@@ -258,7 +259,7 @@ const ManageSales: React.FC = () => {
 
       transactionMutation.mutate(payload);
     },
-    [cart, selectedPatient, transactionMutation]
+    [cart, selectedPatient, selectedPrescriptionId, estimatedReadyDate, transactionMutation]
   );
 
   const grandTotal = cart.reduce((sum, item) => {

@@ -335,7 +335,7 @@ const ViewPatient: React.FC = () => {
               <input
                 type="time"
                 className="w-36 rounded-md border border-gray-300 bg-background px-3 py-2 text-sm ring-offset-background focus:border-gray-400 focus:outline-none"
-                style={{ WebkitAppearance: "auto", appearance: "auto" } as React.CSSProperties}
+                style={{ WebkitAppearance: "auto", appearance: "auto" } as unknown as React.CSSProperties}
                 value={logVisitTime}
                 step="60"
                 onChange={(e) => setLogVisitTime(e.target.value)}

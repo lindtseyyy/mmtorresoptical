@@ -56,6 +56,7 @@ public class TransactionService {
     private final AuthenticatedUserService authenticatedUserService;
     private final PatientRepository patientRepository;
     private final ProductRepository productRepository;
+    private final PrescriptionRepository prescriptionRepository;
     private final TransactionItemMapper transactionItemMapper;
     private final RefundItemRepository refundItemRepository;
     private final RefundReceiptRepository refundReceiptRepository;
@@ -76,9 +77,14 @@ public class TransactionService {
             patient = patientRepository.findById(patientId)
                     .orElseThrow(() -> new ResourceNotFoundException("Patient not found with id: " + patientId));
 
-            // Default estimated ready date for patient-associated orders
-            if (transactionRequestDTO.getEstimatedReadyDate() == null) {
-                transactionRequestDTO.setEstimatedReadyDate(LocalDate.now().plusDays(3));
+            if (transactionRequestDTO.getPrescriptionId() != null) {
+                // Patient with linked prescription → lab workflow (default +3 days)
+                if (transactionRequestDTO.getEstimatedReadyDate() == null) {
+                    transactionRequestDTO.setEstimatedReadyDate(LocalDate.now().plusDays(3));
+                }
+            } else {
+                // Patient but no linked prescription → immediate fulfillment, no pickup date
+                transactionRequestDTO.setEstimatedReadyDate(null);
             }
         } else {
             // Walk-in retail: force estimated ready date to null
@@ -89,6 +95,20 @@ public class TransactionService {
 
         transaction.setUser(authenticatedUser);
         transaction.setPatient(patient);
+
+        // Link prescription if provided — order remains in lab workflow (PENDING_LAB)
+        if (transactionRequestDTO.getPrescriptionId() != null) {
+            Prescription prescription = prescriptionRepository.findById(transactionRequestDTO.getPrescriptionId())
+                    .orElseThrow(() -> new ResourceNotFoundException(
+                            "Prescription not found with id: " + transactionRequestDTO.getPrescriptionId()));
+            transaction.setPrescription(prescription);
+        }
+
+        // Patient without a linked prescription: hand over items immediately
+        if (patient != null && transactionRequestDTO.getPrescriptionId() == null) {
+            transaction.setFulfillmentStatus(FulfillmentStatus.COMPLETED);
+            transaction.setCompletedAt(LocalDateTime.now());
+        }
 
         List<TransactionItem> transactionItems = transactionRequestDTO.getItems()
                 .stream().map(dto -> {
@@ -575,10 +595,6 @@ public class TransactionService {
 
         if (transaction.getTransactionStatus() == TransactionStatus.VOIDED) {
             throw new IllegalStateException("Transaction already voided");
-        }
-
-        if (transaction.getFulfillmentStatus() == FulfillmentStatus.COMPLETED) {
-            throw new IllegalStateException("Cannot void a transaction where items have already been picked up. Please process a refund instead.");
         }
 
         if (transaction.getFulfillmentStatus() == FulfillmentStatus.READY_FOR_PICKUP) {

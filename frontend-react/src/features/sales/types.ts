@@ -11,6 +11,7 @@ export interface CartItem {
 
 export interface TransactionRequest {
   patientId?: string;
+  prescriptionId?: string;
   estimatedReadyDate?: string;
   amountTendered?: number;
   paymentMethod?: "CASH" | "GCASH";
@@ -126,6 +127,7 @@ export interface TransactionListItem {
   transactionStatus: string;
   refundStatus: string;
   fulfillmentStatus: string;
+  itemCount: number;
   paymentType: string;
   createdBy: { userId: string; username: string; role: string; fullName: string };
   patient: { patientId: string; fullName: string } | null;
