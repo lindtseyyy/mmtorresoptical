@@ -13,7 +13,7 @@ import { Button } from "@/shared/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/shared/components/ui/card";
 import { Input } from "@/shared/components/ui/input";
 import { Label } from "@/shared/components/ui/label";
-import { Dialog, DialogHeader, DialogTitle, DialogDescription } from "@/shared/components/ui/dialog";
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from "@/shared/components/ui/dialog";
 import { toast } from "sonner";
 import { downloadBackup, restoreBackup, fetchLastBackup, fetchLastRestore, readMetadataFromFile } from "@/features/admin/services/databaseApi";
 import type { BackupFileMetadata } from "@/features/admin/services/databaseApi";

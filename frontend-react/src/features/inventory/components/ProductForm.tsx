@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useRef, useState, useCallback } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { useForm, FormProvider } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useNavigate } from "react-router-dom";
@@ -105,14 +105,12 @@ export const ProductForm: React.FC<ProductFormProps> = ({
   const [selectedCategoryId, setSelectedCategoryId] = useState<string | null>(
     passedDefaultValues?.categoryId ?? null
   );
-  const [selectedCategoryName, setSelectedCategoryName] = useState<string | null>(null);
   const [newCategoryName, setNewCategoryName] = useState<string | null>(null);
   const [categoryModalOpen, setCategoryModalOpen] = useState(false);
   const [categoryRefreshKey, setCategoryRefreshKey] = useState(0);
   const [selectedSupplierId, setSelectedSupplierId] = useState<string | null>(
     passedDefaultValues?.supplierId ?? null
   );
-  const [selectedSupplierName, setSelectedSupplierName] = useState<string | null>(null);
   const [newSupplierName, setNewSupplierName] = useState<string | null>(null);
   const [supplierModalOpen, setSupplierModalOpen] = useState(false);
   const [supplierRefreshKey, setSupplierRefreshKey] = useState(0);
@@ -235,16 +233,14 @@ export const ProductForm: React.FC<ProductFormProps> = ({
                   </div>
                   <SupplierCombobox
                     value={selectedSupplierId}
-                    onChange={(id, name) => {
+                    onChange={(id, _name) => {
                       setSelectedSupplierId(id);
-                      setSelectedSupplierName(name);
                       setNewSupplierName(null);
                       form.setValue("supplierId", id, { shouldValidate: true });
                     }}
                     onCreate={(name) => {
                       setNewSupplierName(name);
                       setSelectedSupplierId(null);
-                      setSelectedSupplierName(null);
                       form.setValue("newSupplierName", name, { shouldValidate: true });
                     }}
                     disabled={isLoading}
@@ -274,16 +270,14 @@ export const ProductForm: React.FC<ProductFormProps> = ({
                 </div>
                 <CategoryCombobox
                   value={selectedCategoryId}
-                  onChange={(id, name) => {
+                  onChange={(id, _name) => {
                     setSelectedCategoryId(id);
-                    setSelectedCategoryName(name);
                     setNewCategoryName(null);
                     form.setValue("categoryId", id, { shouldValidate: true });
                   }}
                   onCreate={(name) => {
                     setNewCategoryName(name);
                     setSelectedCategoryId(null);
-                    setSelectedCategoryName(null);
                     form.setValue("newCategoryName", name, { shouldValidate: true });
                   }}
                   disabled={isLoading}

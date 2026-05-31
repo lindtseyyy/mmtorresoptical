@@ -1,6 +1,6 @@
 import api from "@/shared/lib/axiosInstance";
 import type { PageResponse } from "@/shared/types";
-import type { Product, ProductFormData, InventorySummary, ProductMetrics, ProductSummary, CategoryDTO, SupplierDTO, SupplierWithProductCountDTO } from "@/features/inventory/types";
+import type { Product, ProductFormData, InventorySummary, ProductMetrics, ProductSummary, CategoryDTO, SupplierDTO, SupplierWithProductCountDTO, CategoryWithProductCountDTO } from "@/features/inventory/types";
 
 const fetchProducts = async (
   page = 0,

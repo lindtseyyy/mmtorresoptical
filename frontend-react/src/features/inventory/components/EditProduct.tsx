@@ -42,7 +42,9 @@ const EditProduct: React.FC = () => {
     ? {
         productName: product.productName,
         categoryId: product.categoryId,
+        newCategoryName: undefined,
         supplierId: product.supplierId,
+        newSupplierName: undefined,
         productType: product.productType as ProductFormData["productType"],
         unitPrice: product.unitPrice,
         quantity: product.quantity,

@@ -370,7 +370,7 @@ function renderTopSellingTable(
     ]],
     body: products.map((p) => [
       p.productName,
-      p.categoryName.replace(/_/g, " "),
+      p.category.replace(/_/g, " "),
       currency(p.unitPrice),
       number(p.totalSold),
       currency(p.totalRevenue),

@@ -202,8 +202,10 @@ const ManageSales: React.FC = () => {
             product: {
               productId: rec.productId,
               productName: rec.productName,
-              category: rec.category,
-              supplier: rec.supplierName,
+              categoryId: "",
+              categoryName: rec.category,
+              supplierId: "",
+              supplierName: rec.supplierName,
               unitPrice: rec.unitPrice,
               quantity: rec.stockQuantity,
               productType: rec.productType as "PHYSICAL" | "SERVICE",

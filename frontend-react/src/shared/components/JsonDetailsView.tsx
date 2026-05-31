@@ -325,7 +325,7 @@ const PrescriptionEventView: React.FC<{ obj: Record<string, unknown> }> = ({ obj
               </div>
             )}
 
-            {spec.notes && String(spec.notes) !== "" && (
+            {String(spec.notes ?? "") !== "" && (
               <div className="px-2.5 py-1.5 border-t bg-muted/20">
                 <span className="text-[11px] text-muted-foreground font-medium">Notes: </span>
                 <span className="text-[11px] whitespace-pre-wrap break-words">
@@ -434,7 +434,7 @@ const EyeExamEventView: React.FC<{ obj: Record<string, unknown> }> = ({ obj }) =
         </div>
       )}
 
-      {iop && (iop.od || iop.os) && (
+      {iop && (String(iop.od ?? "") !== "" || String(iop.os ?? "") !== "") && (
         <div>
           <h4 className="text-xs font-semibold text-muted-foreground mb-1.5">
             Intraocular Pressure
@@ -484,7 +484,7 @@ const EyeExamEventView: React.FC<{ obj: Record<string, unknown> }> = ({ obj }) =
         </div>
       )}
 
-      {obj.voidReason && (
+      {obj.voidReason != null && String(obj.voidReason) !== "" && (
         <div>
           <h4 className="text-xs font-semibold text-muted-foreground mb-1">
             Void Reason
