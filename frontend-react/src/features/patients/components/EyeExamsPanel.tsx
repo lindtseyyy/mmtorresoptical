@@ -302,23 +302,23 @@ const EyeExamsPanel: React.FC<EyeExamsPanelProps> = ({ patientId, fullName, isAc
                 </div>
               )}
               <div className="grid grid-cols-2 gap-4">
-                {viewEeData.vaUnconvertedOd && <div><p className="text-xs font-medium text-muted-foreground">VA Unconverted (OD)</p><p className="text-sm">{viewEeData.vaUnconvertedOd}</p></div>}
-                {viewEeData.vaUnconvertedOs && <div><p className="text-xs font-medium text-muted-foreground">VA Unconverted (OS)</p><p className="text-sm">{viewEeData.vaUnconvertedOs}</p></div>}
-                {viewEeData.vaAidedOd && <div><p className="text-xs font-medium text-muted-foreground">VA Aided (OD)</p><p className="text-sm">{viewEeData.vaAidedOd}</p></div>}
-                {viewEeData.vaAidedOs && <div><p className="text-xs font-medium text-muted-foreground">VA Aided (OS)</p><p className="text-sm">{viewEeData.vaAidedOs}</p></div>}
-                {viewEeData.iopOd && <div><p className="text-xs font-medium text-muted-foreground">IOP (OD)</p><p className="text-sm">{viewEeData.iopOd}</p></div>}
-                {viewEeData.iopOs && <div><p className="text-xs font-medium text-muted-foreground">IOP (OS)</p><p className="text-sm">{viewEeData.iopOs}</p></div>}
+                {viewEeData.clinicalMetrics?.visualAcuity?.uncorrected?.od && <div><p className="text-xs font-medium text-muted-foreground">Naked Eye (OD)</p><p className="text-sm">{viewEeData.clinicalMetrics.visualAcuity.uncorrected.od}</p></div>}
+                {viewEeData.clinicalMetrics?.visualAcuity?.uncorrected?.os && <div><p className="text-xs font-medium text-muted-foreground">Naked Eye (OS)</p><p className="text-sm">{viewEeData.clinicalMetrics.visualAcuity.uncorrected.os}</p></div>}
+                {viewEeData.clinicalMetrics?.visualAcuity?.aided?.od && <div><p className="text-xs font-medium text-muted-foreground">RX (OD)</p><p className="text-sm">{viewEeData.clinicalMetrics.visualAcuity.aided.od}</p></div>}
+                {viewEeData.clinicalMetrics?.visualAcuity?.aided?.os && <div><p className="text-xs font-medium text-muted-foreground">RX (OS)</p><p className="text-sm">{viewEeData.clinicalMetrics.visualAcuity.aided.os}</p></div>}
+                {viewEeData.clinicalMetrics?.intraocularPressure?.od && <div><p className="text-xs font-medium text-muted-foreground">IOP (OD)</p><p className="text-sm">{viewEeData.clinicalMetrics.intraocularPressure.od}</p></div>}
+                {viewEeData.clinicalMetrics?.intraocularPressure?.os && <div><p className="text-xs font-medium text-muted-foreground">IOP (OS)</p><p className="text-sm">{viewEeData.clinicalMetrics.intraocularPressure.os}</p></div>}
               </div>
-              {viewEeData.slitLampExamination && (
+              {viewEeData.examinations?.slitLampAnterior && (
                 <div>
                   <p className="text-xs font-medium text-muted-foreground">Slit Lamp Examination</p>
-                  <p className="text-sm whitespace-pre-wrap">{viewEeData.slitLampExamination}</p>
+                  <p className="text-sm whitespace-pre-wrap">{viewEeData.examinations.slitLampAnterior}</p>
                 </div>
               )}
-              {viewEeData.fundusExamination && (
+              {viewEeData.examinations?.fundusPosterior && (
                 <div>
                   <p className="text-xs font-medium text-muted-foreground">Fundus Examination</p>
-                  <p className="text-sm whitespace-pre-wrap">{viewEeData.fundusExamination}</p>
+                  <p className="text-sm whitespace-pre-wrap">{viewEeData.examinations.fundusPosterior}</p>
                 </div>
               )}
               {viewEeData.status === "VOIDED" && viewEeData.voidReason && (

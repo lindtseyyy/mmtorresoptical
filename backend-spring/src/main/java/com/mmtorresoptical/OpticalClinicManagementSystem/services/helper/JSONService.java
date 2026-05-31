@@ -233,17 +233,52 @@ public class JSONService {
         }
 
         copyField(clean, node, "chiefComplaint");
-        copyField(clean, node, "vaUnconvertedOd");
-        copyField(clean, node, "vaUnconvertedOs");
-        copyField(clean, node, "vaAidedOd");
-        copyField(clean, node, "vaAidedOs");
-        copyField(clean, node, "iopOd");
-        copyField(clean, node, "iopOs");
-        copyField(clean, node, "slitLampExamination");
-        copyField(clean, node, "fundusExamination");
         copyField(clean, node, "clinicalImpression");
         copyField(clean, node, "planNotes");
         copyField(clean, node, "medicalHistorySnapshot");
+
+        // Build clinicalMetrics with labeled visual acuity groups
+        ObjectNode uncorrected = buildOdOsPair(node, "vaUnconvertedOd", "vaUnconvertedOs");
+        ObjectNode aided = buildOdOsPair(node, "vaAidedOd", "vaAidedOs");
+        ObjectNode iop = buildOdOsPair(node, "iopOd", "iopOs");
+
+        if (uncorrected.size() > 0 || aided.size() > 0 || iop.size() > 0) {
+            ObjectNode clinicalMetricsNode = objectMapper.createObjectNode();
+
+            if (uncorrected.size() > 0 || aided.size() > 0) {
+                ObjectNode visualAcuityNode = objectMapper.createObjectNode();
+                if (uncorrected.size() > 0) {
+                    visualAcuityNode.set("Naked Eye", uncorrected);
+                }
+                if (aided.size() > 0) {
+                    visualAcuityNode.set("RX", aided);
+                }
+                clinicalMetricsNode.set("visualAcuity", visualAcuityNode);
+            }
+
+            if (iop.size() > 0) {
+                clinicalMetricsNode.set("intraocularPressure", iop);
+            }
+
+            clean.set("clinicalMetrics", clinicalMetricsNode);
+        }
+
+        // Build examinations
+        boolean hasSlit = node.has("slitLampExamination") && !node.get("slitLampExamination").isNull()
+                && !node.get("slitLampExamination").asText().isBlank();
+        boolean hasFundus = node.has("fundusExamination") && !node.get("fundusExamination").isNull()
+                && !node.get("fundusExamination").asText().isBlank();
+
+        if (hasSlit || hasFundus) {
+            ObjectNode examinationsNode = objectMapper.createObjectNode();
+            if (hasSlit) {
+                examinationsNode.put("slitLampAnterior", node.get("slitLampExamination").asText());
+            }
+            if (hasFundus) {
+                examinationsNode.put("fundusPosterior", node.get("fundusExamination").asText());
+            }
+            clean.set("examinations", examinationsNode);
+        }
 
         if (node.has("voidReason") && !node.get("voidReason").isNull()
                 && !node.get("voidReason").asText().isBlank()) {
@@ -251,6 +286,19 @@ public class JSONService {
         }
 
         return objectMapper.writeValueAsString(clean);
+    }
+
+    private ObjectNode buildOdOsPair(ObjectNode node, String odKey, String osKey) {
+        ObjectNode pair = objectMapper.createObjectNode();
+        if (node.has(odKey) && !node.get(odKey).isNull()
+                && !node.get(odKey).asText().isBlank()) {
+            pair.put("od", node.get(odKey).asText());
+        }
+        if (node.has(osKey) && !node.get(osKey).isNull()
+                && !node.get(osKey).asText().isBlank()) {
+            pair.put("os", node.get(osKey).asText());
+        }
+        return pair;
     }
 
     private String resolvePerformedBy(ObjectNode node) {

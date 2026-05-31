@@ -136,6 +136,9 @@ const EYE_GROUP_KEYS = ["rightEye", "leftEye", "bothEyes"];
 const isPrescriptionEvent = (obj: Record<string, unknown>): boolean =>
   "issueDate" in obj && EYE_GROUP_KEYS.some((k) => k in obj);
 
+const isEyeExamEvent = (obj: Record<string, unknown>): boolean =>
+  "examNumber" in obj && "chiefComplaint" in obj && "clinicalMetrics" in obj;
+
 const TRANSACTION_ITEM_LIST_KEY = "transactionItemAuditDTOList";
 
 const isCreateTransactionEvent = (obj: Record<string, unknown>): boolean =>
@@ -303,6 +306,130 @@ const PrescriptionEventView: React.FC<{ obj: Record<string, unknown> }> = ({ obj
   );
 };
 
+// ── Eye exam event view ──
+
+const EyeExamEventView: React.FC<{ obj: Record<string, unknown> }> = ({ obj }) => {
+  const clinicalMetrics = obj.clinicalMetrics as Record<string, unknown> | undefined;
+  const visualAcuity = clinicalMetrics?.visualAcuity as Record<string, Record<string, unknown>> | undefined;
+  const iop = clinicalMetrics?.intraocularPressure as Record<string, unknown> | undefined;
+  const examinations = obj.examinations as Record<string, unknown> | undefined;
+
+  const skippedKeys = new Set(["clinicalMetrics", "examinations", "voidReason"]);
+  const mainFields = Object.entries(obj).filter(
+    ([key, value]) => !skippedKeys.has(key) && value !== undefined && value !== null,
+  );
+
+  return (
+    <div className="space-y-4">
+      <div className="grid grid-cols-[auto_1fr] gap-x-3 gap-y-1.5">
+        {mainFields.map(([key, value]) => (
+          <React.Fragment key={key}>
+            <span className="text-xs text-muted-foreground font-medium whitespace-nowrap self-start">
+              {formatFieldName(key)}:
+            </span>
+            <span className="text-xs min-w-0 font-medium">
+              <JsonValue value={value} />
+            </span>
+          </React.Fragment>
+        ))}
+      </div>
+
+      {visualAcuity && Object.keys(visualAcuity).length > 0 && (
+        <div>
+          <h4 className="text-xs font-semibold text-muted-foreground mb-1.5">
+            Visual Acuity
+          </h4>
+          <div className="overflow-x-auto rounded border">
+            <table className="w-full text-xs">
+              <thead>
+                <tr className="border-b bg-muted/50 text-left">
+                  <th className="py-1.5 px-2 font-medium whitespace-nowrap">Type</th>
+                  <th className="py-1.5 px-2 font-medium whitespace-nowrap">OD</th>
+                  <th className="py-1.5 px-2 font-medium whitespace-nowrap">OS</th>
+                </tr>
+              </thead>
+              <tbody>
+                {Object.entries(visualAcuity).map(([type, values]) => (
+                  <tr key={type} className="border-b last:border-b-0">
+                    <td className="py-1.5 px-2 font-medium">{type}</td>
+                    <td className="py-1.5 px-2">
+                      <JsonValue value={values?.od ?? null} />
+                    </td>
+                    <td className="py-1.5 px-2">
+                      <JsonValue value={values?.os ?? null} />
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        </div>
+      )}
+
+      {iop && (iop.od || iop.os) && (
+        <div>
+          <h4 className="text-xs font-semibold text-muted-foreground mb-1.5">
+            Intraocular Pressure
+          </h4>
+          <div className="overflow-x-auto rounded border">
+            <table className="w-full text-xs">
+              <thead>
+                <tr className="border-b bg-muted/50 text-left">
+                  <th className="py-1.5 px-2 font-medium whitespace-nowrap">OD</th>
+                  <th className="py-1.5 px-2 font-medium whitespace-nowrap">OS</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr className="border-b last:border-b-0">
+                  <td className="py-1.5 px-2">
+                    <JsonValue value={iop.od ?? null} />
+                  </td>
+                  <td className="py-1.5 px-2">
+                    <JsonValue value={iop.os ?? null} />
+                  </td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+      )}
+
+      {examinations && (
+        <div>
+          <h4 className="text-xs font-semibold text-muted-foreground mb-1.5">
+            Examinations
+          </h4>
+          <div className="grid grid-cols-[auto_1fr] gap-x-3 gap-y-1.5">
+            {Object.entries(examinations)
+              .filter(([, v]) => v !== null && v !== undefined)
+              .map(([key, value]) => (
+                <React.Fragment key={key}>
+                  <span className="text-xs text-muted-foreground font-medium whitespace-nowrap self-start">
+                    {formatFieldName(key)}:
+                  </span>
+                  <span className="text-xs min-w-0 font-medium whitespace-pre-wrap">
+                    <JsonValue value={value} />
+                  </span>
+                </React.Fragment>
+              ))}
+          </div>
+        </div>
+      )}
+
+      {obj.voidReason && (
+        <div>
+          <h4 className="text-xs font-semibold text-muted-foreground mb-1">
+            Void Reason
+          </h4>
+          <p className="text-xs whitespace-pre-wrap">
+            <JsonValue value={obj.voidReason} />
+          </p>
+        </div>
+      )}
+    </div>
+  );
+};
+
 // ── Main export ──
 
 interface JsonDetailsViewProps {
@@ -387,6 +514,11 @@ const JsonDetailsView: React.FC<JsonDetailsViewProps> = ({ data }) => {
   // Prescription event → main fields grid + eye group tables
   if (isPrescriptionEvent(obj)) {
     return <PrescriptionEventView obj={obj} />;
+  }
+
+  // Eye exam event → main fields grid + clinical metrics tables
+  if (isEyeExamEvent(obj)) {
+    return <EyeExamEventView obj={obj} />;
   }
 
   // Flat object

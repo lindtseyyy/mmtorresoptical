@@ -15,6 +15,31 @@ export interface CreateEyeExamInput {
   planNotes?: string;
 }
 
+export interface Measurement {
+  od: string | null;
+  os: string | null;
+}
+
+export interface VisualAcuity {
+  uncorrected: Measurement | null;
+  aided: Measurement | null;
+}
+
+export interface IntraocularPressure {
+  od: string | null;
+  os: string | null;
+}
+
+export interface ClinicalMetrics {
+  visualAcuity: VisualAcuity | null;
+  intraocularPressure: IntraocularPressure | null;
+}
+
+export interface Examinations {
+  slitLampAnterior: string | null;
+  fundusPosterior: string | null;
+}
+
 export interface EyeExamResponse {
   eyeExamId: string;
   examNumber: string;
@@ -22,14 +47,8 @@ export interface EyeExamResponse {
   examType: string | null;
   chiefComplaint: string | null;
   medicalHistorySnapshot: string | null;
-  vaUnconvertedOd: string | null;
-  vaUnconvertedOs: string | null;
-  vaAidedOd: string | null;
-  vaAidedOs: string | null;
-  iopOd: string | null;
-  iopOs: string | null;
-  slitLampExamination: string | null;
-  fundusExamination: string | null;
+  clinicalMetrics: ClinicalMetrics | null;
+  examinations: Examinations | null;
   clinicalImpression: string | null;
   planNotes: string | null;
   status: string | null;
