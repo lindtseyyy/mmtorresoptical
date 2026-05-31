@@ -781,109 +781,113 @@ const ViewTransaction: React.FC = () => {
 
       {/* Void Transaction Dialog */}
       <Dialog open={voidDialogOpen} onOpenChange={setVoidDialogOpen}>
-        <DialogHeader>
-          <DialogTitle>Void Transaction</DialogTitle>
-          <DialogDescription>
-            This will mark <strong>{tx.transactionNumber}</strong> as voided and restore all item quantities to stock. This action cannot be undone.
-          </DialogDescription>
-        </DialogHeader>
-        <div className="space-y-4 mt-4">
-          <div className="space-y-2">
-            <Label htmlFor="void-reason">Reason</Label>
-            <Input
-              id="void-reason"
-              placeholder="Enter reason for voiding"
-              value={voidReason}
-              onChange={(e) => setVoidReason(e.target.value)}
-            />
-          </div>
-          <div className="space-y-2">
-            <Label htmlFor="void-password">Password</Label>
-            <div className="relative">
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Void Transaction</DialogTitle>
+            <DialogDescription>
+              This will mark <strong>{tx.transactionNumber}</strong> as voided and restore all item quantities to stock. This action cannot be undone.
+            </DialogDescription>
+          </DialogHeader>
+          <div className="space-y-4 mt-4">
+            <div className="space-y-2">
+              <Label htmlFor="void-reason">Reason</Label>
               <Input
-                id="void-password"
-                type={showVoidPassword ? "text" : "password"}
-                placeholder="Enter your password to confirm"
-                className="pr-10"
-                value={voidPassword}
-                onChange={(e) => setVoidPassword(e.target.value)}
-                onKeyDown={(e) => {
-                  if (e.key === "Enter") {
-                    voidMutation.mutate({ reason: voidReason, password: voidPassword });
-                  }
-                }}
+                id="void-reason"
+                placeholder="Enter reason for voiding"
+                value={voidReason}
+                onChange={(e) => setVoidReason(e.target.value)}
               />
-              <button
-                type="button"
-                className="absolute right-2 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground"
-                onClick={() => setShowVoidPassword(!showVoidPassword)}
-                tabIndex={-1}
+            </div>
+            <div className="space-y-2">
+              <Label htmlFor="void-password">Password</Label>
+              <div className="relative">
+                <Input
+                  id="void-password"
+                  type={showVoidPassword ? "text" : "password"}
+                  placeholder="Enter your password to confirm"
+                  className="pr-10"
+                  value={voidPassword}
+                  onChange={(e) => setVoidPassword(e.target.value)}
+                  onKeyDown={(e) => {
+                    if (e.key === "Enter") {
+                      voidMutation.mutate({ reason: voidReason, password: voidPassword });
+                    }
+                  }}
+                />
+                <button
+                  type="button"
+                  className="absolute right-2 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground"
+                  onClick={() => setShowVoidPassword(!showVoidPassword)}
+                  tabIndex={-1}
+                >
+                  {showVoidPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
+                </button>
+              </div>
+            </div>
+            <div className="flex justify-end gap-2 pt-2">
+              <Button
+                variant="outline"
+                onClick={() => {
+                  setVoidDialogOpen(false);
+                  setVoidReason("");
+                  setVoidPassword("");
+                  setShowVoidPassword(false);
+                }}
+                disabled={voidMutation.isPending}
               >
-                {showVoidPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
-              </button>
+                Cancel
+              </Button>
+              <Button
+                variant="destructive"
+                className="text-white"
+                onClick={() =>
+                  voidMutation.mutate({ reason: voidReason, password: voidPassword })
+                }
+                disabled={!voidReason.trim() || !voidPassword || voidMutation.isPending}
+              >
+                {voidMutation.isPending ? "Processing..." : "Proceed"}
+              </Button>
             </div>
           </div>
-          <div className="flex justify-end gap-2 pt-2">
-            <Button
-              variant="outline"
-              onClick={() => {
-                setVoidDialogOpen(false);
-                setVoidReason("");
-                setVoidPassword("");
-                setShowVoidPassword(false);
-              }}
-              disabled={voidMutation.isPending}
-            >
-              Cancel
-            </Button>
-            <Button
-              variant="destructive"
-              className="text-white"
-              onClick={() =>
-                voidMutation.mutate({ reason: voidReason, password: voidPassword })
-              }
-              disabled={!voidReason.trim() || !voidPassword || voidMutation.isPending}
-            >
-              {voidMutation.isPending ? "Processing..." : "Proceed"}
-            </Button>
-          </div>
-        </div>
+        </DialogContent>
       </Dialog>
 
       {/* Fulfillment Confirmation Dialog */}
       <Dialog open={fulfillDialogOpen} onOpenChange={setFulfillDialogOpen}>
-        <DialogHeader>
-          <DialogTitle>
-            {fulfillTarget === "READY_FOR_PICKUP" ? "Mark as Ready for Pickup" : "Mark as Picked Up"}
-          </DialogTitle>
-          <DialogDescription>
-            {fulfillTarget === "READY_FOR_PICKUP" ? (
-              <>
-                This will mark <strong>{tx?.transactionNumber}</strong> as <strong>Ready for Pickup</strong>. The patient can now come in to collect their glasses.
-              </>
-            ) : (
-              <>
-                This will mark <strong>{tx?.transactionNumber}</strong> as <strong>Picked Up</strong>. This confirms the glasses have been handed to the patient and the order is complete. This action cannot be undone.
-              </>
-            )}
-          </DialogDescription>
-        </DialogHeader>
-        <div className="flex justify-end gap-2 pt-4">
-          <Button
-            variant="outline"
-            onClick={() => { setFulfillDialogOpen(false); setFulfillTarget(null); }}
-            disabled={fulfillMutation.isPending}
-          >
-            Cancel
-          </Button>
-          <Button
-            className={fulfillTarget === "READY_FOR_PICKUP" ? "bg-yellow-600 hover:bg-yellow-700 text-white" : "bg-teal-600 hover:bg-teal-700 text-white"}
-            onClick={() => fulfillTarget && fulfillMutation.mutate(fulfillTarget)}
-            disabled={fulfillMutation.isPending || !fulfillTarget}
-          >
-            {fulfillMutation.isPending ? "Processing..." : fulfillTarget === "READY_FOR_PICKUP" ? "Confirm Ready" : "Confirm Picked Up"}
-          </Button>
-        </div>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>
+              {fulfillTarget === "READY_FOR_PICKUP" ? "Mark as Ready for Pickup" : "Mark as Picked Up"}
+            </DialogTitle>
+            <DialogDescription>
+              {fulfillTarget === "READY_FOR_PICKUP" ? (
+                <>
+                  This will mark <strong>{tx?.transactionNumber}</strong> as <strong>Ready for Pickup</strong>. The patient can now come in to collect their glasses.
+                </>
+              ) : (
+                <>
+                  This will mark <strong>{tx?.transactionNumber}</strong> as <strong>Picked Up</strong>. This confirms the glasses have been handed to the patient and the order is complete. This action cannot be undone.
+                </>
+              )}
+            </DialogDescription>
+          </DialogHeader>
+          <div className="flex justify-end gap-2 pt-4">
+            <Button
+              variant="outline"
+              onClick={() => { setFulfillDialogOpen(false); setFulfillTarget(null); }}
+              disabled={fulfillMutation.isPending}
+            >
+              Cancel
+            </Button>
+            <Button
+              className={fulfillTarget === "READY_FOR_PICKUP" ? "bg-yellow-600 hover:bg-yellow-700 text-white" : "bg-teal-600 hover:bg-teal-700 text-white"}
+              onClick={() => fulfillTarget && fulfillMutation.mutate(fulfillTarget)}
+              disabled={fulfillMutation.isPending || !fulfillTarget}
+            >
+              {fulfillMutation.isPending ? "Processing..." : fulfillTarget === "READY_FOR_PICKUP" ? "Confirm Ready" : "Confirm Picked Up"}
+            </Button>
+          </div>
+        </DialogContent>
       </Dialog>
 
       {/* Refund Drawer */}
