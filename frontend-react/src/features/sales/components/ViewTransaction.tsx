@@ -439,7 +439,7 @@ const ViewTransaction: React.FC = () => {
           <div className="grid grid-cols-2 gap-x-8 gap-y-3 sm:grid-cols-3">
             <div>
               <p className="text-xs text-muted-foreground">Transaction Number</p>
-              <p className="font-medium text-sm">{tx.transactionNumber}</p>
+              <p className="font-medium">{tx.transactionNumber}</p>
             </div>
             <div>
               <p className="text-xs text-muted-foreground">Date</p>
@@ -481,14 +481,10 @@ const ViewTransaction: React.FC = () => {
                 <p className="font-medium">{tx.patient.fullName}</p>
               </div>
             )}
-            {tx.rxNumber && (
+            {tx.prescriptionId && tx.rxNumber && (
               <div>
-                <p className="text-xs text-muted-foreground">Prescription</p>
-                <p className="font-medium">
-                  <Link to={`/patients/view/${tx.patient?.id}?tab=prescriptions`} className="text-primary hover:underline">
-                    {tx.rxNumber}
-                  </Link>
-                </p>
+                <p className="text-xs text-muted-foreground">Prescription Number</p>
+                <p className="font-medium">{tx.rxNumber}</p>
               </div>
             )}
             {tx.estimatedReadyDate && (

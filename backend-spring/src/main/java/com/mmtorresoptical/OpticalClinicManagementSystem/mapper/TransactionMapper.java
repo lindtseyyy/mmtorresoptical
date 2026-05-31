@@ -34,6 +34,14 @@ public interface TransactionMapper {
     Transaction requestDTOtoEntity(TransactionRequestDTO transactionRequestDTO);
 
     @Mapping(
+            target = "prescriptionId",
+            source = "prescription.prescriptionId"
+    )
+    @Mapping(
+            target = "rxNumber",
+            source = "prescription.rxNumber"
+    )
+    @Mapping(
             target = "createdBy",
             source = "user"
     )

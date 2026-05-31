@@ -34,7 +34,7 @@ const formatDateTime = (dateStr: string | null) => {
 };
 
 const formatActionLabel = (actionType: string, resourceType: string) => {
-  const action = actionType.charAt(0) + actionType.slice(1).toLowerCase();
+  const action = actionType.charAt(0) + actionType.slice(1).toLowerCase().replace(/_/g, " ");
   const resource = resourceType
     .replace(/_/g, " ")
     .toLowerCase()

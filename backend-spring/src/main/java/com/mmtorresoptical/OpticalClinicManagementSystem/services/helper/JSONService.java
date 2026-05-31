@@ -96,8 +96,8 @@ public class JSONService {
                 return sanitizePaymentAdjustmentAuditJson(node, performedBy);
             }
 
-            // ── Complete Transaction: hide UUIDs, show who marked complete, humanize statuses ──
-            if ("COMPLETE".equals(actionType) && node.has("transactionItemAuditDTOList")) {
+            // ── Complete / Ready for Pickup Transaction: hide UUIDs, resolve patient name, humanize statuses ──
+            if (("COMPLETE".equals(actionType) || "READY_FOR_PICKUP".equals(actionType)) && node.has("transactionItemAuditDTOList")) {
                 return sanitizeCompleteTransactionAuditJson(node, performedBy);
             }
 
@@ -545,8 +545,10 @@ public class JSONService {
         node.remove("transactionId");
         node.remove("createdByUserId");
 
-        if (performedBy != null && !performedBy.isBlank()) {
-            node.put("markedCompleteBy", performedBy);
+        String patientName = resolvePatientName(node);
+        if (patientName != null) {
+            node.remove("patientId");
+            node.put("patientName", patientName);
         }
 
         formatPesoField(node, "totalAmount");

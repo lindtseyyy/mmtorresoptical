@@ -109,4 +109,18 @@ public class TransactionAuditHelper {
                 detailsJson
         );
     }
+
+    public void logReadyForPickup(Transaction transaction) {
+
+        TransactionAuditDTO auditDTO =
+                transactionMapper.entityToAuditDTO(transaction);
+
+        String detailsJson = jsonService.toJson(auditDTO);
+        auditLogService.log(ActionType.READY_FOR_PICKUP,
+                ResourceType.TRANSACTION,
+                transaction.getTransactionId(),
+                "Marked transaction as ready for pickup",
+                detailsJson
+        );
+    }
 }

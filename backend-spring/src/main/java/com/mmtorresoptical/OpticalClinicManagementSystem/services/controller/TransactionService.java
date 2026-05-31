@@ -314,16 +314,11 @@ public class TransactionService {
 
         Transaction saved = transactionRepository.save(transaction);
 
-        // Audit: reuse COMPLETE action type for fulfillment completion (or if PENDING_LAB→READY, PENDING_LAB→COMPLETED from READY, or READY→COMPLETED)
-        String summary;
-        if (requestedStatus == FulfillmentStatus.COMPLETED) {
-            summary = "Marked transaction as picked up — order fulfilled";
-        } else if (requestedStatus == FulfillmentStatus.READY_FOR_PICKUP) {
-            summary = "Marked transaction as ready for pickup";
+        if (requestedStatus == FulfillmentStatus.READY_FOR_PICKUP) {
+            transactionAuditHelper.logReadyForPickup(saved);
         } else {
-            summary = "Marked transaction as returning to pending lab";
+            transactionAuditHelper.logComplete(saved);
         }
-        transactionAuditHelper.logComplete(saved);
 
         // Enrich with payments
         TransactionResponseDTO response = enrichWithPayments(transactionMapper.entityToResponseDTO(saved));

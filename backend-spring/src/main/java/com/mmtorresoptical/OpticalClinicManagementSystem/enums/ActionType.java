@@ -13,5 +13,6 @@ public enum ActionType {
     BACKUP,
     ADJUSTMENT,
     ADD_PAYMENT,
-    COMPLETE
+    COMPLETE,
+    READY_FOR_PICKUP
 }

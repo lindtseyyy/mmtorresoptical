@@ -32,6 +32,9 @@ public class TransactionDetailsDTO {
     private LocalDateTime voidedAt;
     private String voidReason;
 
+    private UUID prescriptionId;
+    private String rxNumber;
+
     private UserSummaryDTO createdBy;
     private PatientSummaryDTO patient;
 
