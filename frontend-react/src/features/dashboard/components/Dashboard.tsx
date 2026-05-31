@@ -296,55 +296,62 @@ export default function Dashboard() {
           </Button>
         </CardHeader>
         <CardContent className="p-0">
-          <table className="w-full table-fixed text-sm">
-            <colgroup>
-              <col className="w-1/5" />
-              <col className="w-1/5" />
-              <col className="w-1/5" />
-              <col className="w-1/5" />
-              <col className="w-1/5" />
-            </colgroup>
-            <thead>
-              <tr className="border-b text-muted-foreground">
-                <th className="text-left font-medium px-5 py-2">Date</th>
-                <th className="text-left font-medium px-5 py-2">Transaction #</th>
-                <th className="text-right font-medium px-3 py-2">Items</th>
-                <th className="text-right font-medium px-5 py-2">Amount</th>
-                <th className="px-5 py-2" />
-              </tr>
-            </thead>
-            <tbody>
-              {recentTransactions?.content.map((tx: TransactionListItem) => (
-                <tr
-                  key={tx.transactionId}
-                  className="border-b last:border-b-0 hover:bg-muted/50 transition-colors"
-                >
-                  <td className="px-5 py-2.5 text-left text-muted-foreground tabular-nums">
-                    {formatDateTime(tx.transactionDate)}
-                  </td>
-                  <td className="px-5 py-2.5 font-medium">
-                    {tx.transactionNumber}
-                  </td>
-                  <td className="px-5 py-2.5 text-right tabular-nums">
-                    {tx.itemCount}
-                  </td>
-                  <td className="px-5 py-2.5 text-right tabular-nums">
-                    {formatCurrency(tx.totalAmount)}
-                  </td>
-                  <td className="px-5 py-2.5 text-right">
-                    <Button
-                      variant="outline"
-                      size="sm"
-                      onClick={() => navigate(`/transactions/${tx.transactionId}`)}
-                    >
-                      <Eye className="mr-1 h-3.5 w-3.5" />
-                      View
-                    </Button>
-                  </td>
+          {recentTransactions?.content && recentTransactions.content.length > 0 ? (
+            <table className="w-full table-fixed text-sm">
+              <colgroup>
+                <col className="w-1/5" />
+                <col className="w-1/5" />
+                <col className="w-1/5" />
+                <col className="w-1/5" />
+                <col className="w-1/5" />
+              </colgroup>
+              <thead>
+                <tr className="border-b text-muted-foreground">
+                  <th className="text-left font-medium px-5 py-2">Date</th>
+                  <th className="text-left font-medium px-5 py-2">Transaction #</th>
+                  <th className="text-right font-medium px-3 py-2">Items</th>
+                  <th className="text-right font-medium px-5 py-2">Amount</th>
+                  <th className="px-5 py-2" />
                 </tr>
-              ))}
-            </tbody>
-          </table>
+              </thead>
+              <tbody>
+                {recentTransactions.content.map((tx: TransactionListItem) => (
+                  <tr
+                    key={tx.transactionId}
+                    className="border-b last:border-b-0 hover:bg-muted/50 transition-colors"
+                  >
+                    <td className="px-5 py-2.5 text-left text-muted-foreground tabular-nums">
+                      {formatDateTime(tx.transactionDate)}
+                    </td>
+                    <td className="px-5 py-2.5 font-medium">
+                      {tx.transactionNumber}
+                    </td>
+                    <td className="px-5 py-2.5 text-right tabular-nums">
+                      {tx.itemCount}
+                    </td>
+                    <td className="px-5 py-2.5 text-right tabular-nums">
+                      {formatCurrency(tx.totalAmount)}
+                    </td>
+                    <td className="px-5 py-2.5 text-right">
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        onClick={() => navigate(`/transactions/${tx.transactionId}`)}
+                      >
+                        <Eye className="mr-1 h-3.5 w-3.5" />
+                        View
+                      </Button>
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          ) : (
+            <div className="flex flex-col items-center justify-center py-12 text-center text-muted-foreground">
+              <ShoppingCart className="h-12 w-12 mb-3 opacity-50" />
+              <p className="font-medium">No recent transactions yet</p>
+            </div>
+          )}
         </CardContent>
       </Card>
     </div>
