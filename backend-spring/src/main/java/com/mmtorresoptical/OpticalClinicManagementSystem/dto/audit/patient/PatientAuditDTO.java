@@ -17,6 +17,7 @@ public class PatientAuditDTO {
     private String email;
     private LocalDate birthDate;
     private String address;
+    private String medicalHistory;
     private Boolean isArchived;
     private LocalDateTime createdAt;
 }

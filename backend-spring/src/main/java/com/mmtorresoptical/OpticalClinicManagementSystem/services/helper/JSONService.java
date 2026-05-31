@@ -698,6 +698,7 @@ public class JSONService {
         copyField(clean, node, "contactNumber");
         copyField(clean, node, "sex");
         copyField(clean, node, "createdAt");
+        copyField(clean, node, "medicalHistory");
 
         formatDisplayFields(clean);
 
