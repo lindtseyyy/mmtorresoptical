@@ -195,7 +195,7 @@ function drawHorizontalBarChart(
   doc.setFont("helvetica", "normal");
   let labelColW = 0;
   for (const d of data) {
-    const tw = doc.getTextWidth(d.category);
+    const tw = doc.getTextWidth(d.categoryName);
     if (tw > labelColW) labelColW = tw;
   }
   labelColW = Math.min(labelColW + 3, w * 0.38);
@@ -293,7 +293,7 @@ function renderProductTable(
   const body = products.map((p) => {
     const row: Record<string, string> = {
       productName: p.productName,
-      category: p.category.replace(/_/g, " "),
+      category: p.categoryName.replace(/_/g, " "),
       quantity: String(p.quantity),
       unitPrice: currency(p.unitPrice),
     };
@@ -370,7 +370,7 @@ function renderTopSellingTable(
     ]],
     body: products.map((p) => [
       p.productName,
-      p.category.replace(/_/g, " "),
+      p.categoryName.replace(/_/g, " "),
       currency(p.unitPrice),
       number(p.totalSold),
       currency(p.totalRevenue),

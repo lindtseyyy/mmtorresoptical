@@ -13,7 +13,7 @@ export interface ProductDetailsDTO {
   productId: string;
   productName: string;
   imageDir: string | null;
-  category: string;
+  categoryName: string;
   supplierName: string;
   unitPrice: number;
   quantity: number;

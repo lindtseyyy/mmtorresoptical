@@ -52,7 +52,7 @@ const OverstockedProductsTable: React.FC<OverstockedProductsTableProps> = ({
                   <tr key={p.productId} className="border-b hover:bg-muted">
                     <td className="py-3 pr-4 font-medium">{p.productName}</td>
                     <td className="py-3 pr-4 capitalize text-muted-foreground">
-                      {p.category.replace(/_/g, " ")}
+                      {p.categoryName.replace(/_/g, " ")}
                     </td>
                     <td className="py-3 pr-4 text-right text-blue-600 font-medium">{p.quantity}</td>
                     <td className="py-3 pr-4 text-right">{p.overstockedThreshold}</td>
