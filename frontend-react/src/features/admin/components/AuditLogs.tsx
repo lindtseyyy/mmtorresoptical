@@ -353,7 +353,7 @@ const AuditLogs: React.FC = () => {
           </div>
         </DialogHeader>
         {viewingEntry && (
-          <div className="space-y-4 mt-4">
+          <div className="space-y-4 mt-4 max-h-[65vh] overflow-y-auto pr-1">
             <div>
               <Label className="text-xs text-muted-foreground">Log ID</Label>
               <p className="text-sm font-mono">{viewingEntry.logId}</p>
