@@ -203,7 +203,7 @@ export default function Dashboard() {
         />
         <MetricCard
           icon={TrendingUp}
-          label="Avg. Transaction"
+          label="Avg. Transaction Value"
           value={
             metrics?.averageTransactionValue != null
               ? formatCurrency(metrics.averageTransactionValue)
