@@ -14,7 +14,7 @@ export interface ProductDetailsDTO {
   productName: string;
   imageDir: string | null;
   category: string;
-  supplier: string;
+  supplierName: string;
   unitPrice: number;
   quantity: number;
   productType: "PHYSICAL" | "SERVICE";

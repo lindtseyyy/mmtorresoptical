@@ -20,7 +20,9 @@ public class CreateProductRequestDTO implements ProductRequest {
 
     private String newCategoryName;
 
-    private String supplier;
+    private UUID supplierId;
+
+    private String newSupplierName;
 
     @NotNull(message = "Unit price is required")
     @DecimalMin(value = "0.0", inclusive = false, message = "Price must be greater than 0")

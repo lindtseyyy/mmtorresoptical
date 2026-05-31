@@ -8,7 +8,7 @@ public record RecommendationResponseDTO(
         UUID productId,
         String productName,
         String category,
-        String supplier,
+        String supplierName,
         String imageDir,
         String productType,
         BigDecimal unitPrice,

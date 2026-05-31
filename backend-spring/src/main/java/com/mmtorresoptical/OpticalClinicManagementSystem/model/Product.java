@@ -28,8 +28,9 @@ public class Product {
     @JoinColumn(name = "category_id", nullable = false)
     private Category category;
 
-    @Column(nullable = false)
-    private String supplier;
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "supplier_id", nullable = false)
+    private Supplier supplier;
 
     @Column(nullable = false)
     private BigDecimal unitPrice;

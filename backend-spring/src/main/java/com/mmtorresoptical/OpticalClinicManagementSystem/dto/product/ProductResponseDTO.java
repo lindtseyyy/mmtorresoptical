@@ -14,7 +14,8 @@ public class ProductResponseDTO {
     private String imageDir;
     private UUID categoryId;
     private String categoryName;
-    private String supplier;
+    private UUID supplierId;
+    private String supplierName;
     private BigDecimal unitPrice;
     private Integer quantity;
     private String productType;

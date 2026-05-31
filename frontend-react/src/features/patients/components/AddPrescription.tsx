@@ -671,7 +671,7 @@ const AddPrescription: React.FC = () => {
                         {product ? product.productName : "Select product..."}
                       </Button>
                       {product && (
-                        <span className="text-xs text-muted-foreground">{product.category}</span>
+                        <span className="text-xs text-muted-foreground">{product.categoryName}</span>
                       )}
                     </div>
                     <FormField

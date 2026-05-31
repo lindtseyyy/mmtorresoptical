@@ -12,6 +12,7 @@ public class ProductSummaryDTO {
     private String imageDir;
     private UUID categoryId;
     private String categoryName;
-    private String supplier;
+    private UUID supplierId;
+    private String supplierName;
     private String productType;
 }

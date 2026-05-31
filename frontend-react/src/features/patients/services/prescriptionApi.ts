@@ -51,7 +51,7 @@ export interface RecommendationResponse {
   productId: string;
   productName: string;
   category: string;
-  supplier: string;
+  supplierName: string;
   imageDir: string;
   productType: string;
   unitPrice: number;

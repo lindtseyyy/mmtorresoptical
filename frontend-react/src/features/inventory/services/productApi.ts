@@ -1,6 +1,6 @@
 import api from "@/shared/lib/axiosInstance";
 import type { PageResponse } from "@/shared/types";
-import type { Product, ProductFormData, InventorySummary, ProductMetrics, ProductSummary, CategoryDTO } from "@/features/inventory/types";
+import type { Product, ProductFormData, InventorySummary, ProductMetrics, ProductSummary, CategoryDTO, SupplierDTO, SupplierWithProductCountDTO } from "@/features/inventory/types";
 
 const fetchProducts = async (
   page = 0,
@@ -133,4 +133,23 @@ const fetchRopAlertsCount = async (): Promise<{ count: number }> => {
   return data;
 };
 
-export { fetchProducts, fetchProduct, updateProduct, addProduct, archiveProduct, restoreProduct, adjustStock, fetchInventorySummary, fetchProductMetrics, fetchProductSummaries, fetchCategories, fetchCategoriesWithProductCounts, toggleCategoryActive, deleteCategory, fetchRopAlertsCount };
+const fetchSuppliers = async (): Promise<SupplierDTO[]> => {
+  const { data } = await api.get("/suppliers");
+  return data;
+};
+
+const fetchSuppliersWithProductCounts = async (): Promise<SupplierWithProductCountDTO[]> => {
+  const { data } = await api.get("/suppliers/all");
+  return data;
+};
+
+const toggleSupplierActive = async (supplierId: string): Promise<SupplierDTO> => {
+  const { data } = await api.patch(`/suppliers/${supplierId}/toggle-active`);
+  return data;
+};
+
+const deleteSupplier = async (supplierId: string): Promise<void> => {
+  await api.delete(`/suppliers/${supplierId}`);
+};
+
+export { fetchProducts, fetchProduct, updateProduct, addProduct, archiveProduct, restoreProduct, adjustStock, fetchInventorySummary, fetchProductMetrics, fetchProductSummaries, fetchCategories, fetchCategoriesWithProductCounts, toggleCategoryActive, deleteCategory, fetchRopAlertsCount, fetchSuppliers, fetchSuppliersWithProductCounts, toggleSupplierActive, deleteSupplier };

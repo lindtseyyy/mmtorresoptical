@@ -14,6 +14,20 @@ export interface CategoryWithProductCountDTO {
   productCount: number;
 }
 
+// ── Supplier types ─────────────────────────────────────────────────
+
+export interface SupplierDTO {
+  supplierId: string;
+  name: string;
+}
+
+export interface SupplierWithProductCountDTO {
+  supplierId: string;
+  name: string;
+  isActive: boolean;
+  productCount: number;
+}
+
 // ── Field validators ────────────────────────────────────────────────
 
 const decimalString = (label: string) =>
@@ -33,7 +47,8 @@ export const productFormSchema = z
     productName: z.string().min(1, "Name is required"),
     categoryId: z.string().uuid().optional(),
     newCategoryName: z.string().optional(),
-    supplier: z.string().optional(),
+    supplierId: z.string().uuid().optional(),
+    newSupplierName: z.string().optional(),
     productType: z.enum(["PHYSICAL", "SERVICE"]),
     unitPrice: decimalString("Unit price"),
     quantity: z.string().optional(),
@@ -54,11 +69,11 @@ export const productFormSchema = z
 
     if (data.productType !== "PHYSICAL") return;
 
-    if (!data.supplier || data.supplier.trim().length === 0) {
+    if (!data.supplierId && (!data.newSupplierName || data.newSupplierName.trim().length === 0)) {
       ctx.addIssue({
         code: z.ZodIssueCode.custom,
         message: "Supplier is required",
-        path: ["supplier"],
+        path: ["supplierId"],
       });
     }
 
@@ -146,7 +161,8 @@ export const productSchema = productFormSchema.transform((data) => ({
       : Number(data.overstockedThreshold || "0"),
   leadTimeDays:
     data.productType === "SERVICE" ? 0 : Number(data.leadTimeDays || "3"),
-  supplier: data.productType === "SERVICE" ? "In-House" : (data.supplier || ""),
+  supplierId: data.productType === "SERVICE" ? undefined : (data.supplierId || undefined),
+  newSupplierName: data.productType === "SERVICE" ? undefined : (data.newSupplierName || undefined),
   productType: data.productType,
   isArchived: data.isArchived,
   imageDir: data.imageDir,
@@ -162,7 +178,8 @@ export interface Product {
   productName: string;
   categoryId: string;
   categoryName: string;
-  supplier: string;
+  supplierId: string;
+  supplierName: string;
   unitPrice: number;
   quantity: number;
   productType: "PHYSICAL" | "SERVICE";
@@ -182,7 +199,8 @@ export interface ProductSummary {
   imageDir: string;
   categoryId: string;
   categoryName: string;
-  supplier: string;
+  supplierId: string;
+  supplierName: string;
   productType: string;
 }
 

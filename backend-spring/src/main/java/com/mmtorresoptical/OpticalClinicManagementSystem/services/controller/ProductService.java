@@ -11,9 +11,11 @@ import com.mmtorresoptical.OpticalClinicManagementSystem.exception.custom.Resour
 import com.mmtorresoptical.OpticalClinicManagementSystem.mapper.ProductMapper;
 import com.mmtorresoptical.OpticalClinicManagementSystem.model.Category;
 import com.mmtorresoptical.OpticalClinicManagementSystem.model.Product;
+import com.mmtorresoptical.OpticalClinicManagementSystem.model.Supplier;
 import com.mmtorresoptical.OpticalClinicManagementSystem.model.User;
 import com.mmtorresoptical.OpticalClinicManagementSystem.repository.CategoryRepository;
 import com.mmtorresoptical.OpticalClinicManagementSystem.repository.ProductRepository;
+import com.mmtorresoptical.OpticalClinicManagementSystem.repository.SupplierRepository;
 import com.mmtorresoptical.OpticalClinicManagementSystem.services.AuthenticatedUserService;
 import com.mmtorresoptical.OpticalClinicManagementSystem.services.analytics.InventoryAnalyticsService;
 import com.mmtorresoptical.OpticalClinicManagementSystem.services.auditlog.resources.ProductAuditHelper;
@@ -48,6 +50,8 @@ public class ProductService {
     private final FileStorageService fileStorageService;
     private final CategoryService categoryService;
     private final CategoryRepository categoryRepository;
+    private final SupplierService supplierService;
+    private final SupplierRepository supplierRepository;
 
     @Transactional
     public ProductResponseDTO createProduct(CreateProductRequestDTO productRequest, MultipartFile image) {
@@ -57,6 +61,7 @@ public class ProductService {
         Product product = productMapper.createRequestDTOToEntity(productRequest);
 
         product.setCategory(resolveCategory(productRequest.getCategoryId(), productRequest.getNewCategoryName()));
+        product.setSupplier(resolveSupplier(productRequest.getProductType(), productRequest.getSupplierId(), productRequest.getNewSupplierName()));
 
         // Handle image upload — store file to disk, save filename in entity
         String storedFilename = fileStorageService.store(image);
@@ -79,7 +84,7 @@ public class ProductService {
     public Page<ProductDetailsDTO> getAllProducts(
             String keyword,
             UUID categoryId,
-            String supplier,
+            UUID supplierId,
             BigDecimal minPrice,
             BigDecimal maxPrice,
             Integer minQty,
@@ -129,7 +134,6 @@ public class ProductService {
                 mappedArchivedStatus = null;
             }
 
-            String effectiveSupplier = (supplier != null && !supplier.isBlank()) ? supplier : null;
             String effectiveProductType = (productType != null && !productType.isBlank()) ? productType : null;
             String effectiveStockStatus = (stockStatus != null && !stockStatus.isBlank()) ? stockStatus : null;
 
@@ -139,7 +143,7 @@ public class ProductService {
                     keyword,
                     3,
                     categoryId,
-                    effectiveSupplier,
+                    supplierId,
                     effectiveProductType,
                     minPrice,
                     maxPrice,
@@ -161,8 +165,8 @@ public class ProductService {
             spec = spec.and(ProductSpecification.hasCategory(categoryId));
         }
 
-        if (supplier != null && !supplier.isBlank()) {
-            spec = spec.and(ProductSpecification.hasSupplier(supplier));
+        if (supplierId != null) {
+            spec = spec.and(ProductSpecification.hasSupplier(supplierId));
         }
 
         if (minPrice != null || maxPrice != null) {
@@ -226,6 +230,10 @@ public class ProductService {
 
         if (updateProductRequestDTO.getCategoryId() != null || updateProductRequestDTO.getNewCategoryName() != null) {
             retrievedProduct.setCategory(resolveCategory(updateProductRequestDTO.getCategoryId(), updateProductRequestDTO.getNewCategoryName()));
+        }
+
+        if (updateProductRequestDTO.getSupplierId() != null || updateProductRequestDTO.getNewSupplierName() != null) {
+            retrievedProduct.setSupplier(resolveSupplier(updateProductRequestDTO.getProductType(), updateProductRequestDTO.getSupplierId(), updateProductRequestDTO.getNewSupplierName()));
         }
 
         // Handle image — new upload replaces old, otherwise keep existing
@@ -339,6 +347,23 @@ public class ProductService {
             return result;
         }
         throw new IllegalArgumentException("Either categoryId or newCategoryName must be provided");
+    }
+
+    private Supplier resolveSupplier(com.mmtorresoptical.OpticalClinicManagementSystem.enums.ProductType productType, UUID supplierId, String newSupplierName) {
+        System.out.println(">>> resolveSupplier called: productType=" + productType + ", supplierId=" + supplierId + ", newSupplierName=" + newSupplierName);
+        if (productType == com.mmtorresoptical.OpticalClinicManagementSystem.enums.ProductType.SERVICE) {
+            return supplierService.findOrCreate("In-House");
+        }
+        if (supplierId != null) {
+            return supplierRepository.findById(supplierId)
+                    .orElseThrow(() -> new IllegalArgumentException("Supplier not found with id: " + supplierId));
+        }
+        if (newSupplierName != null && !newSupplierName.isBlank()) {
+            Supplier result = supplierService.findOrCreate(newSupplierName.trim());
+            System.out.println(">>> Created/found supplier: " + result.getSupplierId() + " = " + result.getName());
+            return result;
+        }
+        throw new IllegalArgumentException("Either supplierId or newSupplierName must be provided");
     }
 
 }

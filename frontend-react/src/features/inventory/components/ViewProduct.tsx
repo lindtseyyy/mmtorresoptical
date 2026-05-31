@@ -254,7 +254,7 @@ const ViewProduct: React.FC = () => {
             </div>
             <div>
               <p className="text-xs text-muted-foreground">Supplier</p>
-              <p className="font-medium">{product.supplier}</p>
+              <p className="font-medium">{product.supplierName}</p>
             </div>
             <div>
               <p className="text-xs text-muted-foreground">Unit Price</p>

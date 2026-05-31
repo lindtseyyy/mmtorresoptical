@@ -30,7 +30,7 @@ public interface ProductRepository extends JpaRepository<Product, UUID>, JpaSpec
                 OR levenshtein(LOWER(p.product_name), LOWER(:keyword)) <= :maxDistance
             )
             AND (:categoryId IS NULL OR p.category_id = CAST(:categoryId AS UUID))
-            AND (:supplier IS NULL OR p.supplier = :supplier)
+            AND (:supplierId IS NULL OR p.supplier_id = CAST(:supplierId AS UUID))
             AND (:productType IS NULL OR p.product_type = :productType)
             AND (:minPrice IS NULL OR p.unit_price >= :minPrice)
             AND (:maxPrice IS NULL OR p.unit_price <= :maxPrice)
@@ -56,7 +56,7 @@ public interface ProductRepository extends JpaRepository<Product, UUID>, JpaSpec
             OR levenshtein(LOWER(p.product_name), LOWER(:keyword)) <= :maxDistance
         )
         AND (:categoryId IS NULL OR p.category_id = CAST(:categoryId AS UUID))
-        AND (:supplier IS NULL OR p.supplier = :supplier)
+        AND (:supplierId IS NULL OR p.supplier_id = CAST(:supplierId AS UUID))
         AND (:productType IS NULL OR p.product_type = :productType)
         AND (:minPrice IS NULL OR p.unit_price >= :minPrice)
         AND (:maxPrice IS NULL OR p.unit_price <= :maxPrice)
@@ -76,7 +76,7 @@ public interface ProductRepository extends JpaRepository<Product, UUID>, JpaSpec
         @Param("keyword") String keyword,
         @Param("maxDistance") int maxDistance,
         @Param("categoryId") UUID categoryId,
-        @Param("supplier") String supplier,
+        @Param("supplierId") UUID supplierId,
         @Param("productType") String productType,
         @Param("minPrice") BigDecimal minPrice,
         @Param("maxPrice") BigDecimal maxPrice,

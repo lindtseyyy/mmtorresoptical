@@ -12,7 +12,7 @@ public class ProductAuditDTO {
     private String productName;
     private String imageDir;
     private String categoryName;
-    private String supplier;
+    private String supplierName;
     private BigDecimal unitPrice;
     private Integer quantity;
     private Integer lowLevelThreshold;

@@ -4,7 +4,9 @@ import com.mmtorresoptical.OpticalClinicManagementSystem.enums.Sex;
 import com.mmtorresoptical.OpticalClinicManagementSystem.enums.Role;
 import com.mmtorresoptical.OpticalClinicManagementSystem.model.User;
 import com.mmtorresoptical.OpticalClinicManagementSystem.model.Category;
+import com.mmtorresoptical.OpticalClinicManagementSystem.model.Supplier;
 import com.mmtorresoptical.OpticalClinicManagementSystem.repository.CategoryRepository;
+import com.mmtorresoptical.OpticalClinicManagementSystem.repository.SupplierRepository;
 import com.mmtorresoptical.OpticalClinicManagementSystem.repository.UserRepository;
 import com.mmtorresoptical.OpticalClinicManagementSystem.utils.NameUtils;
 import org.springframework.boot.CommandLineRunner;
@@ -19,12 +21,14 @@ public class DataSeeder implements CommandLineRunner {
     private final UserRepository userRepository;
     private final PasswordEncoder passwordEncoder;
     private final CategoryRepository categoryRepository;
+    private final SupplierRepository supplierRepository;
 
     // Use constructor injection to get the beans
-    public DataSeeder(UserRepository userRepository, PasswordEncoder passwordEncoder, CategoryRepository categoryRepository) {
+    public DataSeeder(UserRepository userRepository, PasswordEncoder passwordEncoder, CategoryRepository categoryRepository, SupplierRepository supplierRepository) {
         this.userRepository = userRepository;
         this.passwordEncoder = passwordEncoder;
         this.categoryRepository = categoryRepository;
+        this.supplierRepository = supplierRepository;
     }
 
     @Override
@@ -39,6 +43,18 @@ public class DataSeeder implements CommandLineRunner {
                 categoryRepository.save(category);
             }
             System.out.println("Default categories seeded.");
+        }
+
+        // Seed default suppliers if none exist
+        if (supplierRepository.count() == 0) {
+            System.out.println("Seeding default suppliers...");
+            List<String> defaultSuppliers = List.of("Essilor", "Luxottica", "Safilo", "Hoya");
+            for (String name : defaultSuppliers) {
+                Supplier supplier = new Supplier();
+                supplier.setName(name);
+                supplierRepository.save(supplier);
+            }
+            System.out.println("Default suppliers seeded.");
         }
 
         // Check if the admin user already exists

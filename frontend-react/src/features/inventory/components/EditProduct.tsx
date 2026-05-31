@@ -41,8 +41,8 @@ const EditProduct: React.FC = () => {
   const defaultValues: ProductFormData | undefined = product
     ? {
         productName: product.productName,
-        category: product.category as ProductFormData["category"],
-        supplier: product.supplier,
+        categoryId: product.categoryId,
+        supplierId: product.supplierId,
         productType: product.productType as ProductFormData["productType"],
         unitPrice: product.unitPrice,
         quantity: product.quantity,

@@ -15,14 +15,12 @@ import java.util.List;
 public interface ProductMapper {
 
     @Mapping(target = "category", ignore = true)
+    @Mapping(target = "supplier", ignore = true)
     Product createRequestDTOToEntity(CreateProductRequestDTO createProductRequestDTO);
 
     @AfterMapping
     default void applyServiceDefaults(CreateProductRequestDTO dto, @MappingTarget Product product) {
         if (dto.getProductType() == ProductType.SERVICE) {
-            if (product.getSupplier() == null || product.getSupplier().isBlank()) {
-                product.setSupplier("In-House");
-            }
             if (product.getQuantity() == null || product.getQuantity() < 0) {
                 product.setQuantity(0);
             }
@@ -40,31 +38,36 @@ public interface ProductMapper {
 
     @Mapping(source = "category.categoryId", target = "categoryId")
     @Mapping(source = "category.name", target = "categoryName")
+    @Mapping(source = "supplier.supplierId", target = "supplierId")
+    @Mapping(source = "supplier.name", target = "supplierName")
     ProductResponseDTO entityToResponseDTO(Product product);
 
     @Mapping(source = "category.categoryId", target = "categoryId")
     @Mapping(source = "category.name", target = "categoryName")
+    @Mapping(source = "supplier.supplierId", target = "supplierId")
+    @Mapping(source = "supplier.name", target = "supplierName")
     ProductDetailsDTO entityToDetailsDTO(Product product);
 
     @Mapping(source = "category.categoryId", target = "categoryId")
     @Mapping(source = "category.name", target = "categoryName")
+    @Mapping(source = "supplier.supplierId", target = "supplierId")
+    @Mapping(source = "supplier.name", target = "supplierName")
     ProductSummaryDTO entityToSummaryDTO(Product product);
 
     @Mapping(source = "category.name", target = "categoryName")
+    @Mapping(source = "supplier.name", target = "supplierName")
     ProductAuditDTO entityToAuditDTO(Product product);
 
     List<ProductAuditDTO> entityListToAuditDTOList(
             List<Product> products);
 
     @Mapping(target = "category", ignore = true)
+    @Mapping(target = "supplier", ignore = true)
     void updateProductFromUpdateRequestDTO(UpdateProductRequestDTO updateProductRequestDTO, @MappingTarget Product product);
 
     @AfterMapping
     default void applyServiceDefaultsOnUpdate(UpdateProductRequestDTO dto, @MappingTarget Product product) {
         if (dto.getProductType() == ProductType.SERVICE) {
-            if (product.getSupplier() == null || product.getSupplier().isBlank()) {
-                product.setSupplier("In-House");
-            }
             if (product.getQuantity() == null || product.getQuantity() < 0) {
                 product.setQuantity(0);
             }

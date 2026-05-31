@@ -405,7 +405,7 @@ public class PrescriptionService {
                             p.getProductId(),
                             p.getProductName(),
                             p.getCategory().getName(),
-                            p.getSupplier(),
+                            p.getSupplier().getName(),
                             p.getImageDir(),
                             p.getProductType().name(),
                             p.getUnitPrice(),

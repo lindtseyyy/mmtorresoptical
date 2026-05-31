@@ -21,9 +21,9 @@ public class ProductSpecification {
                 cb.equal(root.get("category").get("categoryId"), categoryId);
     }
 
-    public static Specification<Product> hasSupplier(String supplier) {
+    public static Specification<Product> hasSupplier(UUID supplierId) {
         return (root, query, cb) ->
-                cb.equal(root.get("supplier"), supplier);
+                cb.equal(root.get("supplier").get("supplierId"), supplierId);
     }
 
     public static Specification<Product> priceBetween(

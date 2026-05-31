@@ -57,7 +57,7 @@ public class ProductController {
                                                                   @RequestParam(required = false) String keyword,
 
                                                                   @RequestParam(required = false) UUID categoryId,
-                                                                  @RequestParam(required = false) String supplier,
+                                                                  @RequestParam(required = false) UUID supplierId,
 
                                                                   @RequestParam(required = false) BigDecimal minPrice,
                                                                   @RequestParam(required = false) BigDecimal maxPrice,
@@ -85,7 +85,7 @@ public class ProductController {
         Page<ProductDetailsDTO> productDetailsDTOPage = productService.getAllProducts(
                 keyword,
                 categoryId,
-                supplier,
+                supplierId,
                 minPrice,
                 maxPrice,
                 minQty,

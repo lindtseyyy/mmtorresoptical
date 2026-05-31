@@ -25,6 +25,8 @@ import {
 import { Label } from "@/shared/components/ui/label";
 import CategoryCombobox from "@/features/inventory/components/CategoryCombobox";
 import CategoryManagementModal from "@/features/inventory/components/CategoryManagementModal";
+import SupplierCombobox from "@/features/inventory/components/SupplierCombobox";
+import SupplierManagementModal from "@/features/inventory/components/SupplierManagementModal";
 import {
   productSchema,
   productFormSchema,
@@ -53,7 +55,8 @@ const mapToFormValues = (values?: ProductFormData): ProductFormValues => {
     productName: values?.productName ?? "",
     categoryId: values?.categoryId ?? undefined,
     newCategoryName: undefined,
-    supplier: isService ? "" : (values?.supplier ?? ""),
+    supplierId: isService ? undefined : (values?.supplierId ?? undefined),
+    newSupplierName: undefined,
     productType,
     unitPrice:
       values && values.unitPrice !== undefined ? String(values.unitPrice) : "",
@@ -106,6 +109,13 @@ export const ProductForm: React.FC<ProductFormProps> = ({
   const [newCategoryName, setNewCategoryName] = useState<string | null>(null);
   const [categoryModalOpen, setCategoryModalOpen] = useState(false);
   const [categoryRefreshKey, setCategoryRefreshKey] = useState(0);
+  const [selectedSupplierId, setSelectedSupplierId] = useState<string | null>(
+    passedDefaultValues?.supplierId ?? null
+  );
+  const [selectedSupplierName, setSelectedSupplierName] = useState<string | null>(null);
+  const [newSupplierName, setNewSupplierName] = useState<string | null>(null);
+  const [supplierModalOpen, setSupplierModalOpen] = useState(false);
+  const [supplierRefreshKey, setSupplierRefreshKey] = useState(0);
 
   const initialFormValues = useMemo(
     () => mapToFormValues(passedDefaultValues),
@@ -124,11 +134,14 @@ export const ProductForm: React.FC<ProductFormProps> = ({
     form.reset(initialFormValues);
     setSelectedCategoryId(passedDefaultValues?.categoryId ?? null);
     setNewCategoryName(null);
+    setSelectedSupplierId(passedDefaultValues?.supplierId ?? null);
+    setNewSupplierName(null);
   }, [initialFormValues, form, passedDefaultValues]);
 
   const handleSubmit = form.handleSubmit(async (values) => {
     if (values.productType === "SERVICE") {
-      values.supplier = "";
+      values.supplierId = undefined;
+      values.newSupplierName = undefined;
       values.quantity = "";
       values.lowLevelThreshold = "";
       values.overstockedThreshold = "";
@@ -142,6 +155,8 @@ export const ProductForm: React.FC<ProductFormProps> = ({
       ...values,
       categoryId: selectedCategoryId ?? undefined,
       newCategoryName: newCategoryName ?? undefined,
+      supplierId: selectedSupplierId ?? undefined,
+      newSupplierName: newSupplierName ?? undefined,
     };
 
     const payload = productSchema.parse(mergedValues);
@@ -181,81 +196,105 @@ export const ProductForm: React.FC<ProductFormProps> = ({
               )}
             />
 
+            <FormField
+              control={form.control}
+              name="productName"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel className="font-semibold">
+                    {isService ? "Service Name" : "Product Name"}
+                  </FormLabel>
+                  <FormControl>
+                    <Input
+                      placeholder={
+                        isService ? "Enter service name" : "Enter product name"
+                      }
+                      {...field}
+                    />
+                  </FormControl>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+
             <div className={isService ? "" : "grid gap-4 md:grid-cols-2"}>
-              <FormField
-                control={form.control}
-                name="productName"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel className="font-semibold">
-                      {isService ? "Service Name" : "Product Name"}
-                    </FormLabel>
-                    <FormControl>
-                      <Input
-                        placeholder={
-                          isService ? "Enter service name" : "Enter product name"
-                        }
-                        {...field}
-                      />
-                    </FormControl>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
-
               {!isService && (
-                <FormField
-                  control={form.control}
-                  name="supplier"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel className="font-semibold">Supplier</FormLabel>
-                      <FormControl>
-                        <Input placeholder="Enter supplier name" {...field} />
-                      </FormControl>
-                      <FormMessage />
-                    </FormItem>
+                <div className="space-y-2">
+                  <div className="flex items-center gap-1">
+                    <Label className="font-semibold">Supplier</Label>
+                    <Button
+                      type="button"
+                      variant="ghost"
+                      size="icon"
+                      className="h-6 w-6 ml-1"
+                      title="Manage suppliers"
+                      onClick={() => setSupplierModalOpen(true)}
+                    >
+                      <Settings className="h-3.5 w-3.5" />
+                    </Button>
+                  </div>
+                  <SupplierCombobox
+                    value={selectedSupplierId}
+                    onChange={(id, name) => {
+                      setSelectedSupplierId(id);
+                      setSelectedSupplierName(name);
+                      setNewSupplierName(null);
+                      form.setValue("supplierId", id, { shouldValidate: true });
+                    }}
+                    onCreate={(name) => {
+                      setNewSupplierName(name);
+                      setSelectedSupplierId(null);
+                      setSelectedSupplierName(null);
+                      form.setValue("newSupplierName", name, { shouldValidate: true });
+                    }}
+                    disabled={isLoading}
+                    refreshKey={supplierRefreshKey}
+                  />
+                  {form.formState.errors.supplierId && (
+                    <p className="text-sm font-medium text-destructive">
+                      {form.formState.errors.supplierId.message}
+                    </p>
                   )}
-                />
+                </div>
               )}
-            </div>
 
-            <div className="space-y-2">
-              <div className="flex items-center gap-1">
-                <Label className="font-semibold">Category</Label>
-                <Button
-                  type="button"
-                  variant="ghost"
-                  size="icon"
-                  className="h-6 w-6 ml-1"
-                  title="Manage categories"
-                  onClick={() => setCategoryModalOpen(true)}
-                >
-                  <Settings className="h-3.5 w-3.5" />
-                </Button>
+              <div className="space-y-2">
+                <div className="flex items-center gap-1">
+                  <Label className="font-semibold">Category</Label>
+                  <Button
+                    type="button"
+                    variant="ghost"
+                    size="icon"
+                    className="h-6 w-6 ml-1"
+                    title="Manage categories"
+                    onClick={() => setCategoryModalOpen(true)}
+                  >
+                    <Settings className="h-3.5 w-3.5" />
+                  </Button>
+                </div>
+                <CategoryCombobox
+                  value={selectedCategoryId}
+                  onChange={(id, name) => {
+                    setSelectedCategoryId(id);
+                    setSelectedCategoryName(name);
+                    setNewCategoryName(null);
+                    form.setValue("categoryId", id, { shouldValidate: true });
+                  }}
+                  onCreate={(name) => {
+                    setNewCategoryName(name);
+                    setSelectedCategoryId(null);
+                    setSelectedCategoryName(null);
+                    form.setValue("newCategoryName", name, { shouldValidate: true });
+                  }}
+                  disabled={isLoading}
+                  refreshKey={categoryRefreshKey}
+                />
+                {form.formState.errors.categoryId && (
+                  <p className="text-sm font-medium text-destructive">
+                    {form.formState.errors.categoryId.message}
+                  </p>
+                )}
               </div>
-              <CategoryCombobox
-                value={selectedCategoryId}
-                onChange={(id, name) => {
-                  setSelectedCategoryId(id);
-                  setSelectedCategoryName(name);
-                  setNewCategoryName(null);
-                  form.setValue("categoryId", id, { shouldValidate: true });
-                }}
-                onCreate={(name) => {
-                  setNewCategoryName(name);
-                  setSelectedCategoryId(null);
-                  setSelectedCategoryName(null);
-                  form.setValue("newCategoryName", name, { shouldValidate: true });
-                }}
-                disabled={isLoading}
-                refreshKey={categoryRefreshKey}
-              />
-              {form.formState.errors.categoryId && (
-                <p className="text-sm font-medium text-destructive">
-                  {form.formState.errors.categoryId.message}
-                </p>
-              )}
             </div>
 
             <div className="grid gap-4 md:grid-cols-2">
@@ -318,10 +357,8 @@ export const ProductForm: React.FC<ProductFormProps> = ({
                   )}
                 />
               )}
-            </div>
 
-            {!isService && (
-              <div className="grid gap-4 md:grid-cols-1">
+              {!isService && isEditMode && (
                 <FormField
                   control={form.control}
                   name="leadTimeDays"
@@ -351,11 +388,43 @@ export const ProductForm: React.FC<ProductFormProps> = ({
                     </FormItem>
                   )}
                 />
-              </div>
-            )}
+              )}
+            </div>
 
             {!isService && (
               <div className="grid gap-4 md:grid-cols-2">
+                {!isEditMode && (
+                  <FormField
+                    control={form.control}
+                    name="leadTimeDays"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel className="font-semibold">
+                          Estimated Lead Time (Days)
+                        </FormLabel>
+                        <FormControl>
+                          <Input
+                            type="text"
+                            inputMode="numeric"
+                            placeholder="Enter supplier lead time in days (default: 3)"
+                            value={field.value ?? ""}
+                            name={field.name}
+                            ref={field.ref}
+                            onBlur={field.onBlur}
+                            onChange={(e) => {
+                              const value = e.target.value.trimStart();
+                              if (INTEGER_INPUT_REGEX.test(value)) {
+                                field.onChange(value);
+                              }
+                            }}
+                          />
+                        </FormControl>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+                )}
+
                 <FormField
                   control={form.control}
                   name="lowLevelThreshold"
@@ -530,6 +599,12 @@ export const ProductForm: React.FC<ProductFormProps> = ({
         open={categoryModalOpen}
         onOpenChange={setCategoryModalOpen}
         onCategoriesChanged={() => setCategoryRefreshKey((k) => k + 1)}
+      />
+
+      <SupplierManagementModal
+        open={supplierModalOpen}
+        onOpenChange={setSupplierModalOpen}
+        onSuppliersChanged={() => setSupplierRefreshKey((k) => k + 1)}
       />
     </FormProvider>
   );

@@ -16,9 +16,10 @@ public class ProductRequestValidator
         boolean valid = true;
         context.disableDefaultConstraintViolation();
 
-        if (dto.getSupplier() == null || dto.getSupplier().trim().isEmpty()) {
+        if (dto.getSupplierId() == null
+                && (dto.getNewSupplierName() == null || dto.getNewSupplierName().trim().isEmpty())) {
             context.buildConstraintViolationWithTemplate("Supplier is required")
-                    .addPropertyNode("supplier")
+                    .addPropertyNode("supplierId")
                     .addConstraintViolation();
             valid = false;
         }

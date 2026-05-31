@@ -25,14 +25,14 @@ const ProductPickerModal: React.FC<ProductPickerModalProps> = ({ open, onOpenCha
   const categoryCounts = useMemo(() => {
     const counts: Record<string, number> = {};
     nonServiceProducts.forEach((p) => {
-      counts[p.category] = (counts[p.category] ?? 0) + 1;
+      counts[p.categoryName] = (counts[p.categoryName] ?? 0) + 1;
     });
     return counts;
   }, [nonServiceProducts]);
 
   const filtered = useMemo(() => {
     return nonServiceProducts.filter((p) => {
-      if (categoryFilter !== "all" && p.category !== categoryFilter) return false;
+      if (categoryFilter !== "all" && p.categoryName !== categoryFilter) return false;
       if (!search) return true;
       return p.productName.toLowerCase().includes(search.toLowerCase());
     });
@@ -112,7 +112,7 @@ const ProductPickerModal: React.FC<ProductPickerModalProps> = ({ open, onOpenCha
                     {product.productName}
                   </p>
                   <p className="text-[11px] text-muted-foreground/70 line-clamp-1">
-                    {product.category} &middot; {product.supplier}
+                    {product.categoryName} &middot; {product.supplierName}
                   </p>
                 </div>
               </div>
