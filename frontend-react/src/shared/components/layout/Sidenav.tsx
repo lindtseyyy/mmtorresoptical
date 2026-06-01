@@ -130,7 +130,7 @@ const Sidenav: React.FC = () => {
   };
 
   return (
-    <div className="flex h-screen w-64 shrink-0 flex-col border-r border-border bg-card">
+    <div className="flex h-screen w-64 shrink-0 flex-col border-r border-border bg-card shadow-xl">
       <div className="flex h-16 items-center gap-2 border-b border-border p-4">
         <div className="flex h-10 w-10 items-center justify-center rounded-full bg-primary">
           <Eye className="h-5 w-5 text-primary-foreground" />
@@ -213,7 +213,7 @@ const Sidenav: React.FC = () => {
         </div>
       </div>
 
-      <div className="mt-auto border-t border-border p-4">
+      <div className="mt-auto border-t-2 border-gray-300 p-4">
         <div className="mb-4">
           <div className="font-semibold text-foreground">{user.name}</div>
           <div className="text-xs text-muted-foreground">{user.role}</div>
