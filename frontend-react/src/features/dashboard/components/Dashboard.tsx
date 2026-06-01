@@ -24,7 +24,6 @@ import {
 } from "@/features/sales/hooks/transactionQuery";
 import type { TransactionListItem } from "@/features/sales/types";
 import {
-  createDashboardPatientMetricsQueryOptions,
   createDailyPatientArrivalsQueryOptions,
 } from "@/features/patients/hooks/patientQuery";
 import DailyRevenueChart from "@/features/dashboard/components/DailyRevenueChart";
@@ -68,9 +67,6 @@ export default function Dashboard() {
     createInventorySummaryQueryOptions()
   );
   const { data: metrics } = useQuery(createTransactionMetricsQueryOptions());
-  const { data: patientMetrics } = useQuery(
-    createDashboardPatientMetricsQueryOptions()
-  );
   const { data: dailyArrivals } = useQuery(
     createDailyPatientArrivalsQueryOptions()
   );
@@ -250,29 +246,6 @@ export default function Dashboard() {
           </CardHeader>
           <CardContent className="space-y-4">
             <DailyPatientChart data={dailyArrivals ?? []} />
-
-            <div className="flex flex-wrap gap-3 border-t pt-4">
-              <StatChip
-                color="bg-blue-500"
-                label="Active"
-                value={patientMetrics?.totalActivePatients}
-              />
-              <StatChip
-                color="bg-emerald-500"
-                label="New"
-                value={patientMetrics?.newPatientsThisMonth}
-              />
-              <StatChip
-                color="bg-amber-500"
-                label="Follow-ups"
-                value={patientMetrics?.pendingFollowUps}
-              />
-              <StatChip
-                color="bg-violet-500"
-                label="Seen"
-                value={patientMetrics?.patientsSeenThisMonth}
-              />
-            </div>
           </CardContent>
         </Card>
       </div>
