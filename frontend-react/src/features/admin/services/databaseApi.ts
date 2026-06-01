@@ -46,10 +46,24 @@ export const fetchLastRestore = async (): Promise<LastBackupInfo> => {
 };
 
 export const downloadBackup = async (password: string): Promise<void> => {
-  const response = await api.post("/admin/database/backup", { currentPassword: password }, {
-    responseType: "blob",
-    timeout: 1800000, // 30 minutes
-  });
+  let response;
+  try {
+    response = await api.post("/admin/database/backup", { currentPassword: password }, {
+      responseType: "blob",
+      timeout: 1800000, // 30 minutes
+    });
+  } catch (error) {
+    if (axios.isAxiosError(error) && error.response?.data instanceof Blob) {
+      const text = await error.response.data.text();
+      try {
+        const json = JSON.parse(text);
+        throw new Error(json.message || json.error || text);
+      } catch {
+        if (text) throw new Error(text);
+      }
+    }
+    throw error;
+  }
 
   const blob = response.data as Blob;
   const contentDisposition = response.headers["content-disposition"] as string | undefined;
