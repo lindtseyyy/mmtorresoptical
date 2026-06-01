@@ -27,7 +27,7 @@ export interface ProductDetailsDTO {
 export interface TopSellingProductDTO {
   productId: string;
   productName: string;
-  category: string;
+  categoryName: string;
   unitPrice: number;
   totalSold: number;
   totalRevenue: number;
