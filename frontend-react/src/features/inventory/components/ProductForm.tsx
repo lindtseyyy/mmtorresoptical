@@ -392,7 +392,7 @@ export const ProductForm: React.FC<ProductFormProps> = ({
                     control={form.control}
                     name="leadTimeDays"
                     render={({ field }) => (
-                      <FormItem>
+                      <FormItem className="md:col-span-2">
                         <FormLabel className="font-semibold">
                           Estimated Lead Time (Days)
                         </FormLabel>
