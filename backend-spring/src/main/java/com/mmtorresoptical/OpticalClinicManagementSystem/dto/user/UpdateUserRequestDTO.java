@@ -18,7 +18,7 @@ public class UpdateUserRequestDTO {
     private String firstName;
 
     @Size(max = 100)
-    @Pattern(regexp = "^[\\p{L}\\s.'-]+$", message = "Name contains invalid characters")
+    @Pattern(regexp = "^[\\p{L}\\s.'-]*$", message = "Name contains invalid characters")
     private String middleName; // Optional
 
     @NotEmpty(message = "Last name is required")
