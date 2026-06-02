@@ -149,7 +149,7 @@ const ManageInventory: React.FC = () => {
                     <SelectValue />
                   </SelectTrigger>
                   <SelectContent>
-                    <SelectItem value="productName">Product Name</SelectItem>
+                    <SelectItem value="productName">Name</SelectItem>
                     <SelectItem value="quantity">Quantity</SelectItem>
                     <SelectItem value="unitPrice">Price</SelectItem>
                   </SelectContent>
@@ -234,7 +234,7 @@ const ManageInventory: React.FC = () => {
                 <table className="w-full table-fixed text-sm">
                   <thead>
                     <tr className="border-b text-left text-muted-foreground">
-                      <th className="w-[32%] py-3 pr-4 font-medium">Product Name</th>
+                      <th className="w-[32%] py-3 pr-4 font-medium">Name</th>
                       <th className="w-[12%] py-3 pr-4 font-medium">Category</th>
                       <th className="w-[10%] py-3 pr-4 text-right font-medium">Quantity</th>
                       <th className="w-[12%] py-3 pr-4 text-right font-medium">Unit Price</th>
