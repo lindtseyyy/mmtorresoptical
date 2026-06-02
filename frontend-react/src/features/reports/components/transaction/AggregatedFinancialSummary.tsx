@@ -88,18 +88,13 @@ const AggregatedFinancialSummary: React.FC<AggregatedFinancialSummaryProps> = ({
   const grossCount = paid.count + partiallyPaid.count;
   const grossValue = paid.totalValue + partiallyPaid.totalValue;
 
-  // Deduction subtotals (for visual display only)
-  const deductionCount =
-    voided.count + refunded.count;
-  const deductionValue =
-    voided.totalValue +
-    refunded.totalValue;
+  // Cash Deductions: only refunds (Voided excluded — those funds were never collected)
+  const deductionValue = refunded.totalValue;
 
-  // Bottom metrics
+  // Operational metrics
   const totalTransactions = grossCount + voided.count;
   const netActiveTransactions = grossCount;
-  // Cash-basis: Net Revenue = Gross − Refunded (Voided excluded — those funds were never collected)
-  const netRevenue = grossValue - refunded.totalValue;
+  const netRevenue = grossValue - deductionValue;
 
   return (
     <Card>
@@ -113,51 +108,60 @@ const AggregatedFinancialSummary: React.FC<AggregatedFinancialSummaryProps> = ({
           <tbody>
             {/* ═══ A. Inflow Section ═══ */}
             <tr className="border-b bg-muted/50">
-              <td colSpan={3} className="px-6 py-2 text-xs font-semibold uppercase tracking-wider text-muted-foreground">
+              <td colSpan={2} className="px-6 py-2 text-xs font-semibold uppercase tracking-wider text-muted-foreground">
                 Inflow
               </td>
             </tr>
-            <InflowRow label="Paid" agg={paid} />
-            <InflowRow label="Deposit" agg={partiallyPaid} />
-            <SubtotalRow label="Gross Total" agg={{ count: grossCount, totalValue: grossValue }} />
+            <CurrencyRow label="Paid" value={paid.totalValue} isPositive />
+            <CurrencyRow label="Deposit" value={partiallyPaid.totalValue} isPositive />
+            <CurrencySubtotalRow label="Gross Total" value={grossValue} isPositive />
 
             {/* ═══ B. Spacer ═══ */}
             <tr className="h-4" />
 
-            {/* ═══ C. Deduction Section ═══ */}
+            {/* ═══ C. Cash Deductions Section ═══ */}
             <tr className="border-b bg-muted/50">
-              <td colSpan={3} className="px-6 py-2 text-xs font-semibold uppercase tracking-wider text-muted-foreground">
-                Deductions
+              <td colSpan={2} className="px-6 py-2 text-xs font-semibold uppercase tracking-wider text-muted-foreground">
+                Cash Deductions
               </td>
             </tr>
-            <DeductionRow label="Voided" agg={voided} />
-            <DeductionRow label="Refunded" agg={refunded} />
-            <SubtotalRow
-              label="Total Deductions"
-              agg={{ count: deductionCount, totalValue: deductionValue }}
-              isDeduction
-            />
+            <CurrencyRow label="Refunded" value={refunded.totalValue} />
+            <CurrencySubtotalRow label="Total Deductions" value={deductionValue} />
 
             {/* ═══ D. Spacer ═══ */}
             <tr className="h-4" />
 
-            {/* ═══ E. Bottom Summary Metrics ═══ */}
-            <tr className="border-b">
-              <td className="py-3 pl-6 pr-4 text-muted-foreground">Total Transactions</td>
-              <td className="py-3 pr-4 text-right font-medium">{number(totalTransactions)}</td>
-              <td className="py-3 pr-6" />
-            </tr>
-            <tr className="border-b">
-              <td className="py-3 pl-6 pr-4 text-muted-foreground">Net Active Transactions</td>
-              <td className="py-3 pr-4 text-right font-medium">{number(netActiveTransactions)}</td>
-              <td className="py-3 pr-6" />
-            </tr>
+            {/* ═══ E. Net Revenue ═══ */}
             <tr className="bg-blue-100">
               <td className="py-3 pl-6 pr-4 font-bold text-blue-900">Net Revenue</td>
-              <td className="py-3 pr-6 text-right" />
               <td className="py-3 pr-6 text-right text-lg font-bold text-blue-700">
                 {currency(netRevenue)}
               </td>
+            </tr>
+
+            {/* ═══ F. Spacer ═══ */}
+            <tr className="h-4" />
+
+            {/* ═══ G. Operational Overview Section ═══ */}
+            <tr className="border-b bg-muted/50">
+              <td colSpan={2} className="px-6 py-2 text-xs font-semibold uppercase tracking-wider text-muted-foreground">
+                Operational Overview
+              </td>
+            </tr>
+            <tr className="border-b hover:bg-muted/50">
+              <td className="py-2.5 pl-6 pr-4 text-muted-foreground">Voided Transactions</td>
+              <td className="py-2.5 pr-6 text-right">
+                <span className="text-muted-foreground">{currency(voided.totalValue)}</span>
+                &nbsp;<span className="font-semibold">({number(voided.count)})</span>
+              </td>
+            </tr>
+            <tr className="border-b hover:bg-muted/50">
+              <td className="py-2.5 pl-6 pr-4 text-muted-foreground">Total Transactions</td>
+              <td className="py-2.5 pr-6 text-right font-medium">{number(totalTransactions)}</td>
+            </tr>
+            <tr className="border-b hover:bg-muted/50">
+              <td className="py-2.5 pl-6 pr-4 text-muted-foreground">Net Active Transactions</td>
+              <td className="py-2.5 pr-6 text-right font-medium">{number(netActiveTransactions)}</td>
             </tr>
           </tbody>
         </table>
@@ -168,69 +172,55 @@ const AggregatedFinancialSummary: React.FC<AggregatedFinancialSummaryProps> = ({
 
 // ── Row helpers ──────────────────────────────────────────────────────────
 
-interface RowProps {
+interface CurrencyRowProps {
   label: string;
-  agg: StatusAggregate;
+  value: number;
+  isPositive?: boolean;
 }
 
-const InflowRow: React.FC<RowProps> = ({ label, agg }) => (
+const CurrencyRow: React.FC<CurrencyRowProps> = ({ label, value, isPositive }) => (
   <tr className="border-b hover:bg-muted/50">
     <td className="py-2.5 pl-6 pr-4 text-muted-foreground">{label}</td>
-    <td className="py-2.5 pr-4 text-right">{number(agg.count)}</td>
-    <td className="py-2.5 pr-6 text-right text-green-600">
-      {agg.totalValue > 0 ? `+${currency(agg.totalValue)}` : currency(agg.totalValue)}
+    <td className={`py-2.5 pr-6 text-right ${isPositive ? "text-green-600" : "text-red-600"}`}>
+      {isPositive
+        ? value > 0 ? `+${currency(value)}` : currency(value)
+        : value > 0 ? `-${currency(value)}` : currency(value)}
     </td>
   </tr>
 );
 
-const DeductionRow: React.FC<RowProps> = ({ label, agg }) => (
-  <tr className="border-b hover:bg-muted/50">
-    <td className="py-2.5 pl-6 pr-4 text-muted-foreground">{label}</td>
-    <td className="py-2.5 pr-4 text-right text-red-600">{number(agg.count)}</td>
-    <td className="py-2.5 pr-6 text-right text-red-600">
-      {agg.totalValue > 0 ? `-${currency(agg.totalValue)}` : currency(agg.totalValue)}
-    </td>
-  </tr>
-);
-
-interface SubtotalRowProps {
+interface CurrencySubtotalRowProps {
   label: string;
-  agg: StatusAggregate;
-  isDeduction?: boolean;
+  value: number;
+  isPositive?: boolean;
 }
 
-const SubtotalRow: React.FC<SubtotalRowProps> = ({ label, agg, isDeduction }) => (
-  <tr
-    className={`border-b-2 font-semibold ${
-      isDeduction ? "bg-red-100" : "bg-emerald-100"
-    }`}
-  >
-    <td
-      className={`py-2.5 pl-6 pr-4 ${
-        isDeduction ? "text-red-800" : "text-emerald-800"
+const CurrencySubtotalRow: React.FC<CurrencySubtotalRowProps> = ({ label, value, isPositive }) => {
+  const isDeduction = !isPositive;
+  return (
+    <tr
+      className={`border-b-2 font-semibold ${
+        isDeduction ? "bg-red-100" : "bg-emerald-100"
       }`}
     >
-      {label}
-    </td>
-    <td
-      className={`py-2.5 pr-4 text-right ${
-        isDeduction ? "text-red-700" : "text-emerald-700"
-      }`}
-    >
-      {number(agg.count)}
-    </td>
-    <td
-      className={`py-2.5 pr-6 text-right ${
-        isDeduction ? "text-red-700" : "text-emerald-700"
-      }`}
-    >
-      {agg.totalValue > 0
-        ? isDeduction
-          ? `-${currency(agg.totalValue)}`
-          : `+${currency(agg.totalValue)}`
-        : currency(agg.totalValue)}
-    </td>
-  </tr>
-);
+      <td
+        className={`py-2.5 pl-6 pr-4 ${
+          isDeduction ? "text-red-800" : "text-emerald-800"
+        }`}
+      >
+        {label}
+      </td>
+      <td
+        className={`py-2.5 pr-6 text-right ${
+          isDeduction ? "text-red-700" : "text-emerald-700"
+        }`}
+      >
+        {isPositive
+          ? value > 0 ? `+${currency(value)}` : currency(value)
+          : value > 0 ? `-${currency(value)}` : currency(value)}
+      </td>
+    </tr>
+  );
+};
 
 export default AggregatedFinancialSummary;

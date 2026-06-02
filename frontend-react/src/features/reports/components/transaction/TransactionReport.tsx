@@ -6,7 +6,7 @@ import TransactionCharts from "@/features/reports/components/transaction/Transac
 import type { TransactionHierarchicalReportDataset } from "@/features/reports/types";
 
 const MIN_DATE_LOCAL = "2020-01-01";
-const MAX_DATE_LOCAL = "2099-12-31";
+const TODAY = new Date().toISOString().slice(0, 10);
 
 interface TransactionReportProps {
   report: TransactionHierarchicalReportDataset;
@@ -35,18 +35,28 @@ const TransactionReport: React.FC<TransactionReportProps> = ({
             <Input
               type="date"
               min={MIN_DATE_LOCAL}
-              max={MAX_DATE_LOCAL}
+              max={maxDate || TODAY}
               value={minDate}
-              onChange={(e) => onMinDateChange(e.target.value)}
+              onChange={(e) => {
+                const val = e.target.value;
+                if (!maxDate || val <= maxDate) {
+                  onMinDateChange(val);
+                }
+              }}
               className="w-auto"
             />
             <span className="text-sm text-muted-foreground">to</span>
             <Input
               type="date"
-              min={MIN_DATE_LOCAL}
-              max={MAX_DATE_LOCAL}
+              min={minDate || MIN_DATE_LOCAL}
+              max={TODAY}
               value={maxDate}
-              onChange={(e) => onMaxDateChange(e.target.value)}
+              onChange={(e) => {
+                const val = e.target.value;
+                if (val <= TODAY && (!minDate || val >= minDate)) {
+                  onMaxDateChange(val);
+                }
+              }}
               className="w-auto"
             />
           </div>

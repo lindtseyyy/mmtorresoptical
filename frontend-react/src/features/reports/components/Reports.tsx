@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useSessionState } from "@/shared/hooks/useSessionState";
 import {
   FileText,
@@ -90,6 +90,24 @@ const Reports: React.FC = () => {
   const { data: receivables } = useQuery(createAccountsReceivableQueryOptions());
   const { data: valueTrend } = useInventoryValueTrend();
   const { data: categoryBreakdown } = useCategoryBreakdown();
+
+  // ── Auto-populate dates for transaction report ────────────────────
+
+  useEffect(() => {
+    if (
+      reportType === "TRANSACTIONS" &&
+      !minDate &&
+      !maxDate &&
+      data &&
+      "statusGroups" in data
+    ) {
+      const txData = data as TransactionHierarchicalReportDataset;
+      if (txData.minDate) {
+        setMinDate(txData.minDate);
+      }
+      setMaxDate(new Date().toISOString().slice(0, 10));
+    }
+  }, [reportType, minDate, maxDate, data, setMinDate, setMaxDate]);
 
   // ── Export handlers ──────────────────────────────────────────────
 

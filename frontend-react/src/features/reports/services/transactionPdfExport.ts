@@ -357,25 +357,22 @@ function generateTransactionPdf(
 
   const grossCount = paid.count + partiallyPaid.count;
   const grossValue = paid.totalValue + partiallyPaid.totalValue;
-  const deductionCount = voided.count + refunded.count;
-  const deductionValue = voided.totalValue + refunded.totalValue;
+  // Cash Deductions: only refunds (Voided excluded — those funds were never collected)
+  const deductionValue = refunded.totalValue;
   const totalTransactions = grossCount + voided.count;
   const netActiveTransactions = grossCount;
-  // Cash-basis: Net Revenue = Gross − Refunded (Voided excluded — those funds were never collected)
-  const netRevenue = grossValue - refunded.totalValue;
+  const netRevenue = grossValue - deductionValue;
 
   const summaryBody = [
     [
-      { content: "INFLOW", colSpan: 3, styles: { fontStyle: "bold", fillColor: [245, 245, 245], textColor: [100] } },
+      { content: "INFLOW", colSpan: 2, styles: { fontStyle: "bold", fillColor: [245, 245, 245], textColor: [100] } },
     ],
     [
       "Paid",
-      number(paid.count),
       paid.totalValue > 0 ? `+${currency(paid.totalValue)}` : currency(0),
     ],
     [
       "Deposit",
-      number(partiallyPaid.count),
       partiallyPaid.totalValue > 0 ? `+${currency(partiallyPaid.totalValue)}` : currency(0),
     ],
     [
@@ -384,25 +381,15 @@ function generateTransactionPdf(
         styles: { fontStyle: "bold", fillColor: [209, 250, 229] },
       },
       {
-        content: number(grossCount),
-        styles: { fontStyle: "bold", fillColor: [209, 250, 229] },
-      },
-      {
         content: grossValue > 0 ? `+${currency(grossValue)}` : currency(0),
         styles: { fontStyle: "bold", fillColor: [209, 250, 229] },
       },
     ],
     [
-      { content: "DEDUCTIONS", colSpan: 3, styles: { fontStyle: "bold", fillColor: [245, 245, 245], textColor: [100] } },
-    ],
-    [
-      "Voided",
-      number(voided.count),
-      voided.totalValue > 0 ? `-${currency(voided.totalValue)}` : currency(0),
+      { content: "CASH DEDUCTIONS", colSpan: 2, styles: { fontStyle: "bold", fillColor: [245, 245, 245], textColor: [100] } },
     ],
     [
       "Refunded",
-      number(refunded.count),
       refunded.totalValue > 0 ? `-${currency(refunded.totalValue)}` : currency(0),
     ],
     [
@@ -411,23 +398,9 @@ function generateTransactionPdf(
         styles: { fontStyle: "bold", fillColor: [254, 226, 226] },
       },
       {
-        content: number(deductionCount),
-        styles: { fontStyle: "bold", fillColor: [254, 226, 226] },
-      },
-      {
         content: deductionValue > 0 ? `-${currency(deductionValue)}` : currency(0),
         styles: { fontStyle: "bold", fillColor: [254, 226, 226] },
       },
-    ],
-    [
-      "Total Transactions",
-      number(totalTransactions),
-      "",
-    ],
-    [
-      "Net Active Transactions",
-      number(netActiveTransactions),
-      "",
     ],
     [
       {
@@ -435,27 +408,36 @@ function generateTransactionPdf(
         styles: { fontStyle: "bold", fillColor: [219, 234, 254], textColor: [30, 64, 175] },
       },
       {
-        content: "",
-        styles: { fillColor: [219, 234, 254] },
-      },
-      {
         content: currency(netRevenue),
         styles: { fontStyle: "bold", fillColor: [219, 234, 254], textColor: [30, 64, 175] },
       },
     ],
+    [
+      { content: "OPERATIONAL OVERVIEW", colSpan: 2, styles: { fontStyle: "bold", fillColor: [245, 245, 245], textColor: [100] } },
+    ],
+    [
+      "Voided Transactions",
+      `${currency(voided.totalValue)} (${number(voided.count)})`,
+    ],
+    [
+      "Total Transactions",
+      number(totalTransactions),
+    ],
+    [
+      "Net Active Transactions",
+      number(netActiveTransactions),
+    ],
   ];
 
   const tableW = pageW - margin * 2;
-  const col0 = Math.round(tableW * 0.52);
-  const col1 = Math.round(tableW * 0.18);
-  const col2 = tableW - col0 - col1;
+  const col0 = Math.round(tableW * 0.55);
+  const col1 = tableW - col0;
 
   autoTable(doc, {
     startY: cursorY,
     margin: { left: margin, right: margin },
     head: [[
       { content: "", styles: { halign: "left" } },
-      { content: "Count", styles: { halign: "right" } },
       { content: "Amount", styles: { halign: "right" } },
     ]],
     body: summaryBody as any,
@@ -466,7 +448,6 @@ function generateTransactionPdf(
     columnStyles: {
       0: { cellWidth: col0, halign: "left" as const },
       1: { cellWidth: col1, halign: "right" as const },
-      2: { cellWidth: col2, halign: "right" as const },
     },
   });
 
