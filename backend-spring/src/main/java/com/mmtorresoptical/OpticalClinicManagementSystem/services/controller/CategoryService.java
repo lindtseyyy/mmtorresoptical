@@ -2,6 +2,7 @@ package com.mmtorresoptical.OpticalClinicManagementSystem.services.controller;
 
 import com.mmtorresoptical.OpticalClinicManagementSystem.dto.category.CategoryDTO;
 import com.mmtorresoptical.OpticalClinicManagementSystem.dto.category.CategoryWithProductCountDTO;
+import com.mmtorresoptical.OpticalClinicManagementSystem.enums.CategoryType;
 import com.mmtorresoptical.OpticalClinicManagementSystem.model.Category;
 import com.mmtorresoptical.OpticalClinicManagementSystem.repository.CategoryRepository;
 import lombok.RequiredArgsConstructor;
@@ -18,15 +19,17 @@ public class CategoryService {
 
     private final CategoryRepository categoryRepository;
 
-    public List<CategoryDTO> getAllCategories() {
-        return categoryRepository.findByIsActiveTrueOrderByNameAsc()
-                .stream()
+    public List<CategoryDTO> getAllCategories(CategoryType type) {
+        List<Category> categories = (type != null)
+                ? categoryRepository.findByIsActiveTrueAndCategoryTypeOrderByNameAsc(type)
+                : categoryRepository.findByIsActiveTrueOrderByNameAsc();
+        return categories.stream()
                 .map(this::toDTO)
                 .toList();
     }
 
-    public List<CategoryWithProductCountDTO> getAllCategoriesWithProductCounts() {
-        return categoryRepository.findAllWithProductCounts()
+    public List<CategoryWithProductCountDTO> getAllCategoriesWithProductCounts(CategoryType type) {
+        return categoryRepository.findAllWithProductCountsByType(type)
                 .stream()
                 .map(row -> {
                     Category cat = (Category) row[0];
@@ -34,6 +37,7 @@ public class CategoryService {
                     return CategoryWithProductCountDTO.builder()
                             .categoryId(cat.getCategoryId())
                             .name(cat.getName())
+                            .categoryType(cat.getCategoryType().name())
                             .isActive(cat.getIsActive())
                             .productCount(count)
                             .build();
@@ -42,11 +46,12 @@ public class CategoryService {
     }
 
     @Transactional
-    public Category findOrCreate(String name) {
-        return categoryRepository.findByNameIgnoreCase(name.trim())
+    public Category findOrCreate(String name, CategoryType type) {
+        return categoryRepository.findByNameIgnoreCaseAndCategoryType(name.trim(), type)
                 .orElseGet(() -> {
                     Category category = new Category();
                     category.setName(name.trim());
+                    category.setCategoryType(type);
                     category.setIsActive(true);
                     return categoryRepository.saveAndFlush(category);
                 });
@@ -84,6 +89,7 @@ public class CategoryService {
         return CategoryDTO.builder()
                 .categoryId(category.getCategoryId())
                 .name(category.getName())
+                .categoryType(category.getCategoryType().name())
                 .build();
     }
 }

@@ -254,14 +254,20 @@ const InventoryMaintenance: React.FC = () => {
                         >
                           <td className="py-3 pr-4">
                             <span className="inline-flex items-center gap-2 font-medium">
-                              {product.imageDir ? (
+                              {product.productType === "SERVICE" ? (
+                                <span className="flex h-6 w-6 items-center justify-center">
+                                  <Glasses className="h-4 w-4 text-muted-foreground" />
+                                </span>
+                              ) : product.imageDir ? (
                                 <img
                                   src={getImageUrl(product.imageDir) ?? undefined}
                                   alt=""
                                   className="h-6 w-6 rounded object-cover"
                                 />
                               ) : (
-                                <Glasses className="h-4 w-4 text-muted-foreground" />
+                                <span className="flex h-6 w-6 items-center justify-center">
+                                  <Glasses className="h-4 w-4 text-muted-foreground" />
+                                </span>
                               )}
                               {product.productName}
                             </span>

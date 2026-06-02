@@ -25,6 +25,7 @@ interface CategoryComboboxProps {
   disabled?: boolean;
   placeholder?: string;
   refreshKey?: number;
+  productType?: "PHYSICAL" | "SERVICE";
 }
 
 const CategoryCombobox: React.FC<CategoryComboboxProps> = ({
@@ -34,6 +35,7 @@ const CategoryCombobox: React.FC<CategoryComboboxProps> = ({
   disabled = false,
   placeholder = "Select or type a category...",
   refreshKey,
+  productType,
 }) => {
   const [open, setOpen] = useState(false);
   const [categories, setCategories] = useState<CategoryDTO[]>([]);
@@ -41,8 +43,8 @@ const CategoryCombobox: React.FC<CategoryComboboxProps> = ({
   const [pendingCreateName, setPendingCreateName] = useState<string | null>(null);
 
   useEffect(() => {
-    fetchCategories().then(setCategories).catch(() => setCategories([]));
-  }, [refreshKey]);
+    fetchCategories(productType).then(setCategories).catch(() => setCategories([]));
+  }, [refreshKey, productType]);
 
   const selectedCategory = categories.find((c) => c.categoryId === value);
 

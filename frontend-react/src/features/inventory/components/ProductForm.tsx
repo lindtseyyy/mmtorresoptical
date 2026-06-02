@@ -129,6 +129,13 @@ export const ProductForm: React.FC<ProductFormProps> = ({
   const isService = watchedProductType === "SERVICE";
 
   useEffect(() => {
+    setSelectedCategoryId(null);
+    setNewCategoryName(null);
+    form.setValue("categoryId", undefined, { shouldValidate: false });
+    form.setValue("newCategoryName", undefined, { shouldValidate: false });
+  }, [watchedProductType, form]);
+
+  useEffect(() => {
     form.reset(initialFormValues);
     setSelectedCategoryId(passedDefaultValues?.categoryId ?? null);
     setNewCategoryName(null);
@@ -194,6 +201,7 @@ export const ProductForm: React.FC<ProductFormProps> = ({
               )}
             />
 
+            <div className={isService ? "grid gap-4 md:grid-cols-2" : ""}>
             <FormField
               control={form.control}
               name="productName"
@@ -214,6 +222,39 @@ export const ProductForm: React.FC<ProductFormProps> = ({
                 </FormItem>
               )}
             />
+
+              {isService && (
+                <FormField
+                  control={form.control}
+                  name="unitPrice"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel className="font-semibold">
+                        Unit Price (₱)
+                      </FormLabel>
+                      <FormControl>
+                        <Input
+                          type="text"
+                          inputMode="decimal"
+                          placeholder="Enter unit price"
+                          value={field.value ?? ""}
+                          name={field.name}
+                          ref={field.ref}
+                          onBlur={field.onBlur}
+                          onChange={(e) => {
+                            const value = e.target.value.trimStart();
+                            if (DECIMAL_INPUT_REGEX.test(value)) {
+                              field.onChange(value);
+                            }
+                          }}
+                        />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+              )}
+            </div>
 
             <div className={isService ? "" : "grid gap-4 md:grid-cols-2"}>
               {!isService && (
@@ -282,6 +323,7 @@ export const ProductForm: React.FC<ProductFormProps> = ({
                   }}
                   disabled={isLoading}
                   refreshKey={categoryRefreshKey}
+                  productType={watchedProductType}
                 />
                 {form.formState.errors.categoryId && (
                   <p className="text-sm font-medium text-destructive">
@@ -292,6 +334,7 @@ export const ProductForm: React.FC<ProductFormProps> = ({
             </div>
 
             <div className="grid gap-4 md:grid-cols-2">
+              {!isService && (
               <FormField
                 control={form.control}
                 name="unitPrice"
@@ -321,6 +364,7 @@ export const ProductForm: React.FC<ProductFormProps> = ({
                   </FormItem>
                 )}
               />
+              )}
 
               {!isService && !isEditMode && (
                 <FormField
@@ -484,6 +528,7 @@ export const ProductForm: React.FC<ProductFormProps> = ({
             {/*
               ── Image Upload Zone ──
             */}
+            {!isService && (
             <div className="space-y-2">
               <Label className="font-semibold">Product Image</Label>
               <input
@@ -562,6 +607,7 @@ export const ProductForm: React.FC<ProductFormProps> = ({
                 <p className="text-xs text-muted-foreground truncate">{imageFile.name}</p>
               )}
             </div>
+            )}
 
             <div className="flex justify-end gap-2 pt-4">
               <Button

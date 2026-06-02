@@ -2,15 +2,14 @@ package com.mmtorresoptical.OpticalClinicManagementSystem.controller;
 
 import com.mmtorresoptical.OpticalClinicManagementSystem.dto.category.CategoryDTO;
 import com.mmtorresoptical.OpticalClinicManagementSystem.dto.category.CategoryWithProductCountDTO;
+import com.mmtorresoptical.OpticalClinicManagementSystem.enums.CategoryType;
 import com.mmtorresoptical.OpticalClinicManagementSystem.services.controller.CategoryService;
 import lombok.RequiredArgsConstructor;
-import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
-import java.util.Map;
 import java.util.UUID;
 
 @RestController
@@ -21,13 +20,15 @@ public class CategoryController {
     private final CategoryService categoryService;
 
     @GetMapping
-    public ResponseEntity<List<CategoryDTO>> getAllCategories() {
-        return ResponseEntity.ok(categoryService.getAllCategories());
+    public ResponseEntity<List<CategoryDTO>> getAllCategories(
+            @RequestParam(required = false) CategoryType type) {
+        return ResponseEntity.ok(categoryService.getAllCategories(type));
     }
 
     @GetMapping("/all")
-    public ResponseEntity<List<CategoryWithProductCountDTO>> getAllCategoriesWithProductCounts() {
-        return ResponseEntity.ok(categoryService.getAllCategoriesWithProductCounts());
+    public ResponseEntity<List<CategoryWithProductCountDTO>> getAllCategoriesWithProductCounts(
+            @RequestParam(required = false) CategoryType type) {
+        return ResponseEntity.ok(categoryService.getAllCategoriesWithProductCounts(type));
     }
 
     @PreAuthorize("hasRole('ADMIN')")

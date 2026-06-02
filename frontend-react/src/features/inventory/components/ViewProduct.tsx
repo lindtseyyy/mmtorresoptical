@@ -1,7 +1,7 @@
 import { useState } from "react";
 import { useParams, Link, useNavigate } from "react-router-dom";
 import { useQuery } from "@tanstack/react-query";
-import { ArrowLeft, ChevronRight, Package, ShoppingCart, Banknote, Calendar, Hash, TrendingUp, Layers } from "lucide-react";
+import { ArrowLeft, ChevronRight, Package, ShoppingCart, Banknote, Calendar, Hash, TrendingUp, Layers, Glasses } from "lucide-react";
 import StockAdjustmentModal from "./StockAdjustmentModal";
 import { Button } from "@/shared/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/shared/components/ui/card";
@@ -90,7 +90,11 @@ const ViewProduct: React.FC = () => {
         <div>
           <div className="flex items-center gap-3">
             <div className="flex items-center gap-3">
-              {product.imageDir ? (
+              {isService ? (
+                <div className="flex h-12 w-12 items-center justify-center rounded-lg bg-muted">
+                  <Glasses className="h-6 w-6 text-muted-foreground" />
+                </div>
+              ) : product.imageDir ? (
                 <img
                   src={getImageUrl(product.imageDir) ?? undefined}
                   alt={product.productName}

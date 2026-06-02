@@ -1,5 +1,5 @@
 import { useState, useMemo, useEffect } from "react";
-import { Search, Plus, Package, ImageOff, ArrowUp, ArrowDown, Stethoscope } from "lucide-react";
+import { Search, Plus, Package, ImageOff, ArrowUp, ArrowDown, Stethoscope, Glasses } from "lucide-react";
 import { Input } from "@/shared/components/ui/input";
 import { Button } from "@/shared/components/ui/button";
 import { Badge } from "@/shared/components/ui/badge";
@@ -29,7 +29,9 @@ const ProductCard: React.FC<{
   return (
     <div className={`flex flex-col rounded-lg border border-border bg-card shadow-sm transition-shadow hover:shadow-md overflow-hidden${outOfStock ? " opacity-50" : ""}`}>
       <div className="aspect-[4/3] bg-muted/50 flex items-center justify-center overflow-hidden relative">
-        {product.imageDir && !imgFailed ? (
+        {isService ? (
+          <Glasses className="h-8 w-8 text-muted-foreground/50" />
+        ) : product.imageDir && !imgFailed ? (
           <img
             src={getImageUrl(product.imageDir) ?? undefined}
             alt={product.productName}

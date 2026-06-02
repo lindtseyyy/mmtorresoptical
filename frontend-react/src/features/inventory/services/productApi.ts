@@ -109,13 +109,17 @@ const fetchProductSummaries = async (keyword?: string, category?: string): Promi
   return data;
 };
 
-const fetchCategories = async (): Promise<CategoryDTO[]> => {
-  const { data } = await api.get("/categories");
+const fetchCategories = async (type?: string): Promise<CategoryDTO[]> => {
+  const { data } = await api.get("/categories", {
+    params: { ...(type && { type }) },
+  });
   return data;
 };
 
-const fetchCategoriesWithProductCounts = async (): Promise<CategoryWithProductCountDTO[]> => {
-  const { data } = await api.get("/categories/all");
+const fetchCategoriesWithProductCounts = async (type?: string): Promise<CategoryWithProductCountDTO[]> => {
+  const { data } = await api.get("/categories/all", {
+    params: { ...(type && { type }) },
+  });
   return data;
 };
 

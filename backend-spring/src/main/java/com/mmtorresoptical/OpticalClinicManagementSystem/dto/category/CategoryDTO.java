@@ -14,4 +14,5 @@ import java.util.UUID;
 public class CategoryDTO {
     private UUID categoryId;
     private String name;
+    private String categoryType;
 }

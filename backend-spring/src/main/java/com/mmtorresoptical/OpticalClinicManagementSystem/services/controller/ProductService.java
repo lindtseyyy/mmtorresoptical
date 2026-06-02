@@ -1,5 +1,6 @@
 package com.mmtorresoptical.OpticalClinicManagementSystem.services.controller;
 
+import com.mmtorresoptical.OpticalClinicManagementSystem.enums.CategoryType;
 import com.mmtorresoptical.OpticalClinicManagementSystem.dto.product.CreateProductRequestDTO;
 import com.mmtorresoptical.OpticalClinicManagementSystem.dto.product.ProductDetailsDTO;
 import com.mmtorresoptical.OpticalClinicManagementSystem.dto.product.ProductResponseDTO;
@@ -60,15 +61,19 @@ public class ProductService {
 
         Product product = productMapper.createRequestDTOToEntity(productRequest);
 
-        product.setCategory(resolveCategory(productRequest.getCategoryId(), productRequest.getNewCategoryName()));
+        product.setCategory(resolveCategory(productRequest.getCategoryId(), productRequest.getNewCategoryName(), productRequest.getProductType()));
         product.setSupplier(resolveSupplier(productRequest.getProductType(), productRequest.getSupplierId(), productRequest.getNewSupplierName()));
 
         // Handle image upload — store file to disk, save filename in entity
-        String storedFilename = fileStorageService.store(image);
-        if (storedFilename != null) {
-            product.setImageDir(storedFilename);
+        if (product.getProductType() == com.mmtorresoptical.OpticalClinicManagementSystem.enums.ProductType.SERVICE) {
+            product.setImageDir(null);
         } else {
-            product.setImageDir("default_product_logo.png");
+            String storedFilename = fileStorageService.store(image);
+            if (storedFilename != null) {
+                product.setImageDir(storedFilename);
+            } else {
+                product.setImageDir("default_product_logo.png");
+            }
         }
 
         product.setUser(authenticatedUser);
@@ -229,7 +234,7 @@ public class ProductService {
         productMapper.updateProductFromUpdateRequestDTO(updateProductRequestDTO, retrievedProduct);
 
         if (updateProductRequestDTO.getCategoryId() != null || updateProductRequestDTO.getNewCategoryName() != null) {
-            retrievedProduct.setCategory(resolveCategory(updateProductRequestDTO.getCategoryId(), updateProductRequestDTO.getNewCategoryName()));
+            retrievedProduct.setCategory(resolveCategory(updateProductRequestDTO.getCategoryId(), updateProductRequestDTO.getNewCategoryName(), updateProductRequestDTO.getProductType()));
         }
 
         if (updateProductRequestDTO.getSupplierId() != null || updateProductRequestDTO.getNewSupplierName() != null) {
@@ -335,14 +340,17 @@ public class ProductService {
                 .collect(Collectors.toList());
     }
 
-    private Category resolveCategory(UUID categoryId, String newCategoryName) {
-        System.out.println(">>> resolveCategory called: categoryId=" + categoryId + ", newCategoryName=" + newCategoryName);
+    private Category resolveCategory(UUID categoryId, String newCategoryName, com.mmtorresoptical.OpticalClinicManagementSystem.enums.ProductType productType) {
+        CategoryType categoryType = (productType == com.mmtorresoptical.OpticalClinicManagementSystem.enums.ProductType.SERVICE)
+                ? CategoryType.SERVICE
+                : CategoryType.PHYSICAL;
+        System.out.println(">>> resolveCategory called: categoryId=" + categoryId + ", newCategoryName=" + newCategoryName + ", categoryType=" + categoryType);
         if (categoryId != null) {
             return categoryRepository.findById(categoryId)
                     .orElseThrow(() -> new IllegalArgumentException("Category not found with id: " + categoryId));
         }
         if (newCategoryName != null && !newCategoryName.isBlank()) {
-            Category result = categoryService.findOrCreate(newCategoryName.trim());
+            Category result = categoryService.findOrCreate(newCategoryName.trim(), categoryType);
             System.out.println(">>> Created/found category: " + result.getCategoryId() + " = " + result.getName());
             return result;
         }

@@ -85,7 +85,7 @@ const CategoryManagementModal: React.FC<CategoryManagementModalProps> = ({
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="sm:max-w-lg">
+      <DialogContent className="sm:max-w-xl">
         <DialogHeader>
           <DialogTitle className="flex items-center gap-2">
             <Settings className="h-5 w-5" />
@@ -105,6 +105,7 @@ const CategoryManagementModal: React.FC<CategoryManagementModalProps> = ({
               <thead>
                 <tr className="border-b text-left text-muted-foreground">
                   <th className="py-2 pr-4 font-medium">Category</th>
+                  <th className="py-2 pr-4 text-center font-medium">Type</th>
                   <th className="py-2 pr-4 text-center font-medium">Products</th>
                   <th className="py-2 pr-4 text-center font-medium">Active</th>
                   <th className="py-2 text-center font-medium">Action</th>
@@ -119,6 +120,15 @@ const CategoryManagementModal: React.FC<CategoryManagementModalProps> = ({
                   .map((cat) => (
                   <tr key={cat.categoryId} className="border-b last:border-0">
                     <td className="py-2 pr-4">{cat.name}</td>
+                    <td className="py-2 pr-4 text-center">
+                      <span className={`inline-block rounded-full px-2 py-0.5 text-xs font-medium ${
+                        cat.categoryType === "SERVICE"
+                          ? "bg-purple-700 text-white"
+                          : "bg-blue-700 text-white"
+                      }`}>
+                        {cat.categoryType === "SERVICE" ? "Service" : "Physical"}
+                      </span>
+                    </td>
                     <td className="py-2 pr-4 text-center">{cat.productCount}</td>
                     <td className="py-2 pr-4 text-center">
                       <TooltipProvider>
@@ -161,7 +171,7 @@ const CategoryManagementModal: React.FC<CategoryManagementModalProps> = ({
                 ))}
                 {categories.length === 0 && (
                   <tr>
-                    <td colSpan={4} className="py-6 text-center text-muted-foreground">
+                    <td colSpan={5} className="py-6 text-center text-muted-foreground">
                       No categories found.
                     </td>
                   </tr>

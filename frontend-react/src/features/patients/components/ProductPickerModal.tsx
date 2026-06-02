@@ -1,5 +1,5 @@
 import { useState, useMemo } from "react";
-import { Search, Package, ImageOff } from "lucide-react";
+import { Search, Package, ImageOff, Glasses } from "lucide-react";
 import { Input } from "@/shared/components/ui/input";
 import { Badge } from "@/shared/components/ui/badge";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/shared/components/ui/dialog";
@@ -98,7 +98,9 @@ const ProductPickerModal: React.FC<ProductPickerModalProps> = ({ open, onOpenCha
                 onClick={() => handleSelect(product)}
               >
                 <div className="aspect-[4/3] bg-muted/50 flex items-center justify-center overflow-hidden shrink-0">
-                  {product.imageDir ? (
+                  {product.productType === "SERVICE" ? (
+                    <Glasses className="h-8 w-8 text-muted-foreground/50" />
+                  ) : product.imageDir ? (
                     <img
                       src={getImageUrl(product.imageDir) ?? undefined}
                       alt={product.productName}

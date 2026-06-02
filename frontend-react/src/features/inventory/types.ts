@@ -5,11 +5,13 @@ import { z } from "zod";
 export interface CategoryDTO {
   categoryId: string;
   name: string;
+  categoryType: "PHYSICAL" | "SERVICE";
 }
 
 export interface CategoryWithProductCountDTO {
   categoryId: string;
   name: string;
+  categoryType: "PHYSICAL" | "SERVICE";
   isActive: boolean;
   productCount: number;
 }

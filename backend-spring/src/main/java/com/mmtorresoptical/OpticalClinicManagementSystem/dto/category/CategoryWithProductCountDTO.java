@@ -14,6 +14,7 @@ import java.util.UUID;
 public class CategoryWithProductCountDTO {
     private UUID categoryId;
     private String name;
+    private String categoryType;
     private Boolean isActive;
     private Long productCount;
 }
