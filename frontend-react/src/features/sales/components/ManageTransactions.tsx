@@ -247,7 +247,7 @@ const ManageTransactions: React.FC = () => {
                 <table className="w-full table-fixed text-sm">
                   <thead>
                     <tr className="border-b text-left text-muted-foreground">
-                      <th className="w-[14%] py-3 pr-4 text-left font-medium">Transaction Date</th>
+                      <th className="w-[14%] py-3 pl-4 pr-4 text-left font-medium">Transaction Date</th>
                       <th className="w-[16%] py-3 pr-4 font-medium">Transaction Number</th>
                       <th className="w-[10%] py-3 pr-4 text-left font-medium">Financial</th>
                       <th className="w-[10%] py-3 pr-4 text-left font-medium">Fulfillment</th>
@@ -257,38 +257,38 @@ const ManageTransactions: React.FC = () => {
                     </tr>
                   </thead>
                   <tbody>
-                    {transactions.map((tx: TransactionListItem) => (
+                    {transactions.map((tx: TransactionListItem, index) => (
                       <tr
                         key={tx.transactionId}
-                        className="border-b transition-colors hover:bg-muted"
+                        className={`border-b transition-colors hover:bg-muted/30 ${index % 2 === 0 ? "bg-transparent" : "bg-muted"}`}
                       >
-                        <td className="py-3 pr-4 text-left text-muted-foreground">
+                        <td className="py-3 pl-4 pr-4 text-left text-muted-foreground">
                           <span className="block truncate">{formatDateTime(tx.transactionDate)}</span>
                         </td>
-                        <td className="py-3 pr-4">
+                        <td className="py-3 pl-4 pr-4">
                           <span className="block truncate font-medium">
                             {tx.transactionNumber}
                           </span>
                         </td>
-                        <td className="py-3 pr-4 text-left">
+                        <td className="py-3 pl-4 pr-4 text-left">
                           <StatusBadge status={tx.transactionStatus} />
                         </td>
-                        <td className="py-3 pr-4 text-left">
+                        <td className="py-3 pl-4 pr-4 text-left">
                           <StatusBadge status={tx.fulfillmentStatus} />
                         </td>
-                        <td className="py-3 pr-4 text-left">
+                        <td className="py-3 pl-4 pr-4 text-left">
                           {tx.refundStatus !== "NONE" ? (
                             <StatusBadge status={tx.refundStatus} />
                           ) : (
                             <span className="text-muted-foreground">—</span>
                           )}
                         </td>
-                        <td className="py-3 pr-4 text-right">
+                        <td className="py-3 pl-4 pr-4 text-right">
                           <span className="block truncate">
                             {formatCurrency(tx.totalAmount)}
                           </span>
                         </td>
-                        <td className="py-3">
+                        <td className="py-3 pl-4">
                           <div className="flex justify-center">
                             <Button
                               variant="outline"

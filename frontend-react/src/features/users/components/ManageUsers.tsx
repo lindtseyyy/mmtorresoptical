@@ -239,7 +239,7 @@ const ManageUsers: React.FC = () => {
                 <table className="w-full table-fixed text-sm">
                   <thead>
                     <tr className="border-b text-left text-muted-foreground">
-                      <th className="w-[22%] py-3 pr-4 font-medium">Full Name</th>
+                      <th className="w-[22%] py-3 pl-4 pr-4 font-medium">Full Name</th>
                       <th className="w-[14%] py-3 pr-4 font-medium">Username</th>
                       <th className="w-[24%] py-3 pr-4 font-medium">Email</th>
                       <th className="w-[16%] py-3 pr-4 font-medium">Contact Number</th>
@@ -249,29 +249,29 @@ const ManageUsers: React.FC = () => {
                     </tr>
                   </thead>
                   <tbody>
-                    {sortedUsers.map((user) => (
+                    {sortedUsers.map((user, index) => (
                       <tr
                         key={user.userId}
-                        className={`border-b transition-colors hover:bg-muted ${user.userId === currentUserId ? "bg-muted" : ""}`}
+                        className={`border-b transition-colors hover:bg-muted/30 ${index % 2 === 0 ? "bg-transparent" : "bg-muted"}`}
                       >
-                        <td className="py-3 pr-4">
+                        <td className="py-3 pl-4 pr-4">
                           <span className="block truncate font-medium">
                             {user.firstName} {user.lastName}
                           </span>
                         </td>
-                        <td className="py-3 pr-4 text-muted-foreground">
+                        <td className="py-3 pl-4 pr-4 text-muted-foreground">
                           <span className="block truncate">@{user.username}</span>
                         </td>
-                        <td className="py-3 pr-4 text-muted-foreground">
+                        <td className="py-3 pl-4 pr-4 text-muted-foreground">
                           <span className="block truncate">{user.email}</span>
                         </td>
-                        <td className="py-3 pr-4 text-muted-foreground">
+                        <td className="py-3 pl-4 pr-4 text-muted-foreground">
                           <span className="block truncate">{user.contactNumber}</span>
                         </td>
-                        <td className="py-3 pr-4 capitalize">
+                        <td className="py-3 pl-4 pr-4 capitalize">
                           <span className="block truncate">{user.sex}</span>
                         </td>
-                        <td className="py-3 pr-4 text-center">
+                        <td className="py-3 pl-4 pr-4 text-center">
                           <Badge
                             className={
                               user.role === "Admin"
@@ -282,7 +282,7 @@ const ManageUsers: React.FC = () => {
                             {user.role}
                           </Badge>
                         </td>
-                        <td className="py-3">
+                        <td className="py-3 pl-4">
                           {user.userId !== currentUserId ? (
                             <div className="flex justify-center">
                               <Button
