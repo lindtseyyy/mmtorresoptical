@@ -184,16 +184,16 @@ const ManagePatients: React.FC = () => {
                             {fullName(patient)}
                           </span>
                         </td>
-                        <td className="py-3 pr-4 text-muted-foreground">
+                        <td className="py-3 pl-4 pr-4 text-muted-foreground">
                           <span className="block truncate">{patient.email}</span>
                         </td>
-                        <td className="py-3 pr-4 text-left capitalize">
+                        <td className="py-3 pl-4 pr-4 text-left capitalize">
                           <span className="block truncate">{patient.sex}</span>
                         </td>
-                        <td className="py-3 pr-4 text-left text-muted-foreground">
+                        <td className="py-3 pl-4 pr-4 text-left text-muted-foreground">
                           <span className="block truncate">{patient.contactNumber}</span>
                         </td>
-                        <td className="py-3 pr-4 text-left text-muted-foreground">
+                        <td className="py-3 pl-4 pr-4 text-left text-muted-foreground">
                           {formatDate(patient.birthDate)}
                         </td>
                         <td className="py-3 pl-4 text-center">

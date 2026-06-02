@@ -229,7 +229,7 @@ const UserMaintenance: React.FC = () => {
                 <table className="w-full table-fixed text-sm">
                   <thead>
                     <tr className="border-b text-left text-muted-foreground">
-                      <th className="w-[22%] py-3 pr-4 font-medium">Full Name</th>
+                      <th className="w-[22%] py-3 pl-4 pr-4 font-medium">Full Name</th>
                       <th className="w-[14%] py-3 pr-4 font-medium">Username</th>
                       <th className="w-[24%] py-3 pr-4 font-medium">Email</th>
                       <th className="w-[10%] py-3 pr-4 text-center font-medium">Role</th>
@@ -238,23 +238,23 @@ const UserMaintenance: React.FC = () => {
                     </tr>
                   </thead>
                   <tbody>
-                    {sortedUsers.map((user) => (
+                    {sortedUsers.map((user, index) => (
                       <tr
                         key={user.userId}
-                        className={`border-b transition-colors hover:bg-muted ${user.userId === currentUserId ? "bg-muted" : ""}`}
+                        className={`border-b transition-colors hover:bg-muted/30 ${user.userId === currentUserId ? "bg-muted" : index % 2 !== 0 ? "bg-transparent" : "bg-muted"}`}
                       >
-                        <td className="py-3 pr-4">
+                        <td className="py-3 pl-4 pr-4">
                           <span className="block truncate font-medium">
                             {user.firstName} {user.lastName}
                           </span>
                         </td>
-                        <td className="py-3 pr-4 text-muted-foreground">
+                        <td className="py-3 pl-4 pr-4 text-muted-foreground">
                           <span className="block truncate">@{user.username}</span>
                         </td>
-                        <td className="py-3 pr-4 text-muted-foreground">
+                        <td className="py-3 pl-4 pr-4 text-muted-foreground">
                           <span className="block truncate">{user.email}</span>
                         </td>
-                        <td className="py-3 pr-4 text-center">
+                        <td className="py-3 pl-4 pr-4 text-center">
                           <Badge
                             className={
                               user.role === "Admin"
@@ -265,7 +265,7 @@ const UserMaintenance: React.FC = () => {
                             {user.role}
                           </Badge>
                         </td>
-                        <td className="py-3 pr-4 text-center">
+                        <td className="py-3 pl-4 pr-4 text-center">
                           <Badge
                             variant={user.isArchived ? "outline" : "default"}
                             className={

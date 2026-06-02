@@ -271,27 +271,27 @@ const ManageInventory: React.FC = () => {
                               {product.productName}
                             </span>
                           </td>
-                          <td className="py-3 pr-4">
+                          <td className="py-3 pl-4 pr-4">
                             {product.categoryName}
                           </td>
-                          <td className="py-3 pr-4 text-right">
+                          <td className="py-3 pl-4 pr-4 text-right">
                             {product.productType === "SERVICE" ? (
                               <span className="text-muted-foreground">—</span>
                             ) : (
                               product.quantity
                             )}
                           </td>
-                          <td className="py-3 pr-4 text-right">
+                          <td className="py-3 pl-4 pr-4 text-right">
                             ₱{product.unitPrice.toFixed(2)}
                           </td>
-                          <td className="py-3 pr-4 text-right">
+                          <td className="py-3 pl-4 pr-4 text-right">
                             {product.productType === "SERVICE" ? (
                               <span className="text-muted-foreground">—</span>
                             ) : (
                               `${product.leadTimeDays} days`
                             )}
                           </td>
-                          <td className="py-3 pr-4 text-center">
+                          <td className="py-3 pl-4 pr-4 text-center">
                             {product.productType === "SERVICE" ? (
                               <span className="text-muted-foreground">—</span>
                             ) : (
@@ -308,7 +308,7 @@ const ManageInventory: React.FC = () => {
                               </Badge>
                             )}
                           </td>
-                          <td className="py-3">
+                          <td className="py-3 pl-4">
                             <div className="flex justify-center">
                               <Button
                                 variant="outline"

@@ -237,7 +237,7 @@ const InventoryMaintenance: React.FC = () => {
                 <table className="w-full table-fixed text-sm">
                   <thead>
                     <tr className="border-b text-left text-muted-foreground">
-                      <th className="w-[30%] py-3 pr-4 font-medium">Product Name</th>
+                      <th className="w-[30%] py-3 pl-4 pr-4 font-medium">Product Name</th>
                       <th className="w-[18%] py-3 pr-4 font-medium">Category</th>
                       <th className="w-[12%] py-3 pr-4 text-right font-medium">Quantity</th>
                       <th className="w-[12%] py-3 pr-4 text-right font-medium">Unit Price</th>
@@ -246,13 +246,13 @@ const InventoryMaintenance: React.FC = () => {
                     </tr>
                   </thead>
                   <tbody>
-                    {products.map((product) => {
+                    {products.map((product, index) => {
                       return (
                         <tr
                           key={product.productId}
-                          className="border-b transition-colors hover:bg-muted"
+                          className={`border-b transition-colors hover:bg-muted/30 ${index % 2 === 0 ? "bg-transparent" : "bg-muted"}`}
                         >
-                          <td className="py-3 pr-4">
+                          <td className="py-3 pl-4 pr-4">
                             <span className="inline-flex items-center gap-2 font-medium">
                               {product.productType === "SERVICE" ? (
                                 <span className="flex h-6 w-6 items-center justify-center">
@@ -272,20 +272,20 @@ const InventoryMaintenance: React.FC = () => {
                               {product.productName}
                             </span>
                           </td>
-                          <td className="py-3 pr-4">
+                          <td className="py-3 pl-4 pr-4">
                             {product.categoryName}
                           </td>
-                          <td className="py-3 pr-4 text-right">
+                          <td className="py-3 pl-4 pr-4 text-right">
                             {product.productType === "SERVICE" ? (
                               <span className="text-muted-foreground">—</span>
                             ) : (
                               product.quantity
                             )}
                           </td>
-                          <td className="py-3 pr-4 text-right">
+                          <td className="py-3 pl-4 pr-4 text-right">
                             ₱{product.unitPrice.toFixed(2)}
                           </td>
-                          <td className="py-3 pr-4 text-center">
+                          <td className="py-3 pl-4 pr-4 text-center">
                             <Badge
                               variant={product.isArchived ? "outline" : "default"}
                               className={
