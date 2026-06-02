@@ -234,7 +234,7 @@ const ManageInventory: React.FC = () => {
                 <table className="w-full table-fixed text-sm">
                   <thead>
                     <tr className="border-b text-left text-muted-foreground">
-                      <th className="w-[32%] py-3 pr-4 font-medium">Name</th>
+                      <th className="w-[32%] py-3 pl-4 pr-4 font-medium">Name</th>
                       <th className="w-[12%] py-3 pr-4 font-medium">Category</th>
                       <th className="w-[10%] py-3 pr-4 text-right font-medium">Quantity</th>
                       <th className="w-[12%] py-3 pr-4 text-right font-medium">Unit Price</th>
@@ -251,7 +251,7 @@ const ManageInventory: React.FC = () => {
                           key={product.productId}
                           className={`border-b transition-colors hover:bg-muted/30 ${index % 2 === 0 ? "bg-transparent" : "bg-muted"}`}
                         >
-                          <td className="py-3 pr-4">
+                          <td className="py-3 pl-4 pr-4">
                             <span className="inline-flex items-center gap-2 font-medium">
                               {product.productType === "SERVICE" ? (
                                 <span className="flex h-6 w-6 items-center justify-center">
