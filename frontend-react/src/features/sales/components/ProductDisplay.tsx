@@ -26,12 +26,43 @@ const ProductCard: React.FC<{
   const outOfStock = !isService && product.quantity === 0;
   const [imgFailed, setImgFailed] = useState(false);
 
+  if (isService) {
+    return (
+      <div className="flex flex-col rounded-lg border border-border bg-card shadow-sm transition-shadow hover:shadow-md overflow-hidden">
+        <div className="flex flex-col flex-1 p-3">
+          <div className="flex items-start justify-between gap-2 mb-2">
+            <span className="text-xs font-semibold text-card-foreground leading-tight line-clamp-2">
+              {product.productName}
+            </span>
+          </div>
+
+          <span className="mb-2 text-[11px] text-muted-foreground/70">
+            {product.categoryName}
+          </span>
+
+          <div className="mt-auto flex items-center justify-between">
+            <span className="text-sm font-bold text-primary">
+              ₱{product.unitPrice.toFixed(2)}
+            </span>
+            <Button
+              size="icon"
+              variant="default"
+              disabled={disabled}
+              onClick={onAdd}
+              className="h-7 w-7 rounded-md"
+            >
+              <Plus className="h-3.5 w-3.5" />
+            </Button>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
   return (
     <div className={`flex flex-col rounded-lg border border-border bg-card shadow-sm transition-shadow hover:shadow-md overflow-hidden${outOfStock ? " opacity-50" : ""}`}>
       <div className="aspect-[4/3] bg-muted/50 flex items-center justify-center overflow-hidden relative">
-        {isService ? (
-          <Glasses className="h-8 w-8 text-muted-foreground/50" />
-        ) : product.imageDir && !imgFailed ? (
+        {product.imageDir && !imgFailed ? (
           <img
             src={getImageUrl(product.imageDir) ?? undefined}
             alt={product.productName}
@@ -40,12 +71,6 @@ const ProductCard: React.FC<{
           />
         ) : (
           <ImageOff className="h-8 w-8 text-muted-foreground/50" />
-        )}
-        {isService && (
-          <Badge className="absolute top-1.5 left-1.5 bg-blue-600 hover:bg-blue-600 text-white text-[11px] px-1.5 py-0.5">
-            <Stethoscope className="h-3 w-3 mr-0.5 inline" />
-            Service
-          </Badge>
         )}
         {lowStock && !outOfStock && (
           <Badge className="absolute top-1.5 right-1.5 bg-red-700 hover:bg-red-700 text-white text-[11px] px-1.5 py-0.5">
@@ -75,13 +100,9 @@ const ProductCard: React.FC<{
           {product.categoryName}
         </span>
 
-        {isService ? (
-          <span className="mb-1.5 text-[11px] font-medium text-blue-600">Service</span>
-        ) : (
-          <span className="mb-1.5 text-[11px] font-medium text-muted-foreground">
-            {product.quantity} item{product.quantity !== 1 ? "s" : ""} remaining
-          </span>
-        )}
+        <span className="mb-1.5 text-[11px] font-medium text-muted-foreground">
+          {product.quantity} item{product.quantity !== 1 ? "s" : ""} remaining
+        </span>
 
         <div className="mt-auto flex items-center justify-between">
           <span className="text-sm font-bold text-primary">
