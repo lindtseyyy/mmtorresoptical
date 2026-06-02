@@ -6,6 +6,7 @@ import { cn } from "@/shared/lib/utils";
 import { toast } from "sonner";
 import { isAdmin, type Role } from "@/shared/lib/auth";
 import api from "@/shared/lib/axiosInstance";
+import SystemClock from "./SystemClock";
 
 interface MenuItem {
   title: string;
@@ -140,6 +141,8 @@ const Sidenav: React.FC = () => {
           <p className="text-xs text-muted-foreground">Optical Clinic</p>
         </div>
       </div>
+
+      <SystemClock />
 
       <div className="flex-1 overflow-y-auto">
         <div className="px-4 py-2">

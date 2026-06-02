@@ -76,6 +76,9 @@ public class SecurityConfig {
                         // Allow all CORS preflight requests
                         .requestMatchers(HttpMethod.OPTIONS, "/**").permitAll()
 
+                        // System time endpoint (public)
+                        .requestMatchers("/api/system/time").permitAll()
+
                         // Auth endpoints (login, forgot-password, change-password)
                         .requestMatchers("/api/auth/login", "/api/auth/forgot-password/**", "/api/auth/change-password").permitAll()
                         // Admin-only auth actions
