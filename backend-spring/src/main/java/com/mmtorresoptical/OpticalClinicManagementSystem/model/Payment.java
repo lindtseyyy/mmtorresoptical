@@ -31,6 +31,9 @@ public class Payment {
     @Column(name = "payment_method", nullable = false)
     private PaymentMethod paymentMethod;
 
+    @Column(name = "gcash_number", length = 20)
+    private String gcashNumber;
+
     @Column(name = "reference_number", length = 100)
     private String referenceNumber;
 

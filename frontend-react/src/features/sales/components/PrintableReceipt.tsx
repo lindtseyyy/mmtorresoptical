@@ -201,6 +201,11 @@ const OriginalReceipt: React.FC<{
                 Ref# {p.referenceNumber}
               </div>
             )}
+            {p.gcashNumber && (
+              <div className="text-[10px] text-muted-foreground mt-0.5">
+                GCash No# {p.gcashNumber}
+              </div>
+            )}
           </div>
         ))}
         {(() => {

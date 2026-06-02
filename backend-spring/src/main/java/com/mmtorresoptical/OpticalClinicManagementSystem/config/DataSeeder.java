@@ -74,7 +74,7 @@ public class DataSeeder implements CommandLineRunner {
             adminUser.setFirstName("Admin");
             adminUser.setLastName("Account");
             adminUser.setEmail("admin@mmtorres.com");
-            adminUser.setContactNumber("0000000000"); // Placeholder
+            adminUser.setContactNumber("09123456789"); // Placeholder
             adminUser.setSex(Sex.FEMALE); // Placeholder
             adminUser.setBirthDate(LocalDate.of(1990, 1, 1)); // Placeholder
 

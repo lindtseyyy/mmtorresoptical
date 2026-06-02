@@ -93,7 +93,7 @@ const RefundDrawer: React.FC<Props> = ({
 
   const gcashValid = useMemo(() => {
     if (refundMethod !== "GCASH") return true;
-    return gcashNumber.trim().length >= 10 && gcashNumber.trim().length <= 15;
+    return /^09\d{9}$/.test(gcashNumber.trim());
   }, [refundMethod, gcashNumber]);
 
   const referenceValid = useMemo(() => {
@@ -371,15 +371,16 @@ const RefundDrawer: React.FC<Props> = ({
               <label className="text-sm font-medium">GCash Number *</label>
               <input
                 type="text"
+                inputMode="numeric"
                 className={`w-full rounded-md border bg-background px-3 py-2 text-sm ring-offset-background mt-1 focus:border-gray-400 focus:outline-none ${
                   gcashNumber && !gcashValid ? "border-red-500" : "border-gray-300"
                 }`}
-                placeholder="Enter GCash number (e.g. 09XX-XXX-XXXX)"
+                placeholder="09123456789"
                 value={gcashNumber}
-                onChange={(e) => setGcashNumber(e.target.value)}
+                onChange={(e) => setGcashNumber(e.target.value.replace(/[^0-9]/g, '').slice(0, 11))}
               />
               {gcashNumber && !gcashValid && (
-                <p className="text-xs text-red-500 mt-1">Must be at least 10 digits and at most 15 characters</p>
+                <p className="text-xs text-red-500 mt-1">Must start with 09 and be exactly 11 digits</p>
               )}
             </div>
             <div>

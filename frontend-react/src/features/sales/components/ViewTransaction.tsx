@@ -110,7 +110,7 @@ const ViewTransaction: React.FC = () => {
   });
 
   const addPaymentMutation = useMutation({
-    mutationFn: (data: { amount: number; paymentMethod: string; referenceNumber?: string }) =>
+    mutationFn: (data: { amount: number; paymentMethod: string; gcashNumber?: string; referenceNumber?: string }) =>
       addPayment(transactionId, data),
     onSuccess: (payment: PaymentResponse) => {
       queryClient.invalidateQueries({ queryKey: ["transaction", transactionId] });
@@ -509,6 +509,7 @@ const ViewTransaction: React.FC = () => {
                       <th className="py-2 pr-4 font-medium">Date</th>
                       <th className="py-2 pr-4 text-right font-medium">Amount</th>
                       <th className="py-2 pr-4 font-medium">Method</th>
+                      <th className="py-2 pr-4 font-medium">GCash No.</th>
                       <th className="py-2 font-medium">Reference</th>
                     </tr>
                   </thead>
@@ -522,6 +523,7 @@ const ViewTransaction: React.FC = () => {
                           {formatCurrency(p.amount)}
                         </td>
                         <td className="py-2 pr-4 capitalize">{p.paymentMethod}</td>
+                        <td className="py-2 pr-4">{p.gcashNumber || "—"}</td>
                         <td className="py-2">{p.referenceNumber || "—"}</td>
                       </tr>
                     ))}

@@ -15,6 +15,7 @@ export interface TransactionRequest {
   estimatedReadyDate?: string;
   amountTendered?: number;
   paymentMethod?: "CASH" | "GCASH";
+  gcashNumber?: string;
   referenceNumber?: string;
   items: {
     productId: string;
@@ -29,6 +30,7 @@ export interface PaymentResponse {
   id: string;
   amount: number;
   paymentMethod: string;
+  gcashNumber: string | null;
   referenceNumber: string | null;
   createdAt: string;
 }
@@ -36,6 +38,7 @@ export interface PaymentResponse {
 export interface PaymentRequest {
   amount: number;
   paymentMethod: string;
+  gcashNumber?: string;
   referenceNumber?: string;
   gcashPaymentImg?: string;
 }

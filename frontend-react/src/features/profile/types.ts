@@ -22,7 +22,7 @@ export const profileSchema = z.object({
   sex: z.enum(["Male", "Female"]),
   birthDate: z.string().min(1, "Birth date is required"),
   email: z.string().email("Invalid email address"),
-  contactNumber: z.string().min(10, "Must be at least 10 digits"),
+  contactNumber: z.string().regex(/^09\d{9}$/, "Must start with 09 and be exactly 11 digits"),
 });
 
 export type ProfileFormData = z.infer<typeof profileSchema>;

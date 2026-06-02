@@ -104,6 +104,7 @@ export interface TransactionItemEntry {
 export interface PaymentMethodEntry {
   amount: number;
   paymentMethod: string;
+  gcashNumber: string | null;
   referenceNumber: string | null;
   createdAt: string;
 }

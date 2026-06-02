@@ -12,6 +12,7 @@ public class PaymentResponseDTO {
     private UUID id;
     private BigDecimal amount;
     private String paymentMethod;
+    private String gcashNumber;
     private String referenceNumber;
     private LocalDateTime createdAt;
 }

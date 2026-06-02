@@ -31,6 +31,7 @@ const PaymentDrawer: React.FC<PaymentDrawerProps> = ({
   const [paymentMethod, setPaymentMethod] = useState<"CASH" | "GCASH">("CASH");
   const [amountTenderedStr, setAmountTenderedStr] = useState("");
   const [referenceNumber, setReferenceNumber] = useState("");
+  const [gcashNumber, setGcashNumber] = useState("");
 
   const isGcash = paymentMethod === "GCASH";
   const amountTendered = Math.min(parseFloat(amountTenderedStr) || 0, isGcash ? grandTotal : Infinity);
@@ -50,10 +51,14 @@ const PaymentDrawer: React.FC<PaymentDrawerProps> = ({
     !depositBlocked &&
     !pending &&
     (paymentMethod === "GCASH"
-      ? referenceNumber.trim().length > 0
+      ? referenceNumber.trim().length > 0 && /^09\d{9}$/.test(gcashNumber.trim())
       : true);
 
   const handleComplete = () => {
+    if (paymentMethod === "GCASH" && amountTendered > 0 && !gcashNumber.trim()) {
+      toast.error("GCash number is required for GCash payment");
+      return;
+    }
     if (paymentMethod === "GCASH" && amountTendered > 0 && !referenceNumber.trim()) {
       toast.error("Reference number is required for GCash payment");
       return;
@@ -62,6 +67,7 @@ const PaymentDrawer: React.FC<PaymentDrawerProps> = ({
       paymentMethod,
       amountTendered,
       ...(paymentMethod === "GCASH" && {
+        gcashNumber: gcashNumber.trim(),
         referenceNumber: referenceNumber.trim(),
       }),
     });
@@ -328,9 +334,26 @@ const PaymentDrawer: React.FC<PaymentDrawerProps> = ({
               )}
             </div>
 
-            {/* GCash reference (only when paying) */}
+            {/* GCash fields (only when paying) */}
             {paymentMethod === "GCASH" && amountTendered > 0 && (
               <div className="space-y-2 rounded-lg border border-border bg-background/50 p-3">
+                <div className="space-y-1.5">
+                  <Label className="text-xs text-muted-foreground">
+                    GCash Number
+                  </Label>
+                  <Input
+                    type="text"
+                    inputMode="numeric"
+                    value={gcashNumber}
+                    onChange={(e) => setGcashNumber(e.target.value.replace(/[^0-9]/g, '').slice(0, 11))}
+                    placeholder="09123456789"
+                    disabled={pending}
+                    className={gcashNumber && !/^09\d{9}$/.test(gcashNumber.trim()) ? "border-red-500" : ""}
+                  />
+                  {gcashNumber && !/^09\d{9}$/.test(gcashNumber.trim()) && (
+                    <p className="text-xs text-red-500">Must start with 09 and be exactly 11 digits</p>
+                  )}
+                </div>
                 <div className="space-y-1.5">
                   <Label className="text-xs text-muted-foreground">
                     Reference Number

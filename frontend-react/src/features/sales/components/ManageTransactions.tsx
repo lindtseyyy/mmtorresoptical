@@ -91,7 +91,7 @@ const ManageTransactions: React.FC = () => {
   const [paymentDrawerTx, setPaymentDrawerTx] = useState<TransactionListItem | null>(null);
 
   const addPaymentMutation = useMutation({
-    mutationFn: ({ id, data }: { id: string; data: { amount: number; paymentMethod: string; referenceNumber?: string } }) =>
+    mutationFn: ({ id, data }: { id: string; data: { amount: number; paymentMethod: string; gcashNumber?: string; referenceNumber?: string } }) =>
       addPayment(id, data),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["transactions"] });

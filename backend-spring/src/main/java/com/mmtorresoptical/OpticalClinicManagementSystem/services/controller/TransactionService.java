@@ -213,6 +213,7 @@ public class TransactionService {
             payment.setTransaction(savedTransaction);
             payment.setAmount(amountTendered);
             payment.setPaymentMethod(paymentMethod);
+            payment.setGcashNumber(transactionRequestDTO.getGcashNumber());
             payment.setReferenceNumber(transactionRequestDTO.getReferenceNumber());
             Payment savedPayment = paymentRepository.save(payment);
             if (savedTransaction.getPayments() == null) {
@@ -264,6 +265,7 @@ public class TransactionService {
         payment.setTransaction(transaction);
         payment.setAmount(request.getAmount());
         payment.setPaymentMethod(request.getPaymentMethod());
+        payment.setGcashNumber(request.getGcashNumber());
         payment.setReferenceNumber(request.getReferenceNumber());
         paymentRepository.save(payment);
 
@@ -278,6 +280,7 @@ public class TransactionService {
         response.setId(payment.getId());
         response.setAmount(payment.getAmount());
         response.setPaymentMethod(payment.getPaymentMethod().name());
+        response.setGcashNumber(payment.getGcashNumber());
         response.setReferenceNumber(payment.getReferenceNumber());
         response.setCreatedAt(payment.getCreatedAt());
         return response;
@@ -345,6 +348,7 @@ public class TransactionService {
                     dto.setId(p.getId());
                     dto.setAmount(p.getAmount());
                     dto.setPaymentMethod(p.getPaymentMethod().name());
+                    dto.setGcashNumber(p.getGcashNumber());
                     dto.setReferenceNumber(p.getReferenceNumber());
                     dto.setCreatedAt(p.getCreatedAt());
                     return dto;
@@ -431,6 +435,7 @@ public class TransactionService {
                     pd.setId(p.getId());
                     pd.setAmount(p.getAmount());
                     pd.setPaymentMethod(p.getPaymentMethod().name());
+                    pd.setGcashNumber(p.getGcashNumber());
                     pd.setReferenceNumber(p.getReferenceNumber());
                     pd.setCreatedAt(p.getCreatedAt());
                     return pd;
@@ -963,6 +968,7 @@ public class TransactionService {
                     pd.setId(p.getId());
                     pd.setAmount(p.getAmount());
                     pd.setPaymentMethod(p.getPaymentMethod().name());
+                    pd.setGcashNumber(p.getGcashNumber());
                     pd.setReferenceNumber(p.getReferenceNumber());
                     pd.setCreatedAt(p.getCreatedAt());
                     return pd;

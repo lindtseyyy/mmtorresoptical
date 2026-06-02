@@ -22,7 +22,7 @@ export const patientSchema = z.object({
   sex: z.enum(["Male", "Female"]),
   birthDate: z.string().min(1, "Birth date is required"),
   email: z.string().email("Invalid email address"),
-  contactNumber: z.string().min(10, "Must be at least 10 digits").max(15, "Contact number must not exceed 15 characters"),
+  contactNumber: z.string().regex(/^09\d{9}$/, "Must start with 09 and be exactly 11 digits"),
   address: z.string().min(1, "Address is required").max(255),
   medicalHistory: z.string().optional(),
   isArchived: z.boolean().default(false),

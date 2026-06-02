@@ -15,6 +15,7 @@ import java.time.LocalDateTime;
 public class PaymentMethodEntry {
     private BigDecimal amount;
     private String paymentMethod;
+    private String gcashNumber;
     private String referenceNumber;
     private LocalDateTime createdAt;
 }

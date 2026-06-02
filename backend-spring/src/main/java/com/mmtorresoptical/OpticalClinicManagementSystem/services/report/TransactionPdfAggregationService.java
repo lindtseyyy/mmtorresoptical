@@ -117,6 +117,7 @@ public class TransactionPdfAggregationService {
                 .map(p -> PaymentMethodEntry.builder()
                     .amount(p.getAmount())
                     .paymentMethod(p.getPaymentMethod().name())
+                    .gcashNumber(p.getGcashNumber())
                     .referenceNumber(p.getReferenceNumber())
                     .createdAt(p.getCreatedAt())
                     .build())

@@ -300,8 +300,10 @@ export const UserForm: React.FC<UserFormProps> = ({
                     <FormControl>
                       <Input
                         type="tel"
-                        placeholder="Enter contact number"
+                        inputMode="numeric"
+                        placeholder="09123456789"
                         {...field}
+                        onChange={(e) => field.onChange(e.target.value.replace(/[^0-9]/g, '').slice(0, 11))}
                       />
                     </FormControl>
                     <FormMessage />

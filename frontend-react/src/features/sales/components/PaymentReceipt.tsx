@@ -114,6 +114,12 @@ const PaymentReceipt: React.FC<PaymentReceiptProps> = ({
               <span>{payment.referenceNumber}</span>
             </div>
           )}
+          {payment.gcashNumber && (
+            <div className="flex justify-between">
+              <span className="text-muted-foreground">GCash No.</span>
+              <span>{payment.gcashNumber}</span>
+            </div>
+          )}
         </div>
 
         <hr className="border-dashed border-border mb-3" />

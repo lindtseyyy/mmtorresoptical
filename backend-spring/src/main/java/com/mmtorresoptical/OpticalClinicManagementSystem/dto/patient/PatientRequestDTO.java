@@ -26,7 +26,7 @@ public class PatientRequestDTO {
     private String sex;
 
     @NotBlank(message = "Contact number is required")
-    @Size(max = 15)
+    @Pattern(regexp = "^09\\d{9}$", message = "Must start with 09 and be exactly 11 digits")
     private String contactNumber;
 
     @NotBlank(message = "Email is required")

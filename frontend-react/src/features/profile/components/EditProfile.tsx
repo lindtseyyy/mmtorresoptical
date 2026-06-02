@@ -280,7 +280,8 @@ const EditProfile: React.FC = () => {
                     <FormItem>
                       <FormLabel>Contact Number *</FormLabel>
                       <FormControl>
-                        <Input type="tel" placeholder="Enter contact number" {...field} />
+                        <Input type="tel" inputMode="numeric" placeholder="09123456789" {...field}
+                          onChange={(e) => field.onChange(e.target.value.replace(/[^0-9]/g, '').slice(0, 11))} />
                       </FormControl>
                       <FormMessage />
                     </FormItem>

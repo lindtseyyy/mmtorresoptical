@@ -17,6 +17,8 @@ public class PaymentRequestDTO {
     @NotNull
     private PaymentMethod paymentMethod;
 
+    private String gcashNumber;
+
     private String referenceNumber;
 
     private String gcashPaymentImg;

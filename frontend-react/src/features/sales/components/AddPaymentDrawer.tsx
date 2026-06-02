@@ -18,7 +18,7 @@ interface AddPaymentDrawerProps {
   transactionNumber: string;
   totalAmount: number;
   balanceDue: number;
-  onComplete: (data: { amount: number; paymentMethod: string; referenceNumber?: string }) => void;
+  onComplete: (data: { amount: number; paymentMethod: string; gcashNumber?: string; referenceNumber?: string }) => void;
   pending: boolean;
 }
 
@@ -34,22 +34,28 @@ const AddPaymentDrawer: React.FC<AddPaymentDrawerProps> = ({
   const [paymentMethod, setPaymentMethod] = useState<"CASH" | "GCASH">("CASH");
   const [amountStr, setAmountStr] = useState("");
   const [referenceNumber, setReferenceNumber] = useState("");
+  const [gcashNumber, setGcashNumber] = useState("");
 
   useEffect(() => {
     if (open) {
       setAmountStr(balanceDue.toFixed(2));
       setReferenceNumber("");
+      setGcashNumber("");
       setPaymentMethod("CASH");
     }
   }, [open, balanceDue]);
 
   const amount = parseFloat(amountStr) || 0;
   const canComplete = amount > 0 && !pending &&
-    (paymentMethod === "GCASH" ? referenceNumber.trim().length > 0 : true);
+    (paymentMethod === "GCASH" ? referenceNumber.trim().length > 0 && /^09\d{9}$/.test(gcashNumber.trim()) : true);
 
   const handleSubmit = () => {
     if (amount <= 0) {
       toast.error("Enter a valid payment amount");
+      return;
+    }
+    if (paymentMethod === "GCASH" && !gcashNumber.trim()) {
+      toast.error("GCash number is required for GCash");
       return;
     }
     if (paymentMethod === "GCASH" && !referenceNumber.trim()) {
@@ -59,7 +65,7 @@ const AddPaymentDrawer: React.FC<AddPaymentDrawerProps> = ({
     onComplete({
       amount,
       paymentMethod,
-      ...(paymentMethod === "GCASH" && { referenceNumber: referenceNumber.trim() }),
+      ...(paymentMethod === "GCASH" && { gcashNumber: gcashNumber.trim(), referenceNumber: referenceNumber.trim() }),
     });
   };
 
@@ -141,9 +147,22 @@ const AddPaymentDrawer: React.FC<AddPaymentDrawerProps> = ({
             </p>
           </div>
 
-          {/* GCash reference */}
+          {/* GCash fields */}
           {paymentMethod === "GCASH" && (
             <div className="space-y-2 rounded-lg border border-border bg-background/50 p-3">
+              <Label className="text-xs text-muted-foreground">GCash Number</Label>
+              <Input
+                type="text"
+                inputMode="numeric"
+                value={gcashNumber}
+                onChange={(e) => setGcashNumber(e.target.value.replace(/[^0-9]/g, '').slice(0, 11))}
+                placeholder="09123456789"
+                disabled={pending}
+                className={gcashNumber && !/^09\d{9}$/.test(gcashNumber.trim()) ? "border-red-500" : ""}
+              />
+              {gcashNumber && !/^09\d{9}$/.test(gcashNumber.trim()) && (
+                <p className="text-xs text-red-500">Must start with 09 and be exactly 11 digits</p>
+              )}
               <Label className="text-xs text-muted-foreground">Reference Number</Label>
               <Input
                 type="text"

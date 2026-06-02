@@ -16,6 +16,7 @@ interface PaymentSectionProps {
 export interface PaymentData {
   paymentMethod: "CASH" | "GCASH";
   amountTendered: number;
+  gcashNumber?: string;
   referenceNumber?: string;
 }
 

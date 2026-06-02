@@ -271,6 +271,9 @@ const ManageSales: React.FC = () => {
         ...(payment.referenceNumber && {
           referenceNumber: payment.referenceNumber,
         }),
+        ...(payment.gcashNumber && {
+          gcashNumber: payment.gcashNumber,
+        }),
       };
 
       transactionMutation.mutate(payload);

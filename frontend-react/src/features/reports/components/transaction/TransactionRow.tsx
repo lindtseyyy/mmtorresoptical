@@ -131,6 +131,9 @@ const TransactionRow: React.FC<TransactionRowProps> = ({ entry }) => {
                     {pmt.referenceNumber && (
                       <span className="text-muted-foreground">Ref: {pmt.referenceNumber}</span>
                     )}
+                    {pmt.gcashNumber && (
+                      <span className="text-muted-foreground">GCash No: {pmt.gcashNumber}</span>
+                    )}
                     <span className="text-muted-foreground">{formatDateTime(pmt.createdAt)}</span>
                   </div>
                 ))}

@@ -37,7 +37,7 @@ public class UpdateUserRequestDTO {
     private String email;
 
     @NotEmpty(message = "Contact number is required")
-    @Size(min = 10, message = "Contact number must be at least 10 digits")
+    @Pattern(regexp = "^09\\d{9}$", message = "Must start with 09 and be exactly 11 digits")
     private String contactNumber;
 
     @NotEmpty(message = "Username is required")

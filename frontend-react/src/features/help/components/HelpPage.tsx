@@ -204,7 +204,7 @@ export default function HelpPage() {
     {
       question: "What payment methods are supported?",
       answer:
-        "The system supports two payment methods: Cash and GCash. Multiple payments can be applied to a single transaction. For GCash payments, a reference number is required. Cash payments may allow change to be given if the tendered amount exceeds the total.",
+        "The system supports two payment methods: Cash and GCash. Multiple payments can be applied to a single transaction. For GCash payments, a GCash mobile number (10–15 characters) and a reference number are required. Cash payments may allow change to be given if the tendered amount exceeds the total.",
     },
     {
       question: "What should I do if the system is running slowly?",

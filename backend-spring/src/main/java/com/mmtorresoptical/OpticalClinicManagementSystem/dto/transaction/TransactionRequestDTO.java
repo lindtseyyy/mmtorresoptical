@@ -22,6 +22,9 @@ public class TransactionRequestDTO {
     // Optional — payment method for the initial payment (only used if amountTendered > 0)
     private PaymentMethod paymentMethod;
 
+    // Optional — GCash mobile number for the initial payment
+    private String gcashNumber;
+
     // Optional — reference number for the initial payment
     private String referenceNumber;
 
