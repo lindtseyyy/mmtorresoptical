@@ -43,24 +43,6 @@ const formatDateTime = (dateStr: string | null) => {
   });
 };
 
-function StatChip({
-  color,
-  label,
-  value,
-}: {
-  color: string;
-  label: string;
-  value?: number;
-}) {
-  return (
-    <div className="flex items-center gap-1.5 text-sm">
-      <span className={`h-2 w-2 rounded-full ${color}`} />
-      <span className="text-muted-foreground">{label}:</span>
-      <span className="font-semibold">{value ?? "—"}</span>
-    </div>
-  );
-}
-
 export default function Dashboard() {
   const navigate = useNavigate();
   const { data: inventorySummary } = useQuery(

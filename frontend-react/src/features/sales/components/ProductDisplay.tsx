@@ -1,5 +1,5 @@
 import { useState, useMemo, useEffect } from "react";
-import { Search, Plus, Package, ImageOff, ArrowUp, ArrowDown, Stethoscope, Glasses } from "lucide-react";
+import { Search, Plus, Package, ImageOff, ArrowUp, ArrowDown } from "lucide-react";
 import { Input } from "@/shared/components/ui/input";
 import { Button } from "@/shared/components/ui/button";
 import { Badge } from "@/shared/components/ui/badge";
