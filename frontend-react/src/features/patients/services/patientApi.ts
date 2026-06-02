@@ -127,7 +127,7 @@ const fetchPatientPrescriptions = async (
   status = "ALL",
 ): Promise<{ content: PrescriptionListItem[]; totalPages: number; totalElements: number }> => {
   const { data } = await api.get(`/admin/patient/${patientId}/prescriptions`, {
-    params: { page, size, sortBy: "issueDate", sortOrder: "desc", status },
+    params: { page, size, sortBy: "createdAt", sortOrder: "desc", status },
   });
   return {
     content: data.content,

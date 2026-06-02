@@ -163,7 +163,7 @@ const FollowUpsPanel: React.FC<FollowUpsPanelProps> = ({ patientId, isActive }) 
               <div className="flex items-center gap-2">
                 <span className="text-sm text-muted-foreground whitespace-nowrap">Follow Up Status:</span>
                 <Select value={fuStatusFilter} onValueChange={(v) => { setFuStatusFilter(v); setFuPage(0); }}>
-                  <SelectTrigger className="w-[110px] h-8">
+                  <SelectTrigger className="w-[140px] h-8">
                     <SelectValue />
                   </SelectTrigger>
                   <SelectContent>
@@ -209,19 +209,19 @@ const FollowUpsPanel: React.FC<FollowUpsPanelProps> = ({ patientId, isActive }) 
                 >
                   <div className="flex items-start justify-between">
                     <div className="flex items-start gap-2 flex-1 min-w-0">
-                      <Badge className={
-                        fu.status === "COMPLETED" ? "bg-green-700 text-white hover:bg-green-700 w-[90px] justify-center shrink-0" :
-                        fu.status === "CANCELLED" ? "bg-red-600 text-white hover:bg-red-600 w-[90px] justify-center shrink-0" :
-                        fu.status === "NO_SHOW" ? "bg-gray-600 text-white hover:bg-gray-600 w-[90px] justify-center shrink-0" :
-                        "bg-amber-600 text-white hover:bg-amber-600 w-[90px] justify-center shrink-0"
-                      }>
-                        {fu.status === "NO_SHOW" ? "No Show" : fu.status.charAt(0) + fu.status.slice(1).toLowerCase()}
-                      </Badge>
                       <div className="min-w-0">
                         <div className="flex items-center gap-2">
                           <span className="font-medium">
                             {formatDate(fu.scheduledDate)}
                           </span>
+                          <Badge className={
+                            fu.status === "COMPLETED" ? "bg-green-700 text-white hover:bg-green-700" :
+                            fu.status === "CANCELLED" ? "bg-red-600 text-white hover:bg-red-600" :
+                            fu.status === "NO_SHOW" ? "bg-gray-600 text-white hover:bg-gray-600" :
+                            "bg-amber-600 text-white hover:bg-amber-600"
+                          }>
+                            {fu.status === "NO_SHOW" ? "No Show" : fu.status.charAt(0) + fu.status.slice(1).toLowerCase()}
+                          </Badge>
                           {fu.isArchived && (
                             <Badge className="bg-gray-600 text-white">Archived</Badge>
                           )}
@@ -381,7 +381,7 @@ const FollowUpsPanel: React.FC<FollowUpsPanelProps> = ({ patientId, isActive }) 
                 <option value="">None</option>
                 {rxList?.map((rx: PrescriptionListItem) => (
                   <option key={rx.prescriptionId} value={rx.prescriptionId}>
-                    {formatDate(rx.issueDate)} {rx.notes ? `— ${rx.notes.substring(0, 40)}` : ""}
+                    {rx.rxNumber} — {formatDate(rx.issueDate)}
                   </option>
                 ))}
               </select>
@@ -396,7 +396,7 @@ const FollowUpsPanel: React.FC<FollowUpsPanelProps> = ({ patientId, isActive }) 
                 <option value="">None</option>
                 {eeList?.map((ee: EyeExamListItem) => (
                   <option key={ee.eyeExamId} value={ee.eyeExamId}>
-                    {formatDateTime(ee.createdAt)} {ee.chiefComplaint ? `— ${ee.chiefComplaint.substring(0, 40)}` : ""}
+                    {ee.examNumber} — {formatDate(ee.createdAt)}
                   </option>
                 ))}
               </select>
