@@ -1,9 +1,24 @@
 import { z } from "zod";
 
 export const profileSchema = z.object({
-  firstName: z.string().min(1, "First name is required").max(50),
-  middleName: z.string().optional(),
-  lastName: z.string().min(1, "Last name is required").max(50),
+  firstName: z
+    .string()
+    .min(1, "First name is required")
+    .max(100)
+    .regex(/^[\p{L}\s.'-]+$/u, "Names can only contain letters, spaces, hyphens, periods, and apostrophes."),
+  middleName: z
+    .string()
+    .max(100)
+    .optional()
+    .refine(
+      (val) => val === undefined || val === "" || /^[\p{L}\s.'-]+$/u.test(val),
+      "Names can only contain letters, spaces, hyphens, periods, and apostrophes."
+    ),
+  lastName: z
+    .string()
+    .min(1, "Last name is required")
+    .max(100)
+    .regex(/^[\p{L}\s.'-]+$/u, "Names can only contain letters, spaces, hyphens, periods, and apostrophes."),
   sex: z.enum(["Male", "Female"]),
   birthDate: z.string().min(1, "Birth date is required"),
   email: z.string().email("Invalid email address"),

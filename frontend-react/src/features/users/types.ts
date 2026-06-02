@@ -4,20 +4,21 @@ export const userSchema = z.object({
   firstName: z
     .string()
     .min(1, "First name is required")
-    .max(50)
-    .refine((val) => !/\d/.test(val), "Name must not contain numbers"),
+    .max(100)
+    .regex(/^[\p{L}\s.'-]+$/u, "Names can only contain letters, spaces, hyphens, periods, and apostrophes."),
   middleName: z
     .string()
+    .max(100)
     .optional()
     .refine(
-      (val) => val === undefined || val === "" || !/\d/.test(val),
-      "Name must not contain numbers"
+      (val) => val === undefined || val === "" || /^[\p{L}\s.'-]+$/u.test(val),
+      "Names can only contain letters, spaces, hyphens, periods, and apostrophes."
     ),
   lastName: z
     .string()
     .min(1, "Last name is required")
-    .max(50)
-    .refine((val) => !/\d/.test(val), "Name must not contain numbers"),
+    .max(100)
+    .regex(/^[\p{L}\s.'-]+$/u, "Names can only contain letters, spaces, hyphens, periods, and apostrophes."),
   sex: z.enum(["Male", "Female"]),
   birthDate: z.string().min(1, "Birth date is required").refine((val) => {
     const birth = new Date(val);

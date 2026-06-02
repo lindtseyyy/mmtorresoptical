@@ -4,25 +4,25 @@ export const patientSchema = z.object({
   firstName: z
     .string()
     .min(1, "First name is required")
-    .max(50)
-    .refine((val) => !/\d/.test(val), "Name must not contain numbers"),
+    .max(100)
+    .regex(/^[\p{L}\s.'-]+$/u, "Names can only contain letters, spaces, hyphens, periods, and apostrophes."),
   middleName: z
     .string()
-    .max(50)
+    .max(100)
     .optional()
     .refine(
-      (val) => val === undefined || val === "" || !/\d/.test(val),
-      "Name must not contain numbers"
+      (val) => val === undefined || val === "" || /^[\p{L}\s.'-]+$/u.test(val),
+      "Names can only contain letters, spaces, hyphens, periods, and apostrophes."
     ),
   lastName: z
     .string()
     .min(1, "Last name is required")
-    .max(50)
-    .refine((val) => !/\d/.test(val), "Name must not contain numbers"),
+    .max(100)
+    .regex(/^[\p{L}\s.'-]+$/u, "Names can only contain letters, spaces, hyphens, periods, and apostrophes."),
   sex: z.enum(["Male", "Female"]),
   birthDate: z.string().min(1, "Birth date is required"),
   email: z.string().email("Invalid email address"),
-  contactNumber: z.string().min(10, "Must be at least 10 digits"),
+  contactNumber: z.string().min(10, "Must be at least 10 digits").max(15, "Contact number must not exceed 15 characters"),
   address: z.string().min(1, "Address is required").max(255),
   medicalHistory: z.string().optional(),
   isArchived: z.boolean().default(false),

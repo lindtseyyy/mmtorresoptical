@@ -14,11 +14,17 @@ import lombok.Data;
 public class CreateUserRequestDTO {
 
     @NotEmpty(message = "First name is required")
+    @Size(max = 100)
+    @Pattern(regexp = "^[\\p{L}\\s.'-]+$", message = "Name contains invalid characters")
     private String firstName;
 
+    @Size(max = 100)
+    @Pattern(regexp = "^[\\p{L}\\s.'-]+$", message = "Name contains invalid characters")
     private String middleName; // Optional
 
     @NotEmpty(message = "Last name is required")
+    @Size(max = 100)
+    @Pattern(regexp = "^[\\p{L}\\s.'-]+$", message = "Name contains invalid characters")
     private String lastName;
 
     @NotEmpty(message = "Sex is required")

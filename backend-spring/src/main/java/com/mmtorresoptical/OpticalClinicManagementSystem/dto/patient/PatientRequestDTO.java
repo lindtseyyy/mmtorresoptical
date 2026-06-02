@@ -9,14 +9,17 @@ import java.time.LocalDate;
 public class PatientRequestDTO {
 
     @NotBlank(message = "First name is required")
-    @Size(max = 50)
+    @Size(max = 100)
+    @Pattern(regexp = "^[\\p{L}\\s.'-]+$", message = "Name contains invalid characters")
     private String firstName;
 
-    @Size(max = 50)
+    @Size(max = 100)
+    @Pattern(regexp = "^[\\p{L}\\s.'-]+$", message = "Name contains invalid characters")
     private String middleName;
 
     @NotBlank(message = "Last name is required")
-    @Size(max = 50)
+    @Size(max = 100)
+    @Pattern(regexp = "^[\\p{L}\\s.'-]+$", message = "Name contains invalid characters")
     private String lastName;
 
     @NotBlank(message = "Sex is required")
