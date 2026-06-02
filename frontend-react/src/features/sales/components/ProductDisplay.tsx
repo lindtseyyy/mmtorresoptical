@@ -4,7 +4,7 @@ import { Input } from "@/shared/components/ui/input";
 import { Button } from "@/shared/components/ui/button";
 import { Badge } from "@/shared/components/ui/badge";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/shared/components/ui/select";
-import { getImageUrl } from "@/shared/lib/utils";
+import { getImageUrl, levenshtein } from "@/shared/lib/utils";
 import type { Product, CategoryDTO } from "@/features/inventory/types";
 import { fetchCategories } from "@/features/inventory/services/productApi";
 
@@ -173,11 +173,13 @@ const ProductDisplay: React.FC<ProductDisplayProps> = ({
   }, [products]);
 
   const filtered = useMemo(() => {
+    const normalizedSearch = search.toLowerCase();
     const result = products.filter((p) => {
       if (p.productType !== productTypeFilter) return false;
       const matchSearch =
         !search ||
-        p.productName.toLowerCase().includes(search.toLowerCase());
+        p.productName.toLowerCase().includes(normalizedSearch) ||
+        levenshtein(p.productName.toLowerCase(), normalizedSearch) <= 3;
       const matchCategory =
         categoryFilter === "all" ||
         categoryFilter === p.categoryId ||
@@ -191,6 +193,16 @@ const ProductDisplay: React.FC<ProductDisplayProps> = ({
       const aOos = a.productType === "PHYSICAL" && a.quantity === 0 ? 1 : 0;
       const bOos = b.productType === "PHYSICAL" && b.quantity === 0 ? 1 : 0;
       if (aOos !== bOos) return aOos - bOos;
+
+      if (search) {
+        const aSubstring = a.productName.toLowerCase().includes(normalizedSearch) ? 0 : 1;
+        const bSubstring = b.productName.toLowerCase().includes(normalizedSearch) ? 0 : 1;
+        if (aSubstring !== bSubstring) return aSubstring - bSubstring;
+        const aDist = levenshtein(a.productName.toLowerCase(), normalizedSearch);
+        const bDist = levenshtein(b.productName.toLowerCase(), normalizedSearch);
+        if (aDist !== bDist) return aDist - bDist;
+      }
+
       let cmp: number;
       switch (effectiveSortBy) {
         case "price":
