@@ -115,8 +115,8 @@ const ProductDisplay: React.FC<ProductDisplayProps> = ({
   const [categories, setCategories] = useState<CategoryDTO[]>([]);
 
   useEffect(() => {
-    fetchCategories().then(setCategories).catch(() => setCategories([]));
-  }, []);
+    fetchCategories(productTypeFilter).then(setCategories).catch(() => setCategories([]));
+  }, [productTypeFilter]);
 
   const isPhysical = productTypeFilter === "PHYSICAL";
   const segmentTotal = isPhysical
@@ -132,11 +132,13 @@ const ProductDisplay: React.FC<ProductDisplayProps> = ({
 
   const categoryCounts = useMemo(() => {
     const counts: Record<string, number> = {};
-    products.forEach((p) => {
-      counts[p.categoryId] = (counts[p.categoryId] ?? 0) + 1;
-    });
+    products
+      .filter((p) => p.productType === productTypeFilter)
+      .forEach((p) => {
+        counts[p.categoryId] = (counts[p.categoryId] ?? 0) + 1;
+      });
     return counts;
-  }, [products]);
+  }, [products, productTypeFilter]);
 
   const { lowStockCount, overstockCount } = useMemo(() => {
     let low = 0;
