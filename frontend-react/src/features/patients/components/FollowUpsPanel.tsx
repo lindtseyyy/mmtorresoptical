@@ -198,7 +198,17 @@ const FollowUpsPanel: React.FC<FollowUpsPanelProps> = ({ patientId, isActive }) 
             <p className="py-4 text-center text-sm text-muted-foreground">Loading follow-ups...</p>
           ) : !followUps || followUps.content.length === 0 ? (
             <p className="py-4 text-center text-sm text-muted-foreground">
-              {fuFilter === "VOIDED" ? "No archived follow-ups." : "No follow-ups scheduled."}
+              {fuFilter === "VOIDED"
+                ? "No archived follow-ups."
+                : fuStatusFilter === "PENDING"
+                  ? "No pending follow-ups."
+                  : fuStatusFilter === "COMPLETED"
+                    ? "No completed follow-ups."
+                    : fuStatusFilter === "NO_SHOW"
+                      ? "No no-show follow-ups."
+                      : fuStatusFilter === "CANCELLED"
+                        ? "No cancelled follow-ups."
+                        : "No follow-ups scheduled."}
             </p>
           ) : (
             <div className="space-y-3">
