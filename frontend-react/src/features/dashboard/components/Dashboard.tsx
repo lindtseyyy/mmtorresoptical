@@ -262,7 +262,7 @@ export default function Dashboard() {
               </colgroup>
               <thead>
                 <tr className="border-b text-muted-foreground">
-                  <th className="text-left font-medium px-5 py-2">Date</th>
+                  <th className="text-left font-medium py-2 pl-4 pr-5">Date</th>
                   <th className="text-left font-medium px-5 py-2">Transaction #</th>
                   <th className="text-right font-medium px-3 py-2">Items</th>
                   <th className="text-right font-medium px-5 py-2">Amount</th>
@@ -270,12 +270,14 @@ export default function Dashboard() {
                 </tr>
               </thead>
               <tbody>
-                {recentTransactions.content.map((tx: TransactionListItem) => (
+                {recentTransactions.content.map((tx: TransactionListItem, index) => (
                   <tr
                     key={tx.transactionId}
-                    className="border-b last:border-b-0 hover:bg-muted/50 transition-colors"
+                    className={`border-b last:border-b-0 hover:bg-muted/50 transition-colors ${
+                      index % 2 === 0 ? "bg-transparent" : "bg-muted"
+                    }`}
                   >
-                    <td className="px-5 py-2.5 text-left text-muted-foreground tabular-nums">
+                    <td className="py-2.5 pl-4 pr-5 text-left text-muted-foreground tabular-nums">
                       {formatDateTime(tx.transactionDate)}
                     </td>
                     <td className="px-5 py-2.5 font-medium">
