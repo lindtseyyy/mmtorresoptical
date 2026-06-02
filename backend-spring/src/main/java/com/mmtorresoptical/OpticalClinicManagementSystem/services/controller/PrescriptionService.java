@@ -19,6 +19,7 @@ import com.mmtorresoptical.OpticalClinicManagementSystem.repository.PatientFollo
 import com.mmtorresoptical.OpticalClinicManagementSystem.services.AuthenticatedUserService;
 import com.mmtorresoptical.OpticalClinicManagementSystem.services.auditlog.resources.PatientFollowUpAuditHelper;
 import com.mmtorresoptical.OpticalClinicManagementSystem.services.auditlog.resources.PrescriptionAuditHelper;
+import com.mmtorresoptical.OpticalClinicManagementSystem.services.helper.VisitManagerService;
 import com.mmtorresoptical.OpticalClinicManagementSystem.specification.PrescriptionSpecification;
 import com.mmtorresoptical.OpticalClinicManagementSystem.utils.UUIDUtils;
 import jakarta.persistence.EntityManager;
@@ -54,6 +55,7 @@ public class PrescriptionService {
     private final PatientFollowUpAuditHelper patientFollowUpAuditHelper;
     private final EyeExamRepository eyeExamRepository;
     private final EntityManager entityManager;
+    private final VisitManagerService visitManagerService;
 
     @Transactional
     public PrescriptionResponseDTO createPrescription(UUID id, CreatePrescriptionRequestDTO prescriptionRequest) {
@@ -164,6 +166,8 @@ public class PrescriptionService {
         }
 
         prescriptionAuditHelper.logCreate(finalSavedPrescription);
+
+        visitManagerService.linkToLatestOrCreateVisit(retrievedPatient, "Prescription");
 
         PrescriptionResponseDTO response = prescriptionMapper.entityToResponseDTO(finalSavedPrescription);
         response.setRecommendations(buildRecommendationResponses(finalSavedPrescription.getPrescriptionId()));

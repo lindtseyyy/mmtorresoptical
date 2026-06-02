@@ -25,6 +25,7 @@ import com.mmtorresoptical.OpticalClinicManagementSystem.services.AuthenticatedU
 import com.mmtorresoptical.OpticalClinicManagementSystem.services.auditlog.AuditLogService;
 import com.mmtorresoptical.OpticalClinicManagementSystem.services.auditlog.resources.TransactionAuditHelper;
 import com.mmtorresoptical.OpticalClinicManagementSystem.services.helper.JSONService;
+import com.mmtorresoptical.OpticalClinicManagementSystem.services.helper.VisitManagerService;
 import com.mmtorresoptical.OpticalClinicManagementSystem.specification.TransactionSpecification;
 import com.mmtorresoptical.OpticalClinicManagementSystem.utils.UUIDUtils;
 import lombok.RequiredArgsConstructor;
@@ -65,6 +66,7 @@ public class TransactionService {
     private final AuditLogService auditLogService;
     private final PasswordEncoder passwordEncoder;
     private final JSONService jsonService;
+    private final VisitManagerService visitManagerService;
 
     @Transactional
     public TransactionResponseDTO createTransaction(TransactionRequestDTO transactionRequestDTO) {
@@ -221,6 +223,10 @@ public class TransactionService {
 
         // Audit Logging
         transactionAuditHelper.logCreate(savedTransaction);
+
+        if (patient != null) {
+            visitManagerService.linkToLatestOrCreateVisit(patient, "Transaction");
+        }
 
         TransactionResponseDTO response = enrichWithPayments(transactionMapper.entityToResponseDTO(savedTransaction));
         BigDecimal change = amountTendered.subtract(amountPaid);

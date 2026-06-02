@@ -7,6 +7,7 @@ export interface PatientFollowUp {
   patientId: string;
   scheduledDate: string;
   actualVisitDate: string | null;
+  actualVisitTimestamp: string | null;
   status: string;
   followUpReason: string | null;
   isArchived: boolean;

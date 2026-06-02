@@ -236,6 +236,11 @@ const FollowUpsPanel: React.FC<FollowUpsPanelProps> = ({ patientId, isActive }) 
                             <Badge className="bg-gray-600 text-white">Archived</Badge>
                           )}
                         </div>
+                        {fu.status === "COMPLETED" && fu.actualVisitTimestamp && (
+                          <p className="text-xs text-muted-foreground">
+                            Visited: {formatDateTime(fu.actualVisitTimestamp)}
+                          </p>
+                        )}
                         {fu.followUpReason ? (
                           <p className="text-sm text-muted-foreground">{fu.followUpReason}</p>
                         ) : (

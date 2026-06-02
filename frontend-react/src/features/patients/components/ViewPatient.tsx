@@ -397,7 +397,7 @@ const ViewPatient: React.FC = () => {
             disabled={logVisitMutation.isPending}
             onClick={() => {
               logVisitMutation.mutate({
-                visitTimestamp: new Date(`${logVisitDate}T${logVisitTime}:00`).toISOString(),
+                visitTimestamp: `${logVisitDate}T${logVisitTime}:00`,
                 purpose: logVisitPurpose || undefined,
                 notes: logVisitNotes || undefined,
                 followUpId: logVisitFollowUp || undefined,

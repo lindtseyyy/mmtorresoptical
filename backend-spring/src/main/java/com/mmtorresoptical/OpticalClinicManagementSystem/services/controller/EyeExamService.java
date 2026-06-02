@@ -14,6 +14,7 @@ import com.mmtorresoptical.OpticalClinicManagementSystem.repository.EyeExamRepos
 import com.mmtorresoptical.OpticalClinicManagementSystem.repository.PatientRepository;
 import com.mmtorresoptical.OpticalClinicManagementSystem.services.AuthenticatedUserService;
 import com.mmtorresoptical.OpticalClinicManagementSystem.services.auditlog.resources.EyeExamAuditHelper;
+import com.mmtorresoptical.OpticalClinicManagementSystem.services.helper.VisitManagerService;
 import com.mmtorresoptical.OpticalClinicManagementSystem.specification.EyeExamSpecification;
 import com.mmtorresoptical.OpticalClinicManagementSystem.utils.UUIDUtils;
 import jakarta.persistence.EntityManager;
@@ -40,6 +41,7 @@ public class EyeExamService {
     private final AuthenticatedUserService authenticatedUserService;
     private final EyeExamAuditHelper eyeExamAuditHelper;
     private final EntityManager entityManager;
+    private final VisitManagerService visitManagerService;
 
     @Transactional
     public EyeExamResponseDTO createEyeExam(UUID patientId, CreateEyeExamRequestDTO requestDTO) {
@@ -68,6 +70,8 @@ public class EyeExamService {
         EyeExam savedExam = eyeExamRepository.saveAndFlush(eyeExam);
 
         eyeExamAuditHelper.logCreate(savedExam);
+
+        visitManagerService.linkToLatestOrCreateVisit(retrievedPatient, "Eye Exam");
 
         return eyeExamMapper.entityToResponseDTO(savedExam);
     }

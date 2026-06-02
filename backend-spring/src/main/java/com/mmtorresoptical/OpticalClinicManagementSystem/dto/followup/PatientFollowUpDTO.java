@@ -14,6 +14,7 @@ public class PatientFollowUpDTO {
     private UUID patientId;
     private LocalDate scheduledDate;
     private LocalDate actualVisitDate;
+    private LocalDateTime actualVisitTimestamp;
     private String status;
     private String followUpReason;
     private Boolean isArchived;

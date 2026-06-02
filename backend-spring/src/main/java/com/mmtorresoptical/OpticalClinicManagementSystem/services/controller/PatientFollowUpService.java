@@ -10,10 +10,12 @@ import com.mmtorresoptical.OpticalClinicManagementSystem.enums.FollowUpStatus;
 import com.mmtorresoptical.OpticalClinicManagementSystem.exception.custom.ResourceNotFoundException;
 import com.mmtorresoptical.OpticalClinicManagementSystem.model.Patient;
 import com.mmtorresoptical.OpticalClinicManagementSystem.model.PatientFollowUp;
+import com.mmtorresoptical.OpticalClinicManagementSystem.model.PatientVisit;
 import com.mmtorresoptical.OpticalClinicManagementSystem.model.Prescription;
 import com.mmtorresoptical.OpticalClinicManagementSystem.model.EyeExam;
 import com.mmtorresoptical.OpticalClinicManagementSystem.repository.PatientFollowUpRepository;
 import com.mmtorresoptical.OpticalClinicManagementSystem.repository.PatientRepository;
+import com.mmtorresoptical.OpticalClinicManagementSystem.repository.PatientVisitRepository;
 import com.mmtorresoptical.OpticalClinicManagementSystem.repository.PrescriptionRepository;
 import com.mmtorresoptical.OpticalClinicManagementSystem.repository.EyeExamRepository;
 import com.mmtorresoptical.OpticalClinicManagementSystem.services.AuthenticatedUserService;
@@ -37,6 +39,7 @@ public class PatientFollowUpService {
     private final PatientRepository patientRepository;
     private final PrescriptionRepository prescriptionRepository;
     private final EyeExamRepository eyeExamRepository;
+    private final PatientVisitRepository patientVisitRepository;
     private final AuthenticatedUserService authenticatedUserService;
     private final PatientFollowUpAuditHelper patientFollowUpAuditHelper;
 
@@ -226,6 +229,11 @@ public class PatientFollowUpService {
         dto.setPatientId(entity.getPatient().getPatientId());
         dto.setScheduledDate(entity.getScheduledDate());
         dto.setActualVisitDate(entity.getActualVisitDate());
+        if (entity.getCompletedByVisitId() != null) {
+            patientVisitRepository.findById(entity.getCompletedByVisitId())
+                    .map(PatientVisit::getVisitTimestamp)
+                    .ifPresent(dto::setActualVisitTimestamp);
+        }
         dto.setStatus(entity.getStatus().name());
         dto.setFollowUpReason(entity.getFollowUpReason());
         dto.setIsArchived(entity.getIsArchived());

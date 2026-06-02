@@ -9,6 +9,7 @@ import org.springframework.data.repository.query.Param;
 
 import java.time.LocalDate;
 import java.util.List;
+import java.util.Optional;
 import java.util.UUID;
 
 public interface PatientFollowUpRepository
@@ -32,4 +33,7 @@ public interface PatientFollowUpRepository
 
     @Query("SELECT f FROM PatientFollowUp f WHERE f.status = 'PENDING' AND f.scheduledDate < :cutoffDate AND f.isArchived = false")
     List<PatientFollowUp> findStalePendingFollowUps(@Param("cutoffDate") LocalDate cutoffDate);
+
+    Optional<PatientFollowUp> findByPatientPatientIdAndScheduledDateAndStatus(
+        UUID patientId, LocalDate scheduledDate, FollowUpStatus status);
 }
