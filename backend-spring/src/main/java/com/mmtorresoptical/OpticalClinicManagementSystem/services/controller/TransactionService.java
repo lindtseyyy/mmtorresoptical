@@ -596,10 +596,6 @@ public class TransactionService {
             throw new IllegalStateException("Cannot void a transaction where items have been marked as ready for pickup. Please process a refund instead.");
         }
 
-        if (transaction.getTransactionStatus() == TransactionStatus.REFUNDED) {
-            throw new IllegalStateException("Cannot void a fully refunded transaction");
-        }
-
         if (transaction.getRefundStatus() == RefundStatus.FULL) {
             throw new IllegalStateException("Cannot void a fully refunded transaction");
         }
@@ -658,9 +654,8 @@ public class TransactionService {
 
             refundItems.add(item);
 
-            if (transaction.getTransactionStatus() == TransactionStatus.VOIDED
-                    || transaction.getTransactionStatus() == TransactionStatus.REFUNDED) {
-                throw new IllegalStateException("Cannot refund a voided or fully refunded transaction.");
+            if (transaction.getTransactionStatus() == TransactionStatus.VOIDED) {
+                throw new IllegalStateException("Cannot refund a voided transaction.");
             }
 
             if (transaction.getRefundStatus() == RefundStatus.FULL) {
@@ -784,7 +779,6 @@ public class TransactionService {
 
         if (allItemsFullyRefunded) {
             transaction.setRefundStatus(RefundStatus.FULL);
-            transaction.setTransactionStatus(TransactionStatus.REFUNDED);
             transaction.setFulfillmentStatus(FulfillmentStatus.COMPLETED);
         } else {
             transaction.setRefundStatus(RefundStatus.PARTIAL);

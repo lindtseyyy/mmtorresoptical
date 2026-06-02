@@ -23,8 +23,7 @@ public class JSONService {
     private static final Map<String, String> TRANSACTION_STATUS_LABELS = Map.of(
             "DEPOSIT", "Partial Deposit Owed",
             "PAID", "Paid",
-            "VOIDED", "Voided",
-            "REFUNDED", "Refunded"
+            "VOIDED", "Voided"
     );
 
     private static final Map<String, String> FULFILLMENT_STATUS_LABELS = Map.of(

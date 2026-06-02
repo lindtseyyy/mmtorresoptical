@@ -23,7 +23,7 @@ public class TransactionPdfAggregationService {
     private final TransactionService transactionService;
 
     private static final List<String> STATUS_ORDER = List.of(
-        "DEPOSIT", "PAID", "VOIDED", "REFUNDED"
+        "DEPOSIT", "PAID", "VOIDED"
     );
 
     public TransactionHierarchicalReportDataset buildTransactionReport(

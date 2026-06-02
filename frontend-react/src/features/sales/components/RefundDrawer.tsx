@@ -91,6 +91,16 @@ const RefundDrawer: React.FC<Props> = ({
     [items, reasons]
   );
 
+  const gcashValid = useMemo(() => {
+    if (refundMethod !== "GCASH") return true;
+    return gcashNumber.trim().length >= 10 && gcashNumber.trim().length <= 15;
+  }, [refundMethod, gcashNumber]);
+
+  const referenceValid = useMemo(() => {
+    if (refundMethod !== "GCASH") return true;
+    return referenceNumber.trim().length > 0;
+  }, [refundMethod, referenceNumber]);
+
   // Full-value subtotals before payment scaling
   const fullSubtotals = useMemo(() => {
     const result: Record<string, number> = {};
@@ -358,24 +368,34 @@ const RefundDrawer: React.FC<Props> = ({
         {(!accountingPreview || accountingPreview.cashToReturn > 0) && refundMethod === "GCASH" && (
           <div className="mt-3 space-y-3">
             <div>
-              <label className="text-sm font-medium">GCash Number</label>
+              <label className="text-sm font-medium">GCash Number *</label>
               <input
                 type="text"
-                className="w-full rounded-md border border-gray-300 bg-background px-3 py-2 text-sm ring-offset-background mt-1 focus:border-gray-400 focus:outline-none"
+                className={`w-full rounded-md border bg-background px-3 py-2 text-sm ring-offset-background mt-1 focus:border-gray-400 focus:outline-none ${
+                  gcashNumber && !gcashValid ? "border-red-500" : "border-gray-300"
+                }`}
                 placeholder="Enter GCash number (e.g. 09XX-XXX-XXXX)"
                 value={gcashNumber}
                 onChange={(e) => setGcashNumber(e.target.value)}
               />
+              {gcashNumber && !gcashValid && (
+                <p className="text-xs text-red-500 mt-1">Must be at least 10 digits and at most 15 characters</p>
+              )}
             </div>
             <div>
-              <label className="text-sm font-medium">Reference Number</label>
+              <label className="text-sm font-medium">Reference Number *</label>
               <input
                 type="text"
-                className="w-full rounded-md border border-gray-300 bg-background px-3 py-2 text-sm ring-offset-background mt-1 focus:border-gray-400 focus:outline-none"
-                placeholder="Enter reference number (optional)"
+                className={`w-full rounded-md border bg-background px-3 py-2 text-sm ring-offset-background mt-1 focus:border-gray-400 focus:outline-none ${
+                  referenceNumber && !referenceValid ? "border-red-500" : "border-gray-300"
+                }`}
+                placeholder="Enter reference number"
                 value={referenceNumber}
                 onChange={(e) => setReferenceNumber(e.target.value)}
               />
+              {referenceNumber && !referenceValid && (
+                <p className="text-xs text-red-500 mt-1">Reference number is required</p>
+              )}
             </div>
           </div>
         )}
@@ -401,7 +421,7 @@ const RefundDrawer: React.FC<Props> = ({
             className={`w-full ${accountingPreview && accountingPreview.cashToReturn > 0
               ? "bg-red-600 hover:bg-red-700 text-white"
               : "bg-indigo-600 hover:bg-indigo-700 text-white"}`}
-            disabled={!allReasonsFilled || isPending}
+            disabled={!allReasonsFilled || !gcashValid || !referenceValid || isPending}
             onClick={openConfirmModal}
           >
             {isPending ? (

@@ -301,7 +301,6 @@ const ViewTransaction: React.FC = () => {
   const canRefund =
     tx &&
     tx.transactionStatus !== "VOIDED" &&
-    tx.transactionStatus !== "REFUNDED" &&
     tx.refundStatus !== "FULL" &&
     tx.transactionItems.some((i) => (i.refundedQuantity ?? 0) < i.quantity);
 
@@ -343,7 +342,7 @@ const ViewTransaction: React.FC = () => {
                 <StatusBadge status={tx.transactionStatus} />
                 <StatusBadge status={tx.fulfillmentStatus} />
                 {tx.refundStatus !== "NONE" && (
-                  <StatusBadge status={tx.refundStatus} />
+                  <StatusBadge status={tx.refundStatus} displayText={tx.refundStatus === "FULL" ? "Fully Refunded" : "Partially Refunded"} />
                 )}
               </div>
               <p className="text-muted-foreground">Transaction details</p>

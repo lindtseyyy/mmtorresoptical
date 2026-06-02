@@ -256,7 +256,13 @@ const ProductDisplay: React.FC<ProductDisplayProps> = ({
           >
             All ({segmentTotal})
           </Badge>
-          {categories.map((cat) => (
+          {[...categories]
+            .sort((a, b) => {
+              const aCount = categoryCounts[a.categoryId] ?? 0;
+              const bCount = categoryCounts[b.categoryId] ?? 0;
+              return bCount - aCount;
+            })
+            .map((cat) => (
             <Badge
               key={cat.categoryId}
               variant={categoryFilter === cat.categoryId ? "default" : "outline"}

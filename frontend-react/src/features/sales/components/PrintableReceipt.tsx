@@ -241,7 +241,6 @@ const paymentStatusColor = (status: string) => {
     case "DEPOSIT": return "bg-orange-600";
     case "PAID": return "bg-green-600";
     case "VOIDED": return "bg-red-700";
-    case "REFUNDED": return "bg-gray-700";
     default: return "bg-gray-500";
   }
 };
