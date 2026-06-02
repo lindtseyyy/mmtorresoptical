@@ -244,12 +244,12 @@ const ManageInventory: React.FC = () => {
                     </tr>
                   </thead>
                   <tbody>
-                    {products?.map((product) => {
+                    {products?.map((product, index) => {
                       const stockStatus = getStockStatus(product);
                       return (
                         <tr
                           key={product.productId}
-                          className="border-b transition-colors hover:bg-muted"
+                          className={`border-b transition-colors hover:bg-muted/30 ${index % 2 === 0 ? "bg-transparent" : "bg-muted"}`}
                         >
                           <td className="py-3 pr-4">
                             <span className="inline-flex items-center gap-2 font-medium">
