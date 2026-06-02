@@ -165,7 +165,7 @@ const ManagePatients: React.FC = () => {
                 <table className="w-full table-fixed text-sm">
                   <thead>
                     <tr className="border-b text-left text-muted-foreground">
-                      <th className="w-[26%] py-3 pr-4 font-medium">Full Name</th>
+                      <th className="w-[26%] py-3 pl-4 pr-4 font-medium">Full Name</th>
                       <th className="w-[26%] py-3 pr-4 font-medium">Email</th>
                       <th className="w-[10%] py-3 pr-4 text-left font-medium">Gender</th>
                       <th className="w-[16%] py-3 pr-4 text-left font-medium">Contact Number</th>
@@ -174,12 +174,12 @@ const ManagePatients: React.FC = () => {
                     </tr>
                   </thead>
                   <tbody>
-                    {patients.map((patient) => (
+                    {patients.map((patient, index) => (
                       <tr
                         key={patient.patientId}
-                        className="border-b transition-colors hover:bg-muted"
+                        className={`border-b transition-colors hover:bg-muted/30 ${index % 2 === 0 ? "bg-transparent" : "bg-muted"}`}
                       >
-                        <td className="py-3 pr-4">
+                        <td className="py-3 pl-4 pr-4">
                           <span className="block truncate font-medium">
                             {fullName(patient)}
                           </span>
