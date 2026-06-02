@@ -361,7 +361,8 @@ function generateTransactionPdf(
   const deductionValue = voided.totalValue + refunded.totalValue;
   const totalTransactions = grossCount + voided.count;
   const netActiveTransactions = grossCount;
-  const netRevenue = grossValue - deductionValue;
+  // Cash-basis: Net Revenue = Gross − Refunded (Voided excluded — those funds were never collected)
+  const netRevenue = grossValue - refunded.totalValue;
 
   const summaryBody = [
     [

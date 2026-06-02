@@ -88,7 +88,7 @@ const AggregatedFinancialSummary: React.FC<AggregatedFinancialSummaryProps> = ({
   const grossCount = paid.count + partiallyPaid.count;
   const grossValue = paid.totalValue + partiallyPaid.totalValue;
 
-  // Deduction subtotals
+  // Deduction subtotals (for visual display only)
   const deductionCount =
     voided.count + refunded.count;
   const deductionValue =
@@ -98,7 +98,8 @@ const AggregatedFinancialSummary: React.FC<AggregatedFinancialSummaryProps> = ({
   // Bottom metrics
   const totalTransactions = grossCount + voided.count;
   const netActiveTransactions = grossCount;
-  const netRevenue = grossValue - deductionValue;
+  // Cash-basis: Net Revenue = Gross − Refunded (Voided excluded — those funds were never collected)
+  const netRevenue = grossValue - refunded.totalValue;
 
   return (
     <Card>

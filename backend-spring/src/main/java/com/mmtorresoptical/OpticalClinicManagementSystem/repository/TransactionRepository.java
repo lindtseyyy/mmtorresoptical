@@ -69,6 +69,28 @@ public interface TransactionRepository extends JpaRepository<Transaction, UUID>,
     @Query("SELECT COALESCE(SUM(t.totalAmount), 0) FROM Transaction t WHERE t.transactionStatus <> :excludedStatus AND t.transactionDate >= :start AND t.transactionDate < :end")
     BigDecimal sumTotalAmountByTransactionDateBetweenExcludingStatus(LocalDateTime start, LocalDateTime end, TransactionStatus excludedStatus);
 
+    @Query("SELECT COALESCE(SUM(t.totalAmount), 0) FROM Transaction t WHERE t.transactionStatus = :status AND t.transactionDate >= :start AND t.transactionDate < :end")
+    BigDecimal sumTotalAmountByTransactionStatusAndDateBetween(@Param("status") TransactionStatus status, @Param("start") LocalDateTime start, @Param("end") LocalDateTime end);
+
+    @Query("SELECT COALESCE(SUM(t.amountPaid), 0) FROM Transaction t WHERE t.transactionStatus = :status AND t.transactionDate >= :start AND t.transactionDate < :end")
+    BigDecimal sumAmountPaidByTransactionStatusAndDateBetween(@Param("status") TransactionStatus status, @Param("start") LocalDateTime start, @Param("end") LocalDateTime end);
+
+    @Query("SELECT FUNCTION('DATE', t.transactionDate) as day, COALESCE(SUM(t.totalAmount), 0) " +
+           "FROM Transaction t " +
+           "WHERE t.transactionStatus = :status " +
+           "AND t.transactionDate >= :start AND t.transactionDate < :end " +
+           "GROUP BY FUNCTION('DATE', t.transactionDate) " +
+           "ORDER BY FUNCTION('DATE', t.transactionDate)")
+    List<Object[]> sumTotalAmountByStatusGroupedByDay(@Param("status") TransactionStatus status, @Param("start") LocalDateTime start, @Param("end") LocalDateTime end);
+
+    @Query("SELECT FUNCTION('DATE', t.transactionDate) as day, COALESCE(SUM(t.amountPaid), 0) " +
+           "FROM Transaction t " +
+           "WHERE t.transactionStatus = :status " +
+           "AND t.transactionDate >= :start AND t.transactionDate < :end " +
+           "GROUP BY FUNCTION('DATE', t.transactionDate) " +
+           "ORDER BY FUNCTION('DATE', t.transactionDate)")
+    List<Object[]> sumAmountPaidByStatusGroupedByDay(@Param("status") TransactionStatus status, @Param("start") LocalDateTime start, @Param("end") LocalDateTime end);
+
     @Query("SELECT COUNT(t) FROM Transaction t WHERE t.transactionStatus <> :status")
     long countByTransactionStatusNot(TransactionStatus status);
 

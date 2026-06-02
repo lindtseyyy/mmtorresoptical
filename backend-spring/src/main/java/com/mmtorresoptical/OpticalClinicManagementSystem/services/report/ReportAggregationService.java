@@ -197,25 +197,22 @@ public class ReportAggregationService {
 
         BigDecimal totalAmount = t.getTotalAmount() != null ? t.getTotalAmount() : BigDecimal.ZERO;
 
+        // Cash-basis: PAID uses totalAmount, DEPOSIT uses amountPaid, VOIDED contributes nothing
         BigDecimal base = switch (paymentStatus) {
             case PAID -> totalAmount;
             case DEPOSIT -> t.getAmountPaid() != null ? t.getAmountPaid() : BigDecimal.ZERO;
-            case VOIDED -> totalAmount.negate();
+            case VOIDED -> BigDecimal.ZERO;
             default -> BigDecimal.ZERO;
         };
 
-        // Subtract refunds if any were issued
+        // Subtract actual cash returned (not item credit amounts)
         RefundStatus refundStatus = t.getRefundStatus();
         if (refundStatus == RefundStatus.PARTIAL || refundStatus == RefundStatus.FULL) {
             BigDecimal refundSum = BigDecimal.ZERO;
             if (t.getRefundReceipts() != null) {
                 for (RefundReceipt receipt : t.getRefundReceipts()) {
-                    if (receipt.getRefundItems() != null) {
-                        for (RefundItem refundItem : receipt.getRefundItems()) {
-                            if (refundItem.getItemCreditAmount() != null) {
-                                refundSum = refundSum.add(refundItem.getItemCreditAmount());
-                            }
-                        }
+                    if (receipt.getActualCashback() != null) {
+                        refundSum = refundSum.add(receipt.getActualCashback());
                     }
                 }
             }

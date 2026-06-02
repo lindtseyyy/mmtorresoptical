@@ -471,7 +471,12 @@ public class TransactionService {
 
         long totalTransactions = transactionRepository.countByTransactionStatusNot(TransactionStatus.VOIDED);
 
-        BigDecimal grossRevenue = transactionRepository.sumTotalAmountExcludingStatus(TransactionStatus.VOIDED);
+        // All-time gross revenue (cash-basis): PAID totalAmount + DEPOSIT amountPaid
+        BigDecimal allTimePaidRevenue = transactionRepository.sumTotalAmountByTransactionStatusAndDateBetween(
+                TransactionStatus.PAID, LocalDateTime.of(2000, 1, 1, 0, 0), LocalDateTime.now().plusDays(1));
+        BigDecimal allTimeDepositRevenue = transactionRepository.sumAmountPaidByTransactionStatusAndDateBetween(
+                TransactionStatus.DEPOSIT, LocalDateTime.of(2000, 1, 1, 0, 0), LocalDateTime.now().plusDays(1));
+        BigDecimal grossRevenue = allTimePaidRevenue.add(allTimeDepositRevenue);
         BigDecimal totalRefundedAmount = refundReceiptRepository.sumTotalRefundAmount();
         BigDecimal totalRevenue = grossRevenue.subtract(totalRefundedAmount);
 
@@ -480,7 +485,12 @@ public class TransactionService {
 
         long todayTransactions = transactionRepository.countByTransactionStatusNotAndTransactionDateBetween(TransactionStatus.VOIDED, startOfToday, startOfTomorrow);
 
-        BigDecimal todayGrossRevenue = transactionRepository.sumTotalAmountByTransactionDateBetweenExcludingStatus(startOfToday, startOfTomorrow, TransactionStatus.VOIDED);
+        // Today's gross revenue (cash-basis): PAID totalAmount + DEPOSIT amountPaid
+        BigDecimal todayPaidRevenue = transactionRepository.sumTotalAmountByTransactionStatusAndDateBetween(
+                TransactionStatus.PAID, startOfToday, startOfTomorrow);
+        BigDecimal todayDepositRevenue = transactionRepository.sumAmountPaidByTransactionStatusAndDateBetween(
+                TransactionStatus.DEPOSIT, startOfToday, startOfTomorrow);
+        BigDecimal todayGrossRevenue = todayPaidRevenue.add(todayDepositRevenue);
         BigDecimal todayTotalRefundedAmount = refundReceiptRepository.sumRefundAmountByCreatedAtBetween(startOfToday, startOfTomorrow);
         BigDecimal todayRevenue = todayGrossRevenue.subtract(todayTotalRefundedAmount);
 
@@ -494,7 +504,12 @@ public class TransactionService {
 
         long totalTransactionsThisMonth = transactionRepository.countByTransactionStatusNotAndTransactionDateBetween(TransactionStatus.VOIDED, startOfMonth, startOfNextMonth);
 
-        BigDecimal monthlyGrossRevenue = transactionRepository.sumTotalAmountByTransactionDateBetweenExcludingStatus(startOfMonth, startOfNextMonth, TransactionStatus.VOIDED);
+        // Monthly gross revenue (cash-basis): PAID totalAmount + DEPOSIT amountPaid
+        BigDecimal monthlyPaidRevenue = transactionRepository.sumTotalAmountByTransactionStatusAndDateBetween(
+                TransactionStatus.PAID, startOfMonth, startOfNextMonth);
+        BigDecimal monthlyDepositRevenue = transactionRepository.sumAmountPaidByTransactionStatusAndDateBetween(
+                TransactionStatus.DEPOSIT, startOfMonth, startOfNextMonth);
+        BigDecimal monthlyGrossRevenue = monthlyPaidRevenue.add(monthlyDepositRevenue);
 
         BigDecimal totalRefundedAmountThisMonth = refundReceiptRepository.sumRefundAmountByCreatedAtBetween(startOfMonth, startOfNextMonth);
         BigDecimal monthlyNetRevenue = monthlyGrossRevenue.subtract(totalRefundedAmountThisMonth);
@@ -530,8 +545,11 @@ public class TransactionService {
         LocalDateTime startOfMonth = thisMonth.atDay(1).atStartOfDay();
         LocalDateTime startOfNextMonth = thisMonth.plusMonths(1).atDay(1).atStartOfDay();
 
-        List<Object[]> grossRows = transactionRepository.sumGrossRevenueGroupedByDay(
-                startOfMonth, startOfNextMonth, TransactionStatus.VOIDED);
+        // Cash-basis: PAID totalAmount + DEPOSIT amountPaid
+        List<Object[]> paidRows = transactionRepository.sumTotalAmountByStatusGroupedByDay(
+                TransactionStatus.PAID, startOfMonth, startOfNextMonth);
+        List<Object[]> depositRows = transactionRepository.sumAmountPaidByStatusGroupedByDay(
+                TransactionStatus.DEPOSIT, startOfMonth, startOfNextMonth);
         List<Object[]> refundRows = refundReceiptRepository.sumRefundsGroupedByDay(
                 startOfMonth, startOfNextMonth);
 
@@ -541,11 +559,18 @@ public class TransactionService {
             dailyMap.put(d, BigDecimal.ZERO);
         }
 
-        for (Object[] row : grossRows) {
+        for (Object[] row : paidRows) {
             java.sql.Date sqlDate = (java.sql.Date) row[0];
             int day = sqlDate.toLocalDate().getDayOfMonth();
             BigDecimal gross = (BigDecimal) row[1];
             dailyMap.merge(day, gross, BigDecimal::add);
+        }
+
+        for (Object[] row : depositRows) {
+            java.sql.Date sqlDate = (java.sql.Date) row[0];
+            int day = sqlDate.toLocalDate().getDayOfMonth();
+            BigDecimal deposit = (BigDecimal) row[1];
+            dailyMap.merge(day, deposit, BigDecimal::add);
         }
 
         for (Object[] row : refundRows) {
