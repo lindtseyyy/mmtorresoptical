@@ -77,6 +77,8 @@ const ViewTransaction: React.FC = () => {
       queryClient.invalidateQueries({ queryKey: ["transactions"] });
       queryClient.invalidateQueries({ queryKey: ["products"] });
       queryClient.invalidateQueries({ queryKey: ["inventory-summary"] });
+      queryClient.invalidateQueries({ queryKey: ["daily-cash-inflow"] });
+      queryClient.invalidateQueries({ queryKey: ["transaction-metrics"] });
       toast.success("Refund processed successfully.");
       // Store the response for receipt display
       setLastRefundResponse(data);
@@ -94,6 +96,8 @@ const ViewTransaction: React.FC = () => {
       queryClient.invalidateQueries({ queryKey: ["transactions"] });
       queryClient.invalidateQueries({ queryKey: ["products"] });
       queryClient.invalidateQueries({ queryKey: ["inventory-summary"] });
+      queryClient.invalidateQueries({ queryKey: ["daily-cash-inflow"] });
+      queryClient.invalidateQueries({ queryKey: ["transaction-metrics"] });
       toast.success("Transaction voided successfully.");
       setVoidDialogOpen(false);
       setVoidReason("");
