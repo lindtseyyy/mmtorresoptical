@@ -97,13 +97,13 @@ public interface TransactionRepository extends JpaRepository<Transaction, UUID>,
     @Query("SELECT COUNT(t) FROM Transaction t WHERE t.transactionStatus <> :status AND t.transactionDate >= :start AND t.transactionDate < :end")
     long countByTransactionStatusNotAndTransactionDateBetween(TransactionStatus status, LocalDateTime start, LocalDateTime end);
 
-    @Query("SELECT COALESCE(SUM(t.totalAmount), 0) FROM Transaction t WHERE t.transactionStatus = 'VOIDED' AND t.transactionDate >= :start AND t.transactionDate < :end")
+    @Query("SELECT COALESCE(SUM(t.totalAmount), 0) FROM Transaction t WHERE t.transactionStatus = com.mmtorresoptical.OpticalClinicManagementSystem.enums.TransactionStatus.VOIDED AND t.transactionDate >= :start AND t.transactionDate < :end")
     BigDecimal sumVoidedAmountByTransactionDateBetween(LocalDateTime start, LocalDateTime end);
 
-    @Query("SELECT COALESCE(SUM(t.balanceDue), 0) FROM Transaction t WHERE t.transactionStatus = 'DEPOSIT'")
+    @Query("SELECT COALESCE(SUM(t.totalAmount - t.amountPaid + COALESCE(t.totalRefundedCash, 0)), 0) FROM Transaction t WHERE t.transactionStatus = com.mmtorresoptical.OpticalClinicManagementSystem.enums.TransactionStatus.DEPOSIT")
     BigDecimal sumBalanceDueByTransactionStatusPartiallyPaid();
 
-    @Query("SELECT t FROM Transaction t LEFT JOIN FETCH t.patient WHERE t.transactionStatus = 'DEPOSIT' AND t.balanceDue > 0 AND t.transactionDate < :cutoffDate ORDER BY t.transactionDate ASC")
+    @Query("SELECT t FROM Transaction t LEFT JOIN FETCH t.patient WHERE t.transactionStatus = com.mmtorresoptical.OpticalClinicManagementSystem.enums.TransactionStatus.DEPOSIT AND (t.totalAmount - t.amountPaid + COALESCE(t.totalRefundedCash, 0)) > 0 AND t.transactionDate < :cutoffDate ORDER BY t.transactionDate ASC")
     List<Transaction> findAgingAccountsReceivable(LocalDateTime cutoffDate);
 
     @Query("SELECT MIN(t.transactionDate) FROM Transaction t")
