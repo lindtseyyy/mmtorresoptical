@@ -238,11 +238,11 @@ const InventoryMaintenance: React.FC = () => {
                   <thead>
                     <tr className="border-b text-left text-muted-foreground">
                       <th className="w-[30%] py-3 pl-4 pr-4 font-medium">Product Name</th>
-                      <th className="w-[18%] py-3 pr-4 font-medium">Category</th>
-                      <th className="w-[12%] py-3 pr-4 text-right font-medium">Quantity</th>
-                      <th className="w-[12%] py-3 pr-4 text-right font-medium">Unit Price</th>
-                      <th className="w-[18%] py-3 pr-4 text-center font-medium">Status</th>
-                      <th className="w-[10%] py-3 pr-4 text-center font-medium">Action</th>
+                      <th className="w-[18%] py-3 pl-4 pr-4 font-medium">Category</th>
+                      <th className="w-[12%] py-3 pl-4 pr-4 text-right font-medium">Quantity</th>
+                      <th className="w-[12%] py-3 pl-4 pr-4 text-right font-medium">Unit Price</th>
+                      <th className="w-[18%] py-3 pl-4 pr-4 text-center font-medium">Status</th>
+                      <th className="w-[10%] py-3 pl-4 pr-4 text-center font-medium">Action</th>
                     </tr>
                   </thead>
                   <tbody>
