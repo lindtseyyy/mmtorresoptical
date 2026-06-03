@@ -35,5 +35,10 @@ public class TransactionAuditDTO {
     private LocalDateTime completedAt;
     private LocalDate estimatedReadyDate;
 
+    private String seniorPwdName;
+    private String seniorPwdAddress;
+    private String seniorPwdIdNumber;
+    private Boolean isSeniorPwdApplied;
+
     private List<TransactionItemAuditDTO> transactionItemAuditDTOList;
 }

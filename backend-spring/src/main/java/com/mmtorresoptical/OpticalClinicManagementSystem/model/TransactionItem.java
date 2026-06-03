@@ -47,6 +47,9 @@ public class TransactionItem {
     @Column(name = "refund_reason", columnDefinition = "TEXT")
     private String refundReason;
 
+    @Column(name = "senior_pwd_discount_amount", nullable = false, precision = 10, scale = 2)
+    private BigDecimal seniorPwdDiscountAmount = BigDecimal.ZERO;
+
     //Relationships
     // MANY items → ONE transaction
     @ManyToOne(fetch = FetchType.LAZY)

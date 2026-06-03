@@ -75,6 +75,19 @@ public class Transaction {
 
     @Column(name = "estimated_ready_date")
     private LocalDate estimatedReadyDate;
+
+    @Column(name = "senior_pwd_name", length = 255)
+    private String seniorPwdName;
+
+    @Column(name = "senior_pwd_address", columnDefinition = "TEXT")
+    private String seniorPwdAddress;
+
+    @Column(name = "senior_pwd_id_number", length = 100)
+    private String seniorPwdIdNumber;
+
+    @Column(name = "is_senior_pwd_applied", nullable = false)
+    private Boolean isSeniorPwdApplied = false;
+
     // Foreign Key — user (user_id)
     @ManyToOne
     @JoinColumn(name = "voided_by_user_id")

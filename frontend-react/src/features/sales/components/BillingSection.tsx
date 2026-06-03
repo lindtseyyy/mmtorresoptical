@@ -1,5 +1,5 @@
 import { useState, useRef, useEffect } from "react";
-import { Minus, Plus, Trash2, Tag, Receipt, X, CreditCard } from "lucide-react";
+import { Minus, Plus, Trash2, Tag, Receipt, X, CreditCard, ChevronDown, ChevronUp } from "lucide-react";
 import { toast } from "sonner";
 import { Button } from "@/shared/components/ui/button";
 import { Badge } from "@/shared/components/ui/badge";
@@ -17,6 +17,14 @@ interface BillingSectionProps {
   ) => void;
   onRemoveDiscount: (uid: string) => void;
   onPay: () => void;
+  seniorPwdEnabled: boolean;
+  onToggleSeniorPwd: (enabled: boolean) => void;
+  seniorPwdName: string;
+  onSeniorPwdNameChange: (name: string) => void;
+  seniorPwdAddress: string;
+  onSeniorPwdAddressChange: (address: string) => void;
+  seniorPwdIdNumber: string;
+  onSeniorPwdIdNumberChange: (id: string) => void;
 }
 
 const BillingSection: React.FC<BillingSectionProps> = ({
@@ -26,11 +34,21 @@ const BillingSection: React.FC<BillingSectionProps> = ({
   onApplyDiscount,
   onRemoveDiscount,
   onPay,
+  seniorPwdEnabled,
+  onToggleSeniorPwd,
+  seniorPwdName,
+  onSeniorPwdNameChange,
+  seniorPwdAddress,
+  onSeniorPwdAddressChange,
+  seniorPwdIdNumber,
+  onSeniorPwdIdNumberChange,
 }) => {
   const subtotal = items.reduce(
     (sum, item) => sum + item.product.unitPrice * item.quantity,
     0
   );
+
+  const [seniorPwdExpanded, setSeniorPwdExpanded] = useState(false);
 
   const discount = items.reduce((sum, item) => {
     if (!item.isDiscounted || !item.discountType || !item.discountValue)
@@ -57,6 +75,75 @@ const BillingSection: React.FC<BillingSectionProps> = ({
 
   return (
     <div className="flex flex-col flex-1 min-h-0">
+      {/* Senior/PWD Discount Toggle */}
+      <div className="mb-3 rounded-lg border border-border bg-muted/30 p-3">
+        <div className="flex items-center gap-2">
+          <label className="flex items-center gap-2 cursor-pointer flex-1 min-w-0">
+            <input
+              type="checkbox"
+              checked={seniorPwdEnabled}
+              onChange={(e) => {
+                const checked = e.target.checked;
+                onToggleSeniorPwd(checked);
+                if (checked) setSeniorPwdExpanded(true);
+              }}
+              className="h-4 w-4 rounded border-border"
+            />
+            <span className="text-sm font-medium text-card-foreground">
+              Apply Senior / PWD Discount
+            </span>
+          </label>
+          {seniorPwdEnabled && (
+            <button
+              type="button"
+              onClick={() => setSeniorPwdExpanded((p) => !p)}
+              className="shrink-0 text-muted-foreground hover:text-foreground cursor-pointer"
+            >
+              {seniorPwdExpanded ? (
+                <ChevronUp className="h-4 w-4" />
+              ) : (
+                <ChevronDown className="h-4 w-4" />
+              )}
+            </button>
+          )}
+        </div>
+
+        {seniorPwdEnabled && seniorPwdExpanded && (
+          <div className="mt-3 space-y-2">
+            <div>
+              <label className="text-xs font-medium text-muted-foreground">Full Name</label>
+              <Input
+                type="text"
+                value={seniorPwdName}
+                onChange={(e) => onSeniorPwdNameChange(e.target.value)}
+                placeholder="As printed on Senior/PWD ID"
+                className="mt-1 h-8 text-sm"
+              />
+            </div>
+            <div>
+              <label className="text-xs font-medium text-muted-foreground">Home Address</label>
+              <Input
+                type="text"
+                value={seniorPwdAddress}
+                onChange={(e) => onSeniorPwdAddressChange(e.target.value)}
+                placeholder="Home Address"
+                className="mt-1 h-8 text-sm"
+              />
+            </div>
+            <div>
+              <label className="text-xs font-medium text-muted-foreground">Senior / PWD ID Number</label>
+              <Input
+                type="text"
+                value={seniorPwdIdNumber}
+                onChange={(e) => onSeniorPwdIdNumberChange(e.target.value)}
+                placeholder="ID Number"
+                className="mt-1 h-8 text-sm"
+              />
+            </div>
+          </div>
+        )}
+      </div>
+
       <div className="flex-1 min-h-0 overflow-y-auto space-y-2 pr-0.5">
         {items.map((item) => (
           <BillingEntry
@@ -66,6 +153,7 @@ const BillingSection: React.FC<BillingSectionProps> = ({
             onRemoveItem={onRemoveItem}
             onApplyDiscount={onApplyDiscount}
             onRemoveDiscount={onRemoveDiscount}
+            seniorPwdEnabled={seniorPwdEnabled}
           />
         ))}
       </div>
@@ -108,7 +196,8 @@ const BillingEntry: React.FC<{
     discountValue: number
   ) => void;
   onRemoveDiscount: (uid: string) => void;
-}> = ({ item, onUpdateQuantity, onRemoveItem, onApplyDiscount, onRemoveDiscount }) => {
+  seniorPwdEnabled: boolean;
+}> = ({ item, onUpdateQuantity, onRemoveItem, onApplyDiscount, onRemoveDiscount, seniorPwdEnabled }) => {
   const [showDiscount, setShowDiscount] = useState(false);
   const [discountType, setDiscountType] = useState<"FIXED" | "PERCENT">("FIXED");
   const [qtyInput, setQtyInput] = useState(String(item.quantity));
@@ -249,7 +338,11 @@ const BillingEntry: React.FC<{
 
       {/* Row 3: Discount */}
       <div className="mt-1.5">
-        {item.isDiscounted ? (
+        {seniorPwdEnabled && item.isSeniorPwdRateActive ? (
+          <Badge className="bg-green-700 hover:bg-green-700 text-white text-[10px] px-1.5 py-0">
+            20% Senior/PWD
+          </Badge>
+        ) : item.isDiscounted ? (
           <button
             type="button"
             onClick={() => onRemoveDiscount(item.uid)}

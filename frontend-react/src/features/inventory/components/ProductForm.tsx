@@ -86,6 +86,7 @@ const mapToFormValues = (values?: ProductFormData): ProductFormValues => {
           : "3",
     imageDir: values?.imageDir ?? "",
     isArchived: values?.isArchived ?? false,
+    isSeniorPwdEligible: values?.isSeniorPwdEligible ?? true,
   };
 };
 
@@ -608,6 +609,29 @@ export const ProductForm: React.FC<ProductFormProps> = ({
               )}
             </div>
             )}
+
+            {/*
+              ── Senior/PWD Eligibility ──
+            */}
+            <FormField
+              control={form.control}
+              name="isSeniorPwdEligible"
+              render={({ field }) => (
+                <FormItem className="flex flex-row items-center gap-2 space-y-0">
+                  <FormControl>
+                    <input
+                      type="checkbox"
+                      checked={field.value}
+                      onChange={(e) => field.onChange(e.target.checked)}
+                      className="h-4 w-4 rounded border-border"
+                    />
+                  </FormControl>
+                  <FormLabel className="font-medium text-sm cursor-pointer">
+                    Eligible for Senior Citizen / PWD Discount (20%)
+                  </FormLabel>
+                </FormItem>
+              )}
+            />
 
             <div className="flex justify-end gap-2 pt-4">
               <Button

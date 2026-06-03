@@ -39,4 +39,6 @@ public class CreateProductRequestDTO implements ProductRequest {
     private ProductType productType;
 
     private Boolean isArchived = false;
+
+    private Boolean isSeniorPwdEligible = true;
 }

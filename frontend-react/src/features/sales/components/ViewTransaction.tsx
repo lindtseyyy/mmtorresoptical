@@ -498,6 +498,29 @@ const ViewTransaction: React.FC = () => {
             )}
           </div>
 
+          {/* Senior/PWD Discount Info */}
+          {tx.isSeniorPwdApplied && (
+            <div className="mt-4 border-t pt-4">
+              <p className="text-xs font-semibold text-muted-foreground mb-2">
+                Senior / PWD Discount Applied
+              </p>
+              <div className="grid grid-cols-3 gap-x-8 gap-y-1 text-sm">
+                <div>
+                  <p className="text-xs text-muted-foreground">Full Name</p>
+                  <p className="font-medium">{tx.seniorPwdName}</p>
+                </div>
+                <div>
+                  <p className="text-xs text-muted-foreground">Address</p>
+                  <p className="font-medium">{tx.seniorPwdAddress}</p>
+                </div>
+                <div>
+                  <p className="text-xs text-muted-foreground">ID Number</p>
+                  <p className="font-medium">{tx.seniorPwdIdNumber}</p>
+                </div>
+              </div>
+            </div>
+          )}
+
           {/* Payment History */}
           {(tx.payments?.length ?? 0) > 0 && (
             <div className="mt-4 border-t pt-4">

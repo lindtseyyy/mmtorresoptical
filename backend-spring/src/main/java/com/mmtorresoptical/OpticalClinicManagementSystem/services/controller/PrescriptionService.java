@@ -416,7 +416,8 @@ public class PrescriptionService {
                             p.getUnitPrice(),
                             p.getQuantity(),
                             r.getQuantity(),
-                            r.getStaffNotes()
+                            r.getStaffNotes(),
+                            p.getIsSeniorPwdEligible()
                     );
                 }).collect(Collectors.toList());
     }

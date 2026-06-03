@@ -14,5 +14,6 @@ public record RecommendationResponseDTO(
         BigDecimal unitPrice,
         int stockQuantity,
         int quantity,
-        String staffNotes
+        String staffNotes,
+        Boolean isSeniorPwdEligible
 ) {}

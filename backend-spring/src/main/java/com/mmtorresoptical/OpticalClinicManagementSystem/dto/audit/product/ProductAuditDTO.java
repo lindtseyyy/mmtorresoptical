@@ -18,5 +18,6 @@ public class ProductAuditDTO {
     private Integer lowLevelThreshold;
     private Integer overstockedThreshold;
     private Boolean isArchived;
+    private Boolean isSeniorPwdEligible;
     private LocalDateTime createdAt;
 }

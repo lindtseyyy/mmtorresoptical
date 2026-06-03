@@ -25,5 +25,6 @@ public class ProductDetailsDTO {
     private Integer reorderPoint;
     private Integer suggestedOrderQuantity;
     private Boolean isArchived;
+    private Boolean isSeniorPwdEligible;
     private LocalDateTime createdAt;
 }

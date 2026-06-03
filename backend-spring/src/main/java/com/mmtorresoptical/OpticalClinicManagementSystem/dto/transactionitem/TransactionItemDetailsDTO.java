@@ -21,5 +21,6 @@ public class TransactionItemDetailsDTO {
     private BigDecimal discountValue;
     private Integer refundedQuantity;
     private String refundReason;
+    private BigDecimal seniorPwdDiscountAmount;
 
 }

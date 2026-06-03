@@ -29,4 +29,6 @@ public class TransactionItemsRequestDTO {
 
     private Boolean isDiscounted = false;
 
+    private BigDecimal seniorPwdDiscountAmount;
+
 }

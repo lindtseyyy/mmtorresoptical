@@ -44,6 +44,10 @@ const ManageSales: React.FC = () => {
   const [isPatientModalOpen, setIsPatientModalOpen] = useState(false);
   const [selectedPrescriptionId, setSelectedPrescriptionId] = useState("");
   const [patientExpanded, setPatientExpanded] = useState(true);
+  const [seniorPwdEnabled, setSeniorPwdEnabled] = useState(false);
+  const [seniorPwdName, setSeniorPwdName] = useState("");
+  const [seniorPwdAddress, setSeniorPwdAddress] = useState("");
+  const [seniorPwdIdNumber, setSeniorPwdIdNumber] = useState("");
 
   const { data: patientPrescriptions = [] } = usePatientPrescriptions(selectedPatient?.patientId);
 
@@ -76,6 +80,84 @@ const ManageSales: React.FC = () => {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [products]);
 
+  // Senior/PWD discount computation
+  useEffect(() => {
+    const allFieldsFilled = seniorPwdName.trim() && seniorPwdAddress.trim() && seniorPwdIdNumber.trim();
+
+    if (!seniorPwdEnabled || !allFieldsFilled) {
+      // Restore any saved manual discounts
+      setCart((prev) =>
+        prev.map((item) => {
+          if (item.isSeniorPwdRateActive || item.savedManualDiscountType !== undefined) {
+            return {
+              ...item,
+              discountType: item.savedManualDiscountType ?? null,
+              discountValue: item.savedManualDiscountValue ?? 0,
+              isDiscounted: item.savedManualDiscountType != null,
+              savedManualDiscountType: undefined,
+              savedManualDiscountValue: undefined,
+              isSeniorPwdRateActive: false,
+              isSeniorPwdProcessed: false,
+              seniorPwdDiscountAmount: undefined,
+            };
+          }
+          return item;
+        })
+      );
+      return;
+    }
+
+    setCart((prev) =>
+      prev.map((item) => {
+        if (!item.product.isSeniorPwdEligible) return item;
+        // Skip items already processed by this effect (unless a manual discount was applied after)
+        if (item.isSeniorPwdProcessed) return item;
+
+        const pwdSavingPerUnit = item.product.unitPrice * 0.2;
+        const pwdSavingTotal = pwdSavingPerUnit * item.quantity;
+        // Use the current effective discount, or fall back to saved manual discount
+        const currentDiscount =
+          item.isDiscounted && item.discountType && item.discountValue
+            ? item.discountType === "PERCENT"
+              ? (item.product.unitPrice * item.quantity * item.discountValue) / 100
+              : item.discountValue
+            : 0;
+        const manualDiscountTotal =
+          currentDiscount > 0
+            ? currentDiscount
+            : item.savedManualDiscountType && item.savedManualDiscountValue
+              ? item.savedManualDiscountType === "PERCENT"
+                ? (item.product.unitPrice * item.quantity * item.savedManualDiscountValue) / 100
+                : item.savedManualDiscountValue
+              : 0;
+
+        if (pwdSavingTotal >= manualDiscountTotal) {
+          return {
+            ...item,
+            savedManualDiscountType: item.savedManualDiscountType ?? item.discountType,
+            savedManualDiscountValue: item.savedManualDiscountValue ?? item.discountValue,
+            discountType: "PERCENT" as const,
+            discountValue: 20,
+            isDiscounted: true,
+            isSeniorPwdRateActive: true,
+            isSeniorPwdProcessed: true,
+            seniorPwdDiscountAmount: pwdSavingTotal,
+          };
+        }
+
+        return {
+          ...item,
+          savedManualDiscountType: item.savedManualDiscountType ?? item.discountType,
+          savedManualDiscountValue: item.savedManualDiscountValue ?? item.discountValue,
+          isSeniorPwdRateActive: false,
+          isSeniorPwdProcessed: true,
+          seniorPwdDiscountAmount: 0,
+        };
+      })
+    );
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [seniorPwdEnabled, seniorPwdName, seniorPwdAddress, seniorPwdIdNumber]);
+
   const transactionMutation = useMutation({
     mutationFn: createTransaction,
     onSuccess: (data) => {
@@ -90,6 +172,10 @@ const ManageSales: React.FC = () => {
       setEstimatedReadyDate("");
       setShowDrawer(false);
       setResetKey((k) => k + 1);
+      setSeniorPwdEnabled(false);
+      setSeniorPwdName("");
+      setSeniorPwdAddress("");
+      setSeniorPwdIdNumber("");
     },
     onError: (error: any) => {
       const msg =
@@ -114,19 +200,24 @@ const ManageSales: React.FC = () => {
             : i
         );
       }
+      const seniorActive = seniorPwdEnabled && seniorPwdName.trim() && seniorPwdAddress.trim() && seniorPwdIdNumber.trim();
+      const applySenior = seniorActive && product.isSeniorPwdEligible;
       return [
         ...prev,
         {
           uid: nextUid(),
           product,
           quantity: 1,
-          discountType: null,
-          discountValue: 0,
-          isDiscounted: false,
+          discountType: applySenior ? "PERCENT" : null,
+          discountValue: applySenior ? 20 : 0,
+          isDiscounted: !!applySenior,
+          isSeniorPwdRateActive: !!applySenior,
+          isSeniorPwdProcessed: !!applySenior,
+          seniorPwdDiscountAmount: applySenior ? product.unitPrice * 0.2 : undefined,
         },
       ];
     });
-  }, []);
+  }, [seniorPwdEnabled, seniorPwdName, seniorPwdAddress, seniorPwdIdNumber]);
 
   const updateQuantity = useCallback((uid: string, quantity: number) => {
     if (quantity <= 0) {
@@ -134,7 +225,15 @@ const ManageSales: React.FC = () => {
       return;
     }
     setCart((prev) =>
-      prev.map((i) => (i.uid === uid ? { ...i, quantity } : i))
+      prev.map((i) => {
+        if (i.uid !== uid) return i;
+        const updated = { ...i, quantity };
+        // Recalculate senior discount amount if senior rate is active
+        if (i.isSeniorPwdRateActive) {
+          updated.seniorPwdDiscountAmount = i.product.unitPrice * 0.2 * quantity;
+        }
+        return updated;
+      })
     );
   }, []);
 
@@ -145,6 +244,10 @@ const ManageSales: React.FC = () => {
   const clearAll = useCallback(() => {
     setCart([]);
     setEstimatedReadyDate("");
+    setSeniorPwdEnabled(false);
+    setSeniorPwdName("");
+    setSeniorPwdAddress("");
+    setSeniorPwdIdNumber("");
   }, []);
 
   const applyDiscount = useCallback(
@@ -154,25 +257,29 @@ const ManageSales: React.FC = () => {
       discountValue: number
     ) => {
       setCart((prev) =>
-        prev.map((i) =>
-          i.uid === uid
-            ? { ...i, isDiscounted: true, discountType, discountValue }
-            : i
-        )
+        prev.map((i) => {
+          if (i.uid !== uid) return i;
+          // Don't allow manual discount override on senior-eligible items when senior toggle is active
+          const seniorActive = seniorPwdEnabled && seniorPwdName.trim() && seniorPwdAddress.trim() && seniorPwdIdNumber.trim();
+          if (seniorActive && i.product.isSeniorPwdEligible && i.isSeniorPwdRateActive) return i;
+          return { ...i, isDiscounted: true, discountType, discountValue, isSeniorPwdProcessed: false };
+        })
       );
     },
-    []
+    [seniorPwdEnabled, seniorPwdName, seniorPwdAddress, seniorPwdIdNumber]
   );
 
   const removeDiscount = useCallback((uid: string) => {
     setCart((prev) =>
-      prev.map((i) =>
-        i.uid === uid
-          ? { ...i, isDiscounted: false, discountType: null, discountValue: 0 }
-          : i
-      )
+      prev.map((i) => {
+        if (i.uid !== uid) return i;
+        // Don't allow removing senior rate when toggle is active
+        const seniorActive = seniorPwdEnabled && seniorPwdName.trim() && seniorPwdAddress.trim() && seniorPwdIdNumber.trim();
+        if (seniorActive && i.product.isSeniorPwdEligible && i.isSeniorPwdRateActive) return i;
+        return { ...i, isDiscounted: false, discountType: null, discountValue: 0, isSeniorPwdProcessed: false };
+      })
     );
-  }, []);
+  }, [seniorPwdEnabled, seniorPwdName, seniorPwdAddress, seniorPwdIdNumber]);
 
   const loadPrescriptionToCart = useCallback(async (prescriptionId: string) => {
     try {
@@ -216,6 +323,7 @@ const ManageSales: React.FC = () => {
               reorderPoint: null,
               suggestedOrderQuantity: null,
               isArchived: false,
+              isSeniorPwdEligible: rec.isSeniorPwdEligible,
               createdAt: "",
             },
             quantity: rec.quantity,
@@ -259,6 +367,7 @@ const ManageSales: React.FC = () => {
           isDiscounted: true,
         }),
         isDiscounted: item.isDiscounted,
+        seniorPwdDiscountAmount: item.seniorPwdDiscountAmount ?? 0,
       }));
 
       const payload: TransactionRequest = {
@@ -274,11 +383,17 @@ const ManageSales: React.FC = () => {
         ...(payment.gcashNumber && {
           gcashNumber: payment.gcashNumber,
         }),
+        ...(seniorPwdEnabled &&
+          seniorPwdName.trim() && {
+            seniorPwdName: seniorPwdName.trim(),
+            seniorPwdAddress: seniorPwdAddress.trim(),
+            seniorPwdIdNumber: seniorPwdIdNumber.trim(),
+          }),
       };
 
       transactionMutation.mutate(payload);
     },
-    [cart, selectedPatient, selectedPrescriptionId, estimatedReadyDate, transactionMutation]
+    [cart, selectedPatient, selectedPrescriptionId, estimatedReadyDate, transactionMutation, seniorPwdEnabled, seniorPwdName, seniorPwdAddress, seniorPwdIdNumber]
   );
 
   const grandTotal = cart.reduce((sum, item) => {
@@ -463,6 +578,14 @@ const ManageSales: React.FC = () => {
             onApplyDiscount={applyDiscount}
             onRemoveDiscount={removeDiscount}
             onPay={() => setShowDrawer(true)}
+            seniorPwdEnabled={seniorPwdEnabled}
+            onToggleSeniorPwd={setSeniorPwdEnabled}
+            seniorPwdName={seniorPwdName}
+            onSeniorPwdNameChange={setSeniorPwdName}
+            seniorPwdAddress={seniorPwdAddress}
+            onSeniorPwdAddressChange={setSeniorPwdAddress}
+            seniorPwdIdNumber={seniorPwdIdNumber}
+            onSeniorPwdIdNumberChange={setSeniorPwdIdNumber}
           />
         </div>
       </div>

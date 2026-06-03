@@ -58,6 +58,7 @@ export interface RecommendationResponse {
   stockQuantity: number;
   quantity: number;
   staffNotes?: string;
+  isSeniorPwdEligible: boolean;
 }
 
 export interface PrescriptionResponse {

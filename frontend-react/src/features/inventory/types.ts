@@ -58,6 +58,7 @@ export const productFormSchema = z
     overstockedThreshold: z.string().optional(),
     leadTimeDays: z.string().optional(),
     isArchived: z.boolean(),
+    isSeniorPwdEligible: z.boolean(),
     imageDir: z.string().optional(),
   })
   .superRefine((data, ctx) => {
@@ -167,6 +168,7 @@ export const productSchema = productFormSchema.transform((data) => ({
   newSupplierName: data.productType === "SERVICE" ? undefined : (data.newSupplierName || undefined),
   productType: data.productType,
   isArchived: data.isArchived,
+  isSeniorPwdEligible: data.isSeniorPwdEligible,
   imageDir: data.imageDir,
 }));
 
@@ -191,6 +193,7 @@ export interface Product {
   reorderPoint: number | null;
   suggestedOrderQuantity: number | null;
   isArchived: boolean;
+  isSeniorPwdEligible: boolean;
   imageDir: string | null;
   createdAt: string;
 }

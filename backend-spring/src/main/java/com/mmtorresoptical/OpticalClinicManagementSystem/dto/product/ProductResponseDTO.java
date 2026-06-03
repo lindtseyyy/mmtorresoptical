@@ -22,5 +22,6 @@ public class ProductResponseDTO {
     private Integer lowLevelThreshold;
     private Integer overstockedThreshold;
     private Boolean isArchived;
+    private Boolean isSeniorPwdEligible;
     private LocalDateTime createdAt;
 }

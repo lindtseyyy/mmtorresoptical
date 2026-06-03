@@ -15,4 +15,5 @@ public class ProductSummaryDTO {
     private UUID supplierId;
     private String supplierName;
     private String productType;
+    private Boolean isSeniorPwdEligible;
 }

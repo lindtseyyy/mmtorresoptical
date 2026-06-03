@@ -132,6 +132,11 @@ const ViewProduct: React.FC = () => {
                       Overstocked
                     </Badge>
                   )}
+                  {product.isSeniorPwdEligible && (
+                    <Badge className="bg-green-700 text-white hover:bg-green-700 cursor-default">
+                      Senior/PWD Eligible
+                    </Badge>
+                  )}
                 </div>
                 <p className="text-muted-foreground">Item details and transaction history</p>
               </div>

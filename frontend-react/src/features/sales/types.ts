@@ -7,6 +7,11 @@ export interface CartItem {
   discountType: "PERCENT" | "FIXED" | null;
   discountValue: number;
   isDiscounted: boolean;
+  savedManualDiscountType?: "PERCENT" | "FIXED" | null;
+  savedManualDiscountValue?: number;
+  isSeniorPwdRateActive?: boolean;
+  isSeniorPwdProcessed?: boolean;
+  seniorPwdDiscountAmount?: number;
 }
 
 export interface TransactionRequest {
@@ -17,12 +22,16 @@ export interface TransactionRequest {
   paymentMethod?: "CASH" | "GCASH";
   gcashNumber?: string;
   referenceNumber?: string;
+  seniorPwdName?: string;
+  seniorPwdAddress?: string;
+  seniorPwdIdNumber?: string;
   items: {
     productId: string;
     quantity: number;
     discountType?: "PERCENT" | "FIXED";
     discountValue?: number;
     isDiscounted: boolean;
+    seniorPwdDiscountAmount?: number;
   }[];
 }
 
@@ -76,6 +85,7 @@ export interface TransactionItemResponse {
   refundedQuantity: number;
   refundNotes: string;
   refundReason?: string;
+  seniorPwdDiscountAmount?: number;
 }
 
 export interface TransactionResponse {
@@ -99,6 +109,10 @@ export interface TransactionResponse {
   voidReason?: string;
   prescriptionId?: string | null;
   rxNumber?: string | null;
+  seniorPwdName?: string;
+  seniorPwdAddress?: string;
+  seniorPwdIdNumber?: string;
+  isSeniorPwdApplied?: boolean;
   transactionItems: TransactionItemResponse[];
   payments: PaymentResponse[];
   refundReceipts: RefundReceiptData[];

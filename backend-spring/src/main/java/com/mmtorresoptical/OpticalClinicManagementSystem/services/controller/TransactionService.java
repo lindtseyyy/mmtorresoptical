@@ -112,6 +112,10 @@ public class TransactionService {
             transaction.setCompletedAt(LocalDateTime.now());
         }
 
+        // Determine if Senior/PWD discount is being applied
+        boolean hasSeniorPwd = transactionRequestDTO.getSeniorPwdName() != null
+                && !transactionRequestDTO.getSeniorPwdName().isBlank();
+
         List<TransactionItem> transactionItems = transactionRequestDTO.getItems()
                 .stream().map(dto -> {
 
@@ -149,18 +153,49 @@ public class TransactionService {
                             retrievedProduct.getUnitPrice().multiply(BigDecimal.valueOf(dto.getQuantity()));
 
                     BigDecimal discountAmount = BigDecimal.ZERO;
+                    BigDecimal seniorPwdAmountForItem = BigDecimal.ZERO;
 
-                    if (dto.getDiscountType() != null && dto.getDiscountValue() != null) {
+                    // Senior/PWD discount: server-side re-compute to prevent tampering
+                    if (hasSeniorPwd && Boolean.TRUE.equals(retrievedProduct.getIsSeniorPwdEligible())) {
+                        BigDecimal seniorPerUnit = retrievedProduct.getUnitPrice()
+                                .multiply(new BigDecimal("0.20"))
+                                .setScale(2, RoundingMode.HALF_UP);
+                        BigDecimal seniorTotal = seniorPerUnit
+                                .multiply(BigDecimal.valueOf(dto.getQuantity()));
 
-                        discountAmount = switch (dto.getDiscountType()) {
-                            case PERCENT -> baseAmount.multiply(dto.getDiscountValue())
-                                    .divide(BigDecimal.valueOf(100), 2,
-                                            RoundingMode.HALF_UP);
-                            case FIXED -> dto.getDiscountValue();
-                        };
+                        // Incoming manual discount (if any)
+                        BigDecimal manualDiscount = BigDecimal.ZERO;
+                        if (dto.getDiscountType() != null && dto.getDiscountValue() != null) {
+                            manualDiscount = switch (dto.getDiscountType()) {
+                                case PERCENT -> baseAmount.multiply(dto.getDiscountValue())
+                                        .divide(BigDecimal.valueOf(100), 2, RoundingMode.HALF_UP);
+                                case FIXED -> dto.getDiscountValue();
+                            };
+                        }
+
+                        // Pick the higher discount
+                        if (seniorTotal.compareTo(manualDiscount) >= 0) {
+                            discountAmount = seniorTotal;
+                            seniorPwdAmountForItem = seniorTotal;
+                            transactionItem.setDiscountType(DiscountType.PERCENT);
+                            transactionItem.setDiscountValue(new BigDecimal("20"));
+                        } else {
+                            discountAmount = manualDiscount;
+                            seniorPwdAmountForItem = BigDecimal.ZERO;
+                        }
+                    } else {
+                        // No senior/PWD active or item not eligible — use incoming discount as-is
+                        if (dto.getDiscountType() != null && dto.getDiscountValue() != null) {
+                            discountAmount = switch (dto.getDiscountType()) {
+                                case PERCENT -> baseAmount.multiply(dto.getDiscountValue())
+                                        .divide(BigDecimal.valueOf(100), 2, RoundingMode.HALF_UP);
+                                case FIXED -> dto.getDiscountValue();
+                            };
+                        }
                     }
 
                     transactionItem.setSubtotal(baseAmount.subtract(discountAmount));
+                    transactionItem.setSeniorPwdDiscountAmount(seniorPwdAmountForItem);
 
                     return transactionItem;
                 }).toList();
@@ -173,6 +208,14 @@ public class TransactionService {
         transaction.setTotalAmount(total);
         transaction.setTransactionItems(transactionItems);
         transaction.setTransactionNumber(generateTransactionNumber());
+
+        // Persist Senior/PWD identification metadata
+        if (hasSeniorPwd) {
+            transaction.setSeniorPwdName(transactionRequestDTO.getSeniorPwdName());
+            transaction.setSeniorPwdAddress(transactionRequestDTO.getSeniorPwdAddress());
+            transaction.setSeniorPwdIdNumber(transactionRequestDTO.getSeniorPwdIdNumber());
+            transaction.setIsSeniorPwdApplied(true);
+        }
 
         BigDecimal amountTendered = transactionRequestDTO.getAmountTendered();
         if (amountTendered == null) {

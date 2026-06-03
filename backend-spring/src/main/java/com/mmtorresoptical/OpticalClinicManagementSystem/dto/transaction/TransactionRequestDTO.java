@@ -31,4 +31,9 @@ public class TransactionRequestDTO {
     List<TransactionItemsRequestDTO> items;
 
     private LocalDate estimatedReadyDate;
+
+    // Senior/PWD identification (optional)
+    private String seniorPwdName;
+    private String seniorPwdAddress;
+    private String seniorPwdIdNumber;
 }

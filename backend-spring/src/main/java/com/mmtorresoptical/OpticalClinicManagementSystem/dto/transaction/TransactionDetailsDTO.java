@@ -28,6 +28,11 @@ public class TransactionDetailsDTO {
     private String fulfillmentStatus;
     private LocalDate estimatedReadyDate;
 
+    private String seniorPwdName;
+    private String seniorPwdAddress;
+    private String seniorPwdIdNumber;
+    private Boolean isSeniorPwdApplied;
+
     private UserSummaryDTO voidedBy;
     private LocalDateTime voidedAt;
     private String voidReason;

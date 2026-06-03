@@ -23,4 +23,5 @@ public class TransactionItemAuditDTO {
     private Boolean isDiscounted;
     private String discountType;
     private BigDecimal discountValue;
+    private BigDecimal seniorPwdDiscountAmount;
 }

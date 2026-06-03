@@ -52,6 +52,7 @@ const EditProduct: React.FC = () => {
         overstockedThreshold: product.overstockedThreshold,
         leadTimeDays: product.leadTimeDays,
         isArchived: product.isArchived,
+        isSeniorPwdEligible: product.isSeniorPwdEligible,
         imageDir: product.imageDir || "",
       }
     : undefined;

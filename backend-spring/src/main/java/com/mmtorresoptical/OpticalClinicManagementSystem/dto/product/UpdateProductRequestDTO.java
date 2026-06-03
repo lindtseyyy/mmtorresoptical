@@ -38,4 +38,6 @@ public class UpdateProductRequestDTO implements ProductRequest {
     private Integer leadTimeDays;
 
     private ProductType productType;
+
+    private Boolean isSeniorPwdEligible;
 }

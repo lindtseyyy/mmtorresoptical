@@ -58,6 +58,9 @@ public class Product {
     @Column(updatable = false)
     private LocalDateTime createdAt;
 
+    @Column(name = "is_senior_pwd_eligible", nullable = false, columnDefinition = "BOOLEAN NOT NULL DEFAULT true")
+    private Boolean isSeniorPwdEligible = true;
+
     private Boolean isArchived = false;
 
     //Relationships

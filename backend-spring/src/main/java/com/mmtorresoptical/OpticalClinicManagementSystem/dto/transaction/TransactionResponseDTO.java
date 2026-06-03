@@ -28,6 +28,11 @@ public class TransactionResponseDTO {
     private String fulfillmentStatus;
     private LocalDate estimatedReadyDate;
 
+    private String seniorPwdName;
+    private String seniorPwdAddress;
+    private String seniorPwdIdNumber;
+    private Boolean isSeniorPwdApplied;
+
     private UUID prescriptionId;
     private String rxNumber;
 

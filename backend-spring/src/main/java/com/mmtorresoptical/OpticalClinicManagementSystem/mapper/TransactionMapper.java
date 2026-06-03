@@ -31,6 +31,7 @@ public interface TransactionMapper {
     @Mapping(target = "transactionItems", ignore = true)
     @Mapping(target = "payments", ignore = true)
     @Mapping(target = "prescription", ignore = true)
+    @Mapping(target = "isSeniorPwdApplied", ignore = true)
     Transaction requestDTOtoEntity(TransactionRequestDTO transactionRequestDTO);
 
     @Mapping(
