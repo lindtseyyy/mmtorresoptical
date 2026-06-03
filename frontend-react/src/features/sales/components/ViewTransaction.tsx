@@ -423,7 +423,7 @@ const ViewTransaction: React.FC = () => {
                   Mark as Picked Up
                 </Button>
               )}
-              {isAdmin() && ((tx.fulfillmentStatus === "PENDING_LAB" && (tx.transactionStatus === "PAID" || tx.transactionStatus === "DEPOSIT") && tx.refundStatus === "NONE") || (tx.fulfillmentStatus === "COMPLETED" && tx.transactionStatus === "PAID" && tx.refundStatus === "NONE" && !tx.prescriptionId)) && (
+              {isAdmin() && ((tx.fulfillmentStatus === "PENDING_LAB" && tx.refundStatus === "NONE" && (tx.transactionStatus === "DEPOSIT" || (tx.transactionStatus === "PAID" && tx.payments.length < 2))) || (tx.fulfillmentStatus === "COMPLETED" && tx.transactionStatus === "PAID" && tx.refundStatus === "NONE" && !tx.prescriptionId && tx.payments.length < 2)) && (
                 <Button
                   size="sm"
                   variant="destructive"
