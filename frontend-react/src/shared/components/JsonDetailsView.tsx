@@ -154,7 +154,7 @@ const CreateTransactionView: React.FC<{ obj: Record<string, unknown> }> = ({ obj
   const preferredOrder = [
     "transactionNumber", "createdBy", "transactionDate", "totalAmount",
     "paymentMethod", "paymentReferenceNumber",
-    "transactionStatus", "amountPaid", "totalRefundedCash", "balanceDue",
+    "transactionStatus", "amountPaid", "totalAmountPaid", "totalRefundedCash", "balanceDue",
     "completedAt", "estimatedReadyDate",
   ];
 

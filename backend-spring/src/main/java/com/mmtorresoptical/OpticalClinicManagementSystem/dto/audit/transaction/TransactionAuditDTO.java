@@ -29,6 +29,7 @@ public class TransactionAuditDTO {
     private UUID createdByUserId;
 
     private BigDecimal amountPaid;
+    private BigDecimal paymentAmount;
     private BigDecimal totalRefundedCash;
     private BigDecimal balanceDue;
     private LocalDateTime completedAt;

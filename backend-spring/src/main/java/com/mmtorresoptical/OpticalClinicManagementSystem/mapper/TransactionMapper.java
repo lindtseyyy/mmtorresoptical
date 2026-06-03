@@ -143,6 +143,10 @@ public interface TransactionMapper {
             target = "paymentReferenceNumber",
             expression = "java(mapPaymentReferenceNumber(transaction))"
     )
+    @Mapping(
+            target = "paymentAmount",
+            expression = "java(mapPaymentAmount(transaction))"
+    )
     TransactionAuditDTO entityToAuditDTO(Transaction transaction);
 
     default String mapPaymentMethod(Transaction transaction) {
@@ -155,6 +159,13 @@ public interface TransactionMapper {
     default String mapPaymentReferenceNumber(Transaction transaction) {
         if (transaction.getPayments() != null && !transaction.getPayments().isEmpty()) {
             return transaction.getPayments().get(0).getReferenceNumber();
+        }
+        return null;
+    }
+
+    default java.math.BigDecimal mapPaymentAmount(Transaction transaction) {
+        if (transaction.getPayments() != null && !transaction.getPayments().isEmpty()) {
+            return transaction.getPayments().get(transaction.getPayments().size() - 1).getAmount();
         }
         return null;
     }

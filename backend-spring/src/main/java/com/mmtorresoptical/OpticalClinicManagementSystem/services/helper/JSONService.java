@@ -477,8 +477,19 @@ public class JSONService {
 
         formatPesoField(node, "totalAmount");
         formatPesoField(node, "amountPaid");
+        formatPesoField(node, "paymentAmount");
         formatPesoField(node, "totalRefundedCash");
         formatPesoField(node, "balanceDue");
+
+        // Rename amountPaid → totalAmountPaid, then paymentAmount → amountPaid
+        if (node.has("amountPaid")) {
+            node.set("totalAmountPaid", node.get("amountPaid"));
+            node.remove("amountPaid");
+        }
+        if (node.has("paymentAmount")) {
+            node.set("amountPaid", node.get("paymentAmount"));
+            node.remove("paymentAmount");
+        }
 
         if (node.has("paymentMethod") && !node.get("paymentMethod").isNull()
                 && !node.get("paymentMethod").asText().isBlank()) {
