@@ -166,11 +166,11 @@ const ManagePatients: React.FC = () => {
                   <thead>
                     <tr className="border-b text-left text-muted-foreground">
                       <th className="w-[26%] py-3 pl-4 pr-4 font-medium">Full Name</th>
-                      <th className="w-[26%] py-3 pr-4 font-medium">Email</th>
-                      <th className="w-[10%] py-3 pr-4 text-left font-medium">Gender</th>
-                      <th className="w-[16%] py-3 pr-4 text-left font-medium">Contact Number</th>
-                      <th className="w-[12%] py-3 pr-4 text-left font-medium">Birth Date</th>
-                      <th className="w-[10%] py-3 pr-4 font-medium"></th>
+                      <th className="w-[26%] py-3 pl-4 pr-4 font-medium">Email</th>
+                      <th className="w-[10%] py-3 pl-4 pr-4 text-left font-medium">Gender</th>
+                      <th className="w-[16%] py-3 pl-4 pr-4 text-left font-medium">Contact Number</th>
+                      <th className="w-[12%] py-3 pl-4 pr-4 text-left font-medium">Birth Date</th>
+                      <th className="w-[10%] py-3 pl-4 pr-4 font-medium"></th>
                     </tr>
                   </thead>
                   <tbody>
