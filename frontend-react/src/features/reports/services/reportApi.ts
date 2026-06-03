@@ -138,4 +138,8 @@ const fetchTransactionMonthlyTrend = async (): Promise<TransactionMonthlyTrendPo
   return data;
 };
 
-export { fetchReportData, downloadPdfReport, downloadExcelReport, fetchCategoryBreakdown, fetchInventoryValueTrend, fetchLowStockProducts, fetchOverstockedProducts, fetchOutOfStockProducts, fetchPatientGrowthTrend, fetchTransactionMonthlyTrend };
+const logReportExport = async (reportType: string): Promise<void> => {
+  await api.post(`/reports/${reportType}/log-export`);
+};
+
+export { fetchReportData, downloadPdfReport, downloadExcelReport, fetchCategoryBreakdown, fetchInventoryValueTrend, fetchLowStockProducts, fetchOverstockedProducts, fetchOutOfStockProducts, fetchPatientGrowthTrend, fetchTransactionMonthlyTrend, logReportExport };

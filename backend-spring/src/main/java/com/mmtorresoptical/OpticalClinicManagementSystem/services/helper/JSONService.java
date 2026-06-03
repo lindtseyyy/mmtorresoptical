@@ -78,6 +78,14 @@ public class JSONService {
                 }
             }
 
+            // ── EXPORT: clean report export details ──
+            if ("EXPORT".equals(actionType) && node.has("reportType")) {
+                ObjectNode clean = objectMapper.createObjectNode();
+                clean.put("reportType", capitalizeWord(node.get("reportType").asText().replace("_", " ")));
+                copyField(clean, node, "format");
+                return objectMapper.writeValueAsString(clean);
+            }
+
             // ── Refund: collapse before/after pairs into human-readable rows ──
             if (node.has("refundReceiptNumber")
                     && node.has("beforeTotalAmount")

@@ -12,7 +12,7 @@ import { Card, CardContent } from "@/shared/components/ui/card";
 import { useQuery } from "@tanstack/react-query";
 import { useReportData, usePatientGrowthTrend, useLowStockProducts, useOverstockedProducts, useOutOfStockProducts, useTransactionMonthlyTrend, useCategoryBreakdown, useInventoryValueTrend } from "@/features/reports/hooks/reportQuery";
 import { createAccountsReceivableQueryOptions } from "@/features/sales/hooks/transactionQuery";
-import { fetchOutOfStockProducts } from "@/features/reports/services/reportApi";
+import { fetchOutOfStockProducts, logReportExport } from "@/features/reports/services/reportApi";
 import { generateTransactionPdf } from "@/features/reports/services/transactionPdfExport";
 import { generatePatientPdf } from "@/features/reports/services/patientPdfExport";
 import { generateInventoryPdf } from "@/features/reports/services/inventoryPdfExport";
@@ -114,16 +114,17 @@ const Reports: React.FC = () => {
   const handleExportPdf = async () => {
     setExportingPdf(true);
     try {
+      let exported = false;
       if (reportType === "TRANSACTIONS" && data && monthlyTrend && receivables) {
         generateTransactionPdf(
           data as TransactionHierarchicalReportDataset,
           monthlyTrend,
           receivables,
         );
-        toast.success("PDF report downloaded.");
+        exported = true;
       } else if (reportType === "PATIENTS" && data && growthTrend) {
         generatePatientPdf(data as PatientReportDataset, growthTrend);
-        toast.success("PDF report downloaded.");
+        exported = true;
       } else if (reportType === "INVENTORY_ANALYTICS" && data && valueTrend && categoryBreakdown) {
         const allOutOfStock = await fetchOutOfStockProducts(0, 1000);
         generateInventoryPdf(
@@ -132,9 +133,13 @@ const Reports: React.FC = () => {
           categoryBreakdown,
           allOutOfStock.content,
         );
-        toast.success("PDF report downloaded.");
+        exported = true;
       } else {
         toast.error("Required data not yet loaded. Please try again.");
+      }
+      if (exported) {
+        logReportExport(reportType).catch(() => {});
+        toast.success("PDF report downloaded.");
       }
     } catch (err: any) {
       toast.error(err?.message || "Failed to export PDF.");
