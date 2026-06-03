@@ -248,12 +248,12 @@ const ManageTransactions: React.FC = () => {
                   <thead>
                     <tr className="border-b text-left text-muted-foreground">
                       <th className="w-[14%] py-3 pl-4 pr-4 text-left font-medium">Transaction Date</th>
-                      <th className="w-[16%] py-3 pr-4 font-medium">Transaction Number</th>
-                      <th className="w-[10%] py-3 pr-4 text-left font-medium">Financial</th>
-                      <th className="w-[10%] py-3 pr-4 text-left font-medium">Fulfillment</th>
-                      <th className="w-[9%] py-3 pr-4 text-left font-medium">Refund</th>
-                      <th className="w-[10%] py-3 pr-4 text-right font-medium">Total Amount</th>
-                      <th className="w-[8%] py-3 text-center font-medium">Action</th>
+                      <th className="w-[16%] py-3 pl-4 pr-4 font-medium">Transaction Number</th>
+                      <th className="w-[10%] py-3 pl-4 pr-4 text-left font-medium">Financial</th>
+                      <th className="w-[10%] py-3 pl-4 pr-4 text-left font-medium">Fulfillment</th>
+                      <th className="w-[9%] py-3 pl-4 pr-4 text-left font-medium">Refund</th>
+                      <th className="w-[10%] py-3 pl-4 pr-4 text-right font-medium">Total Amount</th>
+                      <th className="w-[8%] py-3 pl-4 text-center font-medium">Action</th>
                     </tr>
                   </thead>
                   <tbody>
