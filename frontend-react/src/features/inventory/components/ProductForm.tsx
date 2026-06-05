@@ -134,7 +134,16 @@ export const ProductForm: React.FC<ProductFormProps> = ({
     setNewCategoryName(null);
     form.setValue("categoryId", undefined, { shouldValidate: false });
     form.setValue("newCategoryName", undefined, { shouldValidate: false });
-  }, [watchedProductType, form]);
+
+    if (watchedProductType === "PHYSICAL") {
+      const origIsPhysical = passedDefaultValues?.productType === "PHYSICAL";
+      form.setValue("quantity", origIsPhysical ? String(passedDefaultValues.quantity ?? 0) : "0", { shouldValidate: false });
+      form.setValue("lowLevelThreshold", origIsPhysical ? String(passedDefaultValues.lowLevelThreshold ?? 0) : "0", { shouldValidate: false });
+      form.setValue("overstockedThreshold", origIsPhysical ? String(passedDefaultValues.overstockedThreshold ?? 0) : "0", { shouldValidate: false });
+      form.setValue("leadTimeDays", origIsPhysical ? String(passedDefaultValues.leadTimeDays ?? 3) : "3", { shouldValidate: false });
+      form.setValue("supplierId", selectedSupplierId ?? undefined, { shouldValidate: false });
+    }
+  }, [watchedProductType, form, passedDefaultValues]);
 
   useEffect(() => {
     form.reset(initialFormValues);
