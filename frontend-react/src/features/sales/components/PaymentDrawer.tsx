@@ -55,11 +55,11 @@ const PaymentDrawer: React.FC<PaymentDrawerProps> = ({
       : true);
 
   const handleComplete = () => {
-    if (paymentMethod === "GCASH" && amountTendered > 0 && !gcashNumber.trim()) {
+    if (paymentMethod === "GCASH" && !gcashNumber.trim()) {
       toast.error("GCash number is required for GCash payment");
       return;
     }
-    if (paymentMethod === "GCASH" && amountTendered > 0 && !referenceNumber.trim()) {
+    if (paymentMethod === "GCASH" && !referenceNumber.trim()) {
       toast.error("Reference number is required for GCash payment");
       return;
     }
@@ -335,7 +335,7 @@ const PaymentDrawer: React.FC<PaymentDrawerProps> = ({
             </div>
 
             {/* GCash fields (only when paying) */}
-            {paymentMethod === "GCASH" && amountTendered > 0 && (
+            {paymentMethod === "GCASH" && (
               <div className="space-y-2 rounded-lg border border-border bg-background/50 p-3">
                 <div className="space-y-1.5">
                   <Label className="text-xs text-muted-foreground">
@@ -346,7 +346,7 @@ const PaymentDrawer: React.FC<PaymentDrawerProps> = ({
                     inputMode="numeric"
                     value={gcashNumber}
                     onChange={(e) => setGcashNumber(e.target.value.replace(/[^0-9]/g, '').slice(0, 11))}
-                    placeholder="09123456789"
+                    placeholder="Enter GCash Number"
                     disabled={pending}
                     className={gcashNumber && !/^09\d{9}$/.test(gcashNumber.trim()) ? "border-red-500" : ""}
                   />
