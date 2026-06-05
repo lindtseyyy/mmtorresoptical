@@ -28,6 +28,7 @@ import java.time.LocalDateTime;
 import java.time.YearMonth;
 import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
+import java.util.Comparator;
 import java.util.Collections;
 import java.util.List;
 import java.util.Map;
@@ -85,12 +86,64 @@ public class InventoryAnalyticsService {
             direction = Sort.Direction.DESC;
         }
 
-        // Create pageable configuration with sorting
-        Pageable pageable = PageRequest.of(page, size, Sort.by(direction, sortBy));
+        // Fetch all active, non-archived PHYSICAL products with quantity > 0
+        Specification<Product> spec = Specification
+                .where(ProductSpecification.hasArchivedStatus("ACTIVE"))
+                .and((root, query, cb) -> cb.equal(root.get("productType"), ProductType.PHYSICAL))
+                .and((root, query, cb) -> cb.greaterThan(root.get("quantity"), 0));
 
-        Page<Product> products = inventoryAnalyticsRepository.findLowStockProducts(pageable);
+        List<Product> candidates = productRepository.findAll(spec);
 
-        return products.map(productMapper::entityToDetailsDTO);
+        // Compute reorder points and filter
+        Map<UUID, Long> velocityMap = fetchSalesVelocityMap();
+
+        List<Product> reorderProducts = candidates.stream()
+                .filter(p -> {
+                    int rop = computeReorderPoint(
+                            p.getProductId(),
+                            p.getLeadTimeDays() != null ? p.getLeadTimeDays() : 3,
+                            velocityMap
+                    );
+                    int threshold = Math.max(
+                            p.getLowLevelThreshold() != null ? p.getLowLevelThreshold() : 0,
+                            rop
+                    );
+                    return p.getQuantity() <= threshold;
+                })
+                .collect(Collectors.toList());
+
+        // Sort the results
+        Comparator<Product> comparator;
+        if ("quantity".equals(sortBy)) {
+            comparator = Comparator.comparingInt(Product::getQuantity);
+        } else if ("unitPrice".equals(sortBy)) {
+            comparator = Comparator.comparing(p -> p.getUnitPrice());
+        } else {
+            comparator = Comparator.comparing(p -> p.getProductName().toLowerCase());
+        }
+
+        if (direction == Sort.Direction.DESC) {
+            comparator = comparator.reversed();
+        }
+
+        List<Product> sorted = reorderProducts.stream()
+                .sorted(comparator)
+                .collect(Collectors.toList());
+
+        // Paginate
+        int start = page * size;
+        int end = Math.min(start + size, sorted.size());
+        List<Product> pageContent = start < sorted.size() ? sorted.subList(start, end) : List.of();
+
+        int totalPages = (int) Math.ceil((double) sorted.size() / size);
+
+        Page<ProductDetailsDTO> result = new org.springframework.data.domain.PageImpl<>(
+                pageContent.stream().map(productMapper::entityToDetailsDTO).collect(Collectors.toList()),
+                PageRequest.of(page, size),
+                sorted.size()
+        );
+
+        return result;
     }
 
     public Page<ProductDetailsDTO> getOverStockedProducts(int page,
@@ -117,10 +170,31 @@ public class InventoryAnalyticsService {
     }
 
     public List<ProductDetailsDTO> getAllLowStockProducts() {
-        Sort sort = Sort.by(Sort.Direction.ASC, "quantity");
-        List<Product> products = inventoryAnalyticsRepository.findLowStockProducts(sort);
+        // Fetch all active, non-archived PHYSICAL products with quantity > 0
+        Specification<Product> spec = Specification
+                .where(ProductSpecification.hasArchivedStatus("ACTIVE"))
+                .and((root, query, cb) -> cb.equal(root.get("productType"), ProductType.PHYSICAL))
+                .and((root, query, cb) -> cb.greaterThan(root.get("quantity"), 0));
 
-        return products.stream()
+        List<Product> candidates = productRepository.findAll(spec);
+
+        // Compute reorder points and filter
+        Map<UUID, Long> velocityMap = fetchSalesVelocityMap();
+
+        return candidates.stream()
+                .filter(p -> {
+                    int rop = computeReorderPoint(
+                            p.getProductId(),
+                            p.getLeadTimeDays() != null ? p.getLeadTimeDays() : 3,
+                            velocityMap
+                    );
+                    int threshold = Math.max(
+                            p.getLowLevelThreshold() != null ? p.getLowLevelThreshold() : 0,
+                            rop
+                    );
+                    return p.getQuantity() <= threshold;
+                })
+                .sorted(Comparator.comparingInt(Product::getQuantity))
                 .map(productMapper::entityToDetailsDTO)
                 .toList();
     }
