@@ -20,6 +20,7 @@ interface MetricCardProps {
   color?: MetricColor;
   size?: "sm" | "md";
   labelPosition?: "top" | "bottom";
+  onClick?: () => void;
 }
 
 const iconCircleBg: Record<MetricColor, string> = {
@@ -74,12 +75,13 @@ export function MetricCard({
   color = "primary",
   size = "md",
   labelPosition = "bottom",
+  onClick,
 }: MetricCardProps) {
   const s = sizes[size];
   const Label = <p className={s.label}>{label}</p>;
 
   return (
-    <Card>
+    <Card className={onClick ? "cursor-pointer transition-colors hover:bg-muted/50" : ""} onClick={onClick}>
       <CardContent className={`flex items-center ${s.gap} ${s.padding}`}>
         <div className={`flex ${s.circle} items-center justify-center rounded-full ${iconCircleBg[color]}`}>
           <Icon className={`${s.icon} ${iconColor[color]}`} />

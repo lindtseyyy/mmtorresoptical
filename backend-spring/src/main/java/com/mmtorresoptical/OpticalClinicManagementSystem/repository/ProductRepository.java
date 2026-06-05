@@ -39,9 +39,9 @@ public interface ProductRepository extends JpaRepository<Product, UUID>, JpaSpec
             AND (:archivedStatus IS NULL OR p.is_archived = :archivedStatus)
             AND (:stockStatus IS NULL
                 OR (:stockStatus = 'OUT_OF_STOCK' AND p.product_type != 'SERVICE' AND p.quantity = 0)
-                OR (:stockStatus = 'LOW_STOCK' AND p.product_type != 'SERVICE' AND p.quantity > 0 AND p.quantity <= p.low_level_threshold)
+                OR (:stockStatus = 'LOW_STOCK' AND p.product_type != 'SERVICE' AND p.quantity > 0 AND p.quantity <= GREATEST(p.low_level_threshold, ROUND((SELECT COALESCE(SUM(ti.quantity - COALESCE(ti.refunded_quantity, 0)), 0)::float / 30.0 * COALESCE(p.lead_time_days, 3) FROM transaction_items ti JOIN transactions t ON ti.transaction_id = t.transaction_id WHERE ti.product_id = p.product_id AND t.transaction_status IN ('PAID', 'DEPOSIT') AND t.transaction_date >= NOW() - INTERVAL '30 days'))::int + 2))
                 OR (:stockStatus = 'OVERSTOCKED' AND p.product_type != 'SERVICE' AND p.quantity >= p.overstocked_threshold)
-                OR (:stockStatus = 'NORMAL' AND p.product_type != 'SERVICE' AND p.quantity > p.low_level_threshold AND p.quantity < p.overstocked_threshold)
+                OR (:stockStatus = 'NORMAL' AND p.product_type != 'SERVICE' AND p.quantity > GREATEST(p.low_level_threshold, ROUND((SELECT COALESCE(SUM(ti.quantity - COALESCE(ti.refunded_quantity, 0)), 0)::float / 30.0 * COALESCE(p.lead_time_days, 3) FROM transaction_items ti JOIN transactions t ON ti.transaction_id = t.transaction_id WHERE ti.product_id = p.product_id AND t.transaction_status IN ('PAID', 'DEPOSIT') AND t.transaction_date >= NOW() - INTERVAL '30 days'))::int + 2) AND p.quantity < p.overstocked_threshold)
                 OR (:stockStatus = 'REORDER_NEEDED' AND p.is_archived = false AND p.product_type != 'SERVICE' AND p.quantity > 0)
             )
             ORDER BY
@@ -65,9 +65,9 @@ public interface ProductRepository extends JpaRepository<Product, UUID>, JpaSpec
         AND (:archivedStatus IS NULL OR p.is_archived = :archivedStatus)
         AND (:stockStatus IS NULL
             OR (:stockStatus = 'OUT_OF_STOCK' AND p.product_type != 'SERVICE' AND p.quantity = 0)
-            OR (:stockStatus = 'LOW_STOCK' AND p.product_type != 'SERVICE' AND p.quantity > 0 AND p.quantity <= p.low_level_threshold)
+            OR (:stockStatus = 'LOW_STOCK' AND p.product_type != 'SERVICE' AND p.quantity > 0 AND p.quantity <= GREATEST(p.low_level_threshold, ROUND((SELECT COALESCE(SUM(ti.quantity - COALESCE(ti.refunded_quantity, 0)), 0)::float / 30.0 * COALESCE(p.lead_time_days, 3) FROM transaction_items ti JOIN transactions t ON ti.transaction_id = t.transaction_id WHERE ti.product_id = p.product_id AND t.transaction_status IN ('PAID', 'DEPOSIT') AND t.transaction_date >= NOW() - INTERVAL '30 days'))::int + 2))
             OR (:stockStatus = 'OVERSTOCKED' AND p.product_type != 'SERVICE' AND p.quantity >= p.overstocked_threshold)
-            OR (:stockStatus = 'NORMAL' AND p.product_type != 'SERVICE' AND p.quantity > p.low_level_threshold AND p.quantity < p.overstocked_threshold)
+            OR (:stockStatus = 'NORMAL' AND p.product_type != 'SERVICE' AND p.quantity > GREATEST(p.low_level_threshold, ROUND((SELECT COALESCE(SUM(ti.quantity - COALESCE(ti.refunded_quantity, 0)), 0)::float / 30.0 * COALESCE(p.lead_time_days, 3) FROM transaction_items ti JOIN transactions t ON ti.transaction_id = t.transaction_id WHERE ti.product_id = p.product_id AND t.transaction_status IN ('PAID', 'DEPOSIT') AND t.transaction_date >= NOW() - INTERVAL '30 days'))::int + 2) AND p.quantity < p.overstocked_threshold)
             OR (:stockStatus = 'REORDER_NEEDED' AND p.is_archived = false AND p.product_type != 'SERVICE' AND p.quantity > 0)
         )
         """,
