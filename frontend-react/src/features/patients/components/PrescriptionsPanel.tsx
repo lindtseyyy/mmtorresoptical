@@ -120,7 +120,7 @@ const PrescriptionsPanel: React.FC<PrescriptionsPanelProps> = ({ patientId, full
                         )}
                       </div>
                       {rx.notes && (
-                        <p className="text-sm text-muted-foreground">{rx.notes}</p>
+                        <p className="text-sm text-muted-foreground break-words">{rx.notes}</p>
                       )}
                       <p className="text-xs text-muted-foreground">
                         Date Issued: {formatDate(rx.issueDate)}
@@ -252,7 +252,7 @@ const PrescriptionsPanel: React.FC<PrescriptionsPanelProps> = ({ patientId, full
 
       {/* View Prescription Dialog */}
       <Dialog open={viewRxId !== null} onOpenChange={(open) => { if (!open) setViewRxId(null); }}>
-        <DialogContent>
+        <DialogContent className="max-h-[85vh] overflow-y-auto">
           {viewRxLoading ? (
           <div className="flex items-center justify-center py-16">
             <div className="h-8 w-8 animate-spin rounded-full border-4 border-primary border-t-transparent" />
@@ -287,7 +287,7 @@ const PrescriptionsPanel: React.FC<PrescriptionsPanelProps> = ({ patientId, full
               {viewRxData.notes && (
                 <div>
                   <p className="text-xs font-medium text-muted-foreground">Notes</p>
-                  <p className="text-sm">{viewRxData.notes}</p>
+                  <p className="text-sm break-words">{viewRxData.notes}</p>
                 </div>
               )}
 
@@ -375,7 +375,7 @@ const PrescriptionsPanel: React.FC<PrescriptionsPanelProps> = ({ patientId, full
                             </div>
                           )}
                           {lens.notes && (
-                            <p className="text-xs text-muted-foreground mt-2">Notes: {lens.notes}</p>
+                            <p className="text-xs text-muted-foreground mt-2 break-words">Notes: {lens.notes}</p>
                           )}
                         </div>
                       ))}
@@ -405,7 +405,7 @@ const PrescriptionsPanel: React.FC<PrescriptionsPanelProps> = ({ patientId, full
                             <p className="text-sm font-medium">{rec.productName}</p>
                             <p className="text-xs text-muted-foreground">{rec.category}</p>
                             {rec.staffNotes && (
-                              <p className="text-xs text-muted-foreground mt-1 italic">&ldquo;{rec.staffNotes}&rdquo;</p>
+                              <p className="text-xs text-muted-foreground mt-1 italic break-words">&ldquo;{rec.staffNotes}&rdquo;</p>
                             )}
                           </div>
                           <div className="text-right">

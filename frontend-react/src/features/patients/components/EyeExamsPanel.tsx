@@ -122,15 +122,15 @@ const EyeExamsPanel: React.FC<EyeExamsPanelProps> = ({ patientId, fullName, isAc
                       </div>
 
                       {ee.chiefComplaint && (
-                        <div>
+                        <div className="min-w-0">
                           <p className="text-xs text-muted-foreground">Chief Complaint</p>
-                          <p className="text-sm">{ee.chiefComplaint}</p>
+                          <p className="text-sm line-clamp-2 break-words">{ee.chiefComplaint}</p>
                         </div>
                       )}
                       {ee.clinicalImpression && (
-                        <div>
+                        <div className="min-w-0">
                           <p className="text-xs text-muted-foreground">Clinical Impression</p>
-                          <p className="text-sm">{ee.clinicalImpression}</p>
+                          <p className="text-sm line-clamp-2 break-words">{ee.clinicalImpression}</p>
                         </div>
                       )}
 
@@ -249,7 +249,7 @@ const EyeExamsPanel: React.FC<EyeExamsPanelProps> = ({ patientId, fullName, isAc
 
       {/* View Eye Exam Dialog */}
       <Dialog open={viewEeId !== null} onOpenChange={(open) => { if (!open) setViewEeId(null); }}>
-        <DialogContent>
+        <DialogContent className="max-h-[85vh] overflow-y-auto overflow-x-hidden">
           {viewEeLoading ? (
           <div className="flex items-center justify-center py-16">
             <div className="h-8 w-8 animate-spin rounded-full border-4 border-primary border-t-transparent" />
@@ -265,7 +265,7 @@ const EyeExamsPanel: React.FC<EyeExamsPanelProps> = ({ patientId, fullName, isAc
                 {viewEeData.performedBy ? ` by ${viewEeData.performedBy.fullName}` : ""}
               </DialogDescription>
             </DialogHeader>
-            <div className="space-y-4">
+            <div className="space-y-4 min-w-0">
               {viewEeData.status === "VOIDED" && (
                 <Badge className="bg-red-800 text-white">Voided</Badge>
               )}
@@ -280,25 +280,25 @@ const EyeExamsPanel: React.FC<EyeExamsPanelProps> = ({ patientId, fullName, isAc
               {viewEeData.chiefComplaint && (
                 <div>
                   <p className="text-xs font-medium text-muted-foreground">Chief Complaint</p>
-                  <p className="text-sm whitespace-pre-wrap">{viewEeData.chiefComplaint}</p>
+                  <p className="text-sm whitespace-normal overflow-wrap-anywhere">{viewEeData.chiefComplaint}</p>
                 </div>
               )}
               {viewEeData.medicalHistorySnapshot && (
                 <div>
                   <p className="text-xs font-medium text-muted-foreground">Medical History Snapshot</p>
-                  <p className="text-sm whitespace-pre-wrap">{viewEeData.medicalHistorySnapshot}</p>
+                  <p className="text-sm whitespace-normal overflow-wrap-anywhere">{viewEeData.medicalHistorySnapshot}</p>
                 </div>
               )}
               {viewEeData.clinicalImpression && (
                 <div>
                   <p className="text-xs font-medium text-muted-foreground">Clinical Impression</p>
-                  <p className="text-sm whitespace-pre-wrap">{viewEeData.clinicalImpression}</p>
+                  <p className="text-sm whitespace-normal overflow-wrap-anywhere">{viewEeData.clinicalImpression}</p>
                 </div>
               )}
               {viewEeData.planNotes && (
                 <div>
                   <p className="text-xs font-medium text-muted-foreground">Plan Notes</p>
-                  <p className="text-sm whitespace-pre-wrap">{viewEeData.planNotes}</p>
+                  <p className="text-sm whitespace-normal overflow-wrap-anywhere">{viewEeData.planNotes}</p>
                 </div>
               )}
               <div className="grid grid-cols-2 gap-4">
@@ -312,19 +312,19 @@ const EyeExamsPanel: React.FC<EyeExamsPanelProps> = ({ patientId, fullName, isAc
               {viewEeData.examinations?.slitLampAnterior && (
                 <div>
                   <p className="text-xs font-medium text-muted-foreground">Slit Lamp Examination</p>
-                  <p className="text-sm whitespace-pre-wrap">{viewEeData.examinations.slitLampAnterior}</p>
+                  <p className="text-sm whitespace-normal overflow-wrap-anywhere">{viewEeData.examinations.slitLampAnterior}</p>
                 </div>
               )}
               {viewEeData.examinations?.fundusPosterior && (
                 <div>
                   <p className="text-xs font-medium text-muted-foreground">Fundus Examination</p>
-                  <p className="text-sm whitespace-pre-wrap">{viewEeData.examinations.fundusPosterior}</p>
+                  <p className="text-sm whitespace-normal overflow-wrap-anywhere">{viewEeData.examinations.fundusPosterior}</p>
                 </div>
               )}
               {viewEeData.status === "VOIDED" && viewEeData.voidReason && (
                 <div>
                   <p className="text-xs font-medium text-muted-foreground">Void Reason</p>
-                  <p className="text-sm">{viewEeData.voidReason}</p>
+                  <p className="text-sm overflow-wrap-anywhere">{viewEeData.voidReason}</p>
                 </div>
               )}
               {viewEeData.voidedAt && (
