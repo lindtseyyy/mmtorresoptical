@@ -45,16 +45,16 @@ public interface TransactionRepository extends JpaRepository<Transaction, UUID>,
     @Query("SELECT COUNT(t) FROM Transaction t WHERE t.fulfillmentStatus = :status AND t.transactionDate >= :start AND t.transactionDate < :end")
     long countByFulfillmentStatusAndTransactionDateBetween(FulfillmentStatus status, LocalDateTime start, LocalDateTime end);
 
-    @Query("SELECT COUNT(t) FROM Transaction t WHERE t.patient.patientId = :patientId")
+    @Query("SELECT COUNT(t) FROM Transaction t WHERE t.patient.patientId = :patientId AND t.transactionStatus <> com.mmtorresoptical.OpticalClinicManagementSystem.enums.TransactionStatus.VOIDED")
     long countByPatientId(UUID patientId);
 
-    @Query("SELECT MAX(t.transactionDate) FROM Transaction t WHERE t.patient.patientId = :patientId")
+    @Query("SELECT MAX(t.transactionDate) FROM Transaction t WHERE t.patient.patientId = :patientId AND t.transactionStatus <> com.mmtorresoptical.OpticalClinicManagementSystem.enums.TransactionStatus.VOIDED")
     LocalDateTime findMaxTransactionDateByPatientId(UUID patientId);
 
-    @Query("SELECT COALESCE(SUM(t.totalAmount), 0) FROM Transaction t WHERE t.patient.patientId = :patientId")
+    @Query("SELECT COALESCE(SUM(t.totalAmount - COALESCE(t.totalRefundedCash, 0)), 0) FROM Transaction t WHERE t.patient.patientId = :patientId AND t.transactionStatus <> com.mmtorresoptical.OpticalClinicManagementSystem.enums.TransactionStatus.VOIDED")
     BigDecimal sumTotalAmountByPatientId(UUID patientId);
 
-    @Query("SELECT COALESCE(SUM(ti.quantity), 0) FROM TransactionItem ti WHERE ti.transaction.patient.patientId = :patientId")
+    @Query("SELECT COALESCE(SUM(ti.quantity - COALESCE(ti.refundedQuantity, 0)), 0) FROM TransactionItem ti WHERE ti.transaction.patient.patientId = :patientId AND ti.transaction.transactionStatus <> com.mmtorresoptical.OpticalClinicManagementSystem.enums.TransactionStatus.VOIDED")
     long sumQuantityByPatientId(UUID patientId);
 
     @Query("SELECT COALESCE(SUM(t.totalAmount), 0) FROM Transaction t")
