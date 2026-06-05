@@ -250,15 +250,15 @@ const PaymentDrawer: React.FC<PaymentDrawerProps> = ({
                     ₱
                   </span>
                   <Input
-                    type="number"
-                    min="0"
-                    max={isGcash ? grandTotal : undefined}
-                    step="0.01"
+                    type="text"
+                    inputMode="decimal"
                     value={amountTenderedStr}
                     onChange={(e) => {
                       const raw = e.target.value.replace(/[^0-9.]/g, '');
-                      const parts = raw.split('.');
-                      let val = parts.length > 2 ? parts[0] + '.' + parts.slice(1).join('') : raw;
+                      const dotIndex = raw.indexOf('.');
+                      let val = dotIndex === -1
+                        ? raw
+                        : raw.slice(0, dotIndex + 1) + raw.slice(dotIndex + 1).replace(/\./g, '');
                       if (isGcash && parseFloat(val) > grandTotal) {
                         val = grandTotal.toFixed(2);
                       }

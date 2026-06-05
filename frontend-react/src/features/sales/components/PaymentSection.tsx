@@ -105,11 +105,27 @@ const PaymentSection: React.FC<PaymentSectionProps> = ({
                   ₱
                 </span>
                 <Input
-                  type="number"
-                  min="0"
-                  step="0.01"
+                  type="text"
+                  inputMode="decimal"
                   value={cashTender}
-                  onChange={(e) => setCashTender(e.target.value)}
+                  onChange={(e) => {
+                    const val = e.target.value;
+                    if (/^[0-9]*\.?[0-9]*$/.test(val) || val === "") {
+                      setCashTender(val);
+                    }
+                  }}
+                  onKeyDown={(e) => {
+                    if (
+                      !/[0-9.]/.test(e.key) &&
+                      !["Backspace", "Delete", "Tab", "Escape", "Enter", "ArrowLeft", "ArrowRight", "Home", "End"].includes(e.key) &&
+                      !(e.ctrlKey || e.metaKey)
+                    ) {
+                      e.preventDefault();
+                    }
+                    if (e.key === "." && cashTender.includes(".")) {
+                      e.preventDefault();
+                    }
+                  }}
                   placeholder="0.00"
                   className="pl-7"
                   disabled={pending}
