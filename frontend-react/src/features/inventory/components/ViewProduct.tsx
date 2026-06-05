@@ -57,7 +57,7 @@ const ViewProduct: React.FC = () => {
 
   const { data: txData, isFetching: txFetching } = useQuery({
     queryKey: ["product-transactions", productId],
-    queryFn: () => fetchProductTransactions(productId, 0, 10),
+    queryFn: () => fetchProductTransactions(productId, 0, 5),
     enabled: !!productId,
   });
 
