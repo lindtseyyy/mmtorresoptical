@@ -56,7 +56,7 @@ const PatientPickerModal: React.FC<PatientPickerModalProps> = ({
           <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
           <Input
             className="pl-9"
-            placeholder="Search by patient name, contact number, or ID..."
+            placeholder="Search by patient name..."
             value={searchInput}
             onChange={(e) => setSearchInput(e.target.value)}
             autoFocus
@@ -91,8 +91,7 @@ const PatientPickerModal: React.FC<PatientPickerModalProps> = ({
                       {patient.fullName}
                     </p>
                     <p className="text-xs text-muted-foreground">
-                      ID: {patient.patientId.slice(0, 8)} &middot;{" "}
-                      {patient.contactNumber}
+                      {patient.email}
                     </p>
                   </div>
                   <Button

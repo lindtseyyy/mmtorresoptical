@@ -9,4 +9,5 @@ public class PatientSearchResultDTO {
     private UUID patientId;
     private String fullName;
     private String contactNumber;
+    private String email;
 }

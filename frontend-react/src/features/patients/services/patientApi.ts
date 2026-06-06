@@ -191,6 +191,7 @@ export interface PatientSearchResult {
   patientId: string;
   fullName: string;
   contactNumber: string;
+  email: string;
 }
 
 const searchPatients = async (
