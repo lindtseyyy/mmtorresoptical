@@ -27,7 +27,7 @@ const Login: React.FC = () => {
         const payload = JSON.parse(atob(token.split(".")[1]));
         const now = Math.floor(Date.now() / 1000);
         if (payload.exp && payload.exp > now) {
-          navigate("/", { replace: true });
+          navigate(payload.role === "ADMIN" ? "/dashboard" : "/inventory", { replace: true });
         }
       } catch {
         localStorage.removeItem("authToken");

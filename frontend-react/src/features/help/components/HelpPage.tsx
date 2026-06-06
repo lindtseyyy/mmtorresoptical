@@ -1,4 +1,4 @@
-import { useState, useMemo, type ReactNode } from "react";
+import { useState, useMemo } from "react";
 import { ExternalLink, ChevronDown, ChevronUp, Search } from "lucide-react";
 import { Button } from "@/shared/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/shared/components/ui/card";
@@ -7,11 +7,6 @@ import SegmentedControl from "@/shared/components/ui/segmented-control";
 import { getUserRole } from "@/shared/lib/auth";
 
 type Tab = "manual" | "faq";
-
-type FaqItem = {
-  question: string;
-  answer: string | ReactNode;
-};
 
 export default function HelpPage() {
   const role = getUserRole();
