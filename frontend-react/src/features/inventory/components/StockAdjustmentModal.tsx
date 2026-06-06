@@ -1,17 +1,24 @@
 import { useState, useCallback } from "react";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
-import { Plus, Minus } from "lucide-react";
+import { Plus, Minus, Check, ChevronsUpDown } from "lucide-react";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from "@/shared/components/ui/dialog";
 import { Button } from "@/shared/components/ui/button";
 import { Input } from "@/shared/components/ui/input";
 import { Label } from "@/shared/components/ui/label";
 import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/shared/components/ui/select";
+  Command,
+  CommandEmpty,
+  CommandGroup,
+  CommandInput,
+  CommandItem,
+  CommandList,
+} from "@/shared/components/ui/command";
+import {
+  Popover,
+  PopoverContent,
+  PopoverTrigger,
+} from "@/shared/components/ui/popover";
+import { cn } from "@/shared/lib/utils";
 import { createAdjustStockMutationOptions } from "@/features/inventory/hooks/productQuery";
 
 interface StockAdjustmentModalProps {
@@ -47,6 +54,8 @@ const StockAdjustmentModal: React.FC<StockAdjustmentModalProps> = ({
   const [mode, setMode] = useState<"ADD_STOCK" | "REMOVE_STOCK">("ADD_STOCK");
   const [amount, setAmount] = useState("");
   const [reason, setReason] = useState("");
+  const [reasonOpen, setReasonOpen] = useState(false);
+  const [reasonSearch, setReasonSearch] = useState("");
 
   const reasons = mode === "ADD_STOCK" ? ADD_REASONS : REMOVE_REASONS;
 
@@ -54,6 +63,7 @@ const StockAdjustmentModal: React.FC<StockAdjustmentModalProps> = ({
     setMode("ADD_STOCK");
     setAmount("");
     setReason("");
+    setReasonSearch("");
   }, []);
 
   const handleOpenChange = useCallback(
@@ -107,7 +117,7 @@ const StockAdjustmentModal: React.FC<StockAdjustmentModalProps> = ({
           <div className="mt-2 flex gap-3">
             <button
               type="button"
-              onClick={() => { setMode("ADD_STOCK"); setReason(""); }}
+              onClick={() => { setMode("ADD_STOCK"); setReason(""); setReasonSearch(""); }}
               className={`flex-1 flex items-center justify-center gap-2 rounded-lg border-2 px-4 py-3 text-sm font-medium transition-colors ${
                 mode === "ADD_STOCK"
                   ? "border-emerald-500 bg-emerald-50 text-emerald-700"
@@ -119,7 +129,7 @@ const StockAdjustmentModal: React.FC<StockAdjustmentModalProps> = ({
             </button>
             <button
               type="button"
-              onClick={() => { setMode("REMOVE_STOCK"); setReason(""); }}
+              onClick={() => { setMode("REMOVE_STOCK"); setReason(""); setReasonSearch(""); }}
               className={`flex-1 flex items-center justify-center gap-2 rounded-lg border-2 px-4 py-3 text-sm font-medium transition-colors ${
                 mode === "REMOVE_STOCK"
                   ? "border-red-500 bg-red-50 text-red-700"
@@ -156,18 +166,73 @@ const StockAdjustmentModal: React.FC<StockAdjustmentModalProps> = ({
         {/* Reason */}
         <div>
           <Label className="font-semibold">Reason</Label>
-          <Select value={reason} onValueChange={setReason}>
-            <SelectTrigger className="mt-2 w-full">
-              <SelectValue placeholder="Select a reason..." />
-            </SelectTrigger>
-            <SelectContent>
-              {reasons.map((r) => (
-                <SelectItem key={r} value={r}>
-                  {r}
-                </SelectItem>
-              ))}
-            </SelectContent>
-          </Select>
+          <Popover open={reasonOpen} onOpenChange={setReasonOpen}>
+            <PopoverTrigger asChild>
+              <Button
+                variant="outline"
+                role="combobox"
+                aria-expanded={reasonOpen}
+                className="mt-2 w-full justify-between font-normal"
+              >
+                {reason || "Select or type a reason..."}
+                <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
+              </Button>
+            </PopoverTrigger>
+            <PopoverContent className="w-[--radix-popover-trigger-width] p-0" align="start">
+              <Command shouldFilter={false}>
+                <CommandInput
+                  placeholder="Search or type a reason..."
+                  value={reasonSearch}
+                  onValueChange={setReasonSearch}
+                />
+                <CommandList>
+                  <CommandEmpty>No reasons found.</CommandEmpty>
+                  <CommandGroup>
+                    {reasons
+                      .filter((r) =>
+                        r.toLowerCase().includes(reasonSearch.toLowerCase())
+                      )
+                      .map((r) => (
+                        <CommandItem
+                          key={r}
+                          value={r}
+                          onSelect={() => {
+                            setReason(r);
+                            setReasonSearch("");
+                            setReasonOpen(false);
+                          }}
+                        >
+                          <Check
+                            className={cn(
+                              "mr-2 h-4 w-4",
+                              reason === r ? "opacity-100" : "opacity-0"
+                            )}
+                          />
+                          {r}
+                        </CommandItem>
+                      ))}
+                  </CommandGroup>
+                </CommandList>
+                {reasonSearch.trim().length > 0 &&
+                  !reasons.some(
+                    (r) => r.toLowerCase() === reasonSearch.trim().toLowerCase()
+                  ) && (
+                    <button
+                      type="button"
+                      className="flex w-full items-center gap-2 border-t px-2 py-2 text-sm text-primary hover:bg-accent hover:text-accent-foreground cursor-pointer"
+                      onClick={() => {
+                        setReason(reasonSearch.trim());
+                        setReasonSearch("");
+                        setReasonOpen(false);
+                      }}
+                    >
+                      <Plus className="h-4 w-4 shrink-0" />
+                      Use &ldquo;{reasonSearch.trim()}&rdquo;
+                    </button>
+                  )}
+              </Command>
+            </PopoverContent>
+          </Popover>
         </div>
 
         {/* Preview */}
