@@ -74,16 +74,16 @@ export default function Dashboard() {
       {/* Hero Row */}
       <div className="grid grid-cols-1 gap-4 lg:grid-cols-3">
         {/* Today's Revenue */}
-        <div className="rounded-xl border border-emerald-200 bg-emerald-50 p-4 shadow-sm">
+        <div className="rounded-xl border border-border bg-card p-4 shadow-sm">
           <div className="flex items-center gap-2">
-            <div className="flex h-9 w-9 items-center justify-center rounded-lg bg-emerald-100">
-              <CircleDollarSign className="h-4 w-4 text-emerald-700" />
+            <div className="flex h-9 w-9 items-center justify-center rounded-full bg-emerald-500/10">
+              <CircleDollarSign className="h-4 w-4 text-emerald-500" />
             </div>
-            <p className="text-xs font-medium text-emerald-800">
+            <p className="text-xs font-medium text-muted-foreground">
               Today&apos;s Revenue
             </p>
           </div>
-          <p className="mt-2 text-2xl font-bold text-emerald-900">
+          <p className="mt-2 text-2xl font-bold">
             {metrics?.todayRevenue != null
               ? formatCurrency(metrics.todayRevenue)
               : "—"}
@@ -91,16 +91,27 @@ export default function Dashboard() {
         </div>
 
         {/* Orders Awaiting Pickup */}
-        <div className="rounded-xl border border-amber-200 bg-amber-50 p-4 shadow-sm">
-          <div className="flex items-center gap-2">
-            <div className="flex h-9 w-9 items-center justify-center rounded-lg bg-amber-100">
-              <PackageOpen className="h-4 w-4 text-amber-700" />
+        <div
+          onClick={() => {
+            sessionStorage.setItem("transactions:fulfillmentStatusFilter", JSON.stringify("FOR_PICKUP"));
+            sessionStorage.setItem("transactions:statusFilter", JSON.stringify("all"));
+            sessionStorage.setItem("transactions:page", JSON.stringify(0));
+            navigate("/transactions");
+          }}
+          className="rounded-xl border border-border bg-card p-4 shadow-sm cursor-pointer transition-colors hover:opacity-90"
+        >
+          <div className="flex items-center justify-between gap-2">
+            <div className="flex items-center gap-2">
+              <div className="flex h-9 w-9 items-center justify-center rounded-full bg-amber-500/10">
+                <PackageOpen className="h-4 w-4 text-amber-500" />
+              </div>
+              <p className="text-xs font-medium text-muted-foreground">
+                Orders Awaiting Pickup
+              </p>
             </div>
-            <p className="text-xs font-medium text-amber-800">
-              Orders Awaiting Pickup
-            </p>
+            <ArrowRight className="h-4 w-4 text-muted-foreground" />
           </div>
-          <p className="mt-2 text-2xl font-bold text-amber-900">
+          <p className="mt-2 text-2xl font-bold">
             {metrics?.awaitingPickupCount ?? "—"}
           </p>
         </div>
