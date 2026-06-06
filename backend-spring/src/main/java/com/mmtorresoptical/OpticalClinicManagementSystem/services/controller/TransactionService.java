@@ -79,12 +79,7 @@ public class TransactionService {
             patient = patientRepository.findById(patientId)
                     .orElseThrow(() -> new ResourceNotFoundException("Patient not found with id: " + patientId));
 
-            if (transactionRequestDTO.getPrescriptionId() != null) {
-                // Patient with linked prescription → lab workflow (default +3 days)
-                if (transactionRequestDTO.getEstimatedReadyDate() == null) {
-                    transactionRequestDTO.setEstimatedReadyDate(LocalDate.now().plusDays(3));
-                }
-            } else {
+            if (transactionRequestDTO.getPrescriptionId() == null) {
                 // Patient but no linked prescription → immediate fulfillment, no pickup date
                 transactionRequestDTO.setEstimatedReadyDate(null);
             }
