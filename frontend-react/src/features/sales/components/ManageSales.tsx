@@ -292,6 +292,8 @@ const ManageSales: React.FC = () => {
       }
 
       const skipped: string[] = [];
+      const outOfStock: string[] = [];
+      const partialStock: { name: string; added: number; requested: number }[] = [];
       let addedCount = 0;
 
       setCart((prev) => {
@@ -304,6 +306,25 @@ const ManageSales: React.FC = () => {
             skipped.push(rec.productName);
             continue;
           }
+
+          const isPhysical = rec.productType === "PHYSICAL";
+          const availableStock = rec.stockQuantity;
+
+          if (isPhysical && availableStock <= 0) {
+            outOfStock.push(rec.productName);
+            continue;
+          }
+
+          let addQuantity = rec.quantity;
+          if (isPhysical && availableStock < rec.quantity) {
+            partialStock.push({
+              name: rec.productName,
+              added: availableStock,
+              requested: rec.quantity,
+            });
+            addQuantity = availableStock;
+          }
+
           merged.push({
             uid: nextUid(),
             product: {
@@ -326,7 +347,7 @@ const ManageSales: React.FC = () => {
               isSeniorPwdEligible: rec.isSeniorPwdEligible,
               createdAt: "",
             },
-            quantity: rec.quantity,
+            quantity: addQuantity,
             discountType: null,
             discountValue: 0,
             isDiscounted: false,
@@ -336,18 +357,33 @@ const ManageSales: React.FC = () => {
         return merged;
       });
 
-      if (skipped.length > 0 && addedCount > 0) {
-        toast.warning("Some items skipped", {
-          description: `Already in cart: ${skipped.join(", ")}. ${addedCount} new item(s) added.`,
-        });
-      } else if (skipped.length > 0 && addedCount === 0) {
-        toast.info("Already in cart", {
-          description: `All items from this prescription are already in the cart: ${skipped.join(", ")}.`,
-        });
-      } else {
-        toast.success("Prescription loaded", {
-          description: `${addedCount} item(s) added to cart.`,
-        });
+      const messages: string[] = [];
+
+      if (outOfStock.length > 0) {
+        messages.push(`Out of stock: ${outOfStock.join(", ")}.`);
+      }
+      if (partialStock.length > 0) {
+        for (const item of partialStock) {
+          messages.push(`Only ${item.added} of ${item.requested} added for ${item.name} due to insufficient stock.`);
+        }
+      }
+      if (skipped.length > 0) {
+        messages.push(`Already in cart: ${skipped.join(", ")}.`);
+      }
+      if (addedCount > 0) {
+        messages.push(`${addedCount} item(s) added to cart.`);
+      }
+
+      const description = (
+        <span style={{ whiteSpace: "pre-line" }}>{messages.join("\n")}</span>
+      );
+
+      if (outOfStock.length > 0) {
+        toast.error("Prescription loaded with issues", { description });
+      } else if (partialStock.length > 0 || skipped.length > 0) {
+        toast.warning("Prescription loaded with notes", { description });
+      } else if (addedCount > 0) {
+        toast.success("Prescription loaded", { description });
       }
     } catch (e: any) {
       toast.error("Failed to load prescription", {
