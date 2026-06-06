@@ -56,6 +56,7 @@ const ManageTransactions: React.FC = () => {
   const [searchQuery, setSearchQuery] = useSessionState("transactions:searchQuery", "");
   const [debouncedSearchQuery, setDebouncedSearchQuery] = useState(searchQuery);
   const [statusFilter, setStatusFilter] = useSessionState("transactions:statusFilter", "all");
+  const [fulfillmentStatusFilter, setFulfillmentStatusFilter] = useSessionState("transactions:fulfillmentStatusFilter", "all");
   const [page, setPage] = useSessionState("transactions:page", 0);
   const [sortBy, setSortBy] = useSessionState("transactions:sortBy", "transactionDate");
   const [sortOrder, setSortOrder] = useSessionState<"asc" | "desc">("transactions:sortOrder", "desc");
@@ -77,6 +78,7 @@ const ManageTransactions: React.FC = () => {
       size: PAGE_SIZE,
       keyword: debouncedSearchQuery || undefined,
       status: statusFilter !== "all" ? statusFilter : undefined,
+      fulfillmentStatus: fulfillmentStatusFilter !== "all" ? fulfillmentStatusFilter : undefined,
       sortBy,
       sortOrder,
       minDate: dateFrom || undefined,
@@ -114,7 +116,7 @@ const ManageTransactions: React.FC = () => {
       return;
     }
     setPage(0);
-  }, [debouncedSearchQuery, statusFilter, sortBy, sortOrder, dateFrom, dateTo]);
+  }, [debouncedSearchQuery, statusFilter, fulfillmentStatusFilter, sortBy, sortOrder, dateFrom, dateTo]);
 
   useEffect(() => {
     if (transactions.length === 0 && page > 0 && !isFetching) {
@@ -136,8 +138,26 @@ const ManageTransactions: React.FC = () => {
       {/* Operational Metrics */}
       <div className="grid grid-cols-1 gap-4 sm:grid-cols-3">
         <MetricCard icon={ShoppingCart} label="Today's Transactions" value={metrics?.todayTransactions ?? "—"} color="blue" />
-        <MetricCard icon={CreditCard} label="Deposits Awaiting Settlement" value={metrics?.depositsPendingCount ?? "—"} color="amber" />
-        <MetricCard icon={PackageOpen} label="Orders For Pickup" value={metrics?.awaitingPickupCount ?? "—"} color="violet" />
+        <MetricCard
+          icon={CreditCard}
+          label="Deposits Awaiting Settlement"
+          value={metrics?.depositsPendingCount ?? "—"}
+          color="amber"
+          onClick={() => {
+            setStatusFilter("DEPOSIT");
+            setFulfillmentStatusFilter("all");
+          }}
+        />
+        <MetricCard
+          icon={PackageOpen}
+          label="Orders For Pickup"
+          value={metrics?.awaitingPickupCount ?? "—"}
+          color="violet"
+          onClick={() => {
+            setStatusFilter("all");
+            setFulfillmentStatusFilter("FOR_PICKUP");
+          }}
+        />
       </div>
 
       {/* Transactions Table */}
@@ -205,26 +225,40 @@ const ManageTransactions: React.FC = () => {
                 />
                 {(dateFrom || dateTo) && (
                   <Button
-                    variant="ghost"
+                    variant="outline"
                     size="sm"
                     onClick={() => { setDateFrom(""); setDateTo(""); }}
-                    className="text-xs text-muted-foreground"
+                    className="text-xs"
                   >
                     Clear
                   </Button>
                 )}
               </div>
               <div className="flex items-center gap-2">
-                <span className="text-sm text-muted-foreground whitespace-nowrap">Status:</span>
+                <span className="text-sm text-muted-foreground whitespace-nowrap">Financial:</span>
                 <Select value={statusFilter} onValueChange={setStatusFilter}>
                   <SelectTrigger className="w-[160px]">
                     <SelectValue />
                   </SelectTrigger>
                   <SelectContent>
-                    <SelectItem value="all">All Statuses</SelectItem>
+                    <SelectItem value="all">All Financial</SelectItem>
                     <SelectItem value="DEPOSIT">Deposit</SelectItem>
                     <SelectItem value="PAID">Paid</SelectItem>
                     <SelectItem value="VOIDED">Voided</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+              <div className="flex items-center gap-2">
+                <span className="text-sm text-muted-foreground whitespace-nowrap">Fulfillment:</span>
+                <Select value={fulfillmentStatusFilter} onValueChange={setFulfillmentStatusFilter}>
+                  <SelectTrigger className="w-[160px]">
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="all">All Fulfillment</SelectItem>
+                    <SelectItem value="PENDING_LAB">Pending Lab</SelectItem>
+                    <SelectItem value="FOR_PICKUP">For Pickup</SelectItem>
+                    <SelectItem value="COMPLETED">Completed</SelectItem>
                   </SelectContent>
                 </Select>
               </div>

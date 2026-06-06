@@ -399,6 +399,7 @@ public class TransactionService {
             LocalDate maxDate,
             TransactionStatus status,
             RefundStatus refundStatus,
+            FulfillmentStatus fulfillmentStatus,
             UUID productId,
             int page,
             int size,
@@ -446,6 +447,10 @@ public class TransactionService {
 
         if (refundStatus != null) {
             spec = spec.and(TransactionSpecification.hasRefundStatus(refundStatus));
+        }
+
+        if (fulfillmentStatus != null) {
+            spec = spec.and(TransactionSpecification.hasFulfillmentStatus(fulfillmentStatus));
         }
 
         if (productId != null) {

@@ -1,5 +1,6 @@
 package com.mmtorresoptical.OpticalClinicManagementSystem.specification;
 
+import com.mmtorresoptical.OpticalClinicManagementSystem.enums.FulfillmentStatus;
 import com.mmtorresoptical.OpticalClinicManagementSystem.enums.RefundStatus;
 import com.mmtorresoptical.OpticalClinicManagementSystem.enums.TransactionStatus;
 import com.mmtorresoptical.OpticalClinicManagementSystem.model.Product;
@@ -74,6 +75,17 @@ public class TransactionSpecification {
             }
 
             return cb.equal(root.get("refundStatus"), refundStatus);
+        };
+    }
+
+    public static Specification<Transaction> hasFulfillmentStatus(FulfillmentStatus fulfillmentStatus) {
+
+        return (root, query, cb) -> {
+            if (fulfillmentStatus == null) {
+                return cb.conjunction(); // no filtering
+            }
+
+            return cb.equal(root.get("fulfillmentStatus"), fulfillmentStatus);
         };
     }
 

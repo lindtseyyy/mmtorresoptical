@@ -8,6 +8,7 @@ import com.mmtorresoptical.OpticalClinicManagementSystem.dto.payment.PaymentResp
 import com.mmtorresoptical.OpticalClinicManagementSystem.dto.refund.ItemRefundResponseDTO;
 import com.mmtorresoptical.OpticalClinicManagementSystem.dto.refund.RefundTransactionRequestDTO;
 import com.mmtorresoptical.OpticalClinicManagementSystem.dto.transaction.*;
+import com.mmtorresoptical.OpticalClinicManagementSystem.enums.FulfillmentStatus;
 import com.mmtorresoptical.OpticalClinicManagementSystem.enums.RefundStatus;
 import com.mmtorresoptical.OpticalClinicManagementSystem.enums.TransactionStatus;
 import com.mmtorresoptical.OpticalClinicManagementSystem.services.controller.TransactionService;
@@ -45,6 +46,7 @@ public class TransactionController {
 
             @RequestParam(required = false) TransactionStatus status,
             @RequestParam(required = false) RefundStatus refundStatus,
+            @RequestParam(required = false) FulfillmentStatus fulfillmentStatus,
 
             @RequestParam(defaultValue = "0") int page,
             @RequestParam(defaultValue = "10") int size,
@@ -69,6 +71,7 @@ public class TransactionController {
                 maxDate,
                 status,
                 refundStatus,
+                fulfillmentStatus,
                 null,
                 page,
                 size,

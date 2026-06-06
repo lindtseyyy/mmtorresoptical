@@ -36,6 +36,7 @@ export interface TransactionFilters {
   maxDate?: string;
   status?: string;
   refundStatus?: string;
+  fulfillmentStatus?: string;
   page?: number;
   size?: number;
   sortBy?: string;
@@ -78,6 +79,7 @@ const fetchTransactions = async (filters: TransactionFilters = {}): Promise<Page
   if (rest.maxDate) params.maxDate = rest.maxDate;
   if (rest.status) params.status = rest.status;
   if (rest.refundStatus) params.refundStatus = rest.refundStatus;
+  if (rest.fulfillmentStatus) params.fulfillmentStatus = rest.fulfillmentStatus;
 
   const { data } = await api.get("/transactions", { params });
   const pg = data.page;
