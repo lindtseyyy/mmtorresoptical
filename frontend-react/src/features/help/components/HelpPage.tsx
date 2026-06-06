@@ -1,7 +1,8 @@
 import { useState, useMemo } from "react";
-import { ExternalLink, ChevronDown, ChevronUp } from "lucide-react";
+import { ExternalLink, ChevronDown, ChevronUp, Search } from "lucide-react";
 import { Button } from "@/shared/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/shared/components/ui/card";
+import { Input } from "@/shared/components/ui/input";
 import SegmentedControl from "@/shared/components/ui/segmented-control";
 import { getUserRole } from "@/shared/lib/auth";
 
@@ -11,6 +12,7 @@ export default function HelpPage() {
   const role = getUserRole();
   const [activeTab, setActiveTab] = useState<Tab>("faq");
   const [openFaqs, setOpenFaqs] = useState<Set<number>>(new Set());
+  const [faqSearch, setFaqSearch] = useState("");
 
   const toggleFaq = (index: number) => {
     setOpenFaqs((prev) => {
@@ -230,14 +232,64 @@ export default function HelpPage() {
         "Navigate to Maintenance &gt; Backup and Restore, click 'Restore Backup', and select a previously downloaded backup file. Enter the password used when the backup was created and confirm. Note: restoration replaces all current data with the backup contents.",
     },
     {
+      question: "What password do I use for backup and restore?",
+      answer:
+        "Both backup and restore require the password of the currently logged-in administrator. This is the same password you use to log in to the system. The backup file itself is protected by a separate password you set when creating the backup — you will need this same password when restoring from that file.",
+    },
+    {
+      question: "How do I generate and export reports?",
+      answer:
+        "Go to Reports in the sidebar. Use the segmented control to switch between Inventory Analytics, Transactions, and Patients. For transaction and patient reports, you can set a date range using the filter inputs. Click 'Export as PDF' or 'Export as Excel' to download the report. All report exports are recorded in the Audit Trail.",
+    },
+    {
+      question: "What do the Dashboard metrics mean?",
+      answer:
+        "The Dashboard provides a high-level overview: Today's Revenue is cash collected today. Orders Awaiting Pickup are completed sales not yet picked up. Needs Reordering shows products below their reorder point — click it to view them in inventory. Active Inventory Value is the total cost value of all active stock. Receivables are outstanding customer balances. Revenue Month-to-Date is net revenue for the current month. Avg. Transaction Value is the mean amount per transaction.",
+    },
+    {
+      question: "How do I adjust stock levels for a product?",
+      answer:
+        "Go to Inventory Management, find the product, and click the View button. In the product detail view, click the stock adjustment button. Choose 'Add Stock' or 'Remove Stock', enter the quantity, and select or type a reason. A preview shows the resulting stock level before you confirm. All adjustments are recorded in the Audit Trail.",
+    },
+    {
+      question: "How do I reset a user's password?",
+      answer:
+        "Go to Registration, find the user, and click Edit. In the edit form, click 'Reset Password' and enter a temporary password. The user will be required to change their password and set a security question the next time they log in.",
+    },
+    {
+      question: "Why is a new user forced to change their password on first login?",
+      answer:
+        "When an administrator creates a new user account or resets a user's password, the system flags the account for a mandatory password change. This ensures that only the user knows their password and that administrators cannot access other accounts. The user must also set up a security question during this process.",
+    },
+    {
+      question: "How do I manage product categories and suppliers?",
+      answer:
+        "When adding or editing a product, click the gear icon next to the Category or Supplier field. This opens a management modal where you can view all categories or suppliers, toggle their active/inactive status, or delete ones that have no associated products. To add a new category or supplier, simply type a new name in the product form's combobox field and select 'Create'.",
+    },
+    {
       question: "How do I view a patient's prescription history?",
       answer:
         "Go to Patient Management, find the patient, and click the View button. The patient profile displays all prescriptions and health history records. You can add new prescriptions or edit existing ones from this view.",
     },
     {
+      question: "How do I log a patient visit?",
+      answer:
+        "Go to Patient Management, find the patient, and click the View button. Click 'Log Visit' to open the visit dialog. Select a date and time, choose a visit purpose (such as Eye Check-up, Frame Fitting, Pick-up, or Consultation), and optionally add notes. If the patient has a pending follow-up, you can link the visit to it.",
+    },
+    {
+      question: "How do I add or record eye exams for a patient?",
+      answer:
+        "Open the patient's profile and navigate to the Eye Exams tab. Click 'Add Eye Exam' to record new exam findings including visual acuity, refraction measurements, and clinical notes. You can also view and edit previous eye exam records from this tab.",
+    },
+    {
       question: "What happens when a product is archived?",
       answer:
         "Archiving a product hides it from the main product list and the billing and payment interface. It does not delete historical transaction data. Archived products can be restored by an administrator from Maintenance &gt; Inventory Maintenance.",
+    },
+    {
+      question: "What happens when a user account is archived?",
+      answer:
+        "Archiving a user disables their login — they can no longer access the system. Their account and historical data (such as processed transactions) are preserved. You cannot archive your own account. Archived users can be restored at any time from Maintenance &gt; User Maintenance.",
     },
     {
       question: "How do I register a new user account?",
@@ -247,12 +299,17 @@ export default function HelpPage() {
     {
       question: "How do I add or edit a product in inventory?",
       answer:
-        "Go to Inventory Management and click 'Add Product' to create a new product, or find an existing product and click the Edit icon. Fill in or update the product details including name, category, price, cost, and stock quantity. You can also upload a product image. Changes do not affect previously completed transactions.",
+        "Go to Inventory Management and click 'Add Product' to create a new product, or find an existing product and click the Edit icon. Fill in or update the product details including name, category, supplier, price, cost, and stock quantity. You can also upload a product image. Changes do not affect previously completed transactions.",
+    },
+    {
+      question: "How do I process a refund?",
+      answer:
+        "Navigate to Sales and Transactions and click on the transaction you want to refund. In the transaction detail view, click 'Refund Item(s)' to enter selection mode. Check the items to refund and click 'Prepare Refund'. In the refund drawer, set the quantity and reason for each item, choose a refund method (Cash or GCash), and confirm. A refund receipt will be generated. Restocked quantities are automatically added back to inventory for physical items.",
     },
     {
       question: "How do I use the Audit Trail?",
       answer:
-        "The Audit Trail is found under Maintenance. It logs all system actions including login/logout, creating or updating records, archiving, voiding transactions, and database backups. You can filter by action type, resource type, and date range to review specific activities.",
+        "The Audit Trail is found under Maintenance. It logs all system actions including login/logout, creating or updating records, archiving, voiding transactions, and database backups. You can filter by action type, resource type, and date range to review specific activities. Click the View button on any entry to see full details and navigate to the related record.",
     },
   ];
 
@@ -260,27 +317,82 @@ export default function HelpPage() {
     {
       question: "How do I process a sale in Billing and Payment?",
       answer:
-        "Go to Billing and Payment. Select products from the left panel — toggle between Physical Products and Services using the tabs at the top. Click the Add to Cart (plus) button for each item. Once items are in the cart, apply payments using cash or GCash, then complete the transaction. A receipt will be generated.",
+        "Go to Billing and Payment. Select products from the left panel — toggle between Physical Products and Services using the tabs at the top. Click the Add to Cart (plus) button for each item. You can search for products by name and filter by category. Once items are in the cart, click 'Pay' to open the payment drawer, choose a payment method, and complete the transaction. A receipt will be generated.",
     },
     {
-      question: "How do I process a refund?",
+      question: "How do I associate a patient with a sale?",
       answer:
-        "Navigate to Sales and Transactions and click on the transaction you want to refund. In the transaction detail view, click the 'Refund' button. Select the items and quantities to refund, choose the refund method (Cash or GCash), and confirm. A refund receipt will be generated.",
+        "In the Billing and Payment page, click 'Associate Patient' in the customer section on the right panel. Search for the patient by name, contact number, or ID, then click 'Select Patient'. Linking a patient is optional for full payments but required for deposits (partial payments). You can remove the linked patient by clicking the X button.",
+    },
+    {
+      question: "How do I load a patient's prescription items into the cart?",
+      answer:
+        "After associating a patient with the sale, the patient section expands to show their prescriptions. Select a prescription from the dropdown and click 'Load to Cart'. The recommended products will be added automatically. Items already in the cart are skipped and will not be duplicated.",
+    },
+    {
+      question: "How do I apply a Senior or PWD discount?",
+      answer:
+        "In the Billing and Payment cart, check the 'Apply Senior / PWD Discount' checkbox. You must fill in the customer's Full Name (as printed on their ID), Home Address, and Senior/PWD ID Number. Once all three fields are completed, eligible items will automatically receive a 20% discount. Note: while the Senior/PWD discount is active, manual discounts on eligible items are locked.",
+    },
+    {
+      question: "How do I apply a discount to a specific item in the cart?",
+      answer:
+        "In the cart, click 'Add Discount' below the item you want to discount. Choose the discount type — Fixed (₱) or Percent (%) — and enter the value. Press Enter to apply. Percentage discounts cannot exceed 100%, and fixed discounts cannot exceed the item subtotal. To remove a discount, click the green discount badge on the item.",
+    },
+    {
+      question: "How do I process a GCash payment?",
+      answer:
+        "In the payment drawer, click the GCash button. Enter the GCash mobile number (must start with 09 and be 11 digits), the reference number from the GCash transaction, and the amount tendered. For GCash, the amount is capped at the total — overpayment is not allowed. Complete the payment to finish the transaction.",
+    },
+    {
+      question: "How do I accept a deposit (partial payment)?",
+      answer:
+        "In the payment drawer, enter an amount that is less than the total. The minimum deposit is 50% of the grand total. Deposits require a linked patient with a linked prescription — if either is missing, you will see a warning message. When using GCash, the amount is capped at the total so deposits must be made with Cash. A deposit receipt will show the remaining balance.",
+    },
+    {
+      question: "How do I settle the remaining balance on a deposit transaction?",
+      answer:
+        "Navigate to Sales and Transactions, find the deposit transaction, and click View. An 'Add Payment' button will appear for deposit transactions. The remaining balance must be settled in full — partial payments are not allowed for the second payment. Choose Cash or GCash and complete the payment.",
+    },
+    {
+      question: "How do I reprint a receipt?",
+      answer:
+        "Go to Sales and Transactions, find the transaction, and click View. In the Payment Details section, click 'Reprint Receipt' to open the original receipt for printing. You can also click 'Statement of Account' to view or print an amended statement that includes any refunds or adjustments.",
+    },
+    {
+      question: "How do I adjust stock levels for a product?",
+      answer:
+        "Go to Inventory Management, find the product, and click View. In the product detail page, click 'Adjust Stock'. Choose 'Add Stock' or 'Remove Stock', enter the quantity, and select or type a reason. A preview shows the resulting stock level before you confirm. This is useful for recording deliveries, damaged items, or inventory corrections.",
+    },
+    {
+      question: "What do the stock status badges mean?",
+      answer:
+        "In the Inventory Management table, each product has a stock status badge: 'Normal' (green) means stock is at a healthy level. 'Reorder' (yellow) means stock is at or below the reorder point and needs restocking. 'Out of Stock' (red) means quantity is zero. 'Overstocked' (yellow) means stock exceeds the overstock threshold. 'Service' appears for service-type products which have no stock tracking.",
+    },
+    {
+      question: "What happens to my cart if I refresh the page?",
+      answer:
+        "Your cart is automatically saved and will persist if you refresh the page or navigate away within the same browser session. However, if you close the browser entirely, the cart will be cleared. If an administrator archives a product while it is in your cart, it will be removed automatically with a notification.",
     },
     {
       question: "How do I look up a product in inventory?",
       answer:
-        "Go to Inventory Management. Use the search bar to find products by name or ID. You can filter by category and sort by name, quantity, or price. Click the View button on any product to see its full details including stock levels and reorder information.",
+        "Go to Inventory Management. Use the search bar to find products by name. You can filter by category and sort by name, quantity, or price. Use the stock filter to view only products that are out of stock, need reordering, or are overstocked. Click the View button on any product to see its full details including stock levels, sales history, and reorder information.",
     },
     {
       question: "How do I view past transactions?",
       answer:
-        "Go to Sales and Transactions to see a list of all completed sales. Use the search bar to find a specific transaction number, and filter by status (Deposit, Paid, Voided) or by date range. Click the View button on any transaction to see its full details, payment history, and refund records.",
+        "Go to Sales and Transactions to see a list of all completed sales. Use the search bar to find a specific transaction number, and filter by status (Deposit, Paid, Voided) or by date range. You can also sort by date or amount. Click the View button on any transaction to see its full details, payment history, and refund records.",
+    },
+    {
+      question: "What do the transaction status badges mean?",
+      answer:
+        "Transactions have two types of status badges. Financial status: 'Paid' means the full amount has been collected, 'Deposit' means a partial payment has been made with a balance remaining, and 'Voided' means the transaction has been cancelled. Fulfillment status: 'Pending Lab' means the order is being prepared, 'Ready for Pickup' means the order is ready for the customer, and 'Completed' means the customer has picked up the order. Refund status shows if any items were partially or fully refunded.",
     },
     {
       question: "What actions are restricted for Staff users?",
       answer:
-        "Staff users cannot access the Dashboard, Patient Management, Registration, Maintenance, or Reports modules. Within Inventory Management, staff can view products and check stock but cannot add, edit, or archive products. If you need to perform any restricted action, please ask your system administrator.",
+        "Staff users cannot access the Dashboard, Patient Management, Registration, Maintenance, or Reports modules. Within Inventory Management, staff can view products and check stock but cannot add, edit, or archive products. Processing refunds, voiding transactions, and marking fulfillment statuses (Ready for Pickup, Picked Up) are restricted to administrators. If you need to perform any restricted action, please ask your system administrator.",
     },
   ];
 
@@ -290,6 +402,16 @@ export default function HelpPage() {
     if (role === "STAFF") items.push(...staffFaqItems);
     return items;
   }, [role]);
+
+  const filteredFaqs = useMemo(() => {
+    if (!faqSearch.trim()) return faqItems;
+    const q = faqSearch.toLowerCase();
+    return faqItems.filter(
+      (item) =>
+        item.question.toLowerCase().includes(q) ||
+        item.answer.toLowerCase().includes(q)
+    );
+  }, [faqItems, faqSearch]);
 
   return (
     <div className="mx-auto max-w-4xl space-y-6 p-6">
@@ -306,7 +428,11 @@ export default function HelpPage() {
           { value: "manual", label: "User Manual" },
         ]}
         value={activeTab}
-        onChange={(value) => setActiveTab(value as Tab)}
+        onChange={(value) => {
+          setActiveTab(value as Tab);
+          setFaqSearch("");
+          setOpenFaqs(new Set());
+        }}
         className="print:hidden"
       />
 
@@ -343,8 +469,25 @@ export default function HelpPage() {
       {/* FAQ Content */}
       {activeTab === "faq" && (
         <div className="space-y-3">
-          {faqItems.map((item, index) => (
-            <Card key={index} className="overflow-hidden">
+          <div className="relative">
+            <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
+            <Input
+              placeholder="Search questions..."
+              value={faqSearch}
+              onChange={(e) => {
+                setFaqSearch(e.target.value);
+                setOpenFaqs(new Set());
+              }}
+              className="pl-9"
+            />
+          </div>
+          {filteredFaqs.length === 0 && (
+            <p className="py-8 text-center text-sm text-muted-foreground">
+              No questions match your search.
+            </p>
+          )}
+          {filteredFaqs.map((item, index) => (
+            <Card key={item.question} className="overflow-hidden">
               <button
                 onClick={() => toggleFaq(index)}
                 className="flex w-full items-center justify-between px-6 py-4 text-left hover:bg-muted/50 transition-colors"
