@@ -1,4 +1,4 @@
-import { useState, useMemo } from "react";
+import { useState, useMemo, type ReactNode } from "react";
 import { ExternalLink, ChevronDown, ChevronUp, Search } from "lucide-react";
 import { Button } from "@/shared/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/shared/components/ui/card";
@@ -7,6 +7,11 @@ import SegmentedControl from "@/shared/components/ui/segmented-control";
 import { getUserRole } from "@/shared/lib/auth";
 
 type Tab = "manual" | "faq";
+
+type FaqItem = {
+  question: string;
+  answer: string | ReactNode;
+};
 
 export default function HelpPage() {
   const role = getUserRole();
@@ -195,8 +200,15 @@ export default function HelpPage() {
   const commonFaqItems = [
     {
       question: "How do I reset my password?",
-      answer:
-        "On the login page, click 'Forgot Password'. You will be prompted to enter your username and answer your security question. If you cannot remember your security answer, contact an administrator who can reset your password from the User Management module.",
+      answer: (
+        <div className="space-y-2 text-muted-foreground">
+          <ol className="list-decimal pl-5 space-y-1.5">
+            <li>On the login page, click <strong>Forgot Password</strong>.</li>
+            <li>Enter your username and answer your security question.</li>
+            <li>If you cannot remember your security answer, contact an administrator who can reset your password from the User Management module.</li>
+          </ol>
+        </div>
+      ),
     },
     {
       question: "Why am I being asked to change my password?",
@@ -205,13 +217,30 @@ export default function HelpPage() {
     },
     {
       question: "What payment methods are supported?",
-      answer:
-        "The system supports two payment methods: Cash and GCash. Multiple payments can be applied to a single transaction. For GCash payments, a GCash mobile number (10–15 characters) and a reference number are required. Cash payments may allow change to be given if the tendered amount exceeds the total.",
+      answer: (
+        <div className="space-y-2 text-muted-foreground">
+          <p>The system supports two payment methods:</p>
+          <ul className="space-y-1.5">
+            <li><strong>Cash</strong> — Change may be given if the tendered amount exceeds the total.</li>
+            <li><strong>GCash</strong> — Requires a GCash mobile number (10–15 characters) and a reference number. Amount is capped at the total (no overpayment).</li>
+          </ul>
+          <p>Multiple payments can be applied to a single transaction.</p>
+        </div>
+      ),
     },
     {
       question: "What should I do if the system is running slowly?",
-      answer:
-        "Try clearing your browser cache and cookies, then restart the browser. If the issue persists, check that the server machine has adequate resources (RAM and disk space). Large transaction volumes may require periodic database maintenance. Contact your system administrator if performance does not improve.",
+      answer: (
+        <div className="space-y-2 text-muted-foreground">
+          <p>Try these steps in order:</p>
+          <ol className="list-decimal pl-5 space-y-1.5">
+            <li>Clear your browser cache and cookies, then restart the browser.</li>
+            <li>Check that the server machine has adequate resources (RAM and disk space).</li>
+            <li>Large transaction volumes may require periodic database maintenance.</li>
+          </ol>
+          <p>Contact your system administrator if performance does not improve.</p>
+        </div>
+      ),
     },
     {
       question: "I see an 'Unauthorized' error when trying to access a page.",
@@ -223,38 +252,161 @@ export default function HelpPage() {
   const adminFaqItems = [
     {
       question: "How do I create a database backup?",
-      answer:
-        "Navigate to Maintenance &gt; Backup and Restore. Click 'Create Backup', enter a password to protect the backup file, and confirm. The backup file will download to your computer. Keep this file secure — it contains all system data.",
+      answer: (
+        <div className="space-y-2 text-muted-foreground">
+          <ol className="list-decimal pl-5 space-y-1.5">
+            <li>Navigate to <strong>Maintenance &gt; Backup and Restore</strong>.</li>
+            <li>Click <strong>Create Backup</strong>.</li>
+            <li>Enter a password to protect the backup file and confirm.</li>
+          </ol>
+          <p>The backup file will download to your computer. Keep this file secure — it contains all system data.</p>
+        </div>
+      ),
     },
     {
       question: "How do I restore from a backup?",
-      answer:
-        "Navigate to Maintenance &gt; Backup and Restore, click 'Restore Backup', and select a previously downloaded backup file. Enter the password used when the backup was created and confirm. Note: restoration replaces all current data with the backup contents.",
+      answer: (
+        <div className="space-y-2 text-muted-foreground">
+          <ol className="list-decimal pl-5 space-y-1.5">
+            <li>Navigate to <strong>Maintenance &gt; Backup and Restore</strong>.</li>
+            <li>Click <strong>Restore Backup</strong> and select a previously downloaded backup file.</li>
+            <li>Enter the password used when the backup was created and confirm.</li>
+          </ol>
+          <p><strong>Note:</strong> Restoration replaces all current data with the backup contents.</p>
+        </div>
+      ),
     },
     {
       question: "What password do I use for backup and restore?",
-      answer:
-        "Both backup and restore require the password of the currently logged-in administrator. This is the same password you use to log in to the system. The backup file itself is protected by a separate password you set when creating the backup — you will need this same password when restoring from that file.",
+      answer: (
+        <div className="space-y-2 text-muted-foreground">
+          <p>There are two passwords involved:</p>
+          <ul className="space-y-1.5">
+            <li><strong>Login password</strong> — Both backup and restore require the password of the currently logged-in administrator (the same password you use to log in to the system).</li>
+            <li><strong>Backup file password</strong> — The backup file itself is protected by a separate password you set when creating the backup. You will need this same password when restoring from that file.</li>
+          </ul>
+        </div>
+      ),
     },
     {
       question: "How do I generate and export reports?",
-      answer:
-        "Go to Reports in the sidebar. Use the segmented control to switch between Inventory Analytics, Transactions, and Patients. For transaction and patient reports, you can set a date range using the filter inputs. Click 'Export as PDF' or 'Export as Excel' to download the report. All report exports are recorded in the Audit Trail.",
+      answer: (
+        <div className="space-y-2 text-muted-foreground">
+          <ol className="list-decimal pl-5 space-y-1.5">
+            <li>Go to <strong>Reports</strong> in the sidebar.</li>
+            <li>Use the segmented control to switch between <strong>Inventory Analytics</strong>, <strong>Transactions</strong>, and <strong>Patients</strong>.</li>
+            <li>For transaction and patient reports, set a date range using the filter inputs.</li>
+            <li>Click <strong>Export as PDF</strong> or <strong>Export as Excel</strong> to download the report.</li>
+          </ol>
+          <p>All report exports are recorded in the Audit Trail.</p>
+        </div>
+      ),
     },
     {
       question: "What do the Dashboard metrics mean?",
-      answer:
-        "The Dashboard provides a high-level overview: Today's Revenue is cash collected today. Orders Awaiting Pickup are completed sales not yet picked up. Needs Reordering shows products below their reorder point — click it to view them in inventory. Active Inventory Value is the total cost value of all active stock. Receivables are outstanding customer balances. Revenue Month-to-Date is net revenue for the current month. Avg. Transaction Value is the mean amount per transaction.",
+      answer: (
+        <div className="space-y-2 text-muted-foreground">
+          <p>The Dashboard provides a high-level overview of your clinic's operations:</p>
+          <ul className="space-y-1.5">
+            <li><strong>Today&apos;s Revenue</strong> — Cash collected today.</li>
+            <li><strong>Orders Awaiting Pickup</strong> — Completed sales not yet picked up by customers.</li>
+            <li><strong>Needs Reordering</strong> — Products below their reorder point. Click it to view them in inventory.</li>
+            <li><strong>Active Inventory Value</strong> — Total cost value of all active stock.</li>
+            <li><strong>Receivables</strong> — Outstanding customer balances from deposit transactions.</li>
+            <li><strong>Revenue Month-to-Date</strong> — Net revenue for the current month.</li>
+            <li><strong>Avg. Transaction Value</strong> — Mean amount per transaction.</li>
+          </ul>
+        </div>
+      ),
+    },
+    {
+      question: "How is the reorder point calculated, and what is its purpose?",
+      answer: (
+        <div className="space-y-2 text-muted-foreground">
+          <p>
+            The reorder point (ROP) tells you the stock level at which you should place a new order
+            to avoid running out.
+          </p>
+          <p><strong>Formula:</strong></p>
+          <p className="pl-4">ROP = (Daily Sales Velocity × Lead Time in Days) + 2</p>
+          <p><strong>Where:</strong></p>
+          <ul className="list-disc pl-8 space-y-1">
+            <li><strong>Daily Sales Velocity</strong> = total units sold in the past 30 days ÷ 30</li>
+            <li><strong>Lead Time</strong> = number of days for a new order to arrive (default: 3 days)</li>
+            <li><strong>+2</strong> = safety stock buffer for unexpected demand</li>
+          </ul>
+          <p>
+            The system also applies a hybrid threshold: if the product's configured low-level threshold
+            is higher than the computed ROP, the system uses the higher value instead.
+          </p>
+          <p><strong>Example:</strong></p>
+          <ul className="list-disc pl-8 space-y-1">
+            <li>A product sold 60 units in the past 30 days → velocity = 60 ÷ 30 = 2.0/day</li>
+            <li>Lead time = 3 days</li>
+            <li>ROP = (2.0 × 3) + 2 = <strong>8 units</strong></li>
+            <li>When stock drops to 8 or below, the product is flagged for reordering.</li>
+          </ul>
+        </div>
+      ),
+    },
+    {
+      question: "How is the suggested quantity of product to be purchased calculated, and what is its purpose?",
+      answer: (
+        <div className="space-y-2 text-muted-foreground">
+          <p>
+            The suggested order quantity tells you how many units to restock so that you have enough
+            supply for the next 30 days.
+          </p>
+          <p><strong>Formula:</strong></p>
+          <p className="pl-4">Suggested Quantity = Target Stock − Current Quantity (minimum of 0)</p>
+          <p><strong>Target Stock</strong> is the higher of:</p>
+          <ul className="list-disc pl-8 space-y-1">
+            <li>Daily Sales Velocity × 30, rounded up (a 30-day supply), or</li>
+            <li>The product's configured low-level threshold</li>
+          </ul>
+          <p>
+            If the result is negative or zero, no reorder is suggested.
+          </p>
+          <p><strong>Example:</strong></p>
+          <ul className="list-disc pl-8 space-y-1">
+            <li>A product sold 90 units in the past 30 days → velocity = 90 ÷ 30 = 3.0/day</li>
+            <li>Current stock = 5 units</li>
+            <li>Target Stock = ceil(3.0 × 30) = 90</li>
+            <li>Suggested Quantity = 90 − 5 = <strong>85 units</strong></li>
+          </ul>
+          <p>
+            This suggestion appears as a reorder warning banner in the product detail view when
+            stock is at or below the reorder point.
+          </p>
+        </div>
+      ),
     },
     {
       question: "How do I adjust stock levels for a product?",
-      answer:
-        "Go to Inventory Management, find the product, and click the View button. In the product detail view, click the stock adjustment button. Choose 'Add Stock' or 'Remove Stock', enter the quantity, and select or type a reason. A preview shows the resulting stock level before you confirm. All adjustments are recorded in the Audit Trail.",
+      answer: (
+        <div className="space-y-2 text-muted-foreground">
+          <ol className="list-decimal pl-5 space-y-1.5">
+            <li>Go to <strong>Inventory Management</strong>, find the product, and click the <strong>View</strong> button.</li>
+            <li>In the product detail view, click the stock adjustment button.</li>
+            <li>Choose <strong>Add Stock</strong> or <strong>Remove Stock</strong>.</li>
+            <li>Enter the quantity and select or type a reason.</li>
+          </ol>
+          <p>A preview shows the resulting stock level before you confirm. All adjustments are recorded in the Audit Trail.</p>
+        </div>
+      ),
     },
     {
       question: "How do I reset a user's password?",
-      answer:
-        "Go to Registration, find the user, and click Edit. In the edit form, click 'Reset Password' and enter a temporary password. The user will be required to change their password and set a security question the next time they log in.",
+      answer: (
+        <div className="space-y-2 text-muted-foreground">
+          <ol className="list-decimal pl-5 space-y-1.5">
+            <li>Go to <strong>Registration</strong>, find the user, and click <strong>Edit</strong>.</li>
+            <li>In the edit form, click <strong>Reset Password</strong>.</li>
+            <li>Enter a temporary password and confirm.</li>
+          </ol>
+          <p>The user will be required to change their password and set a security question the next time they log in.</p>
+        </div>
+      ),
     },
     {
       question: "Why is a new user forced to change their password on first login?",
@@ -263,8 +415,15 @@ export default function HelpPage() {
     },
     {
       question: "How do I manage product categories and suppliers?",
-      answer:
-        "When adding or editing a product, click the gear icon next to the Category or Supplier field. This opens a management modal where you can view all categories or suppliers, toggle their active/inactive status, or delete ones that have no associated products. To add a new category or supplier, simply type a new name in the product form's combobox field and select 'Create'.",
+      answer: (
+        <div className="space-y-2 text-muted-foreground">
+          <p>When adding or editing a product, you can manage categories and suppliers in two ways:</p>
+          <ul className="space-y-1.5">
+            <li><strong>Edit existing entries</strong> — Click the gear icon next to the Category or Supplier field to open a management modal. From there you can view all entries, toggle their active/inactive status, or delete ones that have no associated products.</li>
+            <li><strong>Add new entries</strong> — Type a new name in the product form's combobox field and select <strong>Create</strong>.</li>
+          </ul>
+        </div>
+      ),
     },
     {
       question: "How do I view a patient's prescription history?",
@@ -273,8 +432,17 @@ export default function HelpPage() {
     },
     {
       question: "How do I log a patient visit?",
-      answer:
-        "Go to Patient Management, find the patient, and click the View button. Click 'Log Visit' to open the visit dialog. Select a date and time, choose a visit purpose (such as Eye Check-up, Frame Fitting, Pick-up, or Consultation), and optionally add notes. If the patient has a pending follow-up, you can link the visit to it.",
+      answer: (
+        <div className="space-y-2 text-muted-foreground">
+          <ol className="list-decimal pl-5 space-y-1.5">
+            <li>Go to <strong>Patient Management</strong>, find the patient, and click <strong>View</strong>.</li>
+            <li>Click <strong>Log Visit</strong> to open the visit dialog.</li>
+            <li>Select a date and time.</li>
+            <li>Choose a visit purpose (such as Eye Check-up, Frame Fitting, Pick-up, or Consultation).</li>
+            <li>Optionally add notes. If the patient has a pending follow-up, you can link the visit to it.</li>
+          </ol>
+        </div>
+      ),
     },
     {
       question: "How do I add or record eye exams for a patient?",
@@ -293,36 +461,93 @@ export default function HelpPage() {
     },
     {
       question: "How do I register a new user account?",
-      answer:
-        "Go to Registration and click 'Add User'. Fill in the personal information, set a username and password, assign a role (Admin or Staff), and set a security question for password recovery. The new user will be prompted to change their password on first login.",
+      answer: (
+        <div className="space-y-2 text-muted-foreground">
+          <ol className="list-decimal pl-5 space-y-1.5">
+            <li>Go to <strong>Registration</strong> and click <strong>Add User</strong>.</li>
+            <li>Fill in the personal information.</li>
+            <li>Set a username and password.</li>
+            <li>Assign a role (Admin or Staff).</li>
+            <li>Set a security question for password recovery.</li>
+          </ol>
+          <p>The new user will be prompted to change their password on first login.</p>
+        </div>
+      ),
     },
     {
       question: "How do I add or edit a product in inventory?",
-      answer:
-        "Go to Inventory Management and click 'Add Product' to create a new product, or find an existing product and click the Edit icon. Fill in or update the product details including name, category, supplier, price, cost, and stock quantity. You can also upload a product image. Changes do not affect previously completed transactions.",
+      answer: (
+        <div className="space-y-2 text-muted-foreground">
+          <ol className="list-decimal pl-5 space-y-1.5">
+            <li>Go to <strong>Inventory Management</strong>.</li>
+            <li>Click <strong>Add Product</strong> to create a new product, or find an existing product and click the <strong>Edit</strong> icon.</li>
+            <li>Fill in or update the product details including name, category, supplier, price, cost, and stock quantity.</li>
+            <li>Optionally upload a product image.</li>
+          </ol>
+          <p>Changes do not affect previously completed transactions.</p>
+        </div>
+      ),
     },
     {
       question: "How do I process a refund?",
-      answer:
-        "Navigate to Sales and Transactions and click on the transaction you want to refund. In the transaction detail view, click 'Refund Item(s)' to enter selection mode. Check the items to refund and click 'Prepare Refund'. In the refund drawer, set the quantity and reason for each item, choose a refund method (Cash or GCash), and confirm. A refund receipt will be generated. Restocked quantities are automatically added back to inventory for physical items.",
+      answer: (
+        <div className="space-y-2 text-muted-foreground">
+          <ol className="list-decimal pl-5 space-y-1.5">
+            <li>Navigate to <strong>Sales and Transactions</strong> and click on the transaction you want to refund.</li>
+            <li>In the transaction detail view, click <strong>Refund Item(s)</strong> to enter selection mode.</li>
+            <li>Check the items to refund and click <strong>Prepare Refund</strong>.</li>
+            <li>In the refund drawer, set the <strong>quantity</strong> and <strong>reason</strong> for each item.</li>
+            <li>Choose a refund method (<strong>Cash</strong> or <strong>GCash</strong>) and confirm.</li>
+          </ol>
+          <p>A refund receipt will be generated. Restocked quantities are automatically added back to inventory for physical items.</p>
+        </div>
+      ),
     },
     {
       question: "How do I use the Audit Trail?",
-      answer:
-        "The Audit Trail is found under Maintenance. It logs all system actions including login/logout, creating or updating records, archiving, voiding transactions, and database backups. You can filter by action type, resource type, and date range to review specific activities. Click the View button on any entry to see full details and navigate to the related record.",
+      answer: (
+        <div className="space-y-2 text-muted-foreground">
+          <p>The Audit Trail is found under <strong>Maintenance</strong>. It logs all system actions including:</p>
+          <ul className="list-disc pl-5 space-y-1">
+            <li>Login and logout activity</li>
+            <li>Creating or updating records</li>
+            <li>Archiving and restoring</li>
+            <li>Voiding transactions</li>
+            <li>Database backups</li>
+          </ul>
+          <p>You can filter by action type, resource type, and date range to review specific activities. Click the <strong>View</strong> button on any entry to see full details and navigate to the related record.</p>
+        </div>
+      ),
     },
   ];
 
   const staffFaqItems = [
     {
       question: "How do I process a sale in Billing and Payment?",
-      answer:
-        "Go to Billing and Payment. Select products from the left panel — toggle between Physical Products and Services using the tabs at the top. Click the Add to Cart (plus) button for each item. You can search for products by name and filter by category. Once items are in the cart, click 'Pay' to open the payment drawer, choose a payment method, and complete the transaction. A receipt will be generated.",
+      answer: (
+        <div className="space-y-2 text-muted-foreground">
+          <ol className="list-decimal pl-5 space-y-1.5">
+            <li>Go to <strong>Billing and Payment</strong>.</li>
+            <li>Select products from the left panel — toggle between <strong>Physical Products</strong> and <strong>Services</strong> using the tabs at the top. You can search by name and filter by category.</li>
+            <li>Click the <strong>Add to Cart</strong> (plus) button for each item.</li>
+            <li>Once items are in the cart, click <strong>Pay</strong> to open the payment drawer.</li>
+            <li>Choose a payment method (Cash or GCash) and complete the transaction. A receipt will be generated.</li>
+          </ol>
+        </div>
+      ),
     },
     {
       question: "How do I associate a patient with a sale?",
-      answer:
-        "In the Billing and Payment page, click 'Associate Patient' in the customer section on the right panel. Search for the patient by name, contact number, or ID, then click 'Select Patient'. Linking a patient is optional for full payments but required for deposits (partial payments). You can remove the linked patient by clicking the X button.",
+      answer: (
+        <div className="space-y-2 text-muted-foreground">
+          <ol className="list-decimal pl-5 space-y-1.5">
+            <li>In the Billing and Payment page, click <strong>Associate Patient</strong> in the customer section on the right panel.</li>
+            <li>Search for the patient by name, contact number, or ID.</li>
+            <li>Click <strong>Select Patient</strong>.</li>
+          </ol>
+          <p>Linking a patient is optional for full payments but required for deposits (partial payments). You can remove the linked patient by clicking the X button.</p>
+        </div>
+      ),
     },
     {
       question: "How do I load a patient's prescription items into the cart?",
@@ -331,28 +556,72 @@ export default function HelpPage() {
     },
     {
       question: "How do I apply a Senior or PWD discount?",
-      answer:
-        "In the Billing and Payment cart, check the 'Apply Senior / PWD Discount' checkbox. You must fill in the customer's Full Name (as printed on their ID), Home Address, and Senior/PWD ID Number. Once all three fields are completed, eligible items will automatically receive a 20% discount. Note: while the Senior/PWD discount is active, manual discounts on eligible items are locked.",
+      answer: (
+        <div className="space-y-2 text-muted-foreground">
+          <p>In the Billing and Payment cart, check the <strong>Apply Senior / PWD Discount</strong> checkbox. You must fill in all three required fields:</p>
+          <ul className="list-disc pl-5 space-y-1">
+            <li>Full Name (as printed on their ID)</li>
+            <li>Home Address</li>
+            <li>Senior/PWD ID Number</li>
+          </ul>
+          <p>Once all three fields are completed, eligible items will automatically receive a <strong>20% discount</strong>.</p>
+          <p><strong>Note:</strong> While the Senior/PWD discount is active, manual discounts on eligible items are locked.</p>
+        </div>
+      ),
     },
     {
       question: "How do I apply a discount to a specific item in the cart?",
-      answer:
-        "In the cart, click 'Add Discount' below the item you want to discount. Choose the discount type — Fixed (₱) or Percent (%) — and enter the value. Press Enter to apply. Percentage discounts cannot exceed 100%, and fixed discounts cannot exceed the item subtotal. To remove a discount, click the green discount badge on the item.",
+      answer: (
+        <div className="space-y-2 text-muted-foreground">
+          <ol className="list-decimal pl-5 space-y-1.5">
+            <li>In the cart, click <strong>Add Discount</strong> below the item you want to discount.</li>
+            <li>Choose the discount type — <strong>Fixed</strong> (₱) or <strong>Percent</strong> (%).</li>
+            <li>Enter the value and press <strong>Enter</strong> to apply.</li>
+          </ol>
+          <p>Percentage discounts cannot exceed 100%, and fixed discounts cannot exceed the item subtotal. To remove a discount, click the green discount badge on the item.</p>
+        </div>
+      ),
     },
     {
       question: "How do I process a GCash payment?",
-      answer:
-        "In the payment drawer, click the GCash button. Enter the GCash mobile number (must start with 09 and be 11 digits), the reference number from the GCash transaction, and the amount tendered. For GCash, the amount is capped at the total — overpayment is not allowed. Complete the payment to finish the transaction.",
+      answer: (
+        <div className="space-y-2 text-muted-foreground">
+          <ol className="list-decimal pl-5 space-y-1.5">
+            <li>In the payment drawer, click the <strong>GCash</strong> button.</li>
+            <li>Enter the GCash mobile number (must start with 09 and be 11 digits).</li>
+            <li>Enter the reference number from the GCash transaction.</li>
+            <li>Enter the amount tendered and complete the payment.</li>
+          </ol>
+          <p>For GCash, the amount is capped at the total — overpayment is not allowed.</p>
+        </div>
+      ),
     },
     {
       question: "How do I accept a deposit (partial payment)?",
-      answer:
-        "In the payment drawer, enter an amount that is less than the total. The minimum deposit is 50% of the grand total. Deposits require a linked patient with a linked prescription — if either is missing, you will see a warning message. When using GCash, the amount is capped at the total so deposits must be made with Cash. A deposit receipt will show the remaining balance.",
+      answer: (
+        <div className="space-y-2 text-muted-foreground">
+          <p>In the payment drawer, enter an amount that is less than the total. Keep in mind the following rules:</p>
+          <ul className="space-y-1.5">
+            <li><strong>Minimum deposit</strong> — 50% of the grand total.</li>
+            <li><strong>Patient and prescription required</strong> — Deposits require a linked patient with a linked prescription. If either is missing, you will see a warning message.</li>
+            <li><strong>Payment method</strong> — GCash amounts are capped at the total, so deposits must be made with Cash.</li>
+          </ul>
+          <p>A deposit receipt will show the remaining balance.</p>
+        </div>
+      ),
     },
     {
       question: "How do I settle the remaining balance on a deposit transaction?",
-      answer:
-        "Navigate to Sales and Transactions, find the deposit transaction, and click View. An 'Add Payment' button will appear for deposit transactions. The remaining balance must be settled in full — partial payments are not allowed for the second payment. Choose Cash or GCash and complete the payment.",
+      answer: (
+        <div className="space-y-2 text-muted-foreground">
+          <ol className="list-decimal pl-5 space-y-1.5">
+            <li>Navigate to <strong>Sales and Transactions</strong> and find the deposit transaction.</li>
+            <li>Click <strong>View</strong>. An <strong>Add Payment</strong> button will appear for deposit transactions.</li>
+            <li>Choose <strong>Cash</strong> or <strong>GCash</strong> and complete the payment.</li>
+          </ol>
+          <p>The remaining balance must be settled in full — partial payments are not allowed for the second payment.</p>
+        </div>
+      ),
     },
     {
       question: "How do I reprint a receipt?",
@@ -361,13 +630,32 @@ export default function HelpPage() {
     },
     {
       question: "How do I adjust stock levels for a product?",
-      answer:
-        "Go to Inventory Management, find the product, and click View. In the product detail page, click 'Adjust Stock'. Choose 'Add Stock' or 'Remove Stock', enter the quantity, and select or type a reason. A preview shows the resulting stock level before you confirm. This is useful for recording deliveries, damaged items, or inventory corrections.",
+      answer: (
+        <div className="space-y-2 text-muted-foreground">
+          <ol className="list-decimal pl-5 space-y-1.5">
+            <li>Go to <strong>Inventory Management</strong>, find the product, and click <strong>View</strong>.</li>
+            <li>In the product detail page, click <strong>Adjust Stock</strong>.</li>
+            <li>Choose <strong>Add Stock</strong> or <strong>Remove Stock</strong>.</li>
+            <li>Enter the quantity and select or type a reason.</li>
+          </ol>
+          <p>A preview shows the resulting stock level before you confirm. This is useful for recording deliveries, damaged items, or inventory corrections.</p>
+        </div>
+      ),
     },
     {
       question: "What do the stock status badges mean?",
-      answer:
-        "In the Inventory Management table, each product has a stock status badge: 'Normal' (green) means stock is at a healthy level. 'Reorder' (yellow) means stock is at or below the reorder point and needs restocking. 'Out of Stock' (red) means quantity is zero. 'Overstocked' (yellow) means stock exceeds the overstock threshold. 'Service' appears for service-type products which have no stock tracking.",
+      answer: (
+        <div className="space-y-2 text-muted-foreground">
+          <p>In the Inventory Management table, each product has a stock status badge:</p>
+          <ul className="space-y-1.5">
+            <li><strong>Normal</strong> (green) — Stock is at a healthy level.</li>
+            <li><strong>Reorder</strong> (yellow) — Stock is at or below the reorder point and needs restocking.</li>
+            <li><strong>Out of Stock</strong> (red) — Quantity is zero.</li>
+            <li><strong>Overstocked</strong> (yellow) — Stock exceeds the overstock threshold.</li>
+            <li><strong>Service</strong> — Service-type products which have no stock tracking.</li>
+          </ul>
+        </div>
+      ),
     },
     {
       question: "What happens to my cart if I refresh the page?",
@@ -376,23 +664,72 @@ export default function HelpPage() {
     },
     {
       question: "How do I look up a product in inventory?",
-      answer:
-        "Go to Inventory Management. Use the search bar to find products by name. You can filter by category and sort by name, quantity, or price. Use the stock filter to view only products that are out of stock, need reordering, or are overstocked. Click the View button on any product to see its full details including stock levels, sales history, and reorder information.",
+      answer: (
+        <div className="space-y-2 text-muted-foreground">
+          <p>Go to <strong>Inventory Management</strong> and use the following tools to find products:</p>
+          <ul className="space-y-1.5">
+            <li><strong>Search bar</strong> — Find products by name.</li>
+            <li><strong>Category filter</strong> — Filter products by category.</li>
+            <li><strong>Sorting</strong> — Sort by name, quantity, or price.</li>
+            <li><strong>Stock filter</strong> — View only products that are out of stock, need reordering, or are overstocked.</li>
+          </ul>
+          <p>Click the <strong>View</strong> button on any product to see its full details including stock levels, sales history, and reorder information.</p>
+        </div>
+      ),
     },
     {
       question: "How do I view past transactions?",
-      answer:
-        "Go to Sales and Transactions to see a list of all completed sales. Use the search bar to find a specific transaction number, and filter by status (Deposit, Paid, Voided) or by date range. You can also sort by date or amount. Click the View button on any transaction to see its full details, payment history, and refund records.",
+      answer: (
+        <div className="space-y-2 text-muted-foreground">
+          <p>Go to <strong>Sales and Transactions</strong> to see a list of all completed sales. Use the following tools to find transactions:</p>
+          <ul className="space-y-1.5">
+            <li><strong>Search bar</strong> — Find a specific transaction number.</li>
+            <li><strong>Status filter</strong> — Filter by Deposit, Paid, or Voided.</li>
+            <li><strong>Date range filter</strong> — Filter transactions within a specific period.</li>
+            <li><strong>Sorting</strong> — Sort by date or amount.</li>
+          </ul>
+          <p>Click the <strong>View</strong> button on any transaction to see its full details, payment history, and refund records.</p>
+        </div>
+      ),
     },
     {
       question: "What do the transaction status badges mean?",
-      answer:
-        "Transactions have two types of status badges. Financial status: 'Paid' means the full amount has been collected, 'Deposit' means a partial payment has been made with a balance remaining, and 'Voided' means the transaction has been cancelled. Fulfillment status: 'Pending Lab' means the order is being prepared, 'For Pickup' means the order is ready for the customer, and 'Completed' means the customer has picked up the order. Refund status shows if any items were partially or fully refunded.",
+      answer: (
+        <div className="space-y-3 text-muted-foreground">
+          <p>Transactions have two types of status badges:</p>
+          <div>
+            <p className="font-medium text-foreground">Financial Status</p>
+            <ul className="mt-1 space-y-1">
+              <li><strong>Paid</strong> — Full amount has been collected.</li>
+              <li><strong>Deposit</strong> — Partial payment made; balance remaining.</li>
+              <li><strong>Voided</strong> — Transaction has been cancelled.</li>
+            </ul>
+          </div>
+          <div>
+            <p className="font-medium text-foreground">Fulfillment Status</p>
+            <ul className="mt-1 space-y-1">
+              <li><strong>Pending Lab</strong> — Order is being prepared.</li>
+              <li><strong>For Pickup</strong> — Order is ready for the customer.</li>
+              <li><strong>Completed</strong> — Customer has picked up the order.</li>
+            </ul>
+          </div>
+          <p>A separate <strong>refund status</strong> shows if any items were partially or fully refunded.</p>
+        </div>
+      ),
     },
     {
       question: "What actions are restricted for Staff users?",
-      answer:
-        "Staff users cannot access the Dashboard, Patient Management, Registration, Maintenance, or Reports modules. Within Inventory Management, staff can view products and check stock but cannot add, edit, or archive products. Processing refunds, voiding transactions, and marking fulfillment statuses (Ready for Pickup, Picked Up) are restricted to administrators. If you need to perform any restricted action, please ask your system administrator.",
+      answer: (
+        <div className="space-y-2 text-muted-foreground">
+          <p>As a Staff user, the following restrictions apply:</p>
+          <ul className="space-y-1.5">
+            <li><strong>Inaccessible modules</strong> — Dashboard, Patient Management, Registration, Maintenance, and Reports.</li>
+            <li><strong>Inventory Management</strong> — You can view products and check stock, but cannot add, edit, or archive products.</li>
+            <li><strong>Transactions</strong> — Processing refunds, voiding transactions, and marking fulfillment statuses (Ready for Pickup, Picked Up) are restricted to administrators.</li>
+          </ul>
+          <p>If you need to perform any restricted action, please ask your system administrator.</p>
+        </div>
+      ),
     },
   ];
 
@@ -409,7 +746,7 @@ export default function HelpPage() {
     return faqItems.filter(
       (item) =>
         item.question.toLowerCase().includes(q) ||
-        item.answer.toLowerCase().includes(q)
+        (typeof item.answer === "string" && item.answer.toLowerCase().includes(q))
     );
   }, [faqItems, faqSearch]);
 
@@ -501,7 +838,11 @@ export default function HelpPage() {
               </button>
               {openFaqs.has(index) && (
                 <div className="border-t px-6 py-4">
-                  <p className="text-muted-foreground">{item.answer}</p>
+                  {typeof item.answer === "string" ? (
+                    <p className="text-muted-foreground">{item.answer}</p>
+                  ) : (
+                    item.answer
+                  )}
                 </div>
               )}
             </Card>
