@@ -162,7 +162,7 @@ const ViewTransaction: React.FC = () => {
 
   // ── Fulfillment dialog state ──
   const [fulfillDialogOpen, setFulfillDialogOpen] = useState(false);
-  const [fulfillTarget, setFulfillTarget] = useState<"READY_FOR_PICKUP" | "COMPLETED" | null>(null);
+  const [fulfillTarget, setFulfillTarget] = useState<"FOR_PICKUP" | "COMPLETED" | null>(null);
 
   // ── Void dialog state ──
   const [voidDialogOpen, setVoidDialogOpen] = useState(false);
@@ -404,14 +404,14 @@ const ViewTransaction: React.FC = () => {
                 <Button
                   size="sm"
                   className="h-8 bg-yellow-600 hover:bg-yellow-700 text-white"
-                  onClick={() => { setFulfillTarget("READY_FOR_PICKUP"); setFulfillDialogOpen(true); }}
+                  onClick={() => { setFulfillTarget("FOR_PICKUP"); setFulfillDialogOpen(true); }}
                   disabled={fulfillMutation.isPending}
                 >
                   <PackageCheck className="mr-1 h-3.5 w-3.5" />
-                  Mark as Ready for Pickup
+                  Mark as For Pickup
                 </Button>
               )}
-              {isAdmin() && tx.fulfillmentStatus === "READY_FOR_PICKUP" && tx.refundStatus !== "FULL" && tx.transactionStatus !== "VOIDED" && (
+              {isAdmin() && tx.fulfillmentStatus === "FOR_PICKUP" && tx.refundStatus !== "FULL" && tx.transactionStatus !== "VOIDED" && (
                 <Button
                   size="sm"
                   className="h-8 bg-teal-600 hover:bg-teal-700 text-white disabled:opacity-50"
@@ -891,10 +891,10 @@ const ViewTransaction: React.FC = () => {
         <DialogContent>
           <DialogHeader>
             <DialogTitle>
-              {fulfillTarget === "READY_FOR_PICKUP" ? "Mark as Ready for Pickup" : "Mark as Picked Up"}
+              {fulfillTarget === "FOR_PICKUP" ? "Mark as Ready for Pickup" : "Mark as Picked Up"}
             </DialogTitle>
             <DialogDescription>
-              {fulfillTarget === "READY_FOR_PICKUP" ? (
+              {fulfillTarget === "FOR_PICKUP" ? (
                 <>
                   This will mark <strong>{tx?.transactionNumber}</strong> as <strong>Ready for Pickup</strong>. The patient can now come in to collect their glasses.
                 </>
@@ -914,11 +914,11 @@ const ViewTransaction: React.FC = () => {
               Cancel
             </Button>
             <Button
-              className={fulfillTarget === "READY_FOR_PICKUP" ? "bg-yellow-600 hover:bg-yellow-700 text-white" : "bg-teal-600 hover:bg-teal-700 text-white"}
+              className={fulfillTarget === "FOR_PICKUP" ? "bg-yellow-600 hover:bg-yellow-700 text-white" : "bg-teal-600 hover:bg-teal-700 text-white"}
               onClick={() => fulfillTarget && fulfillMutation.mutate(fulfillTarget)}
               disabled={fulfillMutation.isPending || !fulfillTarget}
             >
-              {fulfillMutation.isPending ? "Processing..." : fulfillTarget === "READY_FOR_PICKUP" ? "Confirm Ready" : "Confirm Picked Up"}
+              {fulfillMutation.isPending ? "Processing..." : fulfillTarget === "FOR_PICKUP" ? "Confirm Ready" : "Confirm Picked Up"}
             </Button>
           </div>
         </DialogContent>

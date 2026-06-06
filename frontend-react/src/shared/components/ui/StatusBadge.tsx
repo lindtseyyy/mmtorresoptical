@@ -19,7 +19,7 @@ const REFUND_STATUS_STYLES: Record<string, string> = {
 
 const FULFILLMENT_STATUS_STYLES: Record<string, string> = {
   PENDING_LAB: "bg-orange-700 hover:bg-orange-800 text-white",
-  READY_FOR_PICKUP: "bg-yellow-600 hover:bg-yellow-700 text-white",
+  FOR_PICKUP: "bg-yellow-600 hover:bg-yellow-700 text-white",
   COMPLETED: "bg-gray-600 hover:bg-gray-700 text-white",
 };
 

@@ -137,7 +137,7 @@ const ManageTransactions: React.FC = () => {
       <div className="grid grid-cols-1 gap-4 sm:grid-cols-3">
         <MetricCard icon={ShoppingCart} label="Today's Transactions" value={metrics?.todayTransactions ?? "—"} color="blue" />
         <MetricCard icon={CreditCard} label="Deposits Awaiting Settlement" value={metrics?.depositsPendingCount ?? "—"} color="amber" />
-        <MetricCard icon={PackageOpen} label="Orders Ready for Pickup" value={metrics?.awaitingPickupCount ?? "—"} color="violet" />
+        <MetricCard icon={PackageOpen} label="Orders For Pickup" value={metrics?.awaitingPickupCount ?? "—"} color="violet" />
       </div>
 
       {/* Transactions Table */}

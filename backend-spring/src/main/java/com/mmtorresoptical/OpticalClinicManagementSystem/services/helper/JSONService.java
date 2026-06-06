@@ -28,7 +28,7 @@ public class JSONService {
 
     private static final Map<String, String> FULFILLMENT_STATUS_LABELS = Map.of(
             "PENDING_LAB", "In Lab",
-            "READY_FOR_PICKUP", "Ready for Pickup",
+            "FOR_PICKUP", "For Pickup",
             "COMPLETED", "Picked Up"
     );
 
@@ -103,8 +103,8 @@ public class JSONService {
                 return sanitizePaymentAdjustmentAuditJson(node, performedBy);
             }
 
-            // ── Complete / Ready for Pickup Transaction: hide UUIDs, resolve patient name, humanize statuses ──
-            if (("COMPLETE".equals(actionType) || "READY_FOR_PICKUP".equals(actionType)) && node.has("transactionItemAuditDTOList")) {
+            // ── Complete / For Pickup Transaction: hide UUIDs, resolve patient name, humanize statuses ──
+            if (("COMPLETE".equals(actionType) || "FOR_PICKUP".equals(actionType)) && node.has("transactionItemAuditDTOList")) {
                 return sanitizeCompleteTransactionAuditJson(node, performedBy);
             }
 

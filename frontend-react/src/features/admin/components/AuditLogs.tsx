@@ -49,7 +49,7 @@ const actionBadgeClass: Record<string, string> = {
   VOID: "bg-rose-600 hover:bg-rose-600 text-white",
   REFUND: "bg-orange-600 hover:bg-orange-600 text-white",
   ADJUSTMENT: "bg-violet-600 hover:bg-violet-600 text-white",
-  READY_FOR_PICKUP: "bg-yellow-600 hover:bg-yellow-600 text-white",
+  FOR_PICKUP: "bg-yellow-600 hover:bg-yellow-600 text-white",
 };
 
 const RESOURCE_VIEW_ROUTES: Record<string, string> = {

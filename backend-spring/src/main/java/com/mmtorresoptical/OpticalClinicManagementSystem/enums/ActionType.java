@@ -14,5 +14,5 @@ public enum ActionType {
     ADJUSTMENT,
     ADD_PAYMENT,
     COMPLETE,
-    READY_FOR_PICKUP
+    FOR_PICKUP
 }

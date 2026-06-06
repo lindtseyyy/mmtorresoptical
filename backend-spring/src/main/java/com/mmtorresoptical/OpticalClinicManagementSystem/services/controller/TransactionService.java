@@ -341,11 +341,11 @@ public class TransactionService {
             throw new BadRequestException("Transaction is already in " + currentStatus.name() + " fulfillment status.");
         }
 
-        if (requestedStatus == FulfillmentStatus.READY_FOR_PICKUP && currentStatus != FulfillmentStatus.PENDING_LAB) {
-            throw new BadRequestException("Can only mark as Ready for Pickup from Pending Lab status. Current: " + currentStatus.name());
+        if (requestedStatus == FulfillmentStatus.FOR_PICKUP && currentStatus != FulfillmentStatus.PENDING_LAB) {
+            throw new BadRequestException("Can only mark as For Pickup from Pending Lab status. Current: " + currentStatus.name());
         }
 
-        if (requestedStatus == FulfillmentStatus.COMPLETED && currentStatus != FulfillmentStatus.READY_FOR_PICKUP) {
+        if (requestedStatus == FulfillmentStatus.COMPLETED && currentStatus != FulfillmentStatus.FOR_PICKUP) {
             throw new BadRequestException("Can only mark as Completed from Ready for Pickup status. Current: " + currentStatus.name());
         }
 
@@ -366,7 +366,7 @@ public class TransactionService {
 
         Transaction saved = transactionRepository.save(transaction);
 
-        if (requestedStatus == FulfillmentStatus.READY_FOR_PICKUP) {
+        if (requestedStatus == FulfillmentStatus.FOR_PICKUP) {
             transactionAuditHelper.logReadyForPickup(saved);
         } else {
             transactionAuditHelper.logComplete(saved);
@@ -561,7 +561,7 @@ public class TransactionService {
 
         BigDecimal totalAccountsReceivable = transactionRepository.sumBalanceDueByTransactionStatusPartiallyPaid();
 
-        long awaitingPickupCount = transactionRepository.countByFulfillmentStatus(FulfillmentStatus.READY_FOR_PICKUP);
+        long awaitingPickupCount = transactionRepository.countByFulfillmentStatus(FulfillmentStatus.FOR_PICKUP);
 
         long depositsPendingCount = transactionRepository.countByTransactionStatus(TransactionStatus.DEPOSIT);
 
@@ -671,7 +671,7 @@ public class TransactionService {
             throw new IllegalStateException("Transaction already voided");
         }
 
-        if (transaction.getFulfillmentStatus() == FulfillmentStatus.READY_FOR_PICKUP) {
+        if (transaction.getFulfillmentStatus() == FulfillmentStatus.FOR_PICKUP) {
             throw new IllegalStateException("Cannot void a transaction where items have been marked as ready for pickup. Please process a refund instead.");
         }
 

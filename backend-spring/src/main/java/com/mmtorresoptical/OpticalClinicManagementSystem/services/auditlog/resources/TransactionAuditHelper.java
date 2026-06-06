@@ -116,7 +116,7 @@ public class TransactionAuditHelper {
                 transactionMapper.entityToAuditDTO(transaction);
 
         String detailsJson = jsonService.toJson(auditDTO);
-        auditLogService.log(ActionType.READY_FOR_PICKUP,
+        auditLogService.log(ActionType.FOR_PICKUP,
                 ResourceType.TRANSACTION,
                 transaction.getTransactionId(),
                 "Marked transaction as ready for pickup",

@@ -387,7 +387,7 @@ export default function HelpPage() {
     {
       question: "What do the transaction status badges mean?",
       answer:
-        "Transactions have two types of status badges. Financial status: 'Paid' means the full amount has been collected, 'Deposit' means a partial payment has been made with a balance remaining, and 'Voided' means the transaction has been cancelled. Fulfillment status: 'Pending Lab' means the order is being prepared, 'Ready for Pickup' means the order is ready for the customer, and 'Completed' means the customer has picked up the order. Refund status shows if any items were partially or fully refunded.",
+        "Transactions have two types of status badges. Financial status: 'Paid' means the full amount has been collected, 'Deposit' means a partial payment has been made with a balance remaining, and 'Voided' means the transaction has been cancelled. Fulfillment status: 'Pending Lab' means the order is being prepared, 'For Pickup' means the order is ready for the customer, and 'Completed' means the customer has picked up the order. Refund status shows if any items were partially or fully refunded.",
     },
     {
       question: "What actions are restricted for Staff users?",
