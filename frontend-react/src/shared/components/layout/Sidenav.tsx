@@ -23,6 +23,7 @@ const menuItems: MenuItem[] = [
   { title: "Sales and Transactions", href: "/transactions", icon: Receipt, roles: ["ADMIN", "STAFF"] as Role[] },
   { title: "Patient Management", href: "/patients", icon: UserRound, roles: ["ADMIN"] as Role[] },
   { title: "Registration", href: "/users", icon: Users, roles: ["ADMIN"] as Role[] },
+  { title: "Reports", href: "/reports", icon: FileText, roles: ["ADMIN"] as Role[] },
   {
     title: "Maintenance",
     icon: Database,
@@ -35,7 +36,6 @@ const menuItems: MenuItem[] = [
       { title: "Audit Trail", href: "/admin/audit-logs" },
     ],
   },
-  { title: "Reports", href: "/reports", icon: FileText, roles: ["ADMIN"] as Role[] },
   { title: "Help", href: "/help", icon: CircleHelp, roles: ["ADMIN", "STAFF"] as Role[] },
   { title: "About", href: "/about", icon: Info, roles: ["ADMIN", "STAFF"] as Role[] },
 ];
