@@ -36,4 +36,5 @@ public class TransactionRequestDTO {
     private String seniorPwdName;
     private String seniorPwdAddress;
     private String seniorPwdIdNumber;
+    private String seniorPwdType;
 }

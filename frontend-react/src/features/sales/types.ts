@@ -25,6 +25,7 @@ export interface TransactionRequest {
   seniorPwdName?: string;
   seniorPwdAddress?: string;
   seniorPwdIdNumber?: string;
+  seniorPwdType?: string;
   items: {
     productId: string;
     quantity: number;

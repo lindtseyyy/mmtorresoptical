@@ -25,6 +25,8 @@ interface BillingSectionProps {
   onSeniorPwdAddressChange: (address: string) => void;
   seniorPwdIdNumber: string;
   onSeniorPwdIdNumberChange: (id: string) => void;
+  seniorPwdType: "SENIOR_CITIZEN" | "PWD" | "";
+  onSeniorPwdTypeChange: (type: "SENIOR_CITIZEN" | "PWD" | "") => void;
 }
 
 const BillingSection: React.FC<BillingSectionProps> = ({
@@ -42,6 +44,8 @@ const BillingSection: React.FC<BillingSectionProps> = ({
   onSeniorPwdAddressChange,
   seniorPwdIdNumber,
   onSeniorPwdIdNumberChange,
+  seniorPwdType,
+  onSeniorPwdTypeChange,
 }) => {
   const subtotal = items.reduce(
     (sum, item) => sum + item.product.unitPrice * item.quantity,
@@ -111,6 +115,18 @@ const BillingSection: React.FC<BillingSectionProps> = ({
         {seniorPwdEnabled && seniorPwdExpanded && (
           <div className="mt-3 space-y-2">
             <div>
+              <label className="text-xs font-medium text-muted-foreground">Discount Type</label>
+              <select
+                value={seniorPwdType}
+                onChange={(e) => onSeniorPwdTypeChange(e.target.value as "SENIOR_CITIZEN" | "PWD" | "")}
+                className="mt-1 flex h-8 w-full rounded-md border border-input bg-card px-3 py-1 text-sm shadow-sm cursor-pointer"
+              >
+                <option value="">Select type...</option>
+                <option value="SENIOR_CITIZEN">Senior Citizen</option>
+                <option value="PWD">PWD (Person with Disability)</option>
+              </select>
+            </div>
+            <div>
               <label className="text-xs font-medium text-muted-foreground">Full Name</label>
               <Input
                 type="text"
@@ -131,12 +147,16 @@ const BillingSection: React.FC<BillingSectionProps> = ({
               />
             </div>
             <div>
-              <label className="text-xs font-medium text-muted-foreground">Senior / PWD ID Number</label>
+              <label className="text-xs font-medium text-muted-foreground">
+                {seniorPwdType === "SENIOR_CITIZEN" ? "Senior Citizen ID Number" : seniorPwdType === "PWD" ? "PWD ID Number" : "Senior / PWD ID Number"}
+              </label>
               <Input
                 type="text"
+                inputMode="numeric"
+                pattern="[0-9]*"
                 value={seniorPwdIdNumber}
-                onChange={(e) => onSeniorPwdIdNumberChange(e.target.value)}
-                placeholder="ID Number"
+                onChange={(e) => onSeniorPwdIdNumberChange(e.target.value.replace(/[^0-9]/g, ""))}
+                placeholder={seniorPwdType === "SENIOR_CITIZEN" ? "Senior Citizen ID Number" : seniorPwdType === "PWD" ? "PWD ID Number" : "ID Number"}
                 className="mt-1 h-8 text-sm"
               />
             </div>

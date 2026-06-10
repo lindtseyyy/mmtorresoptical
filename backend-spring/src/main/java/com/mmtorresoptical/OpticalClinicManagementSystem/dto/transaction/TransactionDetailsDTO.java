@@ -31,6 +31,7 @@ public class TransactionDetailsDTO {
     private String seniorPwdName;
     private String seniorPwdAddress;
     private String seniorPwdIdNumber;
+    private String seniorPwdType;
     private Boolean isSeniorPwdApplied;
 
     private UserSummaryDTO voidedBy;

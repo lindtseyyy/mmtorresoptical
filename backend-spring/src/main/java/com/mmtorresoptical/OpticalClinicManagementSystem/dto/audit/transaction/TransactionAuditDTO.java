@@ -38,6 +38,7 @@ public class TransactionAuditDTO {
     private String seniorPwdName;
     private String seniorPwdAddress;
     private String seniorPwdIdNumber;
+    private String seniorPwdType;
     private Boolean isSeniorPwdApplied;
 
     private List<TransactionItemAuditDTO> transactionItemAuditDTOList;

@@ -48,6 +48,7 @@ const ManageSales: React.FC = () => {
   const [seniorPwdName, setSeniorPwdName] = useState("");
   const [seniorPwdAddress, setSeniorPwdAddress] = useState("");
   const [seniorPwdIdNumber, setSeniorPwdIdNumber] = useState("");
+  const [seniorPwdType, setSeniorPwdType] = useState<"SENIOR_CITIZEN" | "PWD" | "">("");
 
   const { data: patientPrescriptions = [] } = usePatientPrescriptions(selectedPatient?.patientId);
 
@@ -82,7 +83,7 @@ const ManageSales: React.FC = () => {
 
   // Senior/PWD discount computation
   useEffect(() => {
-    const allFieldsFilled = seniorPwdName.trim() && seniorPwdAddress.trim() && seniorPwdIdNumber.trim();
+    const allFieldsFilled = seniorPwdName.trim() && seniorPwdAddress.trim() && seniorPwdIdNumber.trim() && seniorPwdType.trim();
 
     if (!seniorPwdEnabled || !allFieldsFilled) {
       // Restore any saved manual discounts
@@ -156,7 +157,7 @@ const ManageSales: React.FC = () => {
       })
     );
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [seniorPwdEnabled, seniorPwdName, seniorPwdAddress, seniorPwdIdNumber]);
+  }, [seniorPwdEnabled, seniorPwdName, seniorPwdAddress, seniorPwdIdNumber, seniorPwdType]);
 
   const transactionMutation = useMutation({
     mutationFn: createTransaction,
@@ -248,6 +249,7 @@ const ManageSales: React.FC = () => {
     setSeniorPwdName("");
     setSeniorPwdAddress("");
     setSeniorPwdIdNumber("");
+    setSeniorPwdType("");
   }, []);
 
   const applyDiscount = useCallback(
@@ -260,13 +262,13 @@ const ManageSales: React.FC = () => {
         prev.map((i) => {
           if (i.uid !== uid) return i;
           // Don't allow manual discount override on senior-eligible items when senior toggle is active
-          const seniorActive = seniorPwdEnabled && seniorPwdName.trim() && seniorPwdAddress.trim() && seniorPwdIdNumber.trim();
+          const seniorActive = seniorPwdEnabled && seniorPwdName.trim() && seniorPwdAddress.trim() && seniorPwdIdNumber.trim() && seniorPwdType.trim();
           if (seniorActive && i.product.isSeniorPwdEligible && i.isSeniorPwdRateActive) return i;
           return { ...i, isDiscounted: true, discountType, discountValue, isSeniorPwdProcessed: false };
         })
       );
     },
-    [seniorPwdEnabled, seniorPwdName, seniorPwdAddress, seniorPwdIdNumber]
+    [seniorPwdEnabled, seniorPwdName, seniorPwdAddress, seniorPwdIdNumber, seniorPwdType]
   );
 
   const removeDiscount = useCallback((uid: string) => {
@@ -274,12 +276,12 @@ const ManageSales: React.FC = () => {
       prev.map((i) => {
         if (i.uid !== uid) return i;
         // Don't allow removing senior rate when toggle is active
-        const seniorActive = seniorPwdEnabled && seniorPwdName.trim() && seniorPwdAddress.trim() && seniorPwdIdNumber.trim();
+        const seniorActive = seniorPwdEnabled && seniorPwdName.trim() && seniorPwdAddress.trim() && seniorPwdIdNumber.trim() && seniorPwdType.trim();
         if (seniorActive && i.product.isSeniorPwdEligible && i.isSeniorPwdRateActive) return i;
         return { ...i, isDiscounted: false, discountType: null, discountValue: 0, isSeniorPwdProcessed: false };
       })
     );
-  }, [seniorPwdEnabled, seniorPwdName, seniorPwdAddress, seniorPwdIdNumber]);
+  }, [seniorPwdEnabled, seniorPwdName, seniorPwdAddress, seniorPwdIdNumber, seniorPwdType]);
 
   const loadPrescriptionToCart = useCallback(async (prescriptionId: string) => {
     try {
@@ -424,12 +426,13 @@ const ManageSales: React.FC = () => {
             seniorPwdName: seniorPwdName.trim(),
             seniorPwdAddress: seniorPwdAddress.trim(),
             seniorPwdIdNumber: seniorPwdIdNumber.trim(),
+            seniorPwdType: seniorPwdType,
           }),
       };
 
       transactionMutation.mutate(payload);
     },
-    [cart, selectedPatient, selectedPrescriptionId, estimatedReadyDate, transactionMutation, seniorPwdEnabled, seniorPwdName, seniorPwdAddress, seniorPwdIdNumber]
+    [cart, selectedPatient, selectedPrescriptionId, estimatedReadyDate, transactionMutation, seniorPwdEnabled, seniorPwdName, seniorPwdAddress, seniorPwdIdNumber, seniorPwdType]
   );
 
   const grandTotal = cart.reduce((sum, item) => {
@@ -622,6 +625,8 @@ const ManageSales: React.FC = () => {
             onSeniorPwdAddressChange={setSeniorPwdAddress}
             seniorPwdIdNumber={seniorPwdIdNumber}
             onSeniorPwdIdNumberChange={setSeniorPwdIdNumber}
+            seniorPwdType={seniorPwdType}
+            onSeniorPwdTypeChange={setSeniorPwdType}
           />
         </div>
       </div>

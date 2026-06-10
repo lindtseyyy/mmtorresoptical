@@ -209,6 +209,7 @@ public class TransactionService {
             transaction.setSeniorPwdName(transactionRequestDTO.getSeniorPwdName());
             transaction.setSeniorPwdAddress(transactionRequestDTO.getSeniorPwdAddress());
             transaction.setSeniorPwdIdNumber(transactionRequestDTO.getSeniorPwdIdNumber());
+            transaction.setSeniorPwdType(transactionRequestDTO.getSeniorPwdType());
             transaction.setIsSeniorPwdApplied(true);
         }
 

@@ -85,6 +85,9 @@ public class Transaction {
     @Column(name = "senior_pwd_id_number", length = 100)
     private String seniorPwdIdNumber;
 
+    @Column(name = "senior_pwd_type", length = 50)
+    private String seniorPwdType;
+
     @Column(name = "is_senior_pwd_applied", nullable = false)
     private Boolean isSeniorPwdApplied = false;
 
