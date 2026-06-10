@@ -245,7 +245,7 @@ const ViewProduct: React.FC = () => {
                   size="sm"
                   onClick={() => navigate(`/inventory/edit/${productId}`)}
                 >
-                  Edit Product
+                  Edit Item
                 </Button>
               )}
             </div>

@@ -61,7 +61,7 @@ const EditProduct: React.FC = () => {
     <div className="mx-auto max-w-2xl space-y-6">
       <div className="flex items-start justify-between">
         <div>
-          <h2 className="text-3xl font-bold">Edit Product</h2>
+          <h2 className="text-3xl font-bold">Edit Item</h2>
           <p className="text-muted-foreground">Update item details</p>
         </div>
         <Button variant="secondary" size="sm" className="text-xs" asChild>
