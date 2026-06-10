@@ -112,6 +112,29 @@ const OriginalReceipt: React.FC<{
         </div>
       )}
 
+      {/* Senior/PWD Discount Info */}
+      {tx.isSeniorPwdApplied && (
+        <div className="mb-3 border border-dashed border-border rounded-sm px-2 py-1.5">
+          <p className="font-semibold mb-0.5">
+            {tx.seniorPwdType === "SENIOR_CITIZEN" ? "Senior Citizen" : tx.seniorPwdType === "PWD" ? "PWD" : "Senior / PWD"} Discount Applied
+          </p>
+          <div className="text-[10px] text-muted-foreground">
+            <div className="flex justify-between">
+              <span>Name</span>
+              <span>{tx.seniorPwdName}</span>
+            </div>
+            <div className="flex justify-between">
+              <span>Address</span>
+              <span>{tx.seniorPwdAddress}</span>
+            </div>
+            <div className="flex justify-between">
+              <span>ID Number</span>
+              <span>{tx.seniorPwdIdNumber}</span>
+            </div>
+          </div>
+        </div>
+      )}
+
       <hr className="border-dashed border-border mb-3" />
 
       {/* Items */}
@@ -379,6 +402,29 @@ const UpdatedStatement: React.FC<{ transaction: TransactionResponse }> = ({ tran
           <div className="flex justify-between">
             <span className="text-muted-foreground">Patient</span>
             <span>{tx.patient.fullName}</span>
+          </div>
+        </div>
+      )}
+
+      {/* Senior/PWD Discount Info */}
+      {tx.isSeniorPwdApplied && (
+        <div className="mb-3 border border-dashed border-border rounded-sm px-2 py-1.5">
+          <p className="font-semibold mb-0.5">
+            {tx.seniorPwdType === "SENIOR_CITIZEN" ? "Senior Citizen" : tx.seniorPwdType === "PWD" ? "PWD" : "Senior / PWD"} Discount Applied
+          </p>
+          <div className="text-[10px] text-muted-foreground">
+            <div className="flex justify-between">
+              <span>Name</span>
+              <span>{tx.seniorPwdName}</span>
+            </div>
+            <div className="flex justify-between">
+              <span>Address</span>
+              <span>{tx.seniorPwdAddress}</span>
+            </div>
+            <div className="flex justify-between">
+              <span>ID Number</span>
+              <span>{tx.seniorPwdIdNumber}</span>
+            </div>
           </div>
         </div>
       )}
