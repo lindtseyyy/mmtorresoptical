@@ -502,15 +502,9 @@ const ViewTransaction: React.FC = () => {
           {tx.isSeniorPwdApplied && (
             <div className="mt-4 border-t pt-4">
               <p className="text-xs font-semibold text-muted-foreground mb-2">
-                Senior / PWD Discount Applied
+                {tx.seniorPwdType === "SENIOR_CITIZEN" ? "Senior Citizen" : tx.seniorPwdType === "PWD" ? "PWD" : "Senior / PWD"} Discount Applied
               </p>
               <div className="grid grid-cols-3 gap-x-8 gap-y-1 text-sm">
-                {tx.seniorPwdType && (
-                  <div>
-                    <p className="text-xs text-muted-foreground">Type</p>
-                    <p className="font-medium">{tx.seniorPwdType === "SENIOR_CITIZEN" ? "Senior Citizen" : "PWD"}</p>
-                  </div>
-                )}
                 <div>
                   <p className="text-xs text-muted-foreground">Full Name</p>
                   <p className="font-medium">{tx.seniorPwdName}</p>
