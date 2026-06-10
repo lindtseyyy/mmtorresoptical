@@ -239,7 +239,7 @@ const AddEyeExam: React.FC = () => {
                   name="vaAidedOd"
                   render={({ field }) => (
                     <FormItem>
-                      <FormLabel>VA RX (OD)</FormLabel>
+                      <FormLabel>VA Rx (OD)</FormLabel>
                       <FormControl>
                         <Input placeholder="e.g. 20/20" {...field} />
                       </FormControl>
@@ -252,7 +252,7 @@ const AddEyeExam: React.FC = () => {
                   name="vaAidedOs"
                   render={({ field }) => (
                     <FormItem>
-                      <FormLabel>VA RX (OS)</FormLabel>
+                      <FormLabel>VA Rx (OS)</FormLabel>
                       <FormControl>
                         <Input placeholder="e.g. 20/20" {...field} />
                       </FormControl>
