@@ -80,7 +80,7 @@ const BillingSection: React.FC<BillingSectionProps> = ({
   return (
     <div className="flex flex-col flex-1 min-h-0">
       {/* Senior/PWD Discount Toggle */}
-      <div className="mb-3 rounded-lg border border-border bg-muted/30 p-3">
+      <div className="mb-3 rounded-lg border border-border bg-muted p-3">
         <div className="flex items-center gap-2">
           <label className="flex items-center gap-2 cursor-pointer flex-1 min-w-0">
             <input
