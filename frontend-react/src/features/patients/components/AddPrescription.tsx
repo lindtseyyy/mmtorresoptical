@@ -299,7 +299,7 @@ const AddPrescription: React.FC = () => {
 
       <Form {...form}>
         <form onSubmit={form.handleSubmit(handleSubmit)} className="space-y-6">
-          <Card className="bg-slate-100 border-b-2 border-b-slate-300 rounded-b-none">
+          <Card className="bg-stone-200 border-b-2 border-b-stone-400 rounded-b-none">
             <CardHeader>
               <CardTitle>Prescription Details</CardTitle>
               <CardDescription>Enter the issue date and notes</CardDescription>
@@ -355,7 +355,7 @@ const AddPrescription: React.FC = () => {
                   <FormItem>
                     <FormLabel>Notes</FormLabel>
                     <FormControl>
-                      <Textarea placeholder="Prescription notes..." {...field} />
+                      <Textarea className="bg-stone-300" placeholder="Prescription notes..." {...field} />
                     </FormControl>
                     <FormMessage />
                   </FormItem>
@@ -421,39 +421,6 @@ const AddPrescription: React.FC = () => {
               </div>
             </CardContent>
           </Card>
-
-          {/* Canvas area with action buttons */}
-          <div className="rounded-lg border-2 border-dashed border-slate-300 bg-slate-100 p-4 space-y-3">
-            {lensFields.length === 0 && recFields.length === 0 && (
-              <p className="text-sm text-muted-foreground text-center">
-                Add at least one block to create the prescription.
-              </p>
-            )}
-
-            <div className="flex gap-2">
-              <Button
-                type="button"
-                variant="outline"
-                size="sm"
-                className="flex-1 gap-1"
-                onClick={() => appendLens({ ...emptyLens })}
-              >
-                <Eye className="h-4 w-4" />
-                Add Eyeglass Specification
-              </Button>
-
-              <Button
-                type="button"
-                variant="outline"
-                size="sm"
-                className="flex-1 gap-1"
-                onClick={() => appendRec({ productId: "", quantity: 1, staffNotes: "" })}
-              >
-                <Package className="h-4 w-4" />
-                Add Medication / Product
-              </Button>
-            </div>
-          </div>
 
           {lensFields.map((field, index) => {
             const correctionType = form.watch(`lensSpecifications.${index}.correctionType`);
@@ -737,6 +704,39 @@ const AddPrescription: React.FC = () => {
               </div>
             );
           })}
+
+          {/* Canvas area with action buttons */}
+          <div className="rounded-lg border-2 border-dashed border-stone-400 bg-stone-300 p-4 space-y-3">
+            {lensFields.length === 0 && recFields.length === 0 && (
+              <p className="text-sm text-muted-foreground text-center">
+                Add at least one block to create the prescription.
+              </p>
+            )}
+
+            <div className="flex gap-2">
+              <Button
+                type="button"
+                variant="outline"
+                size="sm"
+                className="flex-1 gap-1"
+                onClick={() => appendLens({ ...emptyLens })}
+              >
+                <Eye className="h-4 w-4" />
+                Add Eyeglass Specification
+              </Button>
+
+              <Button
+                type="button"
+                variant="outline"
+                size="sm"
+                className="flex-1 gap-1"
+                onClick={() => appendRec({ productId: "", quantity: 1, staffNotes: "" })}
+              >
+                <Package className="h-4 w-4" />
+                Add Medication / Product
+              </Button>
+            </div>
+          </div>
 
           <ProductPickerModal
             open={pickerIndex !== null}

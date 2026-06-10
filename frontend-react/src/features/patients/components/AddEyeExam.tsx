@@ -156,7 +156,7 @@ const AddEyeExam: React.FC = () => {
                     <FormLabel>Chief Complaint *</FormLabel>
                     <FormControl>
                       <Textarea
-                        placeholder="e.g. Blurry vision, digital eye strain, headache around eyes..."
+                        placeholder="Enter chief complaint"
                         {...field}
                       />
                     </FormControl>
