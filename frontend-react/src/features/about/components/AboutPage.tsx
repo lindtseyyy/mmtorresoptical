@@ -3,39 +3,39 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/sha
 import { Badge } from "@/shared/components/ui/badge";
 
 const frontendStack = [
-  { name: "React", version: "19.1.1" },
-  { name: "TypeScript", version: "5.9.3" },
-  { name: "Vite", version: "7.1.7" },
-  { name: "React Router", version: "7.9.5" },
-  { name: "Tailwind CSS", version: "4.1.17" },
-  { name: "TanStack React Query", version: "5.90.7" },
-  { name: "Axios", version: "1.13.2" },
-  { name: "React Hook Form", version: "7.66.0" },
-  { name: "Zod", version: "4.1.12" },
-  { name: "Lucide React", version: "0.553.0" },
-  { name: "Sonner", version: "2.0.7" },
-  { name: "Radix UI Primitives", version: "2.x" },
-  { name: "Shadcn UI", version: "latest" },
+  { name: "React" },
+  { name: "TypeScript" },
+  { name: "Vite" },
+  { name: "React Router" },
+  { name: "Tailwind CSS" },
+  { name: "TanStack React Query" },
+  { name: "Axios" },
+  { name: "React Hook Form" },
+  { name: "Zod" },
+  { name: "Lucide React" },
+  { name: "Sonner" },
+  { name: "Radix UI Primitives" },
+  { name: "Shadcn UI" },
 ];
 
 const backendStack = [
-  { name: "Spring Boot", version: "3.5.7" },
-  { name: "Java", version: "17" },
-  { name: "Spring Security", version: "6.x" },
-  { name: "Spring Data JPA", version: "3.x" },
-  { name: "PostgreSQL", version: "42.7.3" },
-  { name: "JJWT", version: "0.11.5" },
-  { name: "Lombok", version: "1.18.32" },
-  { name: "MapStruct", version: "1.6.3" },
-  { name: "Apache PDFBox", version: "2.0.29" },
-  { name: "Apache POI", version: "5.2.3" },
-  { name: "SpringDoc OpenAPI", version: "2.8.6" },
+  { name: "Spring Boot" },
+  { name: "Java" },
+  { name: "Spring Security" },
+  { name: "Spring Data JPA" },
+  { name: "PostgreSQL" },
+  { name: "JJWT" },
+  { name: "Lombok" },
+  { name: "MapStruct" },
+  { name: "Apache PDFBox" },
+  { name: "Apache POI" },
+  { name: "SpringDoc OpenAPI" },
 ];
 
 const otherStack = [
-  { name: "PostgreSQL", version: "14+" },
-  { name: "Maven", version: "3.x" },
-  { name: "Node.js", version: "20+" },
+  { name: "PostgreSQL" },
+  { name: "Maven" },
+  { name: "Node.js" },
 ];
 
 export default function AboutPage() {
@@ -105,9 +105,8 @@ export default function AboutPage() {
             </h3>
             <div className="flex flex-wrap gap-2">
               {frontendStack.map((tech) => (
-                <Badge key={tech.name} variant="secondary" className="gap-1 px-3 py-1.5 text-sm">
+                <Badge key={tech.name} variant="secondary" className="px-3 py-1.5 text-sm">
                   {tech.name}
-                  <span className="text-muted-foreground">{tech.version}</span>
                 </Badge>
               ))}
             </div>
@@ -121,9 +120,8 @@ export default function AboutPage() {
             </h3>
             <div className="flex flex-wrap gap-2">
               {backendStack.map((tech) => (
-                <Badge key={tech.name} variant="secondary" className="gap-1 px-3 py-1.5 text-sm">
+                <Badge key={tech.name} variant="secondary" className="px-3 py-1.5 text-sm">
                   {tech.name}
-                  <span className="text-muted-foreground">{tech.version}</span>
                 </Badge>
               ))}
             </div>
@@ -137,9 +135,8 @@ export default function AboutPage() {
             </h3>
             <div className="flex flex-wrap gap-2">
               {otherStack.map((tech) => (
-                <Badge key={tech.name} variant="secondary" className="gap-1 px-3 py-1.5 text-sm">
+                <Badge key={tech.name} variant="secondary" className="px-3 py-1.5 text-sm">
                   {tech.name}
-                  <span className="text-muted-foreground">{tech.version}</span>
                 </Badge>
               ))}
             </div>
