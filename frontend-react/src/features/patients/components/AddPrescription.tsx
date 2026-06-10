@@ -48,8 +48,8 @@ const recommendationItemSchema = z.object({
 });
 
 const lensSpecSchema = z.object({
-  lensTypePurpose: z.string().optional(),
-  correctionType: z.string().optional(),
+  lensTypePurpose: z.string().min(1, "Purpose is required"),
+  correctionType: z.string().min(1, "Correction type is required"),
   rightSph: z.string().optional(),
   rightCyl: z.string().optional(),
   rightAxis: z.string().optional(),
