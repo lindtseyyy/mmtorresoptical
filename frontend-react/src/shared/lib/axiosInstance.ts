@@ -3,7 +3,7 @@ import axios from 'axios';
 // 🎯 Define your base URL here
 // Use environment variables (VITE_API_BASE_URL, REACT_APP_API_BASE_URL, etc.) 
 // for switching between development, staging, and production environments.
-const BASE_URL = import.meta.env.VITE_API_BASE_URL || "http://localhost:8080/api";
+const BASE_URL = import.meta.env.VITE_API_BASE_URL || "http://10.42.0.1:8080/api";
 
 // 1. Create a custom instance of Axios
 const api = axios.create({

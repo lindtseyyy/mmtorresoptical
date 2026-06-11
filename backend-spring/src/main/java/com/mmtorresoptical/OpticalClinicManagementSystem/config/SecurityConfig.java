@@ -38,7 +38,8 @@ public class SecurityConfig {
 
         // 💡 Set this to your frontend's URL.
         // 5173 is the default for Vite, 3000 is common for Create React App.
-        configuration.setAllowedOrigins(Arrays.asList("http://localhost:5174", "http://localhost:5173", "http://localhost:3000"));
+        configuration.setAllowedOriginPatterns(List.of("*"));
+//        configuration.setAllowedOrigins(Arrays.asList("http://localhost:5174", "http://localhost:5173", "http://localhost:3000"));
 
         // Allow all standard methods
         configuration.setAllowedMethods(Arrays.asList("GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"));
