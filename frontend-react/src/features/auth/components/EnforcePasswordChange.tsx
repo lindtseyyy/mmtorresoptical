@@ -4,6 +4,7 @@ import { useForm, type SubmitHandler } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
 import api from "@/shared/lib/axiosInstance";
+import { isAdmin } from "@/shared/lib/auth";
 import { Button } from "@/shared/components/ui/button";
 import { Input } from "@/shared/components/ui/input";
 import { Label } from "@/shared/components/ui/label";
@@ -79,7 +80,7 @@ const EnforcePasswordChange: React.FC = () => {
         securityAnswer: data.securityAnswer,
       });
       localStorage.removeItem("pwChangeRequired");
-      navigate("/");
+      navigate(isAdmin() ? "/dashboard" : "/inventory");
     } catch (err: any) {
       const msg = err?.response?.data;
       setError(
