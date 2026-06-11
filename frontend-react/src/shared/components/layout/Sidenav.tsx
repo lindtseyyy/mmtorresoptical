@@ -19,9 +19,9 @@ interface MenuItem {
 const menuItems: MenuItem[] = [
   { title: "Dashboard", href: "/dashboard", icon: LayoutDashboard, roles: ["ADMIN"] as Role[] },
   { title: "Inventory Management", href: "/inventory", icon: Eye, roles: ["ADMIN", "STAFF"] as Role[] },
+  { title: "Patient Management", href: "/patients", icon: UserRound, roles: ["ADMIN"] as Role[] },
   { title: "Billing and Payment", href: "/sales", icon: ShoppingCart, roles: ["ADMIN", "STAFF"] as Role[] },
   { title: "Sales and Transactions", href: "/transactions", icon: Receipt, roles: ["ADMIN", "STAFF"] as Role[] },
-  { title: "Patient Management", href: "/patients", icon: UserRound, roles: ["ADMIN"] as Role[] },
   { title: "Registration", href: "/users", icon: Users, roles: ["ADMIN"] as Role[] },
   { title: "Reports", href: "/reports", icon: FileText, roles: ["ADMIN"] as Role[] },
   {
