@@ -263,6 +263,7 @@ const InventoryMaintenance: React.FC = () => {
                                   src={getImageUrl(product.imageDir) ?? undefined}
                                   alt=""
                                   className="h-6 w-6 rounded object-cover"
+                                  onError={(e) => { (e.target as HTMLImageElement).style.display = "none"; }}
                                 />
                               ) : (
                                 <span className="flex h-6 w-6 items-center justify-center">

@@ -105,6 +105,7 @@ const ProductPickerModal: React.FC<ProductPickerModalProps> = ({ open, onOpenCha
                       src={getImageUrl(product.imageDir) ?? undefined}
                       alt={product.productName}
                       className="h-full w-full object-contain"
+                      onError={(e) => { (e.target as HTMLImageElement).style.display = "none"; }}
                     />
                   ) : (
                     <ImageOff className="h-8 w-8 text-muted-foreground/50" />

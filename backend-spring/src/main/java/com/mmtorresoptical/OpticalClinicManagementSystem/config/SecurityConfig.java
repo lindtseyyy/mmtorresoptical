@@ -53,8 +53,9 @@ public class SecurityConfig {
         configuration.setAllowCredentials(true);
 
         UrlBasedCorsConfigurationSource source = new UrlBasedCorsConfigurationSource();
-        // Apply this configuration to all routes starting with /api/
+        // Apply this configuration to all routes starting with /api/ and /uploads/
         source.registerCorsConfiguration("/api/**", configuration);
+        source.registerCorsConfiguration("/uploads/**", configuration);
         return source;
     }
 
@@ -99,6 +100,9 @@ public class SecurityConfig {
 
                         // Product images — public streaming
                         .requestMatchers("/api/products/images/**").permitAll()
+
+                        // Static uploads — public streaming for product images over LAN
+                        .requestMatchers("/uploads/**").permitAll()
 
                         // Staff + Admin
                         .requestMatchers("/api/**").hasAnyRole("ADMIN", "STAFF")

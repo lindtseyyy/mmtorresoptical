@@ -1,7 +1,7 @@
 import { useState } from "react";
 import { useParams, Link, useNavigate } from "react-router-dom";
 import { useQuery } from "@tanstack/react-query";
-import { ArrowLeft, ChevronRight, Package, ShoppingCart, Banknote, Calendar, Hash, TrendingUp, Layers, Glasses } from "lucide-react";
+import { ArrowLeft, ChevronRight, Package, ShoppingCart, Banknote, Calendar, Hash, TrendingUp, Layers, Glasses, ImageOff } from "lucide-react";
 import StockAdjustmentModal from "./StockAdjustmentModal";
 import { Button } from "@/shared/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/shared/components/ui/card";
@@ -94,15 +94,20 @@ const ViewProduct: React.FC = () => {
                 <div className="flex h-12 w-12 items-center justify-center rounded-lg bg-muted">
                   <Glasses className="h-6 w-6 text-muted-foreground" />
                 </div>
-              ) : product.imageDir ? (
+              ) : product.imageDir && !imgFailed ? (
                 <img
                   src={getImageUrl(product.imageDir) ?? undefined}
                   alt={product.productName}
                   className="h-12 w-12 rounded-lg object-cover"
+                  onError={() => setImgFailed(true)}
                 />
               ) : (
                 <div className="flex h-12 w-12 items-center justify-center rounded-lg bg-muted">
-                  <Package className="h-6 w-6 text-muted-foreground" />
+                  {imgFailed ? (
+                    <ImageOff className="h-6 w-6 text-muted-foreground" />
+                  ) : (
+                    <Package className="h-6 w-6 text-muted-foreground" />
+                  )}
                 </div>
               )}
               <div>

@@ -21,11 +21,12 @@ export function levenshtein(a: string, b: string): number {
   return dp[m][n];
 }
 
+const IMAGE_SERVER_URL = "http://10.42.0.1:8080/uploads/products";
+
 export function getImageUrl(imageDir: string | null | undefined): string | null {
   if (!imageDir) return null;
   if (imageDir === "default_product_logo.png") {
     return "/default_product_logo.png";
   }
-  const BASE_URL = import.meta.env.VITE_API_BASE_URL || "http://localhost:8080/api";
-  return `${BASE_URL}/products/images/${imageDir}`;
+  return `${IMAGE_SERVER_URL}/${imageDir}`;
 }
