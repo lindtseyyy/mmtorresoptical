@@ -101,11 +101,11 @@ const Reports: React.FC = () => {
       data &&
       "statusGroups" in data
     ) {
-      const txData = data as TransactionHierarchicalReportDataset;
-      if (txData.minDate) {
-        setMinDate(txData.minDate);
-      }
-      setMaxDate(new Date().toISOString().slice(0, 10));
+      const today = new Date();
+      const sevenDaysAgo = new Date(today);
+      sevenDaysAgo.setDate(today.getDate() - 7);
+      setMinDate(sevenDaysAgo.toISOString().slice(0, 10));
+      setMaxDate(today.toISOString().slice(0, 10));
     }
   }, [reportType, minDate, maxDate, data, setMinDate, setMaxDate]);
 
