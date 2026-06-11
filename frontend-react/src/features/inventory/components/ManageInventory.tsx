@@ -237,12 +237,11 @@ const ManageInventory: React.FC = () => {
                 <table className="w-full table-fixed text-sm">
                   <thead>
                     <tr className="border-b text-left text-muted-foreground">
-                      <th className="w-[32%] py-3 pl-4 pr-4 font-medium">Name</th>
+                      <th className="w-[38%] py-3 pl-4 pr-4 font-medium">Name</th>
                       <th className="w-[12%] py-3 pl-4 pr-4 font-medium">Category</th>
-                      <th className="w-[10%] py-3 pl-4 pr-4 text-right font-medium">Quantity</th>
-                      <th className="w-[12%] py-3 pl-4 pr-4 text-right font-medium">Unit Price</th>
-                      <th className="w-[12%] py-3 pl-4 pr-4 text-right font-medium">Lead Time</th>
-                      <th className="w-[14%] py-3 pl-4 pr-4 text-center font-medium">Stock Status</th>
+                      <th className="w-[12%] py-3 pl-4 pr-4 text-right font-medium">Quantity</th>
+                      <th className="w-[14%] py-3 pl-4 pr-4 text-right font-medium">Unit Price</th>
+                      <th className="w-[16%] py-3 pl-4 pr-4 text-center font-medium">Stock Status</th>
                       <th className="w-[8%] py-3 pl-4 text-center font-medium">Action</th>
                     </tr>
                   </thead>
@@ -287,13 +286,6 @@ const ManageInventory: React.FC = () => {
                           <td className="py-3 pl-4 pr-4 text-right">
                             ₱{product.unitPrice.toFixed(2)}
                           </td>
-                          <td className="py-3 pl-4 pr-4 text-right">
-                            {product.productType === "SERVICE" ? (
-                              <span className="text-muted-foreground">—</span>
-                            ) : (
-                              `${product.leadTimeDays} days`
-                            )}
-                          </td>
                           <td className="py-3 pl-4 pr-4 text-center">
                             {product.productType === "SERVICE" ? (
                               <span className="text-muted-foreground">—</span>
@@ -328,7 +320,7 @@ const ManageInventory: React.FC = () => {
                     })}
                     <EmptyTableRows
                       count={PAGE_SIZE - (products?.length ?? 0)}
-                      colSpan={7}
+                      colSpan={6}
                       className="h-[57px]"
                     />
                   </tbody>

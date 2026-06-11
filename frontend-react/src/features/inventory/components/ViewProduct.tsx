@@ -291,6 +291,12 @@ const ViewProduct: React.FC = () => {
                 <p className="font-medium">{product.overstockedThreshold}</p>
               </div>
             )}
+            {!isService && (
+              <div>
+                <p className="text-xs text-muted-foreground">Lead Time</p>
+                <p className="font-medium">{product.leadTimeDays} days</p>
+              </div>
+            )}
           </div>
         </CardContent>
       </Card>
