@@ -212,6 +212,7 @@ public interface InventoryAnalyticsRepository extends JpaRepository<Product, UUI
       AND t.transactionDate >= :startDate
       AND t.transactionDate < :endDate
     GROUP BY p.productId, p.productName, c.name, p.unitPrice
+    HAVING SUM(ti.quantity - COALESCE(ti.refundedQuantity, 0)) > 0
     ORDER BY SUM(
         ti.subtotal
         -
@@ -263,6 +264,7 @@ public interface InventoryAnalyticsRepository extends JpaRepository<Product, UUI
       AND t.transactionDate >= :startDate
       AND t.transactionDate < :endDate
     GROUP BY p.productId, p.productName, c.name, p.unitPrice
+    HAVING SUM(ti.quantity - COALESCE(ti.refundedQuantity, 0)) > 0
     ORDER BY SUM(
         ti.subtotal
         -
