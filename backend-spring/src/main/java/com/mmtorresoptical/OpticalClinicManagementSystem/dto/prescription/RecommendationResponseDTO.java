@@ -15,5 +15,6 @@ public record RecommendationResponseDTO(
         int stockQuantity,
         int quantity,
         String staffNotes,
-        Boolean isSeniorPwdEligible
+        Boolean isSeniorPwdEligible,
+        Boolean isArchived
 ) {}

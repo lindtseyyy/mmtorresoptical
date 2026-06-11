@@ -295,12 +295,18 @@ const ManageSales: React.FC = () => {
 
       const skipped: string[] = [];
       const outOfStock: string[] = [];
+      const archived: string[] = [];
       const partialStock: { name: string; added: number; requested: number }[] = [];
       let addedCount = 0;
 
       setCart((prev) => {
         const merged = [...prev];
         for (const rec of details.recommendations!) {
+          if (rec.isArchived) {
+            archived.push(rec.productName);
+            continue;
+          }
+
           const alreadyInCart = merged.some(
             (i) => i.product.productId === rec.productId
           );
@@ -361,6 +367,9 @@ const ManageSales: React.FC = () => {
 
       const messages: string[] = [];
 
+      if (archived.length > 0) {
+        messages.push(`No longer available (archived): ${archived.join(", ")}.`);
+      }
       if (outOfStock.length > 0) {
         messages.push(`Out of stock: ${outOfStock.join(", ")}.`);
       }
@@ -380,7 +389,7 @@ const ManageSales: React.FC = () => {
         <span style={{ whiteSpace: "pre-line" }}>{messages.join("\n")}</span>
       );
 
-      if (outOfStock.length > 0) {
+      if (archived.length > 0 || outOfStock.length > 0) {
         toast.error("Prescription loaded with issues", { description });
       } else if (partialStock.length > 0 || skipped.length > 0) {
         toast.warning("Prescription loaded with notes", { description });

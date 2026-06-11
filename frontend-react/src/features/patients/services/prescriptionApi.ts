@@ -59,6 +59,7 @@ export interface RecommendationResponse {
   quantity: number;
   staffNotes?: string;
   isSeniorPwdEligible: boolean;
+  isArchived: boolean;
 }
 
 export interface PrescriptionResponse {
@@ -131,6 +132,8 @@ const fetchPatientPrescriptions = async (
       page: params?.page ?? 0,
       size: params?.size ?? 50,
       status: "ACTIVE",
+      sortBy: "issueDate",
+      sortOrder: "desc",
     },
   });
   return data;
