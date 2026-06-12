@@ -141,6 +141,14 @@ export default function AboutPage() {
               ))}
             </div>
           </div>
+
+          {/* Version */}
+          <div className="flex items-center gap-2">
+            <h3 className="font-semibold">Version</h3>
+            <Badge variant="outline" className="px-3 py-1.5 text-sm">
+              v1.0.0
+            </Badge>
+          </div>
         </CardContent>
       </Card>
     </div>

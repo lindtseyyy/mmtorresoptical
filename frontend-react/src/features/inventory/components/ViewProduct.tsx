@@ -54,6 +54,7 @@ const ViewProduct: React.FC = () => {
   });
 
   const [adjustModalOpen, setAdjustModalOpen] = useState(false);
+  const [imgFailed, setImgFailed] = useState(false);
 
   const { data: txData, isFetching: txFetching } = useQuery({
     queryKey: ["product-transactions", productId],
