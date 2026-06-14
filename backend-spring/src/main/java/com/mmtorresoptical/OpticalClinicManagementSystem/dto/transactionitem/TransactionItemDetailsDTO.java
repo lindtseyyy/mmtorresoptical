@@ -4,6 +4,7 @@ import com.mmtorresoptical.OpticalClinicManagementSystem.dto.product.ProductSumm
 import lombok.Data;
 
 import java.math.BigDecimal;
+import java.util.List;
 import java.util.UUID;
 
 @Data
@@ -22,5 +23,7 @@ public class TransactionItemDetailsDTO {
     private Integer refundedQuantity;
     private String refundReason;
     private BigDecimal seniorPwdDiscountAmount;
+
+    private List<BatchAllocationDTO> batchAllocations;
 
 }

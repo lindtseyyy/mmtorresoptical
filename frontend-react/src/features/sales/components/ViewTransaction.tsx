@@ -674,6 +674,22 @@ const ViewTransaction: React.FC = () => {
                         <p className="font-medium">
                           {item.product?.productName ?? "—"}
                         </p>
+                        {(item.batchAllocations ?? []).length > 0 && (
+                          <div className="mt-1 space-y-0.5">
+                            {item.batchAllocations!.map((alloc) => (
+                              <div
+                                key={alloc.productBatchId}
+                                className="text-xs text-muted-foreground flex items-center gap-1"
+                              >
+                                <span className="inline-block w-1.5 h-1.5 rounded-full bg-muted-foreground/40 shrink-0" />
+                                <span>
+                                  {alloc.quantityDeducted} {alloc.quantityDeducted === 1 ? "unit" : "units"} from{" "}
+                                  <span className="font-medium text-foreground">{alloc.batchNumber}</span>
+                                </span>
+                              </div>
+                            ))}
+                          </div>
+                        )}
                         {(item.refundedQuantity ?? 0) > 0 && (
                           <span className="text-xs text-red-600">
                             Refunded: {item.refundedQuantity}

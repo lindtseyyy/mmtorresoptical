@@ -2,14 +2,14 @@ import { Printer } from "lucide-react";
 
 import { Dialog, DialogContent } from "@/shared/components/ui/dialog";
 import { Button } from "@/shared/components/ui/button";
-import type { TransactionResponse, TransactionItemResponse, RefundReceiptData } from "@/features/sales/types";
+import type { TransactionResponse, TransactionItemResponse, RefundReceiptData, BatchAllocation } from "@/features/sales/types";
 
 const BUSINESS_NAME = "MM Torres Optical Clinic";
 const BUSINESS_ADDRESS = "259 Shoe Avenue, Sto. Nino, Marikina City, 1806";
 const BUSINESS_ADDRESS_LINE2 = "Metro Manila, Philippines";
 const BUSINESS_PHONE = "(02) 933 7725";
 
-export type PrintMode = "ORIGINAL" | "UPDATED";
+export type PrintMode = "ORIGINAL" | "UPDATED" | "DUAL_SLIP" | "PICK_SLIP";
 
 interface PrintableReceiptProps {
   open: boolean;
@@ -17,6 +17,7 @@ interface PrintableReceiptProps {
   transaction: TransactionResponse;
   printMode: PrintMode;
   isReprint?: boolean;
+  extraButton?: React.ReactNode;
 }
 
 const formatDateTime = (dateStr: string) =>
@@ -578,6 +579,116 @@ const UpdatedStatement: React.FC<{ transaction: TransactionResponse }> = ({ tran
 };
 
 // ────────────────────────────────────────────────────────────
+// STAFF PICK LIST — Internal batch-level retrieval directive
+// ────────────────────────────────────────────────────────────
+const StaffPickSlip: React.FC<{
+  transaction: TransactionResponse;
+}> = ({ transaction: tx }) => {
+  const date = new Date(tx.transactionDate);
+  const dateStr = date.toLocaleDateString(undefined, { year: "numeric", month: "long", day: "numeric" });
+  const timeStr = date.toLocaleTimeString(undefined, { hour: "2-digit", minute: "2-digit" });
+
+  const itemsWithBatches = tx.transactionItems.filter(
+    (item) => item.batchAllocations && item.batchAllocations.length > 0
+  );
+
+  const totalUnits = itemsWithBatches.reduce(
+    (sum, item) =>
+      sum +
+      (item.batchAllocations?.reduce((s, a) => s + a.quantityDeducted, 0) ?? 0),
+    0
+  );
+
+  return (
+    <div className="font-mono text-xs leading-relaxed text-foreground max-h-[65vh] overflow-y-auto print:max-h-none print:overflow-visible print:mt-6">
+      {/* Header */}
+      <div className="text-center mb-4">
+        <h2 className="text-xs font-bold tracking-wide uppercase text-muted-foreground mb-1">
+          STAFF PICK LIST
+        </h2>
+        <h2 className="text-sm font-bold tracking-wide uppercase">
+          {BUSINESS_NAME}
+        </h2>
+        <p className="text-[10px] text-muted-foreground mt-0.5">Internal Use Only</p>
+      </div>
+
+      <hr className="border-dashed border-border mb-3" />
+
+      {/* Metadata */}
+      <div className="space-y-0.5 mb-3">
+        <div className="flex justify-between">
+          <span className="text-muted-foreground">Transaction #</span>
+          <span className="font-semibold">{tx.transactionNumber}</span>
+        </div>
+        <div className="flex justify-between">
+          <span className="text-muted-foreground">Date</span>
+          <span>{dateStr}</span>
+        </div>
+        <div className="flex justify-between">
+          <span className="text-muted-foreground">Time</span>
+          <span>{timeStr}</span>
+        </div>
+        {tx.patient && (
+          <div className="flex justify-between">
+            <span className="text-muted-foreground">Patient</span>
+            <span>{tx.patient.fullName}</span>
+          </div>
+        )}
+      </div>
+
+      <hr className="border-dashed border-border mb-3" />
+
+      {/* Pick List */}
+      <div className="space-y-3">
+        {itemsWithBatches.map((item) => (
+          <div key={item.transactionItemId}>
+            <p className="font-bold text-sm mb-1">{item.product.productName}</p>
+            <div className="space-y-0.5 ml-1">
+              {item.batchAllocations!.map((alloc) => (
+                <div key={alloc.productBatchId} className="flex items-start gap-2">
+                  <span className="inline-block w-3 h-3 border border-foreground mt-0.5 shrink-0 print:border-black" />
+                  <span>
+                    Pull <span className="font-bold">{alloc.quantityDeducted}</span>{" "}
+                    {alloc.quantityDeducted === 1 ? "unit" : "units"} from{" "}
+                    <span className="font-bold">[{alloc.batchNumber}]</span>
+                  </span>
+                </div>
+              ))}
+            </div>
+          </div>
+        ))}
+
+        {/* SERVICE items without batch allocations */}
+        {tx.transactionItems
+          .filter((item) => !item.batchAllocations || item.batchAllocations.length === 0)
+          .map((item) => (
+            <div key={item.transactionItemId}>
+              <p className="font-bold text-sm mb-1">{item.product.productName}</p>
+              <div className="ml-1 text-muted-foreground">
+                <span className="inline-block w-3 h-3 border border-muted-foreground mt-0.5 mr-2 shrink-0 align-middle" />
+                Service — no physical pull needed
+              </div>
+            </div>
+          ))}
+      </div>
+
+      <hr className="border-dashed border-border my-3" />
+
+      {/* Footer */}
+      <div className="flex justify-between text-sm font-bold">
+        <span>Total physical units to pull:</span>
+        <span>{totalUnits}</span>
+      </div>
+
+      <div className="text-center text-[10px] text-muted-foreground mt-4 space-y-1">
+        <p>Check off each item as you retrieve it.</p>
+        <p>Confirm all items before handing to customer.</p>
+      </div>
+    </div>
+  );
+};
+
+// ────────────────────────────────────────────────────────────
 // PrintableReceipt — dual-mode wrapper
 // ────────────────────────────────────────────────────────────
 const PrintableReceipt: React.FC<PrintableReceiptProps> = ({
@@ -586,6 +697,7 @@ const PrintableReceipt: React.FC<PrintableReceiptProps> = ({
   transaction,
   printMode,
   isReprint = false,
+  extraButton,
 }) => {
   const handlePrint = () => {
     window.print();
@@ -593,13 +705,27 @@ const PrintableReceipt: React.FC<PrintableReceiptProps> = ({
 
   if (!open) return null;
 
+  const isDualSlip = printMode === "DUAL_SLIP";
+  const isPickSlip = printMode === "PICK_SLIP";
   const isUpdated = printMode === "UPDATED";
 
   return (
     <Dialog open={open} onOpenChange={onClose}>
-      <DialogContent>
+      <DialogContent className={isDualSlip ? "max-w-2xl" : ""}>
         {isUpdated ? (
           <UpdatedStatement transaction={transaction} />
+        ) : isDualSlip ? (
+          <>
+            <OriginalReceipt transaction={transaction} isReprint={isReprint} />
+            <div className="border-t border-dashed border-border mt-4 pt-4 print:break-before-page print:border-0 print:mt-0 print:pt-0">
+              <div className="text-center text-muted-foreground text-[10px] mb-2 print:hidden">
+                ✂ - - - - - - - - - - - - - - - - - - - - - - - - - -
+              </div>
+              <StaffPickSlip transaction={transaction} />
+            </div>
+          </>
+        ) : isPickSlip ? (
+          <StaffPickSlip transaction={transaction} />
         ) : (
           <OriginalReceipt transaction={transaction} isReprint={isReprint} />
         )}
@@ -608,8 +734,9 @@ const PrintableReceipt: React.FC<PrintableReceiptProps> = ({
         <div className="flex gap-2 mt-4 print:hidden">
           <Button className="flex-1" onClick={handlePrint}>
             <Printer className="mr-2 h-4 w-4" />
-            {isUpdated ? "Print Statement" : "Print Receipt"}
+            {isUpdated ? "Print Statement" : isDualSlip ? "Print Receipts" : isPickSlip ? "Print Pick List" : "Print Receipt"}
           </Button>
+          {extraButton}
           <Button
             variant="outline"
             className="flex-1 border-2 border-gray-400 dark:border-gray-500"

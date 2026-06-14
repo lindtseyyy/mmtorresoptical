@@ -109,6 +109,7 @@ public class ProductBatchService {
             record.setProductBatch(batch);
             record.setQuantityDeducted(alloc.quantity());
             allocationRepository.save(record);
+            item.getBatchAllocations().add(record);
         }
 
         syncProductQuantity(item.getProduct().getProductId());

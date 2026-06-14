@@ -471,6 +471,7 @@ public class TransactionService {
         return transactions.map(transactionMapper::entityToListDTO);
     }
 
+    @Transactional(readOnly = true)
     public TransactionDetailsDTO getTransaction(UUID id) {
         Transaction transaction = transactionRepository.findById(id)
                 .orElseThrow(() -> new ResourceNotFoundException("Transaction not found with id: " + id));

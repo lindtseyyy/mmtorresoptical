@@ -74,6 +74,12 @@ export interface RefundReceiptData {
   refundItems: RefundItemData[];
 }
 
+export interface BatchAllocation {
+  productBatchId: number;
+  batchNumber: string;
+  quantityDeducted: number;
+}
+
 export interface TransactionItemResponse {
   transactionItemId: string;
   product: ProductSummary;
@@ -87,6 +93,7 @@ export interface TransactionItemResponse {
   refundNotes: string;
   refundReason?: string;
   seniorPwdDiscountAmount?: number;
+  batchAllocations?: BatchAllocation[];
 }
 
 export interface TransactionResponse {
