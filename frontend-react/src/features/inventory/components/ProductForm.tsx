@@ -24,16 +24,14 @@ import {
 } from "@/shared/components/ui/card";
 import { Label } from "@/shared/components/ui/label";
 import CategoryCombobox from "@/features/inventory/components/CategoryCombobox";
-import CategoryManagementModal from "@/features/inventory/components/CategoryManagementModal";
 import SupplierCombobox from "@/features/inventory/components/SupplierCombobox";
-import SupplierManagementModal from "@/features/inventory/components/SupplierManagementModal";
 import {
   productSchema,
   productFormSchema,
   type ProductFormData,
   type ProductFormValues,
 } from "@/features/inventory/types";
-import { Upload, X, Settings } from "lucide-react";
+import { Upload, X } from "lucide-react";
 
 interface ProductFormProps {
   defaultValues?: ProductFormData;
@@ -100,15 +98,9 @@ export const ProductForm: React.FC<ProductFormProps> = ({
   const [selectedCategoryId, setSelectedCategoryId] = useState<string | null>(
     passedDefaultValues?.categoryId ?? null
   );
-  const [newCategoryName, setNewCategoryName] = useState<string | null>(null);
-  const [categoryModalOpen, setCategoryModalOpen] = useState(false);
-  const [categoryRefreshKey, setCategoryRefreshKey] = useState(0);
   const [selectedSupplierId, setSelectedSupplierId] = useState<string | null>(
     passedDefaultValues?.supplierId ?? null
   );
-  const [newSupplierName, setNewSupplierName] = useState<string | null>(null);
-  const [supplierModalOpen, setSupplierModalOpen] = useState(false);
-  const [supplierRefreshKey, setSupplierRefreshKey] = useState(0);
 
   const initialFormValues = useMemo(
     () => mapToFormValues(passedDefaultValues),
@@ -125,7 +117,6 @@ export const ProductForm: React.FC<ProductFormProps> = ({
 
   useEffect(() => {
     setSelectedCategoryId(null);
-    setNewCategoryName(null);
     form.setValue("categoryId", undefined, { shouldValidate: false });
     form.setValue("newCategoryName", undefined, { shouldValidate: false });
 
@@ -141,9 +132,7 @@ export const ProductForm: React.FC<ProductFormProps> = ({
   useEffect(() => {
     form.reset(initialFormValues);
     setSelectedCategoryId(passedDefaultValues?.categoryId ?? null);
-    setNewCategoryName(null);
     setSelectedSupplierId(passedDefaultValues?.supplierId ?? null);
-    setNewSupplierName(null);
   }, [initialFormValues, form, passedDefaultValues]);
 
   const handleSubmit = form.handleSubmit(async (values) => {
@@ -158,9 +147,7 @@ export const ProductForm: React.FC<ProductFormProps> = ({
     const mergedValues = {
       ...values,
       categoryId: selectedCategoryId ?? undefined,
-      newCategoryName: newCategoryName ?? undefined,
       supplierId: selectedSupplierId ?? undefined,
-      newSupplierName: newSupplierName ?? undefined,
     };
 
     const payload = productSchema.parse(mergedValues);
@@ -257,33 +244,14 @@ export const ProductForm: React.FC<ProductFormProps> = ({
 
             <div className={isService ? "" : "grid gap-4 md:grid-cols-2"}>
               <div className="space-y-2">
-                <div className="flex items-center gap-1">
-                  <Label className="font-semibold">Category</Label>
-                  <Button
-                    type="button"
-                    variant="ghost"
-                    size="icon"
-                    className="h-6 w-6 ml-1"
-                    title="Manage categories"
-                    onClick={() => setCategoryModalOpen(true)}
-                  >
-                    <Settings className="h-3.5 w-3.5" />
-                  </Button>
-                </div>
+                <Label className="font-semibold">Category</Label>
                 <CategoryCombobox
                   value={selectedCategoryId}
                   onChange={(id, _name) => {
                     setSelectedCategoryId(id);
-                    setNewCategoryName(null);
                     form.setValue("categoryId", id, { shouldValidate: true });
                   }}
-                  onCreate={(name) => {
-                    setNewCategoryName(name);
-                    setSelectedCategoryId(null);
-                    form.setValue("newCategoryName", name, { shouldValidate: true });
-                  }}
                   disabled={isLoading}
-                  refreshKey={categoryRefreshKey}
                   productType={watchedProductType}
                 />
                 {form.formState.errors.categoryId && (
@@ -295,33 +263,14 @@ export const ProductForm: React.FC<ProductFormProps> = ({
 
               {!isService && (
                 <div className="space-y-2">
-                  <div className="flex items-center gap-1">
-                    <Label className="font-semibold">Supplier</Label>
-                    <Button
-                      type="button"
-                      variant="ghost"
-                      size="icon"
-                      className="h-6 w-6 ml-1"
-                      title="Manage suppliers"
-                      onClick={() => setSupplierModalOpen(true)}
-                    >
-                      <Settings className="h-3.5 w-3.5" />
-                    </Button>
-                  </div>
+                  <Label className="font-semibold">Supplier</Label>
                   <SupplierCombobox
                     value={selectedSupplierId}
                     onChange={(id, _name) => {
                       setSelectedSupplierId(id);
-                      setNewSupplierName(null);
                       form.setValue("supplierId", id, { shouldValidate: true });
                     }}
-                    onCreate={(name) => {
-                      setNewSupplierName(name);
-                      setSelectedSupplierId(null);
-                      form.setValue("newSupplierName", name, { shouldValidate: true });
-                    }}
                     disabled={isLoading}
-                    refreshKey={supplierRefreshKey}
                   />
                   {form.formState.errors.supplierId && (
                     <p className="text-sm font-medium text-destructive">
@@ -595,17 +544,6 @@ export const ProductForm: React.FC<ProductFormProps> = ({
         </Card>
       </form>
 
-      <CategoryManagementModal
-        open={categoryModalOpen}
-        onOpenChange={setCategoryModalOpen}
-        onCategoriesChanged={() => setCategoryRefreshKey((k) => k + 1)}
-      />
-
-      <SupplierManagementModal
-        open={supplierModalOpen}
-        onOpenChange={setSupplierModalOpen}
-        onSuppliersChanged={() => setSupplierRefreshKey((k) => k + 1)}
-      />
     </FormProvider>
   );
 };

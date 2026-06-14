@@ -58,6 +58,21 @@ public class CategoryService {
     }
 
     @Transactional
+    public CategoryDTO createCategory(String name, CategoryType type) {
+        Category category = findOrCreate(name, type);
+        return toDTO(category);
+    }
+
+    @Transactional
+    public CategoryDTO updateCategory(UUID categoryId, String name) {
+        Category category = categoryRepository.findById(categoryId)
+                .orElseThrow(() -> new IllegalArgumentException("Category not found with id: " + categoryId));
+        category.setName(name.trim());
+        categoryRepository.save(category);
+        return toDTO(category);
+    }
+
+    @Transactional
     public CategoryDTO toggleActive(UUID categoryId) {
         Category category = categoryRepository.findById(categoryId)
                 .orElseThrow(() -> new IllegalArgumentException("Category not found with id: " + categoryId));

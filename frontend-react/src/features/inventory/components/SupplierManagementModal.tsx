@@ -1,5 +1,6 @@
 import { useState, useEffect } from "react";
-import { Settings, Trash2, Loader2 } from "lucide-react";
+import { Settings, Pencil, Check, X, Loader2 } from "lucide-react";
+import { toast } from "sonner";
 import {
   Dialog,
   DialogContent,
@@ -7,6 +8,7 @@ import {
   DialogTitle,
 } from "@/shared/components/ui/dialog";
 import { Button } from "@/shared/components/ui/button";
+import { Input } from "@/shared/components/ui/input";
 import { Switch } from "@/shared/components/ui/switch";
 import {
   Tooltip,
@@ -17,7 +19,8 @@ import {
 import {
   fetchSuppliersWithProductCounts,
   toggleSupplierActive,
-  deleteSupplier,
+  updateSupplier,
+  createSupplier,
 } from "@/features/inventory/services/productApi";
 import type { SupplierWithProductCountDTO } from "@/features/inventory/types";
 
@@ -36,7 +39,13 @@ const SupplierManagementModal: React.FC<SupplierManagementModalProps> = ({
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [togglingId, setTogglingId] = useState<string | null>(null);
-  const [deletingId, setDeletingId] = useState<string | null>(null);
+  const [editingId, setEditingId] = useState<string | null>(null);
+  const [editName, setEditName] = useState("");
+  const [savingId, setSavingId] = useState<string | null>(null);
+  const [editError, setEditError] = useState<string | null>(null);
+  const [newName, setNewName] = useState("");
+  const [adding, setAdding] = useState(false);
+  const [addError, setAddError] = useState<string | null>(null);
 
   const loadSuppliers = async () => {
     setLoading(true);
@@ -62,6 +71,10 @@ const SupplierManagementModal: React.FC<SupplierManagementModalProps> = ({
       setSuppliers((prev) =>
         prev.map((s) => (s.supplierId === id ? { ...s, isActive: !s.isActive } : s))
       );
+      const sup = suppliers.find((s) => s.supplierId === id);
+      toast.success(sup?.isActive ? "Supplier Archived" : "Supplier Activated", {
+        description: `"${sup?.name}" has been ${sup?.isActive ? "archived" : "activated"}.`,
+      });
       onSuppliersChanged();
     } catch {
       setError("Failed to toggle supplier status.");
@@ -70,28 +83,98 @@ const SupplierManagementModal: React.FC<SupplierManagementModalProps> = ({
     }
   };
 
-  const handleDelete = async (id: string) => {
-    setDeletingId(id);
+  const handleStartEdit = (sup: SupplierWithProductCountDTO) => {
+    setEditingId(sup.supplierId);
+    setEditName(sup.name);
+    setEditError(null);
+  };
+
+  const handleCancelEdit = () => {
+    setEditingId(null);
+    setEditName("");
+    setEditError(null);
+  };
+
+  const handleSaveEdit = async (id: string) => {
+    const trimmed = editName.trim();
+    if (!trimmed) return;
+    if (suppliers.some((s) => s.supplierId !== id && s.name.toLowerCase() === trimmed.toLowerCase())) {
+      setEditError("A supplier with this name already exists.");
+      return;
+    }
+    setSavingId(id);
+    setEditError(null);
     try {
-      await deleteSupplier(id);
-      setSuppliers((prev) => prev.filter((s) => s.supplierId !== id));
+      await updateSupplier(id, trimmed);
+      setSuppliers((prev) =>
+        prev.map((s) => (s.supplierId === id ? { ...s, name: trimmed } : s))
+      );
+      setEditingId(null);
+      setEditName("");
+      toast.success("Supplier Updated", {
+        description: `Supplier name changed to "${trimmed}".`,
+      });
       onSuppliersChanged();
     } catch {
-      setError("Failed to delete supplier. It may be linked to products.");
+      setEditError("Failed to update supplier.");
     } finally {
-      setDeletingId(null);
+      setSavingId(null);
+    }
+  };
+
+  const handleAdd = async () => {
+    const trimmed = newName.trim();
+    if (!trimmed) return;
+    if (suppliers.some((s) => s.name.toLowerCase() === trimmed.toLowerCase())) {
+      setAddError("A supplier with this name already exists.");
+      return;
+    }
+    setAdding(true);
+    setAddError(null);
+    try {
+      await createSupplier(trimmed);
+      setNewName("");
+      toast.success("Supplier Created", {
+        description: `"${trimmed}" has been added.`,
+      });
+      await loadSuppliers();
+      onSuppliersChanged();
+    } catch {
+      setAddError("Failed to create supplier.");
+    } finally {
+      setAdding(false);
     }
   };
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="sm:max-w-lg">
+      <DialogContent className="sm:max-w-xl">
         <DialogHeader>
           <DialogTitle className="flex items-center gap-2">
             <Settings className="h-5 w-5" />
             Manage Suppliers
           </DialogTitle>
         </DialogHeader>
+
+        <div className="flex items-center gap-2 pb-2 border-b">
+          <Input
+            placeholder="New supplier name..."
+            value={newName}
+            onChange={(e) => { setNewName(e.target.value); setAddError(null); }}
+            className="flex-1"
+            disabled={adding}
+          />
+          <Button
+            size="sm"
+            onClick={handleAdd}
+            disabled={adding || !newName.trim()}
+          >
+            {adding ? <Loader2 className="h-4 w-4 animate-spin" /> : "Add"}
+          </Button>
+        </div>
+        {addError && (
+          <p className="text-sm text-destructive">{addError}</p>
+        )}
 
         {loading ? (
           <div className="flex items-center justify-center py-8">
@@ -105,7 +188,6 @@ const SupplierManagementModal: React.FC<SupplierManagementModalProps> = ({
               <thead>
                 <tr className="border-b text-left text-muted-foreground">
                   <th className="py-2 pr-4 font-medium">Supplier</th>
-                  <th className="py-2 pr-4 text-center font-medium">Products</th>
                   <th className="py-2 pr-4 text-center font-medium">Active</th>
                   <th className="py-2 text-center font-medium">Action</th>
                 </tr>
@@ -118,8 +200,22 @@ const SupplierManagementModal: React.FC<SupplierManagementModalProps> = ({
                   })
                   .map((sup) => (
                   <tr key={sup.supplierId} className="border-b last:border-0">
-                    <td className="py-2 pr-4">{sup.name}</td>
-                    <td className="py-2 pr-4 text-center">{sup.productCount}</td>
+                    <td className="py-2 pr-4">
+                      {editingId === sup.supplierId ? (
+                        <Input
+                          value={editName}
+                          onChange={(e) => { setEditName(e.target.value); setEditError(null); }}
+                          className="h-7 text-sm max-w-48"
+                          autoFocus
+                          onKeyDown={(e) => {
+                            if (e.key === "Enter") handleSaveEdit(sup.supplierId);
+                            if (e.key === "Escape") handleCancelEdit();
+                          }}
+                        />
+                      ) : (
+                        sup.name
+                      )}
+                    </td>
                     <td className="py-2 pr-4 text-center">
                       <TooltipProvider>
                         <Tooltip>
@@ -128,7 +224,7 @@ const SupplierManagementModal: React.FC<SupplierManagementModalProps> = ({
                               <Switch
                                 checked={sup.isActive}
                                 onCheckedChange={() => handleToggle(sup.supplierId)}
-                                disabled={togglingId === sup.supplierId}
+                                disabled={togglingId === sup.supplierId || editingId === sup.supplierId}
                               />
                             </div>
                           </TooltipTrigger>
@@ -139,29 +235,54 @@ const SupplierManagementModal: React.FC<SupplierManagementModalProps> = ({
                       </TooltipProvider>
                     </td>
                     <td className="py-2 text-center">
-                      {sup.productCount === 0 ? (
-                        <Button
-                          variant="ghost"
-                          size="icon"
-                          className="h-8 w-8 text-destructive hover:text-destructive"
-                          onClick={() => handleDelete(sup.supplierId)}
-                          disabled={deletingId === sup.supplierId}
-                        >
-                          {deletingId === sup.supplierId ? (
-                            <Loader2 className="h-4 w-4 animate-spin" />
-                          ) : (
-                            <Trash2 className="h-4 w-4" />
-                          )}
-                        </Button>
+                      {editingId === sup.supplierId ? (
+                        <div className="flex items-center justify-center gap-1">
+                          <Button
+                            variant="ghost"
+                            size="icon"
+                            className="h-7 w-7 bg-muted-foreground/10 hover:bg-muted-foreground/20"
+                            onClick={() => handleSaveEdit(sup.supplierId)}
+                            disabled={savingId === sup.supplierId || !editName.trim()}
+                          >
+                            {savingId === sup.supplierId ? (
+                              <Loader2 className="h-3.5 w-3.5 animate-spin" />
+                            ) : (
+                              <Check className="h-3.5 w-3.5 text-green-600" />
+                            )}
+                          </Button>
+                          <Button
+                            variant="ghost"
+                            size="icon"
+                            className="h-7 w-7 bg-muted-foreground/10 hover:bg-muted-foreground/20"
+                            onClick={handleCancelEdit}
+                            disabled={savingId === sup.supplierId}
+                          >
+                            <X className="h-3.5 w-3.5" />
+                          </Button>
+                        </div>
                       ) : (
-                        <span className="text-gray-400">&mdash;</span>
+                        <TooltipProvider>
+                          <Tooltip>
+                            <TooltipTrigger asChild>
+                              <Button
+                                variant="ghost"
+                                size="icon"
+                                className="h-7 w-7 bg-muted-foreground/10 hover:bg-muted-foreground/20"
+                                onClick={() => handleStartEdit(sup)}
+                              >
+                                <Pencil className="h-3.5 w-3.5" />
+                              </Button>
+                            </TooltipTrigger>
+                            <TooltipContent>Edit name</TooltipContent>
+                          </Tooltip>
+                        </TooltipProvider>
                       )}
                     </td>
                   </tr>
                 ))}
                 {suppliers.length === 0 && (
                   <tr>
-                    <td colSpan={4} className="py-6 text-center text-muted-foreground">
+                    <td colSpan={3} className="py-6 text-center text-muted-foreground">
                       No suppliers found.
                     </td>
                   </tr>
@@ -169,6 +290,10 @@ const SupplierManagementModal: React.FC<SupplierManagementModalProps> = ({
               </tbody>
             </table>
           </div>
+        )}
+
+        {editError && (
+          <p className="text-sm text-destructive">{editError}</p>
         )}
       </DialogContent>
     </Dialog>

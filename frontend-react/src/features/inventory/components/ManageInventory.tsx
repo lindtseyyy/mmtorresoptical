@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react";
-import { useQuery, keepPreviousData } from "@tanstack/react-query";
+import { useQuery, useQueryClient, keepPreviousData } from "@tanstack/react-query";
 import { Button } from "@/shared/components/ui/button";
 import { Input } from "@/shared/components/ui/input";
 import {
@@ -10,7 +10,7 @@ import {
   SelectValue,
 } from "@/shared/components/ui/select";
 import { Badge } from "@/shared/components/ui/badge";
-import { Plus, Search, Eye, ChevronLeft, ChevronRight, Glasses, ArrowUp, ArrowDown, PackageX, AlertTriangle, TrendingUp } from "lucide-react";
+import { Plus, Search, Eye, ChevronLeft, ChevronRight, Glasses, ArrowUp, ArrowDown, PackageX, AlertTriangle, TrendingUp, FolderOpen, Truck } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { isAdmin } from "@/shared/lib/auth";
 import { getImageUrl } from "@/shared/lib/utils";
@@ -19,6 +19,8 @@ import { MetricCard } from "@/shared/components/MetricCard";
 import EmptyTableRows from "@/shared/components/EmptyTableRows";
 import type { Product, CategoryDTO } from "@/features/inventory/types";
 import { fetchCategories } from "@/features/inventory/services/productApi";
+import CategoryManagementModal from "@/features/inventory/components/CategoryManagementModal";
+import SupplierManagementModal from "@/features/inventory/components/SupplierManagementModal";
 import {
   createProductsListQueryOptions,
   createInventorySummaryQueryOptions,
@@ -30,6 +32,8 @@ const ManageInventory: React.FC = () => {
   const [debouncedSearchQuery, setDebouncedSearchQuery] = useState(searchQuery);
   const [categoryFilter, setCategoryFilter] = useState<string>("all");
   const [categories, setCategories] = useState<CategoryDTO[]>([]);
+  const [categoryModalOpen, setCategoryModalOpen] = useState(false);
+  const [supplierModalOpen, setSupplierModalOpen] = useState(false);
 
   useEffect(() => {
     fetchCategories().then(setCategories).catch(() => setCategories([]));
@@ -45,6 +49,7 @@ const ManageInventory: React.FC = () => {
     return () => clearTimeout(timer);
   }, [searchQuery]);
   const navigate = useNavigate();
+  const queryClient = useQueryClient();
 
   const {
     data: pageData,
@@ -100,10 +105,20 @@ const ManageInventory: React.FC = () => {
         </div>
         {/* Updated Button to navigate */}
         {isAdmin() && (
-          <Button onClick={() => navigate("/inventory/add")}>
-            <Plus className="mr-2 h-4 w-4" />
-            Add Item to Catalog
-          </Button>
+          <div className="flex items-center gap-2">
+            <Button variant="outline" onClick={() => setCategoryModalOpen(true)}>
+              <FolderOpen className="mr-2 h-4 w-4" />
+              Manage Categories
+            </Button>
+            <Button variant="outline" onClick={() => setSupplierModalOpen(true)}>
+              <Truck className="mr-2 h-4 w-4" />
+              Manage Suppliers
+            </Button>
+            <Button onClick={() => navigate("/inventory/add")}>
+              <Plus className="mr-2 h-4 w-4" />
+              Add Item to Catalog
+            </Button>
+          </div>
         )}
       </div>
 
@@ -359,6 +374,23 @@ const ManageInventory: React.FC = () => {
           )}
         </CardContent>
       </Card>
+
+      <CategoryManagementModal
+        open={categoryModalOpen}
+        onOpenChange={setCategoryModalOpen}
+        onCategoriesChanged={() => {
+          fetchCategories().then(setCategories).catch(() => setCategories([]));
+          queryClient.invalidateQueries({ queryKey: ["products"] });
+        }}
+      />
+
+      <SupplierManagementModal
+        open={supplierModalOpen}
+        onOpenChange={setSupplierModalOpen}
+        onSuppliersChanged={() => {
+          queryClient.invalidateQueries({ queryKey: ["products"] });
+        }}
+      />
     </div>
   );
 };

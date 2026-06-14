@@ -54,6 +54,21 @@ public class SupplierService {
     }
 
     @Transactional
+    public SupplierDTO createSupplier(String name) {
+        Supplier supplier = findOrCreate(name);
+        return toDTO(supplier);
+    }
+
+    @Transactional
+    public SupplierDTO updateSupplier(UUID supplierId, String name) {
+        Supplier supplier = supplierRepository.findById(supplierId)
+                .orElseThrow(() -> new BadRequestException("Supplier not found with id: " + supplierId));
+        supplier.setName(name.trim());
+        supplierRepository.save(supplier);
+        return toDTO(supplier);
+    }
+
+    @Transactional
     public SupplierDTO toggleActive(UUID supplierId) {
         Supplier supplier = supplierRepository.findById(supplierId)
                 .orElseThrow(() -> new BadRequestException("Supplier not found with id: " + supplierId));

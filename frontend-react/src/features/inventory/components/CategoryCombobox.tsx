@@ -1,5 +1,5 @@
 import { useState, useEffect, useCallback } from "react";
-import { Check, ChevronsUpDown, Plus } from "lucide-react";
+import { Check, ChevronsUpDown } from "lucide-react";
 import { Button } from "@/shared/components/ui/button";
 import {
   Command,
@@ -21,7 +21,6 @@ import type { CategoryDTO } from "@/features/inventory/types";
 interface CategoryComboboxProps {
   value: string | null;
   onChange: (categoryId: string, categoryName: string) => void;
-  onCreate: (newCategoryName: string) => void;
   disabled?: boolean;
   placeholder?: string;
   refreshKey?: number;
@@ -31,16 +30,14 @@ interface CategoryComboboxProps {
 const CategoryCombobox: React.FC<CategoryComboboxProps> = ({
   value,
   onChange,
-  onCreate,
   disabled = false,
-  placeholder = "Select or type a category...",
+  placeholder = "Select a category",
   refreshKey,
   productType,
 }) => {
   const [open, setOpen] = useState(false);
   const [categories, setCategories] = useState<CategoryDTO[]>([]);
   const [search, setSearch] = useState("");
-  const [pendingCreateName, setPendingCreateName] = useState<string | null>(null);
 
   useEffect(() => {
     fetchCategories(productType).then(setCategories).catch(() => setCategories([]));
@@ -48,43 +45,21 @@ const CategoryCombobox: React.FC<CategoryComboboxProps> = ({
 
   const selectedCategory = categories.find((c) => c.categoryId === value);
 
-  useEffect(() => {
-    if (value) setPendingCreateName(null);
-  }, [value]);
-
   const filtered = categories.filter((c) =>
     c.name.toLowerCase().includes(search.toLowerCase())
   );
-
-  const showCreate =
-    search.trim().length > 0 &&
-    !filtered.some(
-      (c) => c.name.toLowerCase() === search.toLowerCase()
-    );
 
   const handleSelect = useCallback(
     (categoryId: string) => {
       const cat = categories.find((c) => c.categoryId === categoryId);
       if (cat) {
         onChange(cat.categoryId, cat.name);
-        setPendingCreateName(null);
         setOpen(false);
         setSearch("");
       }
     },
     [categories, onChange]
   );
-
-  const handleCreate = useCallback(() => {
-    const trimmed = search.trim();
-    if (trimmed.length > 0) {
-      console.log("[CategoryCombobox] Creating category:", trimmed);
-      setPendingCreateName(trimmed);
-      onCreate(trimmed);
-      setOpen(false);
-      setSearch("");
-    }
-  }, [search, onCreate]);
 
   return (
     <Popover open={open} onOpenChange={setOpen}>
@@ -96,7 +71,7 @@ const CategoryCombobox: React.FC<CategoryComboboxProps> = ({
           disabled={disabled}
           className="w-full justify-between font-normal"
         >
-          {selectedCategory ? selectedCategory.name : pendingCreateName ?? placeholder}
+          {selectedCategory ? selectedCategory.name : placeholder}
           <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
         </Button>
       </PopoverTrigger>
@@ -129,16 +104,6 @@ const CategoryCombobox: React.FC<CategoryComboboxProps> = ({
               ))}
             </CommandGroup>
           </CommandList>
-          {showCreate && (
-            <button
-              type="button"
-              className="flex w-full items-center gap-2 border-t px-2 py-2 text-sm text-primary hover:bg-accent hover:text-accent-foreground cursor-pointer"
-              onClick={handleCreate}
-            >
-              <Plus className="h-4 w-4 shrink-0" />
-              Create &ldquo;{search.trim()}&rdquo;
-            </button>
-          )}
         </Command>
       </PopoverContent>
     </Popover>

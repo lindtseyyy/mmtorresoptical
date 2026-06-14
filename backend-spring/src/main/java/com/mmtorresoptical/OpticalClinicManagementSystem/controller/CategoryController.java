@@ -5,6 +5,7 @@ import com.mmtorresoptical.OpticalClinicManagementSystem.dto.category.CategoryWi
 import com.mmtorresoptical.OpticalClinicManagementSystem.enums.CategoryType;
 import com.mmtorresoptical.OpticalClinicManagementSystem.services.controller.CategoryService;
 import lombok.RequiredArgsConstructor;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
@@ -19,6 +20,14 @@ public class CategoryController {
 
     private final CategoryService categoryService;
 
+    @PreAuthorize("hasRole('ADMIN')")
+    @PostMapping
+    public ResponseEntity<CategoryDTO> createCategory(
+            @RequestParam String name,
+            @RequestParam CategoryType type) {
+        return ResponseEntity.status(HttpStatus.CREATED).body(categoryService.createCategory(name, type));
+    }
+
     @GetMapping
     public ResponseEntity<List<CategoryDTO>> getAllCategories(
             @RequestParam(required = false) CategoryType type) {
@@ -29,6 +38,14 @@ public class CategoryController {
     public ResponseEntity<List<CategoryWithProductCountDTO>> getAllCategoriesWithProductCounts(
             @RequestParam(required = false) CategoryType type) {
         return ResponseEntity.ok(categoryService.getAllCategoriesWithProductCounts(type));
+    }
+
+    @PreAuthorize("hasRole('ADMIN')")
+    @PatchMapping("/{id}")
+    public ResponseEntity<CategoryDTO> updateCategory(
+            @PathVariable UUID id,
+            @RequestParam String name) {
+        return ResponseEntity.ok(categoryService.updateCategory(id, name));
     }
 
     @PreAuthorize("hasRole('ADMIN')")

@@ -109,6 +109,20 @@ const fetchProductSummaries = async (keyword?: string, category?: string): Promi
   return data;
 };
 
+const createCategory = async (name: string, type: string): Promise<CategoryDTO> => {
+  const { data } = await api.post("/categories", null, {
+    params: { name, type },
+  });
+  return data;
+};
+
+const createSupplier = async (name: string): Promise<SupplierDTO> => {
+  const { data } = await api.post("/suppliers", null, {
+    params: { name },
+  });
+  return data;
+};
+
 const fetchCategories = async (type?: string): Promise<CategoryDTO[]> => {
   const { data } = await api.get("/categories", {
     params: { ...(type && { type }) },
@@ -130,6 +144,13 @@ const toggleCategoryActive = async (categoryId: string): Promise<CategoryDTO> =>
 
 const toggleCategoryPerishable = async (categoryId: string): Promise<CategoryDTO> => {
   const { data } = await api.patch(`/categories/${categoryId}/toggle-perishable`);
+  return data;
+};
+
+const updateCategory = async (categoryId: string, name: string): Promise<CategoryDTO> => {
+  const { data } = await api.patch(`/categories/${categoryId}`, null, {
+    params: { name },
+  });
   return data;
 };
 
@@ -157,6 +178,13 @@ const toggleSupplierActive = async (supplierId: string): Promise<SupplierDTO> =>
   return data;
 };
 
+const updateSupplier = async (supplierId: string, name: string): Promise<SupplierDTO> => {
+  const { data } = await api.patch(`/suppliers/${supplierId}`, null, {
+    params: { name },
+  });
+  return data;
+};
+
 const deleteSupplier = async (supplierId: string): Promise<void> => {
   await api.delete(`/suppliers/${supplierId}`);
 };
@@ -181,4 +209,4 @@ const removeStockFromBatch = async (productId: string, payload: RemoveStockReque
   return data;
 };
 
-export { fetchProducts, fetchProduct, updateProduct, addProduct, archiveProduct, restoreProduct, adjustStock, fetchInventorySummary, fetchProductMetrics, fetchProductSummaries, fetchCategories, fetchCategoriesWithProductCounts, toggleCategoryActive, toggleCategoryPerishable, deleteCategory, fetchRopAlertsCount, fetchSuppliers, fetchSuppliersWithProductCounts, toggleSupplierActive, deleteSupplier, fetchProductBatches, fetchAvailableBatches, addStockToBatch, removeStockFromBatch };
+export { fetchProducts, fetchProduct, updateProduct, addProduct, archiveProduct, restoreProduct, adjustStock, fetchInventorySummary, fetchProductMetrics, fetchProductSummaries, fetchCategories, fetchCategoriesWithProductCounts, toggleCategoryActive, toggleCategoryPerishable, updateCategory, deleteCategory, createCategory, fetchRopAlertsCount, fetchSuppliers, fetchSuppliersWithProductCounts, toggleSupplierActive, updateSupplier, deleteSupplier, createSupplier, fetchProductBatches, fetchAvailableBatches, addStockToBatch, removeStockFromBatch };
