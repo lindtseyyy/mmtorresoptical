@@ -5,6 +5,8 @@ import lombok.Getter;
 import lombok.Setter;
 
 import java.math.BigDecimal;
+import java.util.ArrayList;
+import java.util.List;
 import java.util.UUID;
 
 @Getter
@@ -34,4 +36,7 @@ public class RefundItem {
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "transaction_item_id", nullable = false)
     private TransactionItem transactionItem;
+
+    @OneToMany(mappedBy = "refundItem", cascade = CascadeType.ALL, orphanRemoval = true)
+    private List<RefundItemBatchDetail> batchDetails = new ArrayList<>();
 }

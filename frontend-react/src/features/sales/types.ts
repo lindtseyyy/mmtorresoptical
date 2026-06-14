@@ -53,6 +53,11 @@ export interface PaymentRequest {
   gcashPaymentImg?: string;
 }
 
+export interface RefundItemBatchDetail {
+  batchNumber: string;
+  quantityRestored: number;
+}
+
 export interface RefundItemData {
   refundItemId: string;
   productName: string;
@@ -60,6 +65,7 @@ export interface RefundItemData {
   quantityRefunded: number;
   refundReason: string;
   itemCreditAmount: number;
+  batchDetails?: RefundItemBatchDetail[];
 }
 
 export interface RefundReceiptData {
@@ -139,6 +145,7 @@ export interface RefundStateItem {
   discountValue: number;
   isDiscounted: boolean;
   originalQuantity: number;
+  batchAllocations?: BatchAllocation[];
 }
 
 export interface TransactionListItem {

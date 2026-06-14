@@ -112,7 +112,7 @@ const voidTransaction = async (id: string, reason: string, password: string): Pr
 };
 
 const refundTransaction = async (data: {
-  items: { transactionItemId: string; refundQuantity: number; refundReason: string }[];
+  items: { transactionItemId: string; refundQuantity: number; refundReason: string; batchAllocations?: { productBatchId: number; quantityToRestore: number; refundReason: string }[] }[];
   refundMethod: string;
   gcashNumber?: string;
   referenceNumber?: string;

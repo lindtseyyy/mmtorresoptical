@@ -3,6 +3,7 @@ package com.mmtorresoptical.OpticalClinicManagementSystem.services.controller;
 import com.mmtorresoptical.OpticalClinicManagementSystem.dto.batch.AddStockRequestDTO;
 import com.mmtorresoptical.OpticalClinicManagementSystem.dto.batch.ProductBatchDTO;
 import com.mmtorresoptical.OpticalClinicManagementSystem.dto.batch.RemoveStockRequestDTO;
+import com.mmtorresoptical.OpticalClinicManagementSystem.dto.refund.RefundBatchAllocationDTO;
 import com.mmtorresoptical.OpticalClinicManagementSystem.exception.custom.InsufficientStockException;
 import com.mmtorresoptical.OpticalClinicManagementSystem.exception.custom.ResourceNotFoundException;
 import com.mmtorresoptical.OpticalClinicManagementSystem.model.Product;
@@ -153,6 +154,44 @@ public class ProductBatchService {
             allocationRepository.save(alloc);
 
             remaining -= canRestore;
+        }
+
+        syncProductQuantity(item.getProduct().getProductId());
+    }
+
+    @Transactional
+    public void restoreForRefundToBatch(TransactionItem item, List<RefundBatchAllocationDTO> batchTargets, boolean isDamaged) {
+        for (RefundBatchAllocationDTO target : batchTargets) {
+            if (target.getQuantityToRestore() == null || target.getQuantityToRestore() <= 0) continue;
+
+            TransactionItemBatchAllocation alloc = allocationRepository
+                    .findByTransactionItemId(item.getTransactionItemId())
+                    .stream()
+                    .filter(a -> a.getProductBatch().getProductBatchId().equals(target.getProductBatchId()))
+                    .findFirst()
+                    .orElseThrow(() -> new ResourceNotFoundException(
+                            "Batch allocation not found for batch: " + target.getProductBatchId()));
+
+            if (target.getQuantityToRestore() > alloc.getQuantityDeducted()) {
+                throw new IllegalArgumentException(
+                        "Cannot restore " + target.getQuantityToRestore()
+                                + " units to batch " + target.getProductBatchId()
+                                + " — only " + alloc.getQuantityDeducted() + " were originally deducted.");
+            }
+
+            ProductBatch batch = alloc.getProductBatch();
+            boolean batchIsDamaged = target.getRefundReason() != null
+                    && "Damaged".equalsIgnoreCase(target.getRefundReason());
+
+            if (batchIsDamaged) {
+                batch.setQuantityDamaged(batch.getQuantityDamaged() + target.getQuantityToRestore());
+            } else {
+                batch.setQuantityRemaining(batch.getQuantityRemaining() + target.getQuantityToRestore());
+            }
+
+            alloc.setQuantityDeducted(alloc.getQuantityDeducted() - target.getQuantityToRestore());
+            productBatchRepository.save(batch);
+            allocationRepository.save(alloc);
         }
 
         syncProductQuantity(item.getProduct().getProductId());

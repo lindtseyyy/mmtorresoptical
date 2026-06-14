@@ -7,6 +7,7 @@ import com.mmtorresoptical.OpticalClinicManagementSystem.dto.payment.PaymentResp
 import com.mmtorresoptical.OpticalClinicManagementSystem.dto.refund.ItemRefundResponseDTO;
 import com.mmtorresoptical.OpticalClinicManagementSystem.dto.refund.RefundTransactionRequestDTO;
 import com.mmtorresoptical.OpticalClinicManagementSystem.dto.transaction.*;
+import com.mmtorresoptical.OpticalClinicManagementSystem.dto.refund.RefundBatchAllocationDTO;
 import com.mmtorresoptical.OpticalClinicManagementSystem.dto.refund.RefundItemDTO;
 import com.mmtorresoptical.OpticalClinicManagementSystem.enums.FulfillmentStatus;
 import com.mmtorresoptical.OpticalClinicManagementSystem.enums.DiscountType;
@@ -68,6 +69,7 @@ public class TransactionService {
     private final JSONService jsonService;
     private final VisitManagerService visitManagerService;
     private final ProductBatchService productBatchService;
+    private final ProductBatchRepository productBatchRepository;
 
     @Transactional
     public TransactionResponseDTO createTransaction(TransactionRequestDTO transactionRequestDTO) {
@@ -724,6 +726,7 @@ public class TransactionService {
         List<TransactionItem> refundItems = new ArrayList<>();
         Transaction transaction = null;
         BigDecimal totalRefundValue = BigDecimal.ZERO;
+        Map<UUID, List<RefundBatchAllocationDTO>> batchTargetMap = new HashMap<>();
 
         for (RefundItemDTO dto : request.getItems()) {
             TransactionItem item = transactionItemRepository.findById(dto.getTransactionItemId())
@@ -737,6 +740,10 @@ public class TransactionService {
             }
 
             refundItems.add(item);
+
+            if (dto.getBatchAllocations() != null && !dto.getBatchAllocations().isEmpty()) {
+                batchTargetMap.put(dto.getTransactionItemId(), dto.getBatchAllocations());
+            }
 
             if (transaction.getTransactionStatus() == TransactionStatus.VOIDED) {
                 throw new IllegalStateException("Cannot refund a voided transaction.");
@@ -776,7 +783,21 @@ public class TransactionService {
             refundItem.setItemCreditAmount(itemCredit);
             refundItem.setTransactionItem(item);
             refundItem.setQuantityRefunded(newRefundQty);
-            refundItem.setRefundReason(dto.getRefundReason());
+
+            // Derive item-level reason from batch allocations if present
+            List<RefundBatchAllocationDTO> itemBatchTargets = batchTargetMap.get(dto.getTransactionItemId());
+            if (itemBatchTargets != null && !itemBatchTargets.isEmpty()) {
+                String derivedReason = itemBatchTargets.stream()
+                        .map(RefundBatchAllocationDTO::getRefundReason)
+                        .filter(r -> r != null && !r.isBlank())
+                        .distinct()
+                        .reduce((a, b) -> a) // single reason if uniform
+                        .orElse(dto.getRefundReason() != null ? dto.getRefundReason() : "");
+                refundItem.setRefundReason(derivedReason);
+            } else {
+                refundItem.setRefundReason(dto.getRefundReason());
+            }
+
             pendingItems.add(refundItem);
         }
 
@@ -887,7 +908,21 @@ public class TransactionService {
 
             if (product.getProductType() == ProductType.PHYSICAL) {
                 boolean isDamaged = "Damaged".equalsIgnoreCase(refundItem.getRefundReason());
-                productBatchService.restoreForRefund(item, refundItem.getQuantityRefunded(), isDamaged);
+                List<RefundBatchAllocationDTO> batchTargets = batchTargetMap.get(item.getTransactionItemId());
+                if (batchTargets != null && !batchTargets.isEmpty()) {
+                    productBatchService.restoreForRefundToBatch(item, batchTargets, isDamaged);
+                    // Persist per-batch refund details for audit trail
+                    for (RefundBatchAllocationDTO target : batchTargets) {
+                        if (target.getQuantityToRestore() == null || target.getQuantityToRestore() <= 0) continue;
+                        RefundItemBatchDetail detail = new RefundItemBatchDetail();
+                        detail.setRefundItem(refundItem);
+                        detail.setProductBatch(productBatchRepository.getReferenceById(target.getProductBatchId()));
+                        detail.setQuantityRestored(target.getQuantityToRestore());
+                        refundItem.getBatchDetails().add(detail);
+                    }
+                } else {
+                    productBatchService.restoreForRefund(item, refundItem.getQuantityRefunded(), isDamaged);
+                }
             }
 
             refundItem.setRefundReceipt(receipt);

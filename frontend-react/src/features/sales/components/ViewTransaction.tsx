@@ -220,6 +220,7 @@ const ViewTransaction: React.FC = () => {
           discountValue: item.discountValue,
           isDiscounted: item.isDiscounted,
           originalQuantity: item.quantity,
+          batchAllocations: item.batchAllocations,
         });
       }
     }
@@ -244,6 +245,7 @@ const ViewTransaction: React.FC = () => {
             transactionItemId: i.transactionItemId,
             refundQuantity: i.refundQuantity,
             refundReason: i.refundReason,
+            batchAllocations: (i as any).selectedBatchAllocations,
           })),
           refundMethod,
           gcashNumber,
@@ -662,7 +664,7 @@ const ViewTransaction: React.FC = () => {
                   return (
                     <tr key={item.transactionItemId} className="border-b">
                       {selectionMode && (
-                        <td className="py-3 pr-2">
+                        <td className="py-3 pr-2 align-top">
                           <Checkbox
                             checked={isSelected}
                             disabled={refundableQty <= 0}
@@ -670,7 +672,7 @@ const ViewTransaction: React.FC = () => {
                           />
                         </td>
                       )}
-                      <td className="py-3 pr-4">
+                      <td className="py-3 pr-4 align-top">
                         <p className="font-medium">
                           {item.product?.productName ?? "—"}
                         </p>
@@ -696,20 +698,20 @@ const ViewTransaction: React.FC = () => {
                           </span>
                         )}
                       </td>
-                      <td className="py-3 pr-4 text-center">
+                      <td className="py-3 pr-4 text-center align-top">
                         {formatCurrency(item.unitPrice)}
                       </td>
-                      <td className="py-3 pr-4 text-center">
+                      <td className="py-3 pr-4 text-center align-top">
                         {item.quantity}
                       </td>
-                      <td className="py-3 pr-4 text-center">
+                      <td className="py-3 pr-4 text-center align-top">
                         {item.isDiscounted
                           ? item.discountType === "PERCENT"
                             ? `${item.discountValue}%`
                             : formatCurrency(item.discountValue)
                           : "—"}
                       </td>
-                      <td className="py-3 text-right font-medium">
+                      <td className="py-3 text-right font-medium align-top">
                         {formatCurrency(item.subtotal)}
                       </td>
                     </tr>
@@ -763,11 +765,24 @@ const ViewTransaction: React.FC = () => {
                         </thead>
                         <tbody>
                           {(receipt.refundItems ?? []).map((item) => (
-                            <tr key={item.refundItemId} className="border-b text-muted-foreground">
-                              <td className="py-2 pr-2">
+                            <tr key={item.refundItemId} className="border-b border-muted-foreground/10 text-muted-foreground">
+                              <td className="py-2 pr-2 align-top">
                                 <p className="font-medium text-foreground text-xs">
                                   {item.productName}
                                 </p>
+                                {(item.batchDetails ?? []).length > 0 && (
+                                  <div className="mt-1 space-y-0.5">
+                                    {item.batchDetails!.map((bd, idx) => (
+                                      <div key={idx} className="text-[11px] text-muted-foreground flex items-center gap-1">
+                                        <span className="inline-block w-1.5 h-1.5 rounded-full bg-muted-foreground/40 shrink-0" />
+                                        <span>
+                                          Returned {bd.quantityRestored} {bd.quantityRestored === 1 ? "unit" : "units"} to{" "}
+                                          <span className="font-medium text-foreground">{bd.batchNumber}</span>
+                                        </span>
+                                      </div>
+                                    ))}
+                                  </div>
+                                )}
                               </td>
                               <td className="py-2 pr-2 text-center text-xs">
                                 {formatCurrency(item.unitPrice)}

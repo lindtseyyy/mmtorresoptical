@@ -30,7 +30,6 @@ const REFUND_REASONS = [
 const REFUND_METHODS: { value: RefundMethod; label: string }[] = [
   { value: "CASH", label: "Cash" },
   { value: "GCASH", label: "GCash" },
-
 ];
 
 const formatCurrency = (amount: number) =>
@@ -63,32 +62,107 @@ const RefundDrawer: React.FC<Props> = ({
   transactionTotal,
   transactionAmountPaid,
 }) => {
+  // Item-level state (for non-batch items only)
   const [reasons, setReasons] = useState<Record<string, string>>({});
   const [quantities, setQuantities] = useState<Record<string, number>>({});
+
+  // Batch-level state (for physical items with batch allocations)
+  const [batchQuantities, setBatchQuantities] = useState<Record<string, Record<number, number>>>({});
+  const [batchReasons, setBatchReasons] = useState<Record<string, Record<number, string>>>({});
+
   const [refundMethod, setRefundMethod] = useState<RefundMethod>("CASH");
   const [gcashNumber, setGcashNumber] = useState("");
   const [referenceNumber, setReferenceNumber] = useState("");
   const [showConfirm, setShowConfirm] = useState(false);
 
-  // Initialize state when items change (drawer opens)
+  const hasBatches = useCallback(
+    (item: RefundStateItem) => (item.batchAllocations ?? []).length > 0,
+    []
+  );
+
+  // Auto-distribute refund quantity across batches (FEFO order)
+  const distributeToBatches = useCallback(
+    (item: RefundStateItem, refundQty: number): Record<number, number> => {
+      const allocations = item.batchAllocations ?? [];
+      if (allocations.length === 0) return {};
+      const result: Record<number, number> = {};
+      let remaining = refundQty;
+      for (const alloc of allocations) {
+        if (remaining <= 0) {
+          result[alloc.productBatchId] = 0;
+          continue;
+        }
+        const take = Math.min(remaining, alloc.quantityDeducted);
+        result[alloc.productBatchId] = take;
+        remaining -= take;
+      }
+      return result;
+    },
+    []
+  );
+
+  // Initialize state when drawer opens
   useEffect(() => {
     if (!open) return;
     const initReasons: Record<string, string> = {};
     const initQtys: Record<string, number> = {};
+    const initBatchQtys: Record<string, Record<number, number>> = {};
+    const initBatchReasons: Record<string, Record<number, string>> = {};
     for (const item of items) {
-      initReasons[item.transactionItemId] = "";
-      initQtys[item.transactionItemId] = item.refundQuantity;
+      if (hasBatches(item)) {
+        initBatchQtys[item.transactionItemId] = distributeToBatches(item, item.refundQuantity);
+        initBatchReasons[item.transactionItemId] = {};
+      } else {
+        initReasons[item.transactionItemId] = "";
+        initQtys[item.transactionItemId] = item.refundQuantity;
+      }
     }
     setReasons(initReasons);
     setQuantities(initQtys);
+    setBatchQuantities(initBatchQtys);
+    setBatchReasons(initBatchReasons);
     setRefundMethod("CASH");
     setGcashNumber("");
     setReferenceNumber("");
-  }, [open, items]);
+  }, [open, items, distributeToBatches, hasBatches]);
 
+  // Get effective quantity for an item
+  const getEffectiveQty = useCallback(
+    (item: RefundStateItem): number => {
+      if (hasBatches(item)) {
+        return Object.values(batchQuantities[item.transactionItemId] ?? {}).reduce((a, b) => a + b, 0);
+      }
+      return quantities[item.transactionItemId] ?? item.refundQuantity;
+    },
+    [hasBatches, batchQuantities, quantities]
+  );
+
+  // Validation: all reasons filled
   const allReasonsFilled = useMemo(
-    () => items.every((item) => reasons[item.transactionItemId]?.trim()),
-    [items, reasons]
+    () =>
+      items.every((item) => {
+        if (hasBatches(item)) {
+          const bq = batchQuantities[item.transactionItemId] ?? {};
+          const br = batchReasons[item.transactionItemId] ?? {};
+          // Every batch with qty > 0 must have a reason
+          return Object.entries(bq).every(
+            ([batchId, qty]) => qty <= 0 || (br[Number(batchId)]?.trim())
+          );
+        }
+        return reasons[item.transactionItemId]?.trim();
+      }),
+    [items, reasons, batchQuantities, batchReasons, hasBatches]
+  );
+
+  // Validation: batch items must have at least 1 unit allocated
+  const batchHasQty = useMemo(
+    () =>
+      items.every((item) => {
+        if (!hasBatches(item)) return true;
+        const total = Object.values(batchQuantities[item.transactionItemId] ?? {}).reduce((a, b) => a + b, 0);
+        return total > 0;
+      }),
+    [items, batchQuantities, hasBatches]
   );
 
   const gcashValid = useMemo(() => {
@@ -105,7 +179,7 @@ const RefundDrawer: React.FC<Props> = ({
   const fullSubtotals = useMemo(() => {
     const result: Record<string, number> = {};
     for (const item of items) {
-      const qty = quantities[item.transactionItemId] ?? item.refundQuantity;
+      const qty = getEffectiveQty(item);
       let lineTotal = item.unitPrice * qty;
       if (item.isDiscounted) {
         if (item.discountType === "PERCENT") {
@@ -118,7 +192,7 @@ const RefundDrawer: React.FC<Props> = ({
       result[item.transactionItemId] = Math.max(0, lineTotal);
     }
     return result;
-  }, [items, quantities]);
+  }, [items, getEffectiveQty]);
 
   const fullTotal = useMemo(
     () => Object.values(fullSubtotals).reduce((a, b) => a + b, 0),
@@ -137,28 +211,45 @@ const RefundDrawer: React.FC<Props> = ({
   // ── Order-level accounting preview ──
   const accountingPreview = useMemo(() => {
     if (transactionTotal == null || transactionAmountPaid == null) return null;
-    // Revised total accounts for ALL refunds: past (including balance adjustments) + current batch
     const newOrderTotal = transactionTotal - (totalAllRefunded ?? 0) - fullTotal;
-    // Cash available to return = amount paid minus cash already refunded
     const effectivePaid = transactionAmountPaid - (totalAlreadyRefunded ?? 0);
     const cashToReturn = Math.max(0, effectivePaid - Math.max(0, newOrderTotal));
     const newRemainingDue = Math.max(0, newOrderTotal - effectivePaid);
     return { newOrderTotal, cashToReturn, newRemainingDue };
   }, [transactionTotal, transactionAmountPaid, totalAllRefunded, totalAlreadyRefunded, fullTotal]);
 
+  // ── Apply to all: sets reason on all batches and all non-batch items ──
   const handleApplyToAll = useCallback(
     (reason: string) => {
       setReasons((prev) => {
         const next = { ...prev };
         for (const item of items) {
-          next[item.transactionItemId] = reason;
+          if (!hasBatches(item)) {
+            next[item.transactionItemId] = reason;
+          }
+        }
+        return next;
+      });
+      setBatchReasons((prev) => {
+        const next = { ...prev };
+        for (const item of items) {
+          if (hasBatches(item)) {
+            const allocs = item.batchAllocations ?? {};
+            const current = next[item.transactionItemId] ?? {};
+            const updated: Record<number, string> = {};
+            for (const alloc of allocs) {
+              updated[alloc.productBatchId] = reason;
+            }
+            next[item.transactionItemId] = { ...current, ...updated };
+          }
         }
         return next;
       });
     },
-    [items]
+    [items, hasBatches]
   );
 
+  // ── Item-level quantity change (non-batch items only) ──
   const handleQuantityChange = useCallback(
     (transactionItemId: string, delta: number) => {
       setQuantities((prev) => {
@@ -172,12 +263,77 @@ const RefundDrawer: React.FC<Props> = ({
     [items]
   );
 
+  // ── Batch-level quantity change ──
+  const handleBatchQuantityChange = useCallback(
+    (transactionItemId: string, productBatchId: number, delta: number, maxQty: number) => {
+      setBatchQuantities((prev) => {
+        const current = prev[transactionItemId]?.[productBatchId] ?? 0;
+        const next = Math.min(maxQty, Math.max(0, current + delta));
+        return {
+          ...prev,
+          [transactionItemId]: {
+            ...prev[transactionItemId],
+            [productBatchId]: next,
+          },
+        };
+      });
+    },
+    []
+  );
+
+  // ── Batch-level reason change ──
+  const handleBatchReasonChange = useCallback(
+    (transactionItemId: string, productBatchId: number, reason: string) => {
+      setBatchReasons((prev) => ({
+        ...prev,
+        [transactionItemId]: {
+          ...prev[transactionItemId],
+          [productBatchId]: reason,
+        },
+      }));
+    },
+    []
+  );
+
   const handleComplete = async () => {
-    const updatedItems = items.map((item) => ({
-      ...item,
-      refundReason: reasons[item.transactionItemId] ?? "",
-      refundQuantity: quantities[item.transactionItemId] ?? item.refundQuantity,
-    }));
+    const updatedItems = items.map((item) => {
+      const effectiveQty = getEffectiveQty(item);
+      let refundReason: string;
+
+      if (hasBatches(item)) {
+        // Derive item-level reason from batch reasons
+        const br = batchReasons[item.transactionItemId] ?? {};
+        const bq = batchQuantities[item.transactionItemId] ?? {};
+        const reasonsUsed = Object.entries(bq)
+          .filter(([, qty]) => qty > 0)
+          .map(([batchId]) => br[Number(batchId)] ?? "")
+          .filter((r) => r.trim());
+        const unique = [...new Set(reasonsUsed)];
+        refundReason = unique.length === 1 ? unique[0] : unique.join(", ");
+      } else {
+        refundReason = reasons[item.transactionItemId] ?? "";
+      }
+
+      const base: any = {
+        ...item,
+        refundReason,
+        refundQuantity: effectiveQty,
+      };
+
+      if (hasBatches(item)) {
+        const bq = batchQuantities[item.transactionItemId] ?? {};
+        const br = batchReasons[item.transactionItemId] ?? {};
+        base.selectedBatchAllocations = (item.batchAllocations ?? [])
+          .filter((a) => (bq[a.productBatchId] ?? 0) > 0)
+          .map((a) => ({
+            productBatchId: a.productBatchId,
+            quantityToRestore: bq[a.productBatchId] ?? 0,
+            refundReason: br[a.productBatchId] ?? "",
+          }));
+      }
+
+      return base;
+    });
     try {
       const response = await onComplete(updatedItems, refundMethod, gcashNumber || undefined, referenceNumber || undefined);
       if (onRefundSuccess) {
@@ -230,6 +386,7 @@ const RefundDrawer: React.FC<Props> = ({
               key={item.transactionItemId}
               className="rounded-lg border p-3 space-y-2"
             >
+              {/* Item header */}
               <div className="flex items-start justify-between gap-2">
                 <div className="min-w-0 flex-1">
                   <p className="text-sm font-medium truncate">
@@ -239,67 +396,139 @@ const RefundDrawer: React.FC<Props> = ({
                     {formatCurrency(item.unitPrice)} each
                   </p>
                 </div>
-                <Badge variant="secondary" className="text-xs shrink-0">
-                  Max {item.maxQuantity}
-                </Badge>
+                {!hasBatches(item) && (
+                  <Badge variant="secondary" className="text-xs shrink-0">
+                    Max {item.maxQuantity}
+                  </Badge>
+                )}
               </div>
 
-              <div className="flex items-center gap-3">
-                {/* Quantity control */}
-                <div className="flex items-center gap-1">
-                  <Button
-                    type="button"
-                    variant="outline"
-                    size="icon"
-                    className="h-7 w-7"
-                    disabled={
-                      (quantities[item.transactionItemId] ??
-                        item.refundQuantity) <= 1
-                    }
-                    onClick={() => handleQuantityChange(item.transactionItemId, -1)}
-                  >
-                    <Minus className="h-3 w-3" />
-                  </Button>
-                  <span className="w-8 text-center text-sm font-medium tabular-nums">
-                    {quantities[item.transactionItemId] ?? item.refundQuantity}
-                  </span>
-                  <Button
-                    type="button"
-                    variant="outline"
-                    size="icon"
-                    className="h-7 w-7"
-                    disabled={
-                      (quantities[item.transactionItemId] ??
-                        item.refundQuantity) >= item.maxQuantity
-                    }
-                    onClick={() => handleQuantityChange(item.transactionItemId, 1)}
-                  >
-                    <Plus className="h-3 w-3" />
-                  </Button>
+              {hasBatches(item) ? (
+                /* ── Batch-level controls (physical items) ── */
+                <div className="rounded-md bg-muted/50 border border-muted-foreground/10 p-2 space-y-2">
+                  <p className="text-[11px] font-medium text-muted-foreground uppercase tracking-wide">
+                    Return to Batches
+                  </p>
+                  {(item.batchAllocations ?? []).map((alloc) => {
+                    const currentBatchQty = batchQuantities[item.transactionItemId]?.[alloc.productBatchId] ?? 0;
+                    const currentReason = batchReasons[item.transactionItemId]?.[alloc.productBatchId] ?? "";
+                    return (
+                      <div key={alloc.productBatchId} className="space-y-1.5">
+                        <div className="flex items-center justify-between gap-2">
+                          <span className="text-xs truncate flex-1">
+                            {alloc.batchNumber}
+                            <span className="text-muted-foreground ml-1">(max {alloc.quantityDeducted})</span>
+                          </span>
+                          <div className="flex items-center gap-1 shrink-0">
+                            <Button
+                              type="button"
+                              variant="outline"
+                              size="icon"
+                              className="h-6 w-6"
+                              disabled={currentBatchQty <= 0}
+                              onClick={() => handleBatchQuantityChange(item.transactionItemId, alloc.productBatchId, -1, alloc.quantityDeducted)}
+                            >
+                              <Minus className="h-2.5 w-2.5" />
+                            </Button>
+                            <span className="w-6 text-center text-xs font-medium tabular-nums">
+                              {currentBatchQty}
+                            </span>
+                            <Button
+                              type="button"
+                              variant="outline"
+                              size="icon"
+                              className="h-6 w-6"
+                              disabled={currentBatchQty >= alloc.quantityDeducted}
+                              onClick={() => handleBatchQuantityChange(item.transactionItemId, alloc.productBatchId, 1, alloc.quantityDeducted)}
+                            >
+                              <Plus className="h-2.5 w-2.5" />
+                            </Button>
+                          </div>
+                        </div>
+                        {currentBatchQty > 0 && (
+                          <Select
+                            value={currentReason}
+                            onValueChange={(v) =>
+                              handleBatchReasonChange(item.transactionItemId, alloc.productBatchId, v)
+                            }
+                          >
+                            <SelectTrigger className="h-7 text-[11px]">
+                              <SelectValue placeholder="Select reason…" />
+                            </SelectTrigger>
+                            <SelectContent>
+                              {REFUND_REASONS.map((r) => (
+                                <SelectItem key={r} value={r}>
+                                  {r}
+                                </SelectItem>
+                              ))}
+                            </SelectContent>
+                          </Select>
+                        )}
+                      </div>
+                    );
+                  })}
+                  {!batchHasQty && (
+                    <p className="text-[11px] text-red-500 font-medium">
+                      Allocate at least 1 unit to a batch
+                    </p>
+                  )}
                 </div>
-
-                {/* Reason dropdown */}
-                <Select
-                  value={reasons[item.transactionItemId] ?? ""}
-                  onValueChange={(v) =>
-                    setReasons((prev) => ({
-                      ...prev,
-                      [item.transactionItemId]: v,
-                    }))
-                  }
-                >
-                  <SelectTrigger className="h-8 flex-1 text-xs">
-                    <SelectValue placeholder="Select reason…" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    {REFUND_REASONS.map((r) => (
-                      <SelectItem key={r} value={r}>
-                        {r}
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
-              </div>
+              ) : (
+                /* ── Item-level controls (non-batch / service items) ── */
+                <div className="flex items-center gap-3">
+                  <div className="flex items-center gap-1">
+                    <Button
+                      type="button"
+                      variant="outline"
+                      size="icon"
+                      className="h-7 w-7"
+                      disabled={
+                        (quantities[item.transactionItemId] ??
+                          item.refundQuantity) <= 1
+                      }
+                      onClick={() => handleQuantityChange(item.transactionItemId, -1)}
+                    >
+                      <Minus className="h-3 w-3" />
+                    </Button>
+                    <span className="w-8 text-center text-sm font-medium tabular-nums">
+                      {quantities[item.transactionItemId] ?? item.refundQuantity}
+                    </span>
+                    <Button
+                      type="button"
+                      variant="outline"
+                      size="icon"
+                      className="h-7 w-7"
+                      disabled={
+                        (quantities[item.transactionItemId] ??
+                          item.refundQuantity) >= item.maxQuantity
+                      }
+                      onClick={() => handleQuantityChange(item.transactionItemId, 1)}
+                    >
+                      <Plus className="h-3 w-3" />
+                    </Button>
+                  </div>
+                  <Select
+                    value={reasons[item.transactionItemId] ?? ""}
+                    onValueChange={(v) =>
+                      setReasons((prev) => ({
+                        ...prev,
+                        [item.transactionItemId]: v,
+                      }))
+                    }
+                  >
+                    <SelectTrigger className="h-8 flex-1 text-xs">
+                      <SelectValue placeholder="Select reason…" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {REFUND_REASONS.map((r) => (
+                        <SelectItem key={r} value={r}>
+                          {r}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                </div>
+              )}
 
             </div>
           ))}
@@ -341,7 +570,7 @@ const RefundDrawer: React.FC<Props> = ({
           </div>
         )}
 
-        {/* Refund method — only when cash is leaving the drawer */}
+        {/* Refund method */}
         {(!accountingPreview || accountingPreview.cashToReturn > 0) && (
           <div className="mt-3">
             <label className="text-xs font-medium text-muted-foreground">
@@ -364,7 +593,7 @@ const RefundDrawer: React.FC<Props> = ({
           </div>
         )}
 
-        {/* GCash fields — only when GCash is selected and cash is actually being returned */}
+        {/* GCash fields */}
         {(!accountingPreview || accountingPreview.cashToReturn > 0) && refundMethod === "GCASH" && (
           <div className="mt-3 space-y-3">
             <div>
@@ -416,13 +645,13 @@ const RefundDrawer: React.FC<Props> = ({
           </div>
         )}
 
-        {/* Complete Refund button — dynamic label based on cash flow */}
+        {/* Submit button */}
         <div className="mt-4">
           <Button
             className={`w-full ${accountingPreview && accountingPreview.cashToReturn > 0
               ? "bg-red-600 hover:bg-red-700 text-white"
               : "bg-indigo-600 hover:bg-indigo-700 text-white"}`}
-            disabled={!allReasonsFilled || !gcashValid || !referenceValid || isPending}
+            disabled={!allReasonsFilled || !batchHasQty || !gcashValid || !referenceValid || isPending}
             onClick={openConfirmModal}
           >
             {isPending ? (

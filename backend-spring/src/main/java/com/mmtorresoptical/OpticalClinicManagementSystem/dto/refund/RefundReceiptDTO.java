@@ -28,5 +28,12 @@ public class RefundReceiptDTO {
         private Integer quantityRefunded;
         private String refundReason;
         private BigDecimal itemCreditAmount;
+        private List<BatchDetailDTO> batchDetails;
+    }
+
+    @Data
+    public static class BatchDetailDTO {
+        private String batchNumber;
+        private Integer quantityRestored;
     }
 }

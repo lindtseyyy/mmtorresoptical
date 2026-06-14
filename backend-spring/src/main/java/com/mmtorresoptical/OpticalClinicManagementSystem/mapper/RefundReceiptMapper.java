@@ -2,6 +2,7 @@ package com.mmtorresoptical.OpticalClinicManagementSystem.mapper;
 
 import com.mmtorresoptical.OpticalClinicManagementSystem.dto.refund.RefundReceiptDTO;
 import com.mmtorresoptical.OpticalClinicManagementSystem.model.RefundItem;
+import com.mmtorresoptical.OpticalClinicManagementSystem.model.RefundItemBatchDetail;
 import com.mmtorresoptical.OpticalClinicManagementSystem.model.RefundReceipt;
 import org.mapstruct.Mapper;
 import org.mapstruct.Mapping;
@@ -21,7 +22,12 @@ public interface RefundReceiptMapper {
     @Mapping(target = "quantityRefunded", source = "quantityRefunded")
     @Mapping(target = "refundReason", source = "refundReason")
     @Mapping(target = "itemCreditAmount", source = "itemCreditAmount")
+    @Mapping(target = "batchDetails", source = "batchDetails")
     RefundReceiptDTO.RefundItemDataDTO itemToDTO(RefundItem item);
+
+    @Mapping(target = "batchNumber", source = "productBatch.batchNumber")
+    @Mapping(target = "quantityRestored", source = "quantityRestored")
+    RefundReceiptDTO.BatchDetailDTO batchDetailToDTO(RefundItemBatchDetail detail);
 
     List<RefundReceiptDTO> entityListToDTOList(List<RefundReceipt> receipts);
 }
