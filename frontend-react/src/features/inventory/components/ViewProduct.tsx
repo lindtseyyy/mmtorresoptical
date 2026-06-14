@@ -267,10 +267,6 @@ const ViewProduct: React.FC = () => {
         <CardContent>
           <div className="grid grid-cols-2 gap-x-8 gap-y-3 sm:grid-cols-3">
             <div>
-              <p className="text-xs text-muted-foreground">Product Name</p>
-              <p className="font-medium">{product.productName}</p>
-            </div>
-            <div>
               <p className="text-xs text-muted-foreground">Category</p>
               <p className="font-medium">{product.categoryName}</p>
             </div>
@@ -281,16 +277,6 @@ const ViewProduct: React.FC = () => {
             <div>
               <p className="text-xs text-muted-foreground">Unit Price</p>
               <p className="font-medium">₱ {product.unitPrice.toFixed(2)}</p>
-            </div>
-            {!isService && (
-              <div>
-                <p className="text-xs text-muted-foreground">Quantity</p>
-                <p className="font-medium">{product.quantity}</p>
-              </div>
-            )}
-            <div>
-              <p className="text-xs text-muted-foreground">Created</p>
-              <p className="font-medium">{formatDate(product.createdAt)}</p>
             </div>
             {!isService && (
               <div>
@@ -310,6 +296,10 @@ const ViewProduct: React.FC = () => {
                 <p className="font-medium">{product.leadTimeDays} days</p>
               </div>
             )}
+            <div>
+              <p className="text-xs text-muted-foreground">Created</p>
+              <p className="font-medium">{formatDate(product.createdAt)}</p>
+            </div>
           </div>
         </CardContent>
       </Card>
