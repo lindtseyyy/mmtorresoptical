@@ -120,8 +120,8 @@ const ViewProduct: React.FC = () => {
                 </div>
               )}
               <div>
-                <div className="flex items-center gap-2">
-                  <h2 className="text-3xl font-bold">{product.productName}</h2>
+                <h2 className="text-3xl font-bold">{product.productName}</h2>
+                <div className="flex items-center gap-2 mt-1">
                   <Badge
                     className={
                       product.isArchived
@@ -152,7 +152,6 @@ const ViewProduct: React.FC = () => {
                     </Badge>
                   )}
                 </div>
-                <p className="text-muted-foreground">Item details and transaction history</p>
               </div>
             </div>
           </div>
