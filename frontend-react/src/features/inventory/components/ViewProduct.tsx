@@ -12,7 +12,9 @@ import {
   fetchProductMetrics,
 } from "@/features/inventory/services/productApi";
 import { fetchProductTransactions } from "@/features/sales/services/transactionApi";
+import { createProductBatchesQueryOptions } from "@/features/inventory/hooks/productQuery";
 import type { TransactionListItem } from "@/features/sales/types";
+import type { ProductBatch } from "@/features/inventory/types";
 import { isAdmin } from "@/shared/lib/auth";
 import { getImageUrl } from "@/shared/lib/utils";
 
@@ -62,6 +64,13 @@ const ViewProduct: React.FC = () => {
     enabled: !!productId,
   });
 
+  const isService = product?.productType === "SERVICE";
+
+  const { data: batches } = useQuery({
+    ...createProductBatchesQueryOptions(productId),
+    enabled: !!productId && !!product && !isService,
+  });
+
   if (productLoading) {
     return (
       <div className="flex items-center justify-center py-16">
@@ -81,7 +90,6 @@ const ViewProduct: React.FC = () => {
     );
   }
 
-  const isService = product.productType === "SERVICE";
   const inventoryValue = product.unitPrice * product.quantity;
 
   return (
@@ -307,6 +315,67 @@ const ViewProduct: React.FC = () => {
         </CardContent>
       </Card>
 
+      {/* Inventory Batch Breakdown */}
+      {!isService && (
+        <Card>
+          <CardHeader>
+            <CardTitle className="flex items-center gap-2">
+              <Layers className="h-5 w-5" />
+              Inventory Batch Breakdown
+            </CardTitle>
+            <CardDescription>
+              Total available: <strong>{product.quantity}</strong> units
+              {product.isPerishable && " (unexpired batches only)"}
+            </CardDescription>
+          </CardHeader>
+          <CardContent>
+            {batches && batches.length > 0 ? (
+              <div className="overflow-hidden rounded-lg border">
+                <table className="w-full table-fixed text-sm">
+                  <thead>
+                    <tr className="border-b bg-muted/50">
+                      <th className="px-4 py-3 text-left font-medium w-1/4">Batch Number</th>
+                      <th className="px-4 py-3 text-left font-medium w-1/4">Qty Remaining</th>
+                      <th className="px-4 py-3 text-left font-medium w-1/4">Expiry Date</th>
+                      <th className="px-4 py-3 text-left font-medium w-1/4">Status</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {batches.map((batch: ProductBatch, idx: number) => (
+                      <tr
+                        key={batch.productBatchId}
+                        className={idx % 2 === 0 ? "bg-muted/50" : ""}
+                      >
+                        <td className="px-4 py-3 font-mono text-xs">{batch.batchNumber}</td>
+                        <td className="px-4 py-3">{batch.quantityRemaining}</td>
+                        <td className="px-4 py-3">{formatDate(batch.expiryDate)}</td>
+                        <td className="px-4 py-3">
+                          {batch.status === "EXPIRED" || (batch.expiryDate && new Date(batch.expiryDate) < new Date()) ? (
+                            <Badge className="bg-red-700 text-white hover:bg-red-700 cursor-default">Expired</Badge>
+                          ) : batch.status === "NEAR_EXPIRY" ? (
+                            <Badge className="bg-amber-700 text-white hover:bg-amber-700 cursor-default">Expiring Soon</Badge>
+                          ) : batch.status === "DEPLETED" ? (
+                            <Badge className="bg-gray-600 text-white hover:bg-gray-600 cursor-default">Depleted</Badge>
+                          ) : batch.expiryDate ? (
+                            <Badge className="bg-green-700 text-white hover:bg-green-700 cursor-default">Healthy</Badge>
+                          ) : (
+                            <Badge className="bg-green-700 text-white hover:bg-green-700 cursor-default">No Expiry</Badge>
+                          )}
+                        </td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+            ) : (
+              <p className="py-4 text-center text-sm text-muted-foreground">
+                No batches recorded.
+              </p>
+            )}
+          </CardContent>
+        </Card>
+      )}
+
       {/* Recent Transactions */}
       <Card>
         <CardHeader>
@@ -371,6 +440,7 @@ const ViewProduct: React.FC = () => {
             productId: product.productId,
             productName: product.productName,
             quantity: product.quantity,
+            isPerishable: product.isPerishable,
           }}
         />
       )}

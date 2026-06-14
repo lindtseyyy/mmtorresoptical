@@ -1,6 +1,6 @@
 import api from "@/shared/lib/axiosInstance";
 import type { PageResponse } from "@/shared/types";
-import type { Product, ProductFormData, InventorySummary, ProductMetrics, ProductSummary, CategoryDTO, SupplierDTO, SupplierWithProductCountDTO, CategoryWithProductCountDTO } from "@/features/inventory/types";
+import type { Product, ProductFormData, InventorySummary, ProductMetrics, ProductSummary, CategoryDTO, SupplierDTO, SupplierWithProductCountDTO, CategoryWithProductCountDTO, ProductBatch, AddStockRequest, RemoveStockRequest } from "@/features/inventory/types";
 
 const fetchProducts = async (
   page = 0,
@@ -128,6 +128,11 @@ const toggleCategoryActive = async (categoryId: string): Promise<CategoryDTO> =>
   return data;
 };
 
+const toggleCategoryPerishable = async (categoryId: string): Promise<CategoryDTO> => {
+  const { data } = await api.patch(`/categories/${categoryId}/toggle-perishable`);
+  return data;
+};
+
 const deleteCategory = async (categoryId: string): Promise<void> => {
   await api.delete(`/categories/${categoryId}`);
 };
@@ -156,4 +161,24 @@ const deleteSupplier = async (supplierId: string): Promise<void> => {
   await api.delete(`/suppliers/${supplierId}`);
 };
 
-export { fetchProducts, fetchProduct, updateProduct, addProduct, archiveProduct, restoreProduct, adjustStock, fetchInventorySummary, fetchProductMetrics, fetchProductSummaries, fetchCategories, fetchCategoriesWithProductCounts, toggleCategoryActive, deleteCategory, fetchRopAlertsCount, fetchSuppliers, fetchSuppliersWithProductCounts, toggleSupplierActive, deleteSupplier };
+const fetchProductBatches = async (productId: string): Promise<ProductBatch[]> => {
+  const { data } = await api.get(`/products/${productId}/batches`);
+  return data;
+};
+
+const fetchAvailableBatches = async (productId: string): Promise<ProductBatch[]> => {
+  const { data } = await api.get(`/products/${productId}/available-batches`);
+  return data;
+};
+
+const addStockToBatch = async (productId: string, payload: AddStockRequest) => {
+  const { data } = await api.post(`/products/${productId}/add-stock`, payload);
+  return data;
+};
+
+const removeStockFromBatch = async (productId: string, payload: RemoveStockRequest) => {
+  const { data } = await api.post(`/products/${productId}/remove-stock`, payload);
+  return data;
+};
+
+export { fetchProducts, fetchProduct, updateProduct, addProduct, archiveProduct, restoreProduct, adjustStock, fetchInventorySummary, fetchProductMetrics, fetchProductSummaries, fetchCategories, fetchCategoriesWithProductCounts, toggleCategoryActive, toggleCategoryPerishable, deleteCategory, fetchRopAlertsCount, fetchSuppliers, fetchSuppliersWithProductCounts, toggleSupplierActive, deleteSupplier, fetchProductBatches, fetchAvailableBatches, addStockToBatch, removeStockFromBatch };

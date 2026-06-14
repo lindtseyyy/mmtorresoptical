@@ -32,4 +32,7 @@ public class Category {
 
     @Column(nullable = false)
     private Boolean isActive = true;
+
+    @Column(name = "is_perishable", nullable = false, columnDefinition = "BOOLEAN NOT NULL DEFAULT false")
+    private Boolean isPerishable = false;
 }

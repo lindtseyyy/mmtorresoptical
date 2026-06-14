@@ -38,6 +38,12 @@ public class CategoryController {
     }
 
     @PreAuthorize("hasRole('ADMIN')")
+    @PatchMapping("/{id}/toggle-perishable")
+    public ResponseEntity<CategoryDTO> togglePerishable(@PathVariable UUID id) {
+        return ResponseEntity.ok(categoryService.togglePerishable(id));
+    }
+
+    @PreAuthorize("hasRole('ADMIN')")
     @DeleteMapping("/{id}")
     public ResponseEntity<Void> deleteCategory(@PathVariable UUID id) {
         categoryService.deleteCategoryIfUnused(id);

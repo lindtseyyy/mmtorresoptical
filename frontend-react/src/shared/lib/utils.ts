@@ -21,7 +21,7 @@ export function levenshtein(a: string, b: string): number {
   return dp[m][n];
 }
 
-const IMAGE_SERVER_URL = "http://10.42.0.1:8080/uploads/products";
+const IMAGE_SERVER_URL = import.meta.env.VITE_API_UPLOADS_URL + "/products";
 
 export function getImageUrl(imageDir: string | null | undefined): string | null {
   if (!imageDir) return null;

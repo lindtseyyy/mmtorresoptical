@@ -1,5 +1,8 @@
 package com.mmtorresoptical.OpticalClinicManagementSystem.controller;
 
+import com.mmtorresoptical.OpticalClinicManagementSystem.dto.batch.AddStockRequestDTO;
+import com.mmtorresoptical.OpticalClinicManagementSystem.dto.batch.ProductBatchDTO;
+import com.mmtorresoptical.OpticalClinicManagementSystem.dto.batch.RemoveStockRequestDTO;
 import com.mmtorresoptical.OpticalClinicManagementSystem.dto.product.CreateProductRequestDTO;
 import com.mmtorresoptical.OpticalClinicManagementSystem.dto.product.ProductDetailsDTO;
 import com.mmtorresoptical.OpticalClinicManagementSystem.dto.product.ProductResponseDTO;
@@ -8,6 +11,7 @@ import com.mmtorresoptical.OpticalClinicManagementSystem.dto.product.StockAdjust
 import com.mmtorresoptical.OpticalClinicManagementSystem.dto.product.UpdateProductRequestDTO;
 import com.mmtorresoptical.OpticalClinicManagementSystem.dto.transaction.TransactionListDTO;
 import com.mmtorresoptical.OpticalClinicManagementSystem.repository.ProductRepository;
+import com.mmtorresoptical.OpticalClinicManagementSystem.services.controller.ProductBatchService;
 import com.mmtorresoptical.OpticalClinicManagementSystem.services.controller.ProductService;
 import com.mmtorresoptical.OpticalClinicManagementSystem.services.controller.TransactionService;
 import jakarta.validation.Valid;
@@ -31,6 +35,7 @@ public class ProductController {
     private final ProductService productService;
     private final ProductRepository productRepository;
     private final TransactionService transactionService;
+    private final ProductBatchService productBatchService;
 
     /**
      * CREATE a new product
@@ -190,5 +195,35 @@ public class ProductController {
             @RequestParam(required = false) UUID categoryId) {
         List<ProductSummaryDTO> summaries = productService.getProductSummaries(keyword, categoryId);
         return ResponseEntity.ok(summaries);
+    }
+
+    @GetMapping("/{id}/batches")
+    public ResponseEntity<List<ProductBatchDTO>> getProductBatches(@PathVariable UUID id) {
+        return ResponseEntity.ok(productBatchService.getBatchBreakdown(id));
+    }
+
+    @GetMapping("/{id}/available-batches")
+    public ResponseEntity<List<ProductBatchDTO>> getAvailableBatches(@PathVariable UUID id) {
+        return ResponseEntity.ok(productBatchService.getAvailableBatchesForDropdown(id));
+    }
+
+    @PreAuthorize("hasRole('ADMIN')")
+    @PostMapping("/{id}/add-stock")
+    public ResponseEntity<ProductDetailsDTO> addStock(
+            @PathVariable UUID id,
+            @Valid @RequestBody AddStockRequestDTO request) {
+        productBatchService.addStock(id, request);
+        ProductDetailsDTO result = productService.getProduct(id);
+        return ResponseEntity.ok(result);
+    }
+
+    @PreAuthorize("hasRole('ADMIN')")
+    @PostMapping("/{id}/remove-stock")
+    public ResponseEntity<ProductDetailsDTO> removeStock(
+            @PathVariable UUID id,
+            @Valid @RequestBody RemoveStockRequestDTO request) {
+        productBatchService.removeStock(id, request);
+        ProductDetailsDTO result = productService.getProduct(id);
+        return ResponseEntity.ok(result);
     }
 }

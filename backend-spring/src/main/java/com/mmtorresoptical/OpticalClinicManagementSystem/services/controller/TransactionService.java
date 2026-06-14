@@ -67,6 +67,7 @@ public class TransactionService {
     private final PasswordEncoder passwordEncoder;
     private final JSONService jsonService;
     private final VisitManagerService visitManagerService;
+    private final ProductBatchService productBatchService;
 
     @Transactional
     public TransactionResponseDTO createTransaction(TransactionRequestDTO transactionRequestDTO) {
@@ -111,8 +112,12 @@ public class TransactionService {
         boolean hasSeniorPwd = transactionRequestDTO.getSeniorPwdName() != null
                 && !transactionRequestDTO.getSeniorPwdName().isBlank();
 
-        List<TransactionItem> transactionItems = transactionRequestDTO.getItems()
-                .stream().map(dto -> {
+        // Track FEFO batch allocations per transaction item (committed after flush)
+        record PendingAllocation(TransactionItem item, List<ProductBatchService.BatchAllocation> allocations) {}
+        List<PendingAllocation> pendingAllocations = new ArrayList<>();
+
+        List<TransactionItem> transactionItems = new ArrayList<>();
+        for (var dto : transactionRequestDTO.getItems()) {
 
                     Product retrievedProduct = productRepository.findById(dto.getProductId())
                             .orElseThrow(() -> new ResourceNotFoundException("Product not found with id: " + dto.getProductId()));
@@ -123,17 +128,10 @@ public class TransactionService {
                         );
                     }
 
-                    // Inventory guard: only decrement stock for PHYSICAL products
+                    // FEFO allocation check for PHYSICAL products (commit happens after flush)
+                    List<ProductBatchService.BatchAllocation> allocations = null;
                     if (retrievedProduct.getProductType() == ProductType.PHYSICAL) {
-                        if (retrievedProduct.getQuantity() < dto.getQuantity()) {
-                            throw new InsufficientStockException(
-                                    "Not enough stock for product: "
-                                            + retrievedProduct.getProductName()
-                            );
-                        }
-                        retrievedProduct.setQuantity(
-                                retrievedProduct.getQuantity() - dto.getQuantity()
-                        );
+                        allocations = productBatchService.allocateFefo(retrievedProduct.getProductId(), dto.getQuantity());
                     }
 
                     TransactionItem transactionItem = transactionItemMapper.requestDTOtoEntity(dto);
@@ -192,8 +190,11 @@ public class TransactionService {
                     transactionItem.setSubtotal(baseAmount.subtract(discountAmount));
                     transactionItem.setSeniorPwdDiscountAmount(seniorPwdAmountForItem);
 
-                    return transactionItem;
-                }).toList();
+                    transactionItems.add(transactionItem);
+                    if (allocations != null) {
+                        pendingAllocations.add(new PendingAllocation(transactionItem, allocations));
+                    }
+                }
 
         BigDecimal total = transactionItems
                 .stream()
@@ -245,6 +246,11 @@ public class TransactionService {
         }
 
         Transaction savedTransaction = transactionRepository.saveAndFlush(transaction);
+
+        // Commit FEFO batch allocations now that transaction items have IDs
+        for (PendingAllocation pending : pendingAllocations) {
+            productBatchService.commitAllocation(pending.item(), pending.allocations());
+        }
 
         // Create initial payment record if money was tendered
         if (amountTendered.compareTo(BigDecimal.ZERO) > 0) {
@@ -688,10 +694,7 @@ public class TransactionService {
         for (TransactionItem item : transaction.getTransactionItems()) {
             Product product = item.getProduct();
             if (product.getProductType() == ProductType.PHYSICAL) {
-                product.setQuantity(
-                        product.getQuantity() + item.getQuantity()
-                );
-                productRepository.save(product);
+                productBatchService.restoreForVoid(item);
             }
         }
 
@@ -882,12 +885,8 @@ public class TransactionService {
             Product product = item.getProduct();
 
             if (product.getProductType() == ProductType.PHYSICAL) {
-                if ("Damaged".equalsIgnoreCase(refundItem.getRefundReason())) {
-                    product.setDamagedQuantity(product.getDamagedQuantity() + refundItem.getQuantityRefunded());
-                } else {
-                    product.setQuantity(product.getQuantity() + refundItem.getQuantityRefunded());
-                }
-                productRepository.save(product);
+                boolean isDamaged = "Damaged".equalsIgnoreCase(refundItem.getRefundReason());
+                productBatchService.restoreForRefund(item, refundItem.getQuantityRefunded(), isDamaged);
             }
 
             refundItem.setRefundReceipt(receipt);

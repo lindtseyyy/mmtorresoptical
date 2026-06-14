@@ -23,5 +23,6 @@ public class ProductResponseDTO {
     private Integer overstockedThreshold;
     private Boolean isArchived;
     private Boolean isSeniorPwdEligible;
+    private Boolean isPerishable;
     private LocalDateTime createdAt;
 }

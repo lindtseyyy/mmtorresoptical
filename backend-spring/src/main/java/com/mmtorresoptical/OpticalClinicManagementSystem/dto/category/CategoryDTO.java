@@ -15,4 +15,5 @@ public class CategoryDTO {
     private UUID categoryId;
     private String name;
     private String categoryType;
+    private Boolean isPerishable;
 }

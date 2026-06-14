@@ -17,6 +17,7 @@ import {
 import {
   fetchCategoriesWithProductCounts,
   toggleCategoryActive,
+  toggleCategoryPerishable,
   deleteCategory,
 } from "@/features/inventory/services/productApi";
 import type { CategoryWithProductCountDTO } from "@/features/inventory/types";
@@ -36,6 +37,7 @@ const CategoryManagementModal: React.FC<CategoryManagementModalProps> = ({
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [togglingId, setTogglingId] = useState<string | null>(null);
+  const [togglingPerishableId, setTogglingPerishableId] = useState<string | null>(null);
   const [deletingId, setDeletingId] = useState<string | null>(null);
 
   const loadCategories = async () => {
@@ -67,6 +69,21 @@ const CategoryManagementModal: React.FC<CategoryManagementModalProps> = ({
       setError("Failed to toggle category status.");
     } finally {
       setTogglingId(null);
+    }
+  };
+
+  const handleTogglePerishable = async (id: string) => {
+    setTogglingPerishableId(id);
+    try {
+      await toggleCategoryPerishable(id);
+      setCategories((prev) =>
+        prev.map((c) => (c.categoryId === id ? { ...c, isPerishable: !c.isPerishable } : c))
+      );
+      onCategoriesChanged();
+    } catch {
+      setError("Failed to toggle perishable status.");
+    } finally {
+      setTogglingPerishableId(null);
     }
   };
 
@@ -108,6 +125,7 @@ const CategoryManagementModal: React.FC<CategoryManagementModalProps> = ({
                   <th className="py-2 pr-4 text-center font-medium">Type</th>
                   <th className="py-2 pr-4 text-center font-medium">Products</th>
                   <th className="py-2 pr-4 text-center font-medium">Active</th>
+                  <th className="py-2 pr-4 text-center font-medium">Perishable</th>
                   <th className="py-2 text-center font-medium">Action</th>
                 </tr>
               </thead>
@@ -148,6 +166,28 @@ const CategoryManagementModal: React.FC<CategoryManagementModalProps> = ({
                         </Tooltip>
                       </TooltipProvider>
                     </td>
+                    <td className="py-2 pr-4 text-center">
+                      {cat.categoryType === "PHYSICAL" ? (
+                        <TooltipProvider>
+                          <Tooltip>
+                            <TooltipTrigger asChild>
+                              <div className="inline-flex">
+                                <Switch
+                                  checked={cat.isPerishable}
+                                  onCheckedChange={() => handleTogglePerishable(cat.categoryId)}
+                                  disabled={togglingPerishableId === cat.categoryId}
+                                />
+                              </div>
+                            </TooltipTrigger>
+                            <TooltipContent>
+                              {cat.isPerishable ? "Non-perishable (no expiry tracking)" : "Perishable (batch + expiry tracking)"}
+                            </TooltipContent>
+                          </Tooltip>
+                        </TooltipProvider>
+                      ) : (
+                        <span className="text-muted-foreground text-xs">—</span>
+                      )}
+                    </td>
                     <td className="py-2 text-center">
                       {cat.productCount === 0 ? (
                         <Button
@@ -171,7 +211,7 @@ const CategoryManagementModal: React.FC<CategoryManagementModalProps> = ({
                 ))}
                 {categories.length === 0 && (
                   <tr>
-                    <td colSpan={5} className="py-6 text-center text-muted-foreground">
+                    <td colSpan={6} className="py-6 text-center text-muted-foreground">
                       No categories found.
                     </td>
                   </tr>

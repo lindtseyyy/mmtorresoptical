@@ -68,6 +68,10 @@ public class Product {
             cascade = CascadeType.ALL)
     private List<TransactionItem> transactionItems;
 
+    @OneToMany(mappedBy = "product",
+            cascade = CascadeType.ALL)
+    private List<ProductBatch> batches;
+
     // Relationships
     @ManyToOne
     @JoinColumn(name = "created_by", nullable = false)

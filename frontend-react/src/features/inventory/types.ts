@@ -6,6 +6,7 @@ export interface CategoryDTO {
   categoryId: string;
   name: string;
   categoryType: "PHYSICAL" | "SERVICE";
+  isPerishable: boolean;
 }
 
 export interface CategoryWithProductCountDTO {
@@ -13,6 +14,7 @@ export interface CategoryWithProductCountDTO {
   name: string;
   categoryType: "PHYSICAL" | "SERVICE";
   isActive: boolean;
+  isPerishable: boolean;
   productCount: number;
 }
 
@@ -53,7 +55,6 @@ export const productFormSchema = z
     newSupplierName: z.string().optional(),
     productType: z.enum(["PHYSICAL", "SERVICE"]),
     unitPrice: decimalString("Unit price"),
-    quantity: z.string().optional(),
     lowLevelThreshold: z.string().optional(),
     overstockedThreshold: z.string().optional(),
     leadTimeDays: z.string().optional(),
@@ -77,20 +78,6 @@ export const productFormSchema = z
         code: z.ZodIssueCode.custom,
         message: "Supplier is required",
         path: ["supplierId"],
-      });
-    }
-
-    if (!data.quantity || data.quantity.trim().length === 0) {
-      ctx.addIssue({
-        code: z.ZodIssueCode.custom,
-        message: "Quantity is required",
-        path: ["quantity"],
-      });
-    } else if (!/^\d+$/.test(data.quantity) || Number(data.quantity) < 0) {
-      ctx.addIssue({
-        code: z.ZodIssueCode.custom,
-        message: "Quantity must be a non-negative whole number",
-        path: ["quantity"],
       });
     }
 
@@ -152,8 +139,7 @@ export const productSchema = productFormSchema.transform((data) => ({
   categoryId: data.categoryId || undefined,
   newCategoryName: data.newCategoryName || undefined,
   unitPrice: Number(data.unitPrice),
-  quantity:
-    data.productType === "SERVICE" ? 0 : Number(data.quantity || "0"),
+  quantity: 0,
   lowLevelThreshold:
     data.productType === "SERVICE"
       ? 0
@@ -194,6 +180,7 @@ export interface Product {
   suggestedOrderQuantity: number | null;
   isArchived: boolean;
   isSeniorPwdEligible: boolean;
+  isPerishable: boolean;
   imageDir: string | null;
   createdAt: string;
 }
@@ -233,4 +220,30 @@ export interface ProductMetrics {
   totalRevenue: number;
   numberOfTransactions: number;
   lastSoldDate: string | null;
+}
+
+// ── Batch types ────────────────────────────────────────────────────
+
+export interface ProductBatch {
+  productBatchId: number;
+  batchNumber: string;
+  quantityReceived: number;
+  quantityRemaining: number;
+  quantityDamaged: number;
+  expiryDate: string | null;
+  receivedDate: string;
+  status: "HEALTHY" | "NEAR_EXPIRY" | "EXPIRED" | "DEPLETED";
+}
+
+export interface AddStockRequest {
+  quantity: number;
+  batchNumber?: string;
+  expiryDate?: string;
+  reason: string;
+}
+
+export interface RemoveStockRequest {
+  quantity: number;
+  productBatchId?: number;
+  reason: string;
 }

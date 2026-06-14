@@ -20,10 +20,10 @@ public interface ProductMapper {
 
     @AfterMapping
     default void applyServiceDefaults(CreateProductRequestDTO dto, @MappingTarget Product product) {
+        // All new products start with 0 stock — inventory is managed via batch system
+        product.setQuantity(0);
+
         if (dto.getProductType() == ProductType.SERVICE) {
-            if (product.getQuantity() == null || product.getQuantity() < 0) {
-                product.setQuantity(0);
-            }
             if (product.getLowLevelThreshold() == null) {
                 product.setLowLevelThreshold(0);
             }
@@ -38,12 +38,14 @@ public interface ProductMapper {
 
     @Mapping(source = "category.categoryId", target = "categoryId")
     @Mapping(source = "category.name", target = "categoryName")
+    @Mapping(source = "category.isPerishable", target = "isPerishable")
     @Mapping(source = "supplier.supplierId", target = "supplierId")
     @Mapping(source = "supplier.name", target = "supplierName")
     ProductResponseDTO entityToResponseDTO(Product product);
 
     @Mapping(source = "category.categoryId", target = "categoryId")
     @Mapping(source = "category.name", target = "categoryName")
+    @Mapping(source = "category.isPerishable", target = "isPerishable")
     @Mapping(source = "supplier.supplierId", target = "supplierId")
     @Mapping(source = "supplier.name", target = "supplierName")
     ProductDetailsDTO entityToDetailsDTO(Product product);

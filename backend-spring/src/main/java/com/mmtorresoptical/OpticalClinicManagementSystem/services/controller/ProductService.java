@@ -1,6 +1,8 @@
 package com.mmtorresoptical.OpticalClinicManagementSystem.services.controller;
 
 import com.mmtorresoptical.OpticalClinicManagementSystem.enums.CategoryType;
+import com.mmtorresoptical.OpticalClinicManagementSystem.dto.batch.AddStockRequestDTO;
+import com.mmtorresoptical.OpticalClinicManagementSystem.dto.batch.RemoveStockRequestDTO;
 import com.mmtorresoptical.OpticalClinicManagementSystem.dto.product.CreateProductRequestDTO;
 import com.mmtorresoptical.OpticalClinicManagementSystem.dto.product.ProductDetailsDTO;
 import com.mmtorresoptical.OpticalClinicManagementSystem.dto.product.ProductResponseDTO;
@@ -53,6 +55,7 @@ public class ProductService {
     private final CategoryRepository categoryRepository;
     private final SupplierService supplierService;
     private final SupplierRepository supplierRepository;
+    private final ProductBatchService productBatchService;
 
     @Transactional
     public ProductResponseDTO createProduct(CreateProductRequestDTO productRequest, MultipartFile image) {
@@ -286,22 +289,26 @@ public class ProductService {
         BeanUtils.copyProperties(product, beforeProduct);
 
         String adjustmentType = request.getAdjustmentType();
-        int amount = request.getAmount();
 
         if ("ADD_STOCK".equals(adjustmentType)) {
-            product.setQuantity(product.getQuantity() + amount);
+            AddStockRequestDTO batchRequest = new AddStockRequestDTO();
+            batchRequest.setQuantity(request.getAmount());
+            batchRequest.setReason(request.getReason());
+            batchRequest.setBatchNumber(request.getBatchNumber());
+            batchRequest.setExpiryDate(request.getExpiryDate());
+            productBatchService.addStock(id, batchRequest);
         } else if ("REMOVE_STOCK".equals(adjustmentType)) {
-            if (product.getQuantity() < amount) {
-                throw new InsufficientStockException(
-                        "Insufficient stock. Current quantity: " + product.getQuantity()
-                                + ", requested removal: " + amount);
-            }
-            product.setQuantity(product.getQuantity() - amount);
+            RemoveStockRequestDTO batchRequest = new RemoveStockRequestDTO();
+            batchRequest.setQuantity(request.getAmount());
+            batchRequest.setReason(request.getReason());
+            batchRequest.setProductBatchId(request.getProductBatchId());
+            productBatchService.removeStock(id, batchRequest);
         } else {
             throw new IllegalArgumentException("Invalid adjustment type: " + adjustmentType);
         }
 
-        Product updatedProduct = productRepository.save(product);
+        Product updatedProduct = productRepository.findById(id)
+                .orElseThrow(() -> new ResourceNotFoundException("Product not found with id: " + id));
 
         productAuditHelper.logAdjustment(beforeProduct, updatedProduct, request);
 

@@ -28,8 +28,6 @@ public class CreateProductRequestDTO implements ProductRequest {
     @DecimalMin(value = "0.0", inclusive = false, message = "Price must be greater than 0")
     private BigDecimal unitPrice;
 
-    private Integer quantity;
-
     private Integer lowLevelThreshold;
 
     private Integer overstockedThreshold;

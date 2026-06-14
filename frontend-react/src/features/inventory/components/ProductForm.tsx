@@ -60,12 +60,6 @@ const mapToFormValues = (values?: ProductFormData): ProductFormValues => {
     productType,
     unitPrice:
       values && values.unitPrice !== undefined ? String(values.unitPrice) : "",
-    quantity:
-      isService
-        ? ""
-        : values && values.quantity !== undefined && values.quantity >= 0
-          ? String(values.quantity)
-          : "",
     lowLevelThreshold:
       isService
         ? ""
@@ -137,7 +131,6 @@ export const ProductForm: React.FC<ProductFormProps> = ({
 
     if (watchedProductType === "PHYSICAL") {
       const origIsPhysical = passedDefaultValues?.productType === "PHYSICAL";
-      form.setValue("quantity", origIsPhysical ? String(passedDefaultValues.quantity ?? 0) : "0", { shouldValidate: false });
       form.setValue("lowLevelThreshold", origIsPhysical ? String(passedDefaultValues.lowLevelThreshold ?? 0) : "0", { shouldValidate: false });
       form.setValue("overstockedThreshold", origIsPhysical ? String(passedDefaultValues.overstockedThreshold ?? 0) : "0", { shouldValidate: false });
       form.setValue("leadTimeDays", origIsPhysical ? String(passedDefaultValues.leadTimeDays ?? 3) : "3", { shouldValidate: false });
@@ -157,13 +150,9 @@ export const ProductForm: React.FC<ProductFormProps> = ({
     if (values.productType === "SERVICE") {
       values.supplierId = undefined;
       values.newSupplierName = undefined;
-      values.quantity = "";
       values.lowLevelThreshold = "";
       values.overstockedThreshold = "";
       values.leadTimeDays = "";
-    }
-    if (isEditMode && !isService) {
-      values.quantity = String(passedDefaultValues?.quantity ?? "");
     }
 
     const mergedValues = {
@@ -267,6 +256,43 @@ export const ProductForm: React.FC<ProductFormProps> = ({
             </div>
 
             <div className={isService ? "" : "grid gap-4 md:grid-cols-2"}>
+              <div className="space-y-2">
+                <div className="flex items-center gap-1">
+                  <Label className="font-semibold">Category</Label>
+                  <Button
+                    type="button"
+                    variant="ghost"
+                    size="icon"
+                    className="h-6 w-6 ml-1"
+                    title="Manage categories"
+                    onClick={() => setCategoryModalOpen(true)}
+                  >
+                    <Settings className="h-3.5 w-3.5" />
+                  </Button>
+                </div>
+                <CategoryCombobox
+                  value={selectedCategoryId}
+                  onChange={(id, _name) => {
+                    setSelectedCategoryId(id);
+                    setNewCategoryName(null);
+                    form.setValue("categoryId", id, { shouldValidate: true });
+                  }}
+                  onCreate={(name) => {
+                    setNewCategoryName(name);
+                    setSelectedCategoryId(null);
+                    form.setValue("newCategoryName", name, { shouldValidate: true });
+                  }}
+                  disabled={isLoading}
+                  refreshKey={categoryRefreshKey}
+                  productType={watchedProductType}
+                />
+                {form.formState.errors.categoryId && (
+                  <p className="text-sm font-medium text-destructive">
+                    {form.formState.errors.categoryId.message}
+                  </p>
+                )}
+              </div>
+
               {!isService && (
                 <div className="space-y-2">
                   <div className="flex items-center gap-1">
@@ -304,43 +330,6 @@ export const ProductForm: React.FC<ProductFormProps> = ({
                   )}
                 </div>
               )}
-
-              <div className="space-y-2">
-                <div className="flex items-center gap-1">
-                  <Label className="font-semibold">Category</Label>
-                  <Button
-                    type="button"
-                    variant="ghost"
-                    size="icon"
-                    className="h-6 w-6 ml-1"
-                    title="Manage categories"
-                    onClick={() => setCategoryModalOpen(true)}
-                  >
-                    <Settings className="h-3.5 w-3.5" />
-                  </Button>
-                </div>
-                <CategoryCombobox
-                  value={selectedCategoryId}
-                  onChange={(id, _name) => {
-                    setSelectedCategoryId(id);
-                    setNewCategoryName(null);
-                    form.setValue("categoryId", id, { shouldValidate: true });
-                  }}
-                  onCreate={(name) => {
-                    setNewCategoryName(name);
-                    setSelectedCategoryId(null);
-                    form.setValue("newCategoryName", name, { shouldValidate: true });
-                  }}
-                  disabled={isLoading}
-                  refreshKey={categoryRefreshKey}
-                  productType={watchedProductType}
-                />
-                {form.formState.errors.categoryId && (
-                  <p className="text-sm font-medium text-destructive">
-                    {form.formState.errors.categoryId.message}
-                  </p>
-                )}
-              </div>
             </div>
 
             <div className="grid gap-4 md:grid-cols-2">
@@ -376,37 +365,7 @@ export const ProductForm: React.FC<ProductFormProps> = ({
               />
               )}
 
-              {!isService && !isEditMode && (
-                <FormField
-                  control={form.control}
-                  name="quantity"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel className="font-semibold">Quantity</FormLabel>
-                      <FormControl>
-                        <Input
-                          type="text"
-                          inputMode="numeric"
-                          placeholder="Enter quantity"
-                          value={field.value ?? ""}
-                          name={field.name}
-                          ref={field.ref}
-                          onBlur={field.onBlur}
-                          onChange={(e) => {
-                            const value = e.target.value.trimStart();
-                            if (INTEGER_INPUT_REGEX.test(value)) {
-                              field.onChange(value);
-                            }
-                          }}
-                        />
-                      </FormControl>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
-              )}
-
-              {!isService && isEditMode && (
+              {!isService && (
                 <FormField
                   control={form.control}
                   name="leadTimeDays"
@@ -441,38 +400,6 @@ export const ProductForm: React.FC<ProductFormProps> = ({
 
             {!isService && (
               <div className="grid gap-4 md:grid-cols-2">
-                {!isEditMode && (
-                  <FormField
-                    control={form.control}
-                    name="leadTimeDays"
-                    render={({ field }) => (
-                      <FormItem className="md:col-span-2">
-                        <FormLabel className="font-semibold">
-                          Estimated Lead Time (Days)
-                        </FormLabel>
-                        <FormControl>
-                          <Input
-                            type="text"
-                            inputMode="numeric"
-                            placeholder="Enter supplier lead time in days (default: 3)"
-                            value={field.value ?? ""}
-                            name={field.name}
-                            ref={field.ref}
-                            onBlur={field.onBlur}
-                            onChange={(e) => {
-                              const value = e.target.value.trimStart();
-                              if (INTEGER_INPUT_REGEX.test(value)) {
-                                field.onChange(value);
-                              }
-                            }}
-                          />
-                        </FormControl>
-                        <FormMessage />
-                      </FormItem>
-                    )}
-                  />
-                )}
-
                 <FormField
                   control={form.control}
                   name="lowLevelThreshold"

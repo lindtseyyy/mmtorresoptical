@@ -8,6 +8,8 @@ import lombok.Getter;
 import lombok.Setter;
 
 import java.math.BigDecimal;
+import java.util.ArrayList;
+import java.util.List;
 import java.util.UUID;
 
 @Getter
@@ -61,4 +63,6 @@ public class TransactionItem {
     @JoinColumn(name = "product_id", nullable = false)
     private Product product;
 
+    @OneToMany(mappedBy = "transactionItem", cascade = CascadeType.ALL)
+    private List<TransactionItemBatchAllocation> batchAllocations = new ArrayList<>();
 }

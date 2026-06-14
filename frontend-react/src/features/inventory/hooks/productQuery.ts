@@ -1,8 +1,8 @@
 import { queryOptions, useQuery } from "@tanstack/react-query";
-import { fetchProducts, fetchProduct, addProduct, updateProduct, archiveProduct, restoreProduct, adjustStock, fetchInventorySummary, fetchProductSummaries, fetchRopAlertsCount } from "@/features/inventory/services/productApi";
+import { fetchProducts, fetchProduct, addProduct, updateProduct, archiveProduct, restoreProduct, adjustStock, fetchInventorySummary, fetchProductSummaries, fetchRopAlertsCount, fetchProductBatches, addStockToBatch, removeStockFromBatch, toggleCategoryPerishable } from "@/features/inventory/services/productApi";
 import { toast } from "sonner";
 import type { NavigateFunction } from "react-router";
-import type { ProductFormData } from "@/features/inventory/types";
+import type { ProductFormData, AddStockRequest, RemoveStockRequest } from "@/features/inventory/types";
 
 function createProductsListQueryOptions(
   page: number,
@@ -149,7 +149,81 @@ function createRopAlertsCountQueryOptions() {
   });
 }
 
-export {createProductsListQueryOptions, createEditProductQueryOptions, createAddProductMutationOptions, createEditProductMutationOptions, createArchiveProductMutationOptions, createRestoreProductMutationOptions, createAdjustStockMutationOptions, createInventorySummaryQueryOptions, createRopAlertsCountQueryOptions}
+function createProductBatchesQueryOptions(productId: string) {
+  return queryOptions({
+    queryKey: ["product-batches", productId],
+    queryFn: () => fetchProductBatches(productId),
+    enabled: !!productId,
+  });
+}
+
+function createAddStockMutationOptions(queryClient: any) {
+  return {
+    mutationFn: ({ productId, data }: { productId: string; data: AddStockRequest }) =>
+      addStockToBatch(productId, data),
+    onSuccess: (_data: any, variables: { productId: string }) => {
+      queryClient.invalidateQueries({ queryKey: ["product", variables.productId] });
+      queryClient.invalidateQueries({ queryKey: ["product-batches", variables.productId] });
+      queryClient.invalidateQueries({ queryKey: ["products"] });
+      queryClient.invalidateQueries({ queryKey: ["inventory-summary"] });
+      toast.success("Stock Added", {
+        description: "Batch stock has been added successfully.",
+      });
+    },
+    onError: (error: any) => {
+      const message = typeof error?.response?.data?.message === "string"
+        ? error.response.data.message
+        : typeof error?.response?.data === "string"
+          ? error.response.data
+          : undefined;
+      toast.error("Error", { description: message || "Failed to add stock." });
+    },
+  };
+}
+
+function createRemoveStockMutationOptions(queryClient: any) {
+  return {
+    mutationFn: ({ productId, data }: { productId: string; data: RemoveStockRequest }) =>
+      removeStockFromBatch(productId, data),
+    onSuccess: (_data: any, variables: { productId: string }) => {
+      queryClient.invalidateQueries({ queryKey: ["product", variables.productId] });
+      queryClient.invalidateQueries({ queryKey: ["product-batches", variables.productId] });
+      queryClient.invalidateQueries({ queryKey: ["products"] });
+      queryClient.invalidateQueries({ queryKey: ["inventory-summary"] });
+      toast.success("Stock Removed", {
+        description: "Stock has been removed successfully.",
+      });
+    },
+    onError: (error: any) => {
+      const message = typeof error?.response?.data?.message === "string"
+        ? error.response.data.message
+        : typeof error?.response?.data === "string"
+          ? error.response.data
+          : undefined;
+      toast.error("Error", { description: message || "Failed to remove stock." });
+    },
+  };
+}
+
+function createToggleCategoryPerishableMutationOptions(queryClient: any) {
+  return {
+    mutationFn: toggleCategoryPerishable,
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["categories"] });
+      toast.success("Category Updated", {
+        description: "Perishable status has been toggled.",
+      });
+    },
+    onError: (error: any) => {
+      const message = typeof error?.response?.data?.message === "string"
+        ? error.response.data.message
+        : undefined;
+      toast.error("Error", { description: message || "Failed to update category." });
+    },
+  };
+}
+
+export {createProductsListQueryOptions, createEditProductQueryOptions, createAddProductMutationOptions, createEditProductMutationOptions, createArchiveProductMutationOptions, createRestoreProductMutationOptions, createAdjustStockMutationOptions, createInventorySummaryQueryOptions, createRopAlertsCountQueryOptions, createProductBatchesQueryOptions, createAddStockMutationOptions, createRemoveStockMutationOptions, createToggleCategoryPerishableMutationOptions}
 
 export const useProductSummaries = (keyword?: string, category?: string) =>
   useQuery({

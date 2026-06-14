@@ -16,5 +16,6 @@ public class CategoryWithProductCountDTO {
     private String name;
     private String categoryType;
     private Boolean isActive;
+    private Boolean isPerishable;
     private Long productCount;
 }

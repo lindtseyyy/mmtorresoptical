@@ -67,6 +67,15 @@ public class CategoryService {
     }
 
     @Transactional
+    public CategoryDTO togglePerishable(UUID categoryId) {
+        Category category = categoryRepository.findById(categoryId)
+                .orElseThrow(() -> new IllegalArgumentException("Category not found with id: " + categoryId));
+        category.setIsPerishable(!category.getIsPerishable());
+        categoryRepository.save(category);
+        return toDTO(category);
+    }
+
+    @Transactional
     public void deleteCategoryIfUnused(UUID categoryId) {
         List<Object[]> rows = categoryRepository.findAllWithProductCounts();
         for (Object[] row : rows) {
@@ -90,6 +99,7 @@ public class CategoryService {
                 .categoryId(category.getCategoryId())
                 .name(category.getName())
                 .categoryType(category.getCategoryType().name())
+                .isPerishable(category.getIsPerishable())
                 .build();
     }
 }
