@@ -26,7 +26,7 @@ import {
   SelectValue,
 } from "@/shared/components/ui/select";
 import { cn } from "@/shared/lib/utils";
-import { createAddStockMutationOptions, createRemoveStockMutationOptions, createProductBatchesQueryOptions } from "@/features/inventory/hooks/productQuery";
+import { createAddStockMutationOptions, createRemoveStockMutationOptions, createAvailableBatchesQueryOptions } from "@/features/inventory/hooks/productQuery";
 import type { ProductBatch } from "@/features/inventory/types";
 
 interface StockAdjustmentModalProps {
@@ -83,10 +83,10 @@ const StockAdjustmentModal: React.FC<StockAdjustmentModalProps> = ({
 
   const reasons = mode === "ADD_STOCK" ? ADD_REASONS : REMOVE_REASONS;
 
-  // Fetch available batches for perishable remove mode
+  // Fetch available batches for remove mode
   const { data: availableBatches } = useQuery({
-    ...createProductBatchesQueryOptions(product.productId),
-    enabled: open && product.isPerishable && mode === "REMOVE_STOCK",
+    ...createAvailableBatchesQueryOptions(product.productId),
+    enabled: open && mode === "REMOVE_STOCK",
   });
 
   const selectedBatch = useMemo(() => {
@@ -140,7 +140,7 @@ const StockAdjustmentModal: React.FC<StockAdjustmentModalProps> = ({
           data: {
             quantity: parseInt(amount, 10),
             reason,
-            ...(product.isPerishable && selectedBatchId
+            ...(selectedBatchId
               ? { productBatchId: parseInt(selectedBatchId, 10) }
               : {}),
           },
@@ -152,7 +152,7 @@ const StockAdjustmentModal: React.FC<StockAdjustmentModalProps> = ({
 
   const numericAmount = parseInt(amount, 10) || 0;
   const isRemove = mode === "REMOVE_STOCK";
-  const maxRemovable = product.isPerishable && selectedBatch
+  const maxRemovable = isRemove && selectedBatch
     ? selectedBatch.quantityRemaining
     : product.quantity;
   const exceedsStock = isRemove && numericAmount > maxRemovable;
@@ -166,8 +166,8 @@ const StockAdjustmentModal: React.FC<StockAdjustmentModalProps> = ({
     !(mode === "ADD_STOCK" && !batchNumber.trim()) &&
     // Perishable add: expiry required
     !(mode === "ADD_STOCK" && product.isPerishable && !expiryDate) &&
-    // Perishable remove: batch selection required
-    !(mode === "REMOVE_STOCK" && product.isPerishable && !selectedBatchId);
+    // Remove: batch selection required
+    !(mode === "REMOVE_STOCK" && !selectedBatchId);
 
   return (
     <Dialog open={open} onOpenChange={handleOpenChange}>
@@ -246,8 +246,8 @@ const StockAdjustmentModal: React.FC<StockAdjustmentModalProps> = ({
             </>
           )}
 
-          {/* Perishable Remove: Batch Dropdown */}
-          {mode === "REMOVE_STOCK" && product.isPerishable && (
+          {/* Remove: Batch Dropdown */}
+          {mode === "REMOVE_STOCK" && (
             <div>
               <Label className="font-semibold">
                 Select Batch <span className="text-red-500">*</span>
@@ -260,7 +260,7 @@ const StockAdjustmentModal: React.FC<StockAdjustmentModalProps> = ({
                   {availableBatches && availableBatches.length > 0 ? (
                     availableBatches.map((batch: ProductBatch) => (
                       <SelectItem key={batch.productBatchId} value={String(batch.productBatchId)}>
-                        {batch.batchNumber} (Available: {batch.quantityRemaining} | Exp: {formatDate(batch.expiryDate)})
+                        {batch.batchNumber} (Available: {batch.quantityRemaining}{product.isPerishable ? ` | Exp: ${formatDate(batch.expiryDate)}` : ""})
                       </SelectItem>
                     ))
                   ) : (
@@ -280,7 +280,7 @@ const StockAdjustmentModal: React.FC<StockAdjustmentModalProps> = ({
               placeholder="Enter amount"
               className="mt-2"
               value={amount}
-              disabled={mode === "REMOVE_STOCK" && product.isPerishable && !selectedBatchId}
+              disabled={mode === "REMOVE_STOCK" && !selectedBatchId}
               onChange={(e) => {
                 const val = e.target.value.trimStart();
                 if (INTEGER_REGEX.test(val)) setAmount(val);

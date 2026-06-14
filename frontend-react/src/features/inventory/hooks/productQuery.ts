@@ -1,5 +1,5 @@
 import { queryOptions, useQuery } from "@tanstack/react-query";
-import { fetchProducts, fetchProduct, addProduct, updateProduct, archiveProduct, restoreProduct, adjustStock, fetchInventorySummary, fetchProductSummaries, fetchRopAlertsCount, fetchProductBatches, addStockToBatch, removeStockFromBatch, toggleCategoryPerishable } from "@/features/inventory/services/productApi";
+import { fetchProducts, fetchProduct, addProduct, updateProduct, archiveProduct, restoreProduct, adjustStock, fetchInventorySummary, fetchProductSummaries, fetchRopAlertsCount, fetchProductBatches, fetchAvailableBatches, addStockToBatch, removeStockFromBatch, toggleCategoryPerishable } from "@/features/inventory/services/productApi";
 import { toast } from "sonner";
 import type { NavigateFunction } from "react-router";
 import type { ProductFormData, AddStockRequest, RemoveStockRequest } from "@/features/inventory/types";
@@ -157,6 +157,14 @@ function createProductBatchesQueryOptions(productId: string) {
   });
 }
 
+function createAvailableBatchesQueryOptions(productId: string) {
+  return queryOptions({
+    queryKey: ["available-batches", productId],
+    queryFn: () => fetchAvailableBatches(productId),
+    enabled: !!productId,
+  });
+}
+
 function createAddStockMutationOptions(queryClient: any) {
   return {
     mutationFn: ({ productId, data }: { productId: string; data: AddStockRequest }) =>
@@ -223,7 +231,7 @@ function createToggleCategoryPerishableMutationOptions(queryClient: any) {
   };
 }
 
-export {createProductsListQueryOptions, createEditProductQueryOptions, createAddProductMutationOptions, createEditProductMutationOptions, createArchiveProductMutationOptions, createRestoreProductMutationOptions, createAdjustStockMutationOptions, createInventorySummaryQueryOptions, createRopAlertsCountQueryOptions, createProductBatchesQueryOptions, createAddStockMutationOptions, createRemoveStockMutationOptions, createToggleCategoryPerishableMutationOptions}
+export {createProductsListQueryOptions, createEditProductQueryOptions, createAddProductMutationOptions, createEditProductMutationOptions, createArchiveProductMutationOptions, createRestoreProductMutationOptions, createAdjustStockMutationOptions, createInventorySummaryQueryOptions, createRopAlertsCountQueryOptions, createProductBatchesQueryOptions, createAvailableBatchesQueryOptions, createAddStockMutationOptions, createRemoveStockMutationOptions, createToggleCategoryPerishableMutationOptions}
 
 export const useProductSummaries = (keyword?: string, category?: string) =>
   useQuery({

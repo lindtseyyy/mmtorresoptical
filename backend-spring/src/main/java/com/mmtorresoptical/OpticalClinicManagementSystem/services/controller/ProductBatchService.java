@@ -64,11 +64,10 @@ public class ProductBatchService {
 
         boolean isPerishable = product.getCategory().getIsPerishable();
 
-        if (isPerishable) {
-            if (request.getProductBatchId() == null) {
-                throw new IllegalArgumentException("Batch selection is required for perishable products");
-            }
+        if (request.getProductBatchId() != null) {
             removeFromSpecificBatch(request.getProductBatchId(), request.getQuantity());
+        } else if (isPerishable) {
+            throw new IllegalArgumentException("Batch selection is required for perishable products");
         } else {
             removeFifo(productId, request.getQuantity());
         }
