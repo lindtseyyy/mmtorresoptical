@@ -218,10 +218,17 @@ const CategoryManagementModal: React.FC<CategoryManagementModalProps> = ({
           <p className="py-4 text-center text-sm text-destructive">{error}</p>
         ) : (
           <div className="max-h-[60vh] overflow-y-auto">
-            <table className="w-full text-sm">
+            <table className="w-full table-fixed text-sm">
+              <colgroup>
+                <col className="w-[40%]" />
+                <col className="w-[15%]" />
+                <col className="w-[15%]" />
+                <col className="w-[15%]" />
+                <col className="w-[15%]" />
+              </colgroup>
               <thead>
                 <tr className="border-b text-left text-muted-foreground">
-                  <th className="py-2 pr-4 font-medium">Category</th>
+                  <th className="py-2 px-4 font-medium">Category</th>
                   <th className="py-2 pr-4 text-center font-medium">Type</th>
                   <th className="py-2 pr-4 text-center font-medium">Active</th>
                   <th className="py-2 pr-4 text-center font-medium">Perishable</th>
@@ -236,12 +243,12 @@ const CategoryManagementModal: React.FC<CategoryManagementModalProps> = ({
                   })
                   .map((cat) => (
                   <tr key={cat.categoryId} className="border-b last:border-0">
-                    <td className="py-2 pr-4">
+                    <td className="py-2 px-4">
                       {editingId === cat.categoryId ? (
                         <Input
                           value={editName}
                           onChange={(e) => { setEditName(e.target.value); setEditError(null); }}
-                          className="h-7 text-sm max-w-48"
+                          className="h-7 text-sm w-full px-2"
                           autoFocus
                           onKeyDown={(e) => {
                             if (e.key === "Enter") handleSaveEdit(cat.categoryId);
@@ -309,7 +316,7 @@ const CategoryManagementModal: React.FC<CategoryManagementModalProps> = ({
                             size="icon"
                             className="h-7 w-7 bg-muted-foreground/10 hover:bg-muted-foreground/20"
                             onClick={() => handleSaveEdit(cat.categoryId)}
-                            disabled={savingId === cat.categoryId || !editName.trim()}
+                            disabled={savingId === cat.categoryId || !editName.trim() || editName.trim() === cat.name}
                           >
                             {savingId === cat.categoryId ? (
                               <Loader2 className="h-3.5 w-3.5 animate-spin" />

@@ -184,10 +184,15 @@ const SupplierManagementModal: React.FC<SupplierManagementModalProps> = ({
           <p className="py-4 text-center text-sm text-destructive">{error}</p>
         ) : (
           <div className="max-h-[60vh] overflow-y-auto">
-            <table className="w-full text-sm">
+            <table className="w-full table-fixed text-sm">
+              <colgroup>
+                <col className="w-[60%]" />
+                <col className="w-[20%]" />
+                <col className="w-[20%]" />
+              </colgroup>
               <thead>
                 <tr className="border-b text-left text-muted-foreground">
-                  <th className="py-2 pr-4 font-medium">Supplier</th>
+                  <th className="py-2 px-4 font-medium">Supplier</th>
                   <th className="py-2 pr-4 text-center font-medium">Active</th>
                   <th className="py-2 text-center font-medium">Action</th>
                 </tr>
@@ -200,12 +205,12 @@ const SupplierManagementModal: React.FC<SupplierManagementModalProps> = ({
                   })
                   .map((sup) => (
                   <tr key={sup.supplierId} className="border-b last:border-0">
-                    <td className="py-2 pr-4">
+                    <td className="py-2 px-4">
                       {editingId === sup.supplierId ? (
                         <Input
                           value={editName}
                           onChange={(e) => { setEditName(e.target.value); setEditError(null); }}
-                          className="h-7 text-sm max-w-48"
+                          className="h-7 text-sm w-full px-2"
                           autoFocus
                           onKeyDown={(e) => {
                             if (e.key === "Enter") handleSaveEdit(sup.supplierId);
@@ -242,7 +247,7 @@ const SupplierManagementModal: React.FC<SupplierManagementModalProps> = ({
                             size="icon"
                             className="h-7 w-7 bg-muted-foreground/10 hover:bg-muted-foreground/20"
                             onClick={() => handleSaveEdit(sup.supplierId)}
-                            disabled={savingId === sup.supplierId || !editName.trim()}
+                            disabled={savingId === sup.supplierId || !editName.trim() || editName.trim() === sup.name}
                           >
                             {savingId === sup.supplierId ? (
                               <Loader2 className="h-3.5 w-3.5 animate-spin" />
