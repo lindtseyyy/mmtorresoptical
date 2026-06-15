@@ -357,7 +357,7 @@ public class ProductService {
                     .orElseThrow(() -> new IllegalArgumentException("Category not found with id: " + categoryId));
         }
         if (newCategoryName != null && !newCategoryName.isBlank()) {
-            Category result = categoryService.findOrCreate(newCategoryName.trim(), categoryType);
+            Category result = categoryService.findOrCreate(newCategoryName.trim(), categoryType, false);
             System.out.println(">>> Created/found category: " + result.getCategoryId() + " = " + result.getName());
             return result;
         }

@@ -39,6 +39,7 @@ public class CategoryService {
                             .name(cat.getName())
                             .categoryType(cat.getCategoryType().name())
                             .isActive(cat.getIsActive())
+                            .isPerishable(cat.getIsPerishable())
                             .productCount(count)
                             .build();
                 })
@@ -46,20 +47,21 @@ public class CategoryService {
     }
 
     @Transactional
-    public Category findOrCreate(String name, CategoryType type) {
+    public Category findOrCreate(String name, CategoryType type, boolean isPerishable) {
         return categoryRepository.findByNameIgnoreCaseAndCategoryType(name.trim(), type)
                 .orElseGet(() -> {
                     Category category = new Category();
                     category.setName(name.trim());
                     category.setCategoryType(type);
                     category.setIsActive(true);
+                    category.setIsPerishable(isPerishable);
                     return categoryRepository.saveAndFlush(category);
                 });
     }
 
     @Transactional
-    public CategoryDTO createCategory(String name, CategoryType type) {
-        Category category = findOrCreate(name, type);
+    public CategoryDTO createCategory(String name, CategoryType type, boolean isPerishable) {
+        Category category = findOrCreate(name, type, isPerishable);
         return toDTO(category);
     }
 

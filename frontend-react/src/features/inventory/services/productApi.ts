@@ -109,9 +109,9 @@ const fetchProductSummaries = async (keyword?: string, category?: string): Promi
   return data;
 };
 
-const createCategory = async (name: string, type: string): Promise<CategoryDTO> => {
+const createCategory = async (name: string, type: string, isPerishable = false): Promise<CategoryDTO> => {
   const { data } = await api.post("/categories", null, {
-    params: { name, type },
+    params: { name, type, isPerishable },
   });
   return data;
 };

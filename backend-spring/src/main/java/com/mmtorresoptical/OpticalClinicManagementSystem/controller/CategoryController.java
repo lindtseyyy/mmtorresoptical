@@ -24,8 +24,9 @@ public class CategoryController {
     @PostMapping
     public ResponseEntity<CategoryDTO> createCategory(
             @RequestParam String name,
-            @RequestParam CategoryType type) {
-        return ResponseEntity.status(HttpStatus.CREATED).body(categoryService.createCategory(name, type));
+            @RequestParam CategoryType type,
+            @RequestParam(required = false, defaultValue = "false") Boolean isPerishable) {
+        return ResponseEntity.status(HttpStatus.CREATED).body(categoryService.createCategory(name, type, isPerishable));
     }
 
     @GetMapping

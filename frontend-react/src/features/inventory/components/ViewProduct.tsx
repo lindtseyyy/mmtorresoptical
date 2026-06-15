@@ -133,7 +133,7 @@ const ViewProduct: React.FC = () => {
                   </Badge>
                   {!product.isArchived && !isService && product.reorderPoint != null && product.quantity > 0 && product.quantity <= product.reorderPoint && (
                     <Badge className="bg-yellow-700 text-white hover:bg-yellow-700 cursor-default">
-                      Reorder
+                      Needs Reordering
                     </Badge>
                   )}
                   {!product.isArchived && !isService && product.quantity <= 0 && (
@@ -148,7 +148,7 @@ const ViewProduct: React.FC = () => {
                   )}
                   {product.isSeniorPwdEligible && (
                     <Badge className="bg-green-700 text-white hover:bg-green-700 cursor-default">
-                      Senior/PWD Eligible
+                      Senior/PWD Discount Eligible
                     </Badge>
                   )}
                 </div>

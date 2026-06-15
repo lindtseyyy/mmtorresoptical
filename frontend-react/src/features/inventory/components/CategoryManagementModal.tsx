@@ -54,6 +54,7 @@ const CategoryManagementModal: React.FC<CategoryManagementModalProps> = ({
   const [editError, setEditError] = useState<string | null>(null);
   const [newName, setNewName] = useState("");
   const [newType, setNewType] = useState<"PHYSICAL" | "SERVICE">("PHYSICAL");
+  const [newPerishable, setNewPerishable] = useState(false);
   const [adding, setAdding] = useState(false);
   const [addError, setAddError] = useState<string | null>(null);
 
@@ -71,7 +72,13 @@ const CategoryManagementModal: React.FC<CategoryManagementModalProps> = ({
   };
 
   useEffect(() => {
-    if (open) loadCategories();
+    if (open) {
+      loadCategories();
+      setNewName("");
+      setNewType("PHYSICAL");
+      setNewPerishable(false);
+      setAddError(null);
+    }
   }, [open]);
 
   const handleToggle = async (id: string) => {
@@ -97,9 +104,14 @@ const CategoryManagementModal: React.FC<CategoryManagementModalProps> = ({
     setTogglingPerishableId(id);
     try {
       await toggleCategoryPerishable(id);
+      const cat = categories.find((c) => c.categoryId === id);
+      const nowPerishable = !cat?.isPerishable;
       setCategories((prev) =>
-        prev.map((c) => (c.categoryId === id ? { ...c, isPerishable: !c.isPerishable } : c))
+        prev.map((c) => (c.categoryId === id ? { ...c, isPerishable: nowPerishable } : c))
       );
+      toast.success(nowPerishable ? "Marked as Perishable" : "Marked as Non-Perishable", {
+        description: `"${cat?.name}" will ${nowPerishable ? "now track batches and expiry dates" : "no longer track batches and expiry dates"}.`,
+      });
       onCategoriesChanged();
     } catch {
       setError("Failed to toggle perishable status.");
@@ -157,8 +169,9 @@ const CategoryManagementModal: React.FC<CategoryManagementModalProps> = ({
     setAdding(true);
     setAddError(null);
     try {
-      await createCategory(trimmed, newType);
+      await createCategory(trimmed, newType, newType === "PHYSICAL" ? newPerishable : false);
       setNewName("");
+      setNewPerishable(false);
       toast.success("Category Created", {
         description: `"${trimmed}" has been added as a ${newType.toLowerCase()} category.`,
       });
@@ -189,7 +202,7 @@ const CategoryManagementModal: React.FC<CategoryManagementModalProps> = ({
             className="flex-1"
             disabled={adding}
           />
-          <Select value={newType} onValueChange={(v) => setNewType(v as "PHYSICAL" | "SERVICE")} disabled={adding}>
+          <Select value={newType} onValueChange={(v) => { setNewType(v as "PHYSICAL" | "SERVICE"); if (v === "SERVICE") setNewPerishable(false); }} disabled={adding}>
             <SelectTrigger className="w-[130px]">
               <SelectValue />
             </SelectTrigger>
@@ -198,6 +211,23 @@ const CategoryManagementModal: React.FC<CategoryManagementModalProps> = ({
               <SelectItem value="SERVICE">Service</SelectItem>
             </SelectContent>
           </Select>
+          {newType === "PHYSICAL" && (
+            <TooltipProvider>
+              <Tooltip>
+                <TooltipTrigger asChild>
+                  <div className="flex items-center gap-1.5">
+                    <Switch
+                      checked={newPerishable}
+                      onCheckedChange={setNewPerishable}
+                      disabled={adding}
+                    />
+                    <span className="text-xs text-muted-foreground whitespace-nowrap">Perishable</span>
+                  </div>
+                </TooltipTrigger>
+                <TooltipContent>Perishable (batch + expiry tracking)</TooltipContent>
+              </Tooltip>
+            </TooltipProvider>
+          )}
           <Button
             size="sm"
             onClick={handleAdd}
