@@ -1,6 +1,6 @@
 import api from "@/shared/lib/axiosInstance";
 import type { PageResponse } from "@/shared/types";
-import type { Product, ProductFormData, InventorySummary, ProductMetrics, ProductSummary, CategoryDTO, SupplierDTO, SupplierWithProductCountDTO, CategoryWithProductCountDTO, ProductBatch, AddStockRequest, RemoveStockRequest } from "@/features/inventory/types";
+import type { Product, ProductFormData, InventorySummary, ProductMetrics, ProductSummary, CategoryDTO, SupplierDTO, SupplierWithProductCountDTO, CategoryWithProductCountDTO, ProductBatch, BatchBreakdownResponse, AddStockRequest, RemoveStockRequest } from "@/features/inventory/types";
 
 const fetchProducts = async (
   page = 0,
@@ -189,7 +189,7 @@ const deleteSupplier = async (supplierId: string): Promise<void> => {
   await api.delete(`/suppliers/${supplierId}`);
 };
 
-const fetchProductBatches = async (productId: string): Promise<ProductBatch[]> => {
+const fetchProductBatches = async (productId: string): Promise<BatchBreakdownResponse> => {
   const { data } = await api.get(`/products/${productId}/batches`);
   return data;
 };

@@ -213,9 +213,10 @@ public class ProductService {
     }
 
     public ProductDetailsDTO getProduct(UUID id) {
-        // Retrieve prescription or throw exception if not found
         Product retrievedProduct = productRepository.findById(id)
                 .orElseThrow(() -> new ResourceNotFoundException("Product not found with id: " + id));
+
+        productBatchService.syncProductQuantity(id);
 
         ProductDetailsDTO dto = productMapper.entityToDetailsDTO(retrievedProduct);
         inventoryAnalyticsService.enrichWithReorderPoints(List.of(dto));

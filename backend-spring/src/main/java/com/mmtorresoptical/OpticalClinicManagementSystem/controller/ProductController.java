@@ -1,6 +1,7 @@
 package com.mmtorresoptical.OpticalClinicManagementSystem.controller;
 
 import com.mmtorresoptical.OpticalClinicManagementSystem.dto.batch.AddStockRequestDTO;
+import com.mmtorresoptical.OpticalClinicManagementSystem.dto.batch.BatchBreakdownResponse;
 import com.mmtorresoptical.OpticalClinicManagementSystem.dto.batch.ProductBatchDTO;
 import com.mmtorresoptical.OpticalClinicManagementSystem.dto.batch.RemoveStockRequestDTO;
 import com.mmtorresoptical.OpticalClinicManagementSystem.dto.product.CreateProductRequestDTO;
@@ -198,7 +199,7 @@ public class ProductController {
     }
 
     @GetMapping("/{id}/batches")
-    public ResponseEntity<List<ProductBatchDTO>> getProductBatches(@PathVariable UUID id) {
+    public ResponseEntity<BatchBreakdownResponse> getProductBatches(@PathVariable UUID id) {
         return ResponseEntity.ok(productBatchService.getBatchBreakdown(id));
     }
 

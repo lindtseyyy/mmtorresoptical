@@ -1,6 +1,7 @@
 package com.mmtorresoptical.OpticalClinicManagementSystem.services.controller;
 
 import com.mmtorresoptical.OpticalClinicManagementSystem.dto.batch.AddStockRequestDTO;
+import com.mmtorresoptical.OpticalClinicManagementSystem.dto.batch.BatchBreakdownResponse;
 import com.mmtorresoptical.OpticalClinicManagementSystem.dto.batch.ProductBatchDTO;
 import com.mmtorresoptical.OpticalClinicManagementSystem.dto.batch.RemoveStockRequestDTO;
 import com.mmtorresoptical.OpticalClinicManagementSystem.dto.refund.RefundBatchAllocationDTO;
@@ -196,11 +197,11 @@ public class ProductBatchService {
         syncProductQuantity(item.getProduct().getProductId());
     }
 
-    public List<ProductBatchDTO> getBatchBreakdown(UUID productId) {
+    public BatchBreakdownResponse getBatchBreakdown(UUID productId) {
         List<ProductBatch> batches = productBatchRepository.findAllByProductId(productId);
         LocalDate today = LocalDate.now();
 
-        return batches.stream()
+        List<ProductBatchDTO> batchDTOs = batches.stream()
                 .map(batch -> {
                     String status = computeBatchStatus(batch, today);
                     return ProductBatchDTO.builder()
@@ -215,6 +216,19 @@ public class ProductBatchService {
                             .build();
                 })
                 .toList();
+
+        int availableQuantity = batches.stream()
+                .filter(batch -> {
+                    String status = computeBatchStatus(batch, today);
+                    return !"EXPIRED".equals(status) && !"DEPLETED".equals(status);
+                })
+                .mapToInt(ProductBatch::getQuantityRemaining)
+                .sum();
+
+        return BatchBreakdownResponse.builder()
+                .batches(batchDTOs)
+                .availableQuantity(availableQuantity)
+                .build();
     }
 
     public List<ProductBatchDTO> getAvailableBatchesForDropdown(UUID productId) {
@@ -267,7 +281,7 @@ public class ProductBatchService {
         }
     }
 
-    private void syncProductQuantity(UUID productId) {
+    public void syncProductQuantity(UUID productId) {
         int total = productBatchRepository.sumAvailableQuantity(productId);
         Product product = productRepository.findById(productId)
                 .orElseThrow(() -> new ResourceNotFoundException("Product not found: " + productId));

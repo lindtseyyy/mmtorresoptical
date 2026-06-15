@@ -235,6 +235,11 @@ export interface ProductBatch {
   status: "HEALTHY" | "NEAR_EXPIRY" | "EXPIRED" | "DEPLETED";
 }
 
+export interface BatchBreakdownResponse {
+  batches: ProductBatch[];
+  availableQuantity: number;
+}
+
 export interface AddStockRequest {
   quantity: number;
   batchNumber?: string;

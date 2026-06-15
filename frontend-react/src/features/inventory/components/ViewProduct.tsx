@@ -1,7 +1,7 @@
 import { useState } from "react";
 import { useParams, Link, useNavigate } from "react-router-dom";
 import { useQuery } from "@tanstack/react-query";
-import { ArrowLeft, ChevronRight, Package, ShoppingCart, Banknote, Calendar, Hash, TrendingUp, Layers, Glasses, ImageOff } from "lucide-react";
+import { ArrowLeft, Package, ShoppingCart, Banknote, Calendar, Hash, TrendingUp, Layers, Glasses, ImageOff } from "lucide-react";
 import StockAdjustmentModal from "./StockAdjustmentModal";
 import { Button } from "@/shared/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/shared/components/ui/card";
@@ -11,10 +11,8 @@ import {
   fetchProduct,
   fetchProductMetrics,
 } from "@/features/inventory/services/productApi";
-import { fetchProductTransactions } from "@/features/sales/services/transactionApi";
 import { createProductBatchesQueryOptions } from "@/features/inventory/hooks/productQuery";
-import type { TransactionListItem } from "@/features/sales/types";
-import type { ProductBatch } from "@/features/inventory/types";
+import type { ProductBatch, BatchBreakdownResponse } from "@/features/inventory/types";
 import { isAdmin } from "@/shared/lib/auth";
 import { getImageUrl } from "@/shared/lib/utils";
 
@@ -24,17 +22,6 @@ const formatDate = (dateStr: string | null) => {
     year: "numeric",
     month: "short",
     day: "numeric",
-  });
-};
-
-const formatDateTime = (dateStr: string | null) => {
-  if (!dateStr) return "—";
-  return new Date(dateStr).toLocaleString("en-US", {
-    year: "numeric",
-    month: "short",
-    day: "numeric",
-    hour: "2-digit",
-    minute: "2-digit",
   });
 };
 
@@ -58,18 +45,15 @@ const ViewProduct: React.FC = () => {
   const [adjustModalOpen, setAdjustModalOpen] = useState(false);
   const [imgFailed, setImgFailed] = useState(false);
 
-  const { data: txData, isFetching: txFetching } = useQuery({
-    queryKey: ["product-transactions", productId],
-    queryFn: () => fetchProductTransactions(productId, 0, 5),
-    enabled: !!productId,
-  });
-
   const isService = product?.productType === "SERVICE";
 
-  const { data: batches } = useQuery({
+  const { data: batchData } = useQuery({
     ...createProductBatchesQueryOptions(productId),
     enabled: !!productId && !!product && !isService,
   });
+
+  const batches = batchData?.batches;
+  const availableQuantity = batchData?.availableQuantity ?? product?.quantity ?? 0;
 
   if (productLoading) {
     return (
@@ -90,7 +74,7 @@ const ViewProduct: React.FC = () => {
     );
   }
 
-  const inventoryValue = product.unitPrice * product.quantity;
+  const inventoryValue = product.unitPrice * availableQuantity;
 
   return (
     <div className="mx-auto max-w-5xl space-y-6">
@@ -324,7 +308,7 @@ const ViewProduct: React.FC = () => {
               Inventory Batch Breakdown
             </CardTitle>
             <CardDescription>
-              Total available: <strong>{product.quantity}</strong> units
+              Total available: <strong>{availableQuantity}</strong> units
               {product.isPerishable && " (unexpired batches only)"}
             </CardDescription>
           </CardHeader>
@@ -341,7 +325,23 @@ const ViewProduct: React.FC = () => {
                     </tr>
                   </thead>
                   <tbody>
-                    {batches.map((batch: ProductBatch, idx: number) => (
+                    {[...batches].sort((a, b) => {
+                      const statusPriority = (batch: ProductBatch) => {
+                        if (batch.status === "EXPIRED") return 3;
+                        if (batch.status === "NEAR_EXPIRY") return 2;
+                        if (batch.status === "DEPLETED") return 4;
+                        if (batch.expiryDate) return 0;
+                        return 1;
+                      };
+                      const statusDiff = statusPriority(a) - statusPriority(b);
+                      if (statusDiff !== 0) return statusDiff;
+                      if (a.expiryDate && b.expiryDate) {
+                        const dateDiff = new Date(a.expiryDate).getTime() - new Date(b.expiryDate).getTime();
+                        if (dateDiff !== 0) return dateDiff;
+                      } else if (a.expiryDate) return -1;
+                      else if (b.expiryDate) return 1;
+                      return (a.batchNumber || "").localeCompare(b.batchNumber || "");
+                    }).map((batch: ProductBatch, idx: number) => (
                       <tr
                         key={batch.productBatchId}
                         className={idx % 2 === 0 ? "bg-muted/50" : ""}
@@ -350,7 +350,7 @@ const ViewProduct: React.FC = () => {
                         <td className="px-4 py-3">{batch.quantityRemaining}</td>
                         <td className="px-4 py-3">{formatDate(batch.expiryDate)}</td>
                         <td className="px-4 py-3">
-                          {batch.status === "EXPIRED" || (batch.expiryDate && new Date(batch.expiryDate) < new Date()) ? (
+                          {batch.status === "EXPIRED" ? (
                             <Badge className="bg-red-700 text-white hover:bg-red-700 cursor-default">Expired</Badge>
                           ) : batch.status === "NEAR_EXPIRY" ? (
                             <Badge className="bg-amber-700 text-white hover:bg-amber-700 cursor-default">Expiring Soon</Badge>
@@ -375,62 +375,6 @@ const ViewProduct: React.FC = () => {
           </CardContent>
         </Card>
       )}
-
-      {/* Recent Transactions */}
-      <Card>
-        <CardHeader>
-          <div className="flex items-center justify-between">
-            <div>
-              <CardTitle className="flex items-center gap-2">
-                <ShoppingCart className="h-5 w-5" />
-                Recent Transactions
-              </CardTitle>
-              <CardDescription>
-                {txData?.content?.length ?? 0} recent transaction(s)
-              </CardDescription>
-            </div>
-          </div>
-        </CardHeader>
-        <CardContent>
-          {txFetching && !txData ? (
-            <div className="flex items-center justify-center py-8">
-              <div className="h-8 w-8 animate-spin rounded-full border-4 border-primary border-t-transparent" />
-            </div>
-          ) : !txData || txData.content.length === 0 ? (
-            <p className="py-4 text-center text-sm text-muted-foreground">
-              No transactions recorded for this product.
-            </p>
-          ) : (
-            <div className="space-y-3">
-              {txData.content.map((tx: TransactionListItem) => (
-                <div
-                  key={tx.transactionId}
-                  className="rounded-lg border p-4 transition-colors bg-muted/60 hover:bg-muted cursor-pointer"
-                  onClick={() => navigate(`/transactions/${tx.transactionId}`)}
-                >
-                  <div className="flex items-center justify-between">
-                    <div className="space-y-1 flex-1 min-w-0">
-                      <span className="font-medium">
-                        {tx.transactionNumber}
-                      </span>
-                      <div className="flex items-center gap-4 text-sm text-muted-foreground">
-                        <span>{formatDateTime(tx.transactionDate)}</span>
-                        <span>₱ {tx.totalAmount.toFixed(2)}</span>
-                      </div>
-                      {tx.patient && (
-                        <p className="text-xs text-muted-foreground">
-                          Patient: {tx.patient.fullName}
-                        </p>
-                      )}
-                    </div>
-                    <ChevronRight className="h-5 w-5 shrink-0 text-muted-foreground" />
-                  </div>
-                </div>
-              ))}
-            </div>
-          )}
-        </CardContent>
-      </Card>
 
       {!isService && (
         <StockAdjustmentModal
