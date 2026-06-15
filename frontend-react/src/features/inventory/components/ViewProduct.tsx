@@ -318,9 +318,9 @@ const ViewProduct: React.FC = () => {
                 <table className="w-full table-fixed text-sm">
                   <thead>
                     <tr className="border-b bg-muted/50">
-                      <th className="px-4 py-3 text-left font-medium w-1/4">Batch Number</th>
-                      <th className="px-4 py-3 text-left font-medium w-1/4">Qty Remaining</th>
                       <th className="px-4 py-3 text-left font-medium w-1/4">Expiry Date</th>
+                      <th className="px-4 py-3 text-left font-medium w-1/4">Batch Number</th>
+                      <th className="px-4 py-3 text-right font-medium w-1/4">Qty Remaining</th>
                       <th className="px-4 py-3 text-left font-medium w-1/4">Status</th>
                     </tr>
                   </thead>
@@ -346,9 +346,9 @@ const ViewProduct: React.FC = () => {
                         key={batch.productBatchId}
                         className={idx % 2 === 0 ? "bg-muted/50" : ""}
                       >
+                        <td className="px-4 py-3 text-muted-foreground">{formatDate(batch.expiryDate)}</td>
                         <td className="px-4 py-3 font-mono text-xs">{batch.batchNumber}</td>
-                        <td className="px-4 py-3">{batch.quantityRemaining}</td>
-                        <td className="px-4 py-3">{formatDate(batch.expiryDate)}</td>
+                        <td className="px-4 py-3 text-right">{batch.quantityRemaining}</td>
                         <td className="px-4 py-3">
                           {batch.status === "EXPIRED" ? (
                             <Badge className="bg-red-700 text-white hover:bg-red-700 cursor-default">Expired</Badge>
