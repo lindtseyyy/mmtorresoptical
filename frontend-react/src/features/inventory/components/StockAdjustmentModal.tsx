@@ -175,10 +175,7 @@ const StockAdjustmentModal: React.FC<StockAdjustmentModalProps> = ({
         <DialogHeader>
           <DialogTitle>Adjust Stock</DialogTitle>
           <DialogDescription>
-            {product.productName} — Current quantity: <strong>{product.quantity}</strong>
-            {product.isPerishable && (
-              <span className="ml-2 text-xs text-amber-500">(Perishable — batch tracked)</span>
-            )}
+            Current quantity: <strong>{product.quantity}</strong>
           </DialogDescription>
         </DialogHeader>
 
