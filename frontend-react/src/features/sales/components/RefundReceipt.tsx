@@ -2,7 +2,7 @@ import { useRef } from "react";
 import { Dialog, DialogContent } from "@/shared/components/ui/dialog";
 import { Button } from "@/shared/components/ui/button";
 import { Printer } from "lucide-react";
-import type { ItemRefundResponse, TransactionResponse } from "@/features/sales/types";
+import type { ItemRefundResponse, TransactionResponse, RefundReceiptData } from "@/features/sales/types";
 
 const BUSINESS_NAME = "MM Torres Optical Clinic";
 const BUSINESS_ADDRESS = "259 Shoe Avenue, Sto. Niño, Marikina City, 1806";
@@ -12,27 +12,50 @@ const BUSINESS_PHONE = "(02) 933 7725";
 interface RefundReceiptProps {
   open: boolean;
   onClose: () => void;
-  refundData: ItemRefundResponse;
+  refundData?: ItemRefundResponse;
   transaction: TransactionResponse;
+  reprintData?: RefundReceiptData;
 }
 
 const formatCurrency = (amount: number) =>
   amount.toLocaleString("en-US", { minimumFractionDigits: 2, maximumFractionDigits: 2 });
 
-const RefundReceipt: React.FC<RefundReceiptProps> = ({ open, onClose, refundData, transaction }) => {
+const RefundReceipt: React.FC<RefundReceiptProps> = ({ open, onClose, refundData, transaction, reprintData }) => {
   const receiptRef = useRef<HTMLDivElement>(null);
 
-  const now = new Date();
-  const dateStr = now.toLocaleDateString(undefined, { year: "numeric", month: "long", day: "numeric" });
-  const timeStr = now.toLocaleTimeString(undefined, { hour: "2-digit", minute: "2-digit", second: "2-digit" });
+  const isReprint = !!reprintData;
+
+  const dateStr = isReprint
+    ? new Date(reprintData.createdAt).toLocaleDateString(undefined, { year: "numeric", month: "long", day: "numeric" })
+    : new Date().toLocaleDateString(undefined, { year: "numeric", month: "long", day: "numeric" });
+  const timeStr = isReprint
+    ? new Date(reprintData.createdAt).toLocaleTimeString(undefined, { hour: "2-digit", minute: "2-digit", second: "2-digit" })
+    : new Date().toLocaleTimeString(undefined, { hour: "2-digit", minute: "2-digit", second: "2-digit" });
+
+  const receiptNumber = isReprint ? reprintData.receiptNumber : refundData!.refundReceipt.receiptNumber;
+  const clerkName = isReprint ? reprintData.issuedByFullName : refundData!.refundReceipt.issuedByFullName;
+  const cashRefunded = isReprint ? reprintData.actualCashback : refundData!.cashToReturn;
+  const refundMethod = isReprint ? reprintData.refundMethod : refundData!.refundReceipt.refundMethod;
+  const gcashNumber = isReprint ? reprintData.gcashNumber : refundData!.refundReceipt.gcashNumber;
+  const referenceNumber = isReprint ? reprintData.referenceNumber : refundData!.refundReceipt.referenceNumber;
+
+  const items = isReprint
+    ? reprintData.refundItems.map((item) => ({
+        productName: item.productName,
+        quantity: item.quantityRefunded,
+        amount: item.unitPrice * item.quantityRefunded,
+      }))
+    : (refundData!.refundedItems ?? []).map((item) => ({
+        productName: item.productName,
+        quantity: item.refundQuantity,
+        amount: item.unitPrice * item.refundQuantity,
+      }));
 
   const handlePrint = () => {
     window.print();
   };
 
   if (!open) return null;
-
-  const r = refundData;
 
   return (
     <Dialog open={open} onOpenChange={onClose}>
@@ -51,13 +74,16 @@ const RefundReceipt: React.FC<RefundReceiptProps> = ({ open, onClose, refundData
         {/* ---- Document Title ---- */}
         <div className="text-center mb-3">
           <h3 className="text-xs font-bold uppercase tracking-wide">REFUND RECEIPT / CREDIT NOTE</h3>
+          {isReprint && (
+            <p className="text-[10px] text-muted-foreground mt-1 italic">DUPLICATE COPY</p>
+          )}
         </div>
 
         {/* ---- Metadata ---- */}
         <div className="space-y-0.5 mb-3">
           <div className="flex justify-between">
             <span className="text-muted-foreground">Receipt #</span>
-            <span className="font-semibold">{r.refundReceipt.receiptNumber}</span>
+            <span className="font-semibold">{receiptNumber}</span>
           </div>
           <div className="flex justify-between">
             <span className="text-muted-foreground">Original Txn</span>
@@ -73,7 +99,7 @@ const RefundReceipt: React.FC<RefundReceiptProps> = ({ open, onClose, refundData
           </div>
           <div className="flex justify-between">
             <span className="text-muted-foreground">Clerk</span>
-            <span>{r.refundReceipt.issuedByFullName}</span>
+            <span>{clerkName}</span>
           </div>
         </div>
 
@@ -89,12 +115,12 @@ const RefundReceipt: React.FC<RefundReceiptProps> = ({ open, onClose, refundData
             </tr>
           </thead>
           <tbody>
-            {(r.refundedItems ?? []).map((item, idx) => (
+            {items.map((item, idx) => (
               <tr key={idx} className="border-b border-border/30">
                 <td className="py-1">{item.productName}</td>
-                <td className="py-1 text-center">{item.refundQuantity}</td>
+                <td className="py-1 text-center">{item.quantity}</td>
                 <td className="py-1 text-right text-red-600 tabular-nums">
-                  -₱{formatCurrency(item.unitPrice * item.refundQuantity)}
+                  -₱{formatCurrency(item.amount)}
                 </td>
               </tr>
             ))}
@@ -107,12 +133,30 @@ const RefundReceipt: React.FC<RefundReceiptProps> = ({ open, onClose, refundData
         <div className="space-y-0.5 mb-3">
           <div className="flex justify-between font-semibold">
             <span>Cash Refunded to Patient:</span>
-            <span className="tabular-nums text-red-600">₱{formatCurrency(r.cashToReturn)}</span>
+            <span className="tabular-nums text-red-600">₱{formatCurrency(cashRefunded)}</span>
           </div>
-          <div className="flex justify-between text-muted-foreground">
-            <span>Updated Remaining Order Balance:</span>
-            <span className="tabular-nums">₱{formatCurrency(r.newRemainingDue)}</span>
-          </div>
+          {refundMethod && (
+            <div className="flex justify-between text-muted-foreground">
+              <span>Refund Method:</span>
+              <span>{refundMethod === "BALANCE_ADJUSTMENT" ? "Balance Adjustment" : refundMethod}</span>
+            </div>
+          )}
+          {(refundMethod === "GCASH" && (gcashNumber || referenceNumber)) && (
+            <>
+              {gcashNumber && (
+                <div className="flex justify-between text-muted-foreground">
+                  <span>GCash No:</span>
+                  <span>{gcashNumber}</span>
+                </div>
+              )}
+              {referenceNumber && (
+                <div className="flex justify-between text-muted-foreground">
+                  <span>Reference No:</span>
+                  <span>{referenceNumber}</span>
+                </div>
+              )}
+            </>
+          )}
         </div>
 
         <hr className="border-dashed border-border mb-3" />

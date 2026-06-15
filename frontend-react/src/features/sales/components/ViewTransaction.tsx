@@ -160,6 +160,9 @@ const ViewTransaction: React.FC = () => {
   const [reprintReceiptOpen, setReprintReceiptOpen] = useState(false);
   const [statementOpen, setStatementOpen] = useState(false);
 
+  // ── Refund receipt reprint state ──
+  const [reprintRefundReceipt, setReprintRefundReceipt] = useState<RefundReceiptData | null>(null);
+
   // ── Fulfillment dialog state ──
   const [fulfillDialogOpen, setFulfillDialogOpen] = useState(false);
   const [fulfillTarget, setFulfillTarget] = useState<"FOR_PICKUP" | "COMPLETED" | null>(null);
@@ -746,8 +749,19 @@ const ViewTransaction: React.FC = () => {
                           {formatDateTime(receipt.createdAt)}
                         </p>
                       </div>
-                      <div className="text-xs text-muted-foreground">
-                        {receipt.issuedByFullName}
+                      <div className="flex items-center gap-2">
+                        <div className="text-xs text-muted-foreground">
+                          {receipt.issuedByFullName}
+                        </div>
+                        <Button
+                          size="sm"
+                          variant="outline"
+                          className="h-7 gap-1"
+                          onClick={() => setReprintRefundReceipt(receipt)}
+                        >
+                          <Printer className="h-3.5 w-3.5" />
+                          Reprint
+                        </Button>
                       </div>
                     </div>
 
@@ -992,6 +1006,16 @@ const ViewTransaction: React.FC = () => {
             setLastRefundResponse(null);
           }}
           refundData={lastRefundResponse}
+          transaction={tx}
+        />
+      )}
+
+      {/* Refund Receipt Reprint Dialog */}
+      {tx && reprintRefundReceipt && (
+        <RefundReceipt
+          open={!!reprintRefundReceipt}
+          onClose={() => setReprintRefundReceipt(null)}
+          reprintData={reprintRefundReceipt}
           transaction={tx}
         />
       )}
