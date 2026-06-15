@@ -163,6 +163,9 @@ const ViewTransaction: React.FC = () => {
   // ── Refund receipt reprint state ──
   const [reprintRefundReceipt, setReprintRefundReceipt] = useState<RefundReceiptData | null>(null);
 
+  // ── Payment receipt reprint state ──
+  const [reprintPayment, setReprintPayment] = useState<PaymentResponse | null>(null);
+
   // ── Fulfillment dialog state ──
   const [fulfillDialogOpen, setFulfillDialogOpen] = useState(false);
   const [fulfillTarget, setFulfillTarget] = useState<"FOR_PICKUP" | "COMPLETED" | null>(null);
@@ -538,7 +541,8 @@ const ViewTransaction: React.FC = () => {
                       <th className="py-2 pr-4 text-right font-medium">Amount</th>
                       <th className="py-2 pr-4 font-medium">Method</th>
                       <th className="py-2 pr-4 font-medium">GCash No.</th>
-                      <th className="py-2 font-medium">Reference</th>
+                      <th className="py-2 pr-4 font-medium">Reference</th>
+                      <th className="py-2 font-medium"></th>
                     </tr>
                   </thead>
                   <tbody>
@@ -552,7 +556,18 @@ const ViewTransaction: React.FC = () => {
                         </td>
                         <td className="py-2 pr-4 capitalize">{p.paymentMethod}</td>
                         <td className="py-2 pr-4">{p.gcashNumber || "—"}</td>
-                        <td className="py-2">{p.referenceNumber || "—"}</td>
+                        <td className="py-2 pr-4">{p.referenceNumber || "—"}</td>
+                        <td className="py-2">
+                          <Button
+                            size="sm"
+                            variant="outline"
+                            className="h-7 gap-1"
+                            onClick={() => setReprintPayment(p)}
+                          >
+                            <Printer className="h-3.5 w-3.5" />
+                            Reprint
+                          </Button>
+                        </td>
                       </tr>
                     ))}
                   </tbody>
@@ -1049,6 +1064,27 @@ const ViewTransaction: React.FC = () => {
           payment={lastPayment}
         />
       )}
+
+      {/* Payment Receipt Reprint Dialog */}
+      {tx && reprintPayment && (() => {
+        const sortedPayments = [...tx.payments].sort(
+          (a, b) => new Date(a.createdAt).getTime() - new Date(b.createdAt).getTime()
+        );
+        const idx = sortedPayments.findIndex((p) => p.id === reprintPayment.id);
+        const previousPaid = idx > 0
+          ? sortedPayments.slice(0, idx).reduce((sum, p) => sum + p.amount, 0)
+          : 0;
+        return (
+          <PaymentReceipt
+            open={!!reprintPayment}
+            onClose={() => setReprintPayment(null)}
+            transaction={tx}
+            payment={reprintPayment}
+            isReprint
+            previousPaid={previousPaid}
+          />
+        );
+      })()}
     </div>
   );
 };

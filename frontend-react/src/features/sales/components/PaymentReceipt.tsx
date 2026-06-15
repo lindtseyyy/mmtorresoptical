@@ -13,6 +13,8 @@ interface PaymentReceiptProps {
   onClose: () => void;
   transaction: TransactionResponse;
   payment: PaymentResponse;
+  isReprint?: boolean;
+  previousPaid?: number;
 }
 
 const formatDateTime = (dateStr: string) =>
@@ -31,8 +33,14 @@ const PaymentReceipt: React.FC<PaymentReceiptProps> = ({
   onClose,
   transaction: tx,
   payment,
+  isReprint,
+  previousPaid: previousPaidProp,
 }) => {
   if (!open) return null;
+
+  const previousPaid = previousPaidProp ?? ((tx.amountPaid ?? 0) - payment.amount);
+  const totalPaidAtTime = previousPaid + payment.amount;
+  const balanceDueAtTime = Math.max(0, tx.totalAmount - totalPaidAtTime);
 
   const handlePrint = () => window.print();
 
@@ -45,6 +53,9 @@ const PaymentReceipt: React.FC<PaymentReceiptProps> = ({
           <h2 className="text-xs font-bold tracking-wide uppercase text-muted-foreground mb-1">
             PAYMENT RECEIPT
           </h2>
+          {isReprint && (
+            <p className="text-[10px] text-muted-foreground mb-1 italic">DUPLICATE COPY</p>
+          )}
           <h2 className="text-sm font-bold tracking-wide uppercase">
             {BUSINESS_NAME}
           </h2>
@@ -83,7 +94,7 @@ const PaymentReceipt: React.FC<PaymentReceiptProps> = ({
           </div>
           <div className="flex justify-between">
             <span className="text-muted-foreground">Previous Paid</span>
-            <span className="tabular-nums">₱{format2((tx.amountPaid ?? 0) - payment.amount)}</span>
+            <span className="tabular-nums">₱{format2(previousPaid)}</span>
           </div>
           <div className="flex justify-between font-bold text-green-600">
             <span>Additional Payment</span>
@@ -92,11 +103,11 @@ const PaymentReceipt: React.FC<PaymentReceiptProps> = ({
           <hr className="border-dashed border-border my-1" />
           <div className="flex justify-between font-bold">
             <span>Total Paid</span>
-            <span className="tabular-nums">₱{format2(tx.amountPaid ?? 0)}</span>
+            <span className="tabular-nums">₱{format2(totalPaidAtTime)}</span>
           </div>
           <div className="flex justify-between font-bold text-sm">
             <span>Balance Due</span>
-            <span className="tabular-nums">₱{format2(tx.balanceDue ?? 0)}</span>
+            <span className="tabular-nums">₱{format2(balanceDueAtTime)}</span>
           </div>
         </div>
 
@@ -128,15 +139,15 @@ const PaymentReceipt: React.FC<PaymentReceiptProps> = ({
         <div className="rounded-sm bg-muted/50 px-2 py-1.5 mb-3">
           <div className="flex justify-between">
             <span className="text-muted-foreground">Transaction Status</span>
-            <span className={`font-semibold rounded-sm px-1.5 py-0.5 text-xs text-white leading-none inline-flex items-center ${(tx.amountPaid ?? 0) >= tx.totalAmount ? "bg-green-600" : "bg-orange-600"}`}>
-              {(tx.amountPaid ?? 0) >= tx.totalAmount ? "PAID" : "DEPOSIT"}
+            <span className={`font-semibold rounded-sm px-1.5 py-0.5 text-xs text-white leading-none inline-flex items-center ${totalPaidAtTime >= tx.totalAmount ? "bg-green-600" : "bg-orange-600"}`}>
+              {totalPaidAtTime >= tx.totalAmount ? "PAID" : "DEPOSIT"}
             </span>
           </div>
         </div>
 
         {/* Footer */}
         <div className="text-center text-[10px] text-muted-foreground space-y-1">
-          <p>This receipt serves as proof of additional payment.</p>
+          <p>{previousPaid === 0 ? "This receipt serves as proof of deposit." : "This receipt serves as proof of additional payment."}</p>
           <p className="font-medium text-foreground text-xs mt-2">
             Thank you for choosing MM Torres Optical!
           </p>
