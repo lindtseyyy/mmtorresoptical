@@ -151,6 +151,17 @@ const ViewProduct: React.FC = () => {
                       Senior/PWD Discount Eligible
                     </Badge>
                   )}
+                  {!isService && (
+                    <Badge
+                      className={
+                        product.isPerishable
+                          ? "bg-blue-700 text-white hover:bg-blue-700 cursor-default"
+                          : "bg-gray-600 text-white hover:bg-gray-600 cursor-default"
+                      }
+                    >
+                      {product.isPerishable ? "Perishable" : "Non-Perishable"}
+                    </Badge>
+                  )}
                 </div>
               </div>
             </div>
