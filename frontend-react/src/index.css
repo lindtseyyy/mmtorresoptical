@@ -160,7 +160,7 @@ but with the "blue" theme colors from your HSL reference.
   margin: 0 auto;
   box-sizing: border-box;
   font-family: "Courier New", Courier, monospace;
-  font-size: 12px;
+  font-size: 10px;
   line-height: 1.2;
   color: #000;
   background: #fff;
@@ -172,6 +172,7 @@ but with the "blue" theme colors from your HSL reference.
   background: transparent !important;
   border-color: #000 !important;
   box-shadow: none !important;
+  font-size: 10px !important;
 }
 
 .receipt-canvas hr {
@@ -190,7 +191,7 @@ but with the "blue" theme colors from your HSL reference.
 }
 
 .receipt-title {
-  font-size: 14px;
+  font-size: 10px;
   font-weight: bold;
 }
 
@@ -268,7 +269,7 @@ but with the "blue" theme colors from your HSL reference.
     overflow: visible !important;
     max-height: none !important;
     font-family: "Courier New", Courier, monospace !important;
-    font-size: 12px !important;
+    font-size: 10px !important;
     line-height: 1.2 !important;
     color: black !important;
     background: white !important;
@@ -293,7 +294,7 @@ but with the "blue" theme colors from your HSL reference.
 
   /* Document title accents — business name & heading */
   .receipt-title {
-    font-size: 14px !important;
+    font-size: 10px !important;
     font-weight: bold !important;
   }
 

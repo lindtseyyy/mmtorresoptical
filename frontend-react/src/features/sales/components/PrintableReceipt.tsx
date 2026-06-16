@@ -102,16 +102,13 @@ const OriginalReceipt: React.FC<{
             {(tx.amountPaid ?? 0) >= tx.totalAmount ? "PAID" : "DEPOSIT"}
           </span>
         </div>
-      </div>
-
-      {tx.patient && (
-        <div className="mb-3">
+        {tx.patient && (
           <div className="flex justify-between">
             <span className="text-muted-foreground">Patient</span>
             <span>{tx.patient.fullName}</span>
           </div>
-        </div>
-      )}
+        )}
+      </div>
 
       {/* Senior/PWD Discount Info */}
       {tx.isSeniorPwdApplied && (
