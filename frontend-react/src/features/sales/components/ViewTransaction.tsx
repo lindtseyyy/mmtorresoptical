@@ -16,7 +16,6 @@ import {
   PackageOpen,
   PackageCheck,
   Printer,
-  FileText,
 } from "lucide-react";
 import { Button } from "@/shared/components/ui/button";
 import { isAdmin } from "@/shared/lib/auth";
@@ -158,7 +157,6 @@ const ViewTransaction: React.FC = () => {
 
   // ── Reprint receipt state ──
   const [reprintReceiptOpen, setReprintReceiptOpen] = useState(false);
-  const [statementOpen, setStatementOpen] = useState(false);
 
   // ── Refund receipt reprint state ──
   const [reprintRefundReceipt, setReprintRefundReceipt] = useState<RefundReceiptData | null>(null);
@@ -386,15 +384,6 @@ const ViewTransaction: React.FC = () => {
               >
                 <Printer className="h-3.5 w-3.5" />
                 Reprint Receipt
-              </Button>
-              <Button
-                size="sm"
-                variant="outline"
-                className="h-8 gap-1.5"
-                onClick={() => setStatementOpen(true)}
-              >
-                <FileText className="h-3.5 w-3.5" />
-                Statement of Account
               </Button>
             </div>
             <div className="flex items-center gap-2">
@@ -1042,14 +1031,6 @@ const ViewTransaction: React.FC = () => {
         transaction={tx}
         printMode="ORIGINAL"
         isReprint
-      />
-
-      {/* Statement of Account Dialog */}
-      <PrintableReceipt
-        open={statementOpen}
-        onClose={() => setStatementOpen(false)}
-        transaction={tx}
-        printMode="UPDATED"
       />
 
       {/* Payment Receipt Dialog */}
