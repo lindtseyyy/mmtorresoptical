@@ -47,7 +47,7 @@ const PaymentReceipt: React.FC<PaymentReceiptProps> = ({
   return (
     <Dialog open={open} onOpenChange={onClose}>
       <DialogContent>
-        <div className="font-mono text-xs leading-relaxed text-foreground max-h-[65vh] overflow-y-auto print:max-h-none print:overflow-visible">
+        <div className="receipt-canvas font-mono text-xs leading-relaxed text-foreground max-h-[65vh] overflow-y-auto print:max-h-none print:overflow-visible">
         {/* Header */}
         <div className="text-center mb-4">
           <h2 className="text-xs font-bold tracking-wide uppercase text-muted-foreground mb-1">
@@ -56,7 +56,7 @@ const PaymentReceipt: React.FC<PaymentReceiptProps> = ({
           {isReprint && (
             <p className="text-[10px] text-muted-foreground mb-1 italic">DUPLICATE COPY</p>
           )}
-          <h2 className="text-sm font-bold tracking-wide uppercase">
+          <h2 className="receipt-title text-sm font-bold tracking-wide uppercase">
             {BUSINESS_NAME}
           </h2>
           <p className="text-[10px] text-muted-foreground mt-0.5">{BUSINESS_ADDRESS}</p>
@@ -90,24 +90,24 @@ const PaymentReceipt: React.FC<PaymentReceiptProps> = ({
         <div className="space-y-0.5 mb-3">
           <div className="flex justify-between">
             <span className="text-muted-foreground">Original Total</span>
-            <span className="tabular-nums">₱{format2(tx.totalAmount)}</span>
+            <span className="receipt-num tabular-nums">₱{format2(tx.totalAmount)}</span>
           </div>
           <div className="flex justify-between">
             <span className="text-muted-foreground">Previous Paid</span>
-            <span className="tabular-nums">₱{format2(previousPaid)}</span>
+            <span className="receipt-num tabular-nums">₱{format2(previousPaid)}</span>
           </div>
           <div className="flex justify-between font-bold text-green-600">
             <span>Additional Payment</span>
-            <span className="tabular-nums">₱{format2(payment.amount)}</span>
+            <span className="receipt-num tabular-nums">₱{format2(payment.amount)}</span>
           </div>
           <hr className="border-dashed border-border my-1" />
           <div className="flex justify-between font-bold">
             <span>Total Paid</span>
-            <span className="tabular-nums">₱{format2(totalPaidAtTime)}</span>
+            <span className="receipt-num tabular-nums">₱{format2(totalPaidAtTime)}</span>
           </div>
           <div className="flex justify-between font-bold text-sm">
             <span>Balance Due</span>
-            <span className="tabular-nums">₱{format2(balanceDueAtTime)}</span>
+            <span className="receipt-num tabular-nums">₱{format2(balanceDueAtTime)}</span>
           </div>
         </div>
 
@@ -155,7 +155,7 @@ const PaymentReceipt: React.FC<PaymentReceiptProps> = ({
       </div>
 
       {/* Action buttons */}
-      <div className="flex gap-2 mt-4 print:hidden">
+      <div className="receipt-actions flex gap-2 mt-4 print:hidden">
         <Button className="flex-1" onClick={handlePrint}>
           <Printer className="mr-2 h-4 w-4" />
           Print Receipt

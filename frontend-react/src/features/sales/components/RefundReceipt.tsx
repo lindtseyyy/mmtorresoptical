@@ -60,10 +60,10 @@ const RefundReceipt: React.FC<RefundReceiptProps> = ({ open, onClose, refundData
   return (
     <Dialog open={open} onOpenChange={onClose}>
       <DialogContent>
-        <div ref={receiptRef} className="font-mono text-xs leading-relaxed text-foreground max-h-[65vh] overflow-y-auto print:max-h-none print:overflow-visible">
+        <div ref={receiptRef} className="receipt-canvas font-mono text-xs leading-relaxed text-foreground max-h-[65vh] overflow-y-auto print:max-h-none print:overflow-visible">
         {/* ---- Header ---- */}
         <div className="text-center mb-4">
-          <h2 className="text-sm font-bold tracking-wide uppercase">{BUSINESS_NAME}</h2>
+          <h2 className="receipt-title text-sm font-bold tracking-wide uppercase">{BUSINESS_NAME}</h2>
           <p className="text-[10px] text-muted-foreground mt-0.5">{BUSINESS_ADDRESS}</p>
           <p className="text-[10px] text-muted-foreground">{BUSINESS_ADDRESS_LINE2}</p>
           <p className="text-[10px] text-muted-foreground">{BUSINESS_PHONE}</p>
@@ -73,7 +73,7 @@ const RefundReceipt: React.FC<RefundReceiptProps> = ({ open, onClose, refundData
 
         {/* ---- Document Title ---- */}
         <div className="text-center mb-3">
-          <h3 className="text-xs font-bold uppercase tracking-wide">REFUND RECEIPT / CREDIT NOTE</h3>
+          <h3 className="receipt-title text-xs font-bold uppercase tracking-wide">REFUND RECEIPT / CREDIT NOTE</h3>
           {isReprint && (
             <p className="text-[10px] text-muted-foreground mt-1 italic">DUPLICATE COPY</p>
           )}
@@ -111,7 +111,7 @@ const RefundReceipt: React.FC<RefundReceiptProps> = ({ open, onClose, refundData
             <tr className="border-b border-border">
               <th className="text-left font-semibold pb-1">Item</th>
               <th className="text-center font-semibold pb-1 w-10">Qty</th>
-              <th className="text-right font-semibold pb-1 w-20">Amount</th>
+              <th className="receipt-num text-right font-semibold pb-1 w-20">Amount</th>
             </tr>
           </thead>
           <tbody>
@@ -119,7 +119,7 @@ const RefundReceipt: React.FC<RefundReceiptProps> = ({ open, onClose, refundData
               <tr key={idx} className="border-b border-border/30">
                 <td className="py-1">{item.productName}</td>
                 <td className="py-1 text-center">{item.quantity}</td>
-                <td className="py-1 text-right text-red-600 tabular-nums">
+                <td className="receipt-num py-1 text-right text-red-600 tabular-nums">
                   -₱{formatCurrency(item.amount)}
                 </td>
               </tr>
@@ -133,7 +133,7 @@ const RefundReceipt: React.FC<RefundReceiptProps> = ({ open, onClose, refundData
         <div className="space-y-0.5 mb-3">
           <div className="flex justify-between font-semibold">
             <span>Cash Refunded to Patient:</span>
-            <span className="tabular-nums text-red-600">₱{formatCurrency(cashRefunded)}</span>
+            <span className="receipt-num tabular-nums text-red-600">₱{formatCurrency(cashRefunded)}</span>
           </div>
           {refundMethod && (
             <div className="flex justify-between text-muted-foreground">
@@ -175,7 +175,7 @@ const RefundReceipt: React.FC<RefundReceiptProps> = ({ open, onClose, refundData
           </p>
         </div>
 
-        <div className="flex gap-2 mt-4 print:hidden">
+        <div className="receipt-actions flex gap-2 mt-4 print:hidden">
           <Button className="flex-1" onClick={handlePrint}>
             <Printer className="mr-2 h-4 w-4" />
             Print Receipt

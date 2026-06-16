@@ -148,3 +148,197 @@ but with the "blue" theme colors from your HSL reference.
     @apply bg-background text-foreground;
   }
 }
+
+/* ────────────────────────────────────────────────────────
+   80mm Thermal Receipt — Screen Preview Styles
+   Makes the dialog receipt look like the actual printed output.
+   ──────────────────────────────────────────────────────── */
+.receipt-canvas {
+  width: 80mm;
+  max-width: 80mm;
+  padding: 4mm 5mm;
+  margin: 0 auto;
+  box-sizing: border-box;
+  font-family: "Courier New", Courier, monospace;
+  font-size: 12px;
+  line-height: 1.2;
+  color: #000;
+  background: #fff;
+  border-radius: 0;
+}
+
+.receipt-canvas * {
+  color: #000 !important;
+  background: transparent !important;
+  border-color: #000 !important;
+  box-shadow: none !important;
+}
+
+.receipt-canvas hr {
+  border-color: #000 !important;
+}
+
+.receipt-canvas table {
+  width: 100%;
+  border-collapse: collapse;
+}
+
+.receipt-canvas [class*="rounded-sm"][class*="px-1"] {
+  border: 1px solid #000 !important;
+  background: transparent !important;
+  color: #000 !important;
+}
+
+.receipt-title {
+  font-size: 14px;
+  font-weight: bold;
+}
+
+.receipt-num {
+  font-family: "Courier New", Courier, monospace;
+  text-align: right;
+}
+
+.receipt-separator {
+  border-top: 1px dashed #000;
+  margin: 3mm 0;
+}
+
+/* ────────────────────────────────────────────────────────
+   80mm Thermal Receipt — Global Print Styles
+   ──────────────────────────────────────────────────────── */
+@media print {
+  /* Continuous page roll: 80mm wide, auto height, zero margin */
+  @page {
+    size: 80mm auto;
+    margin: 0mm;
+  }
+
+  /* ── 1. Hide the entire application shell ── */
+  /* The Radix dialog portal renders outside #root, so hiding #root
+     eliminates sidebar, main content, toasters, etc. from print output. */
+  #root {
+    display: none !important;
+  }
+
+  /* ── 2. Flatten the dialog portal container ── */
+  [data-radix-portal] {
+    position: static !important;
+    display: block !important;
+    z-index: auto !important;
+  }
+
+  /* Hide dialog overlay */
+  [data-radix-dialog-overlay] {
+    display: none !important;
+  }
+
+  /* Flatten dialog content to a plain block */
+  [data-radix-dialog-content] {
+    border: none !important;
+    box-shadow: none !important;
+    background: transparent !important;
+    padding: 0 !important;
+    width: auto !important;
+    max-width: 80mm !important;
+    transform: none !important;
+    position: static !important;
+    inset: auto !important;
+    translate: 0 0 !important;
+    animation: none !important;
+    transition: none !important;
+    overflow: visible !important;
+    max-height: none !important;
+    display: block !important;
+  }
+
+  /* Hide non-document UI elements */
+  .receipt-actions,
+  .receipt-close-btn {
+    display: none !important;
+  }
+
+  /* ── 3. Receipt canvas — the 80mm thermal wrapper ── */
+  .receipt-canvas {
+    width: 80mm !important;
+    max-width: 80mm !important;
+    padding: 2mm 3mm !important;
+    margin: 0 auto !important;
+    box-sizing: border-box !important;
+    overflow: visible !important;
+    max-height: none !important;
+    font-family: "Courier New", Courier, monospace !important;
+    font-size: 12px !important;
+    line-height: 1.2 !important;
+    color: black !important;
+    background: white !important;
+    display: block !important;
+  }
+
+  /* Force all children to black-on-white, single-width borders */
+  .receipt-canvas * {
+    color: black !important;
+    background: transparent !important;
+    border-color: black !important;
+    box-shadow: none !important;
+    text-shadow: none !important;
+  }
+
+  /* Preserve colored status badges as bordered boxes */
+  .receipt-canvas [class*="rounded-sm"][class*="px-1"] {
+    border: 1px solid black !important;
+    background: transparent !important;
+    color: black !important;
+  }
+
+  /* Document title accents — business name & heading */
+  .receipt-title {
+    font-size: 14px !important;
+    font-weight: bold !important;
+  }
+
+  /* Numerical alignment — right-aligned monospace for prices/qty */
+  .receipt-num {
+    font-family: "Courier New", Courier, monospace !important;
+    text-align: right !important;
+  }
+
+  /* Tables — full width, collapsed borders */
+  .receipt-canvas table {
+    width: 100% !important;
+    border-collapse: collapse !important;
+  }
+
+  /* Horizontal rules */
+  .receipt-canvas hr {
+    border-style: dashed !important;
+    border-color: black !important;
+  }
+
+  /* Cutline separator between dual slips */
+  .receipt-separator {
+    border-top: 1px dashed black !important;
+    margin: 3mm 0 !important;
+  }
+
+  /* Page break for multi-slip operations */
+  .receipt-break {
+    page-break-after: always !important;
+  }
+
+  /* Red/green financial indicators as bold text (no color in thermal) */
+  .receipt-canvas .text-red-600,
+  .receipt-canvas .text-red-500 {
+    font-weight: bold !important;
+  }
+
+  .receipt-canvas .text-green-600,
+  .receipt-canvas .text-green-500 {
+    font-weight: bold !important;
+  }
+
+  /* Checkbox squares for pick slips — force visible border */
+  .receipt-canvas .print\:border-black {
+    border: 1px solid black !important;
+  }
+}

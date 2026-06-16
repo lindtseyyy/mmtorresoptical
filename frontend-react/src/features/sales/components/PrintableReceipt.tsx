@@ -50,7 +50,7 @@ const OriginalReceipt: React.FC<{
   }, 0);
 
   return (
-    <div className="font-mono text-xs leading-relaxed text-foreground max-h-[65vh] overflow-y-auto print:max-h-none print:overflow-visible">
+    <div className="receipt-canvas font-mono text-xs leading-relaxed text-foreground max-h-[65vh] overflow-y-auto print:max-h-none print:overflow-visible">
       {/* Watermark for reprints */}
       {isReprint && (
         <div className="text-center mb-4 border border-dashed border-border py-2 px-4 rounded">
@@ -68,7 +68,7 @@ const OriginalReceipt: React.FC<{
         <h2 className="text-xs font-bold tracking-wide uppercase text-muted-foreground mb-1">
           SALES RECEIPT
         </h2>
-        <h2 className="text-sm font-bold tracking-wide uppercase">
+        <h2 className="receipt-title text-sm font-bold tracking-wide uppercase">
           {BUSINESS_NAME}
         </h2>
         <p className="text-[10px] text-muted-foreground mt-0.5">{BUSINESS_ADDRESS}</p>
@@ -144,7 +144,7 @@ const OriginalReceipt: React.FC<{
           <tr className="border-b border-border">
             <th className="text-left font-semibold pb-1">Item</th>
             <th className="text-center font-semibold pb-1 w-10">Qty</th>
-            <th className="text-right font-semibold pb-1 w-20">Total</th>
+            <th className="receipt-num text-right font-semibold pb-1 w-20">Total</th>
           </tr>
         </thead>
         <tbody>
@@ -171,8 +171,8 @@ const OriginalReceipt: React.FC<{
                     </div>
                   )}
                 </td>
-                <td className="py-1 text-center align-top text-muted-foreground">{item.quantity}</td>
-                <td className="py-1 text-right align-top tabular-nums">
+                <td className="receipt-num py-1 text-center align-top text-muted-foreground">{item.quantity}</td>
+                <td className="receipt-num py-1 text-right align-top tabular-nums">
                   {item.isDiscounted ? (
                     <>
                       <span className="text-muted-foreground line-through text-[10px] block">
@@ -198,17 +198,17 @@ const OriginalReceipt: React.FC<{
       <div className="space-y-0.5 mb-3">
         <div className="flex justify-between text-muted-foreground">
           <span>Subtotal</span>
-          <span className="tabular-nums">{format2(subtotal)}</span>
+          <span className="receipt-num tabular-nums">{format2(subtotal)}</span>
         </div>
         {totalDiscount > 0 && (
           <div className="flex justify-between text-green-600">
             <span>Discount</span>
-            <span className="tabular-nums">-{format2(totalDiscount)}</span>
+            <span className="receipt-num tabular-nums">-{format2(totalDiscount)}</span>
           </div>
         )}
         <div className="flex justify-between font-bold text-sm border-t border-border pt-1 mt-1">
           <span>TOTAL</span>
-          <span className="tabular-nums">{format2(tx.totalAmount)}</span>
+          <span className="receipt-num tabular-nums">{format2(tx.totalAmount)}</span>
         </div>
       </div>
 
@@ -218,7 +218,7 @@ const OriginalReceipt: React.FC<{
           <div key={p.id}>
             <div className="flex justify-between font-semibold">
               <span>{p.paymentMethod}</span>
-              <span className="tabular-nums">{format2(p.amount)}</span>
+              <span className="receipt-num tabular-nums">{format2(p.amount)}</span>
             </div>
             {p.referenceNumber && (
               <div className="text-[10px] text-muted-foreground mt-0.5">
@@ -239,7 +239,7 @@ const OriginalReceipt: React.FC<{
             return (
               <div className="flex justify-between text-green-600 font-semibold mt-0.5">
                 <span>Change</span>
-                <span className="tabular-nums">{format2(changeAmount)}</span>
+                <span className="receipt-num tabular-nums">{format2(changeAmount)}</span>
               </div>
             );
           }
@@ -248,15 +248,14 @@ const OriginalReceipt: React.FC<{
         {(tx.balanceDue ?? 0) > 0 && (
           <div className="flex justify-between text-amber-600 font-semibold mt-0.5">
             <span>Remaining Balance</span>
-            <span className="tabular-nums">{format2(tx.balanceDue ?? 0)}</span>
+            <span className="receipt-num tabular-nums">{format2(tx.balanceDue ?? 0)}</span>
           </div>
         )}
       </div>
 
       {/* Footer */}
       <div className="text-center text-[10px] text-muted-foreground space-y-1">
-        <p>Returns accepted within 7 days of purchase.</p>
-        <p>Receipt and original packaging required.</p>
+        <p>Refunds accepted. Receipt and original packaging required.</p>
         <p className="font-medium text-foreground text-xs mt-2">
           Thank you for choosing MM Torres Optical!
         </p>
@@ -348,13 +347,13 @@ const UpdatedStatement: React.FC<{ transaction: TransactionResponse }> = ({ tran
   const effectiveBalanceDue = Math.max(0, revisedTotal - ((tx.amountPaid ?? 0) - totalCashRefunded));
 
   return (
-    <div className="font-mono text-xs leading-relaxed text-foreground max-h-[65vh] overflow-y-auto print:max-h-none print:overflow-visible">
+    <div className="receipt-canvas font-mono text-xs leading-relaxed text-foreground max-h-[65vh] overflow-y-auto print:max-h-none print:overflow-visible">
       {/* Header */}
       <div className="text-center mb-4">
         <h2 className="text-xs font-bold tracking-wide uppercase text-muted-foreground mb-1">
           AMENDED STATEMENT OF ACCOUNT
         </h2>
-        <h2 className="text-sm font-bold tracking-wide uppercase">
+        <h2 className="receipt-title text-sm font-bold tracking-wide uppercase">
           {BUSINESS_NAME}
         </h2>
         <p className="text-[10px] text-muted-foreground mt-0.5">{BUSINESS_ADDRESS}</p>
@@ -441,7 +440,7 @@ const UpdatedStatement: React.FC<{ transaction: TransactionResponse }> = ({ tran
               <tr className="border-b border-border">
                 <th className="text-left font-semibold pb-1">Item</th>
                 <th className="text-center font-semibold pb-1 w-10">Qty</th>
-                <th className="text-right font-semibold pb-1 w-20">Total</th>
+                <th className="receipt-num text-right font-semibold pb-1 w-20">Total</th>
               </tr>
             </thead>
             <tbody>
@@ -464,8 +463,8 @@ const UpdatedStatement: React.FC<{ transaction: TransactionResponse }> = ({ tran
                       </div>
                     )}
                   </td>
-                  <td className="py-1 text-center align-top text-muted-foreground">{item.activeQty}</td>
-                  <td className="py-1 text-right align-top tabular-nums font-medium">
+                  <td className="receipt-num py-1 text-center align-top text-muted-foreground">{item.activeQty}</td>
+                  <td className="receipt-num py-1 text-right align-top tabular-nums font-medium">
                     {format2(item.activeSubtotal)}
                   </td>
                 </tr>
@@ -491,7 +490,7 @@ const UpdatedStatement: React.FC<{ transaction: TransactionResponse }> = ({ tran
                   <tr className="border-b border-border/30">
                     <th className="text-left font-medium pb-0.5 text-[10px]">Item</th>
                     <th className="text-center font-medium pb-0.5 w-8 text-[10px]">Qty</th>
-                    <th className="text-right font-medium pb-0.5 w-16 text-[10px]">Value</th>
+                    <th className="receipt-num text-right font-medium pb-0.5 w-16 text-[10px]">Value</th>
                   </tr>
                 </thead>
                 <tbody>
@@ -499,7 +498,7 @@ const UpdatedStatement: React.FC<{ transaction: TransactionResponse }> = ({ tran
                     <tr key={idx} className="border-b border-border/30">
                       <td className="py-0.5 text-[10px]">{item.productName}</td>
                       <td className="py-0.5 text-center text-red-600 text-[10px]">-{item.quantityRefunded}</td>
-                      <td className="py-0.5 text-right tabular-nums text-red-600 text-[10px]">
+                      <td className="receipt-num py-0.5 text-right tabular-nums text-red-600 text-[10px]">
                         -₱{format2(item.itemCreditAmount ?? 0)}
                       </td>
                     </tr>
@@ -529,25 +528,25 @@ const UpdatedStatement: React.FC<{ transaction: TransactionResponse }> = ({ tran
       <div className="space-y-1 mb-3">
         <div className="flex justify-between">
           <span>Original Order Total:</span>
-          <span className="tabular-nums">₱{format2(tx.totalAmount)}</span>
+          <span className="receipt-num tabular-nums">₱{format2(tx.totalAmount)}</span>
         </div>
         <div className="flex justify-between text-red-600">
           <span>Total Deductions:</span>
-          <span className="tabular-nums">-₱{format2(totalDeductions)}</span>
+          <span className="receipt-num tabular-nums">-₱{format2(totalDeductions)}</span>
         </div>
         <hr className="border-dashed border-border my-0.5" />
         <div className="flex justify-between font-bold">
           <span>REVISED TOTAL VALUE:</span>
-          <span className="tabular-nums">₱{format2(revisedTotal)}</span>
+          <span className="receipt-num tabular-nums">₱{format2(revisedTotal)}</span>
         </div>
         <hr className="border-double border-border my-0.5" />
         <div className="flex justify-between">
           <span>Total Cash Collected:</span>
-          <span className="tabular-nums">₱{format2(tx.amountPaid ?? 0)}</span>
+          <span className="receipt-num tabular-nums">₱{format2(tx.amountPaid ?? 0)}</span>
         </div>
         <div className="flex justify-between font-bold">
           <span>CURRENT BALANCE DUE:</span>
-          <span className="tabular-nums">₱{format2(effectiveBalanceDue)}</span>
+          <span className="receipt-num tabular-nums">₱{format2(effectiveBalanceDue)}</span>
         </div>
       </div>
 
@@ -600,13 +599,13 @@ const StaffPickSlip: React.FC<{
   );
 
   return (
-    <div className="font-mono text-xs leading-relaxed text-foreground max-h-[65vh] overflow-y-auto print:max-h-none print:overflow-visible print:mt-6">
+    <div className="receipt-canvas font-mono text-xs leading-relaxed text-foreground max-h-[65vh] overflow-y-auto print:max-h-none print:overflow-visible print:mt-6">
       {/* Header */}
       <div className="text-center mb-4">
         <h2 className="text-xs font-bold tracking-wide uppercase text-muted-foreground mb-1">
           STAFF PICK LIST
         </h2>
-        <h2 className="text-sm font-bold tracking-wide uppercase">
+        <h2 className="receipt-title text-sm font-bold tracking-wide uppercase">
           {BUSINESS_NAME}
         </h2>
         <p className="text-[10px] text-muted-foreground mt-0.5">Internal Use Only</p>
@@ -717,7 +716,7 @@ const PrintableReceipt: React.FC<PrintableReceiptProps> = ({
         ) : isDualSlip ? (
           <>
             <OriginalReceipt transaction={transaction} isReprint={isReprint} />
-            <div className="border-t border-dashed border-border mt-4 pt-4 print:break-before-page print:border-0 print:mt-0 print:pt-0">
+            <div className="receipt-separator border-t border-dashed border-border mt-4 pt-4 print:break-before-page print:border-0 print:mt-0 print:pt-0">
               <div className="text-center text-muted-foreground text-[10px] mb-2 print:hidden">
                 ✂ - - - - - - - - - - - - - - - - - - - - - - - - - -
               </div>
@@ -731,7 +730,7 @@ const PrintableReceipt: React.FC<PrintableReceiptProps> = ({
         )}
 
         {/* Action buttons */}
-        <div className="flex gap-2 mt-4 print:hidden">
+        <div className="receipt-actions flex gap-2 mt-4 print:hidden">
           <Button className="flex-1" onClick={handlePrint}>
             <Printer className="mr-2 h-4 w-4" />
             {isUpdated ? "Print Statement" : isDualSlip ? "Print Receipts" : isPickSlip ? "Print Pick List" : "Print Receipt"}
