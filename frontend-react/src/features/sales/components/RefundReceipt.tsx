@@ -61,6 +61,14 @@ const RefundReceipt: React.FC<RefundReceiptProps> = ({ open, onClose, refundData
     <Dialog open={open} onOpenChange={onClose}>
       <DialogContent>
         <div ref={receiptRef} className="receipt-canvas font-mono text-xs leading-relaxed text-foreground max-h-[65vh] overflow-y-auto print:max-h-none print:overflow-visible">
+        {/* ---- Document Title ---- */}
+        <div className="text-center mb-3">
+          <h3 className="receipt-title text-xs font-bold uppercase tracking-wide">REFUND RECEIPT / CREDIT NOTE</h3>
+          {isReprint && (
+            <p className="text-[10px] text-muted-foreground mt-1 italic">DUPLICATE COPY</p>
+          )}
+        </div>
+
         {/* ---- Header ---- */}
         <div className="text-center mb-4">
           <h2 className="receipt-title text-sm font-bold tracking-wide uppercase">{BUSINESS_NAME}</h2>
@@ -70,14 +78,6 @@ const RefundReceipt: React.FC<RefundReceiptProps> = ({ open, onClose, refundData
         </div>
 
         <hr className="border-dashed border-border mb-3" />
-
-        {/* ---- Document Title ---- */}
-        <div className="text-center mb-3">
-          <h3 className="receipt-title text-xs font-bold uppercase tracking-wide">REFUND RECEIPT / CREDIT NOTE</h3>
-          {isReprint && (
-            <p className="text-[10px] text-muted-foreground mt-1 italic">DUPLICATE COPY</p>
-          )}
-        </div>
 
         {/* ---- Metadata ---- */}
         <div className="space-y-0.5 mb-3">
@@ -174,16 +174,16 @@ const RefundReceipt: React.FC<RefundReceiptProps> = ({ open, onClose, refundData
             Thank you for choosing MM Torres Optical!
           </p>
         </div>
+      </div>
 
-        <div className="receipt-actions flex gap-2 mt-4 print:hidden">
-          <Button className="flex-1" onClick={handlePrint}>
-            <Printer className="mr-2 h-4 w-4" />
-            Print Receipt
-          </Button>
-          <Button variant="outline" className="flex-1 border-2 border-gray-400 dark:border-gray-500" onClick={onClose}>
-            Close
-          </Button>
-        </div>
+      <div className="receipt-actions flex gap-2 mt-4 print:hidden">
+        <Button className="flex-1" onClick={handlePrint}>
+          <Printer className="mr-2 h-4 w-4" />
+          Print Receipt
+        </Button>
+        <Button variant="outline" className="flex-1 border-2 border-gray-400 dark:border-gray-500" onClick={onClose}>
+          Close
+        </Button>
       </div>
       </DialogContent>
     </Dialog>

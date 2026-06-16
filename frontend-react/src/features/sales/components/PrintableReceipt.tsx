@@ -148,8 +148,8 @@ const OriginalReceipt: React.FC<{
           {tx.transactionItems.map((item) => {
             const originalTotal = item.unitPrice * item.quantity;
             return (
-              <tr key={item.transactionItemId} className="border-b border-border/30">
-                <td className="py-1 align-top">
+              <tr key={item.transactionItemId}>
+                <td className="py-1 align-top break-words w-[55%]">
                   <span className="font-medium">{item.product.productName}</span>
                   {item.isDiscounted && (
                     <div className="text-[10px] text-muted-foreground">
@@ -168,7 +168,7 @@ const OriginalReceipt: React.FC<{
                     </div>
                   )}
                 </td>
-                <td className="receipt-num py-1 text-center align-top text-muted-foreground">{item.quantity}</td>
+                <td className="py-1 text-center align-top text-muted-foreground">{item.quantity}</td>
                 <td className="receipt-num py-1 text-right align-top tabular-nums">
                   {item.isDiscounted ? (
                     <>
@@ -203,14 +203,14 @@ const OriginalReceipt: React.FC<{
             <span className="receipt-num tabular-nums">-{format2(totalDiscount)}</span>
           </div>
         )}
-        <div className="flex justify-between font-bold text-sm border-t border-border pt-1 mt-1">
+        <div className="receipt-total flex justify-between font-bold text-sm border-t border-border pt-1 mt-1">
           <span>TOTAL</span>
           <span className="receipt-num tabular-nums">{format2(tx.totalAmount)}</span>
         </div>
       </div>
 
       {/* Payment Info */}
-      <div className="rounded-sm bg-muted/50 px-2 py-1.5 mb-3">
+      <div className="mb-3">
         {(tx.payments ?? []).map((p) => (
           <div key={p.id}>
             <div className="flex justify-between font-semibold">
@@ -249,6 +249,8 @@ const OriginalReceipt: React.FC<{
           </div>
         )}
       </div>
+
+      <hr className="border-dashed border-border mb-3" />
 
       {/* Footer */}
       <div className="text-center text-[10px] text-muted-foreground space-y-1">

@@ -185,14 +185,21 @@ but with the "blue" theme colors from your HSL reference.
 }
 
 .receipt-canvas [class*="rounded-sm"][class*="px-1"] {
-  border: 1px solid #000 !important;
+  border: none !important;
   background: transparent !important;
   color: #000 !important;
+  padding: 0 !important;
 }
 
 .receipt-title {
   font-size: 10px;
   font-weight: bold;
+}
+
+.receipt-total,
+.receipt-total * {
+  font-size: 12px !important;
+  font-weight: bold !important;
 }
 
 .receipt-num {
@@ -285,9 +292,9 @@ but with the "blue" theme colors from your HSL reference.
     text-shadow: none !important;
   }
 
-  /* Preserve colored status badges as bordered boxes */
+  /* Preserve colored status badges without borders */
   .receipt-canvas [class*="rounded-sm"][class*="px-1"] {
-    border: 1px solid black !important;
+    border: none !important;
     background: transparent !important;
     color: black !important;
   }
@@ -295,6 +302,13 @@ but with the "blue" theme colors from your HSL reference.
   /* Document title accents — business name & heading */
   .receipt-title {
     font-size: 10px !important;
+    font-weight: bold !important;
+  }
+
+  /* TOTAL line — slightly larger for emphasis */
+  .receipt-total,
+  .receipt-total * {
+    font-size: 12px !important;
     font-weight: bold !important;
   }
 
