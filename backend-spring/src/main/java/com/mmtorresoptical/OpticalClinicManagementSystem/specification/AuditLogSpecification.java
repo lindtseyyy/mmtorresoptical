@@ -37,7 +37,8 @@ public class AuditLogSpecification {
             return cb.or(
                 cb.like(cb.lower(root.get("user").get("firstName")), pattern),
                 cb.like(cb.lower(root.get("user").get("lastName")), pattern),
-                cb.like(cb.lower(root.get("user").get("username")), pattern)
+                cb.like(cb.lower(root.get("user").get("username")), pattern),
+                cb.like(cb.lower(root.get("details")), pattern)
             );
         };
     }

@@ -82,6 +82,14 @@ public class AuditLogService {
         return detailsJson;
     }
 
+    private boolean isSystemGeneratedBackup(AuditDetailsDTO dto) {
+        if (!"BACKUP".equals(dto.getActionType()) || !"DATABASE".equals(dto.getResourceType())) {
+            return false;
+        }
+        String details = dto.getDetails();
+        return details != null && (details.equals("Daily backup at 5:00 PM") || details.startsWith("Backup at "));
+    }
+
     public Page<AuditDetailsDTO> getAllAuditLogs(String keyword,
                                                  ActionType actionType,
                                                  ResourceType resourceType,
@@ -164,6 +172,11 @@ public class AuditLogService {
             String raw = decryptIfNeeded(dto.getDetailsJson(), dto.getUserName());
             dto.setDetailsJson(jsonService.sanitizeAuditDetailsJson(
                     raw, dto.getActionType(), dto.getUserName()));
+            
+            if (isSystemGeneratedBackup(dto)) {
+                dto.setUserName("SYSTEM GENERATED");
+            }
+            
             return dto;
         });
     }

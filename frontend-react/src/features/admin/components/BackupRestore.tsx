@@ -191,6 +191,9 @@ const BackupRestore: React.FC = () => {
             <p className="text-sm text-muted-foreground">
               Creates a copy of all patients, appointments, and records.
             </p>
+            <p className="text-xs text-muted-foreground">
+              A daily automatic backup is captured at 5:00 PM.
+            </p>
             <Button
               className="w-full bg-emerald-600 text-white hover:bg-emerald-700"
               size="lg"

@@ -2,6 +2,10 @@ spring:
   application:
     name: OpticalClinicManagementSystem
 
+  task:
+    scheduling:
+      default-timezone: Asia/Manila
+
   servlet:
     multipart:
       max-file-size: 2GB

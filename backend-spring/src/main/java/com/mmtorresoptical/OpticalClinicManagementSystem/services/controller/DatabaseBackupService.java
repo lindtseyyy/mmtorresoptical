@@ -5,8 +5,11 @@ import com.mmtorresoptical.OpticalClinicManagementSystem.exception.custom.Confli
 import com.mmtorresoptical.OpticalClinicManagementSystem.model.User;
 import com.mmtorresoptical.OpticalClinicManagementSystem.services.AuthenticatedUserService;
 import com.mmtorresoptical.OpticalClinicManagementSystem.services.auditlog.resources.DatabaseBackupAuditHelper;
+import jakarta.annotation.PostConstruct;
+import jakarta.annotation.PreDestroy;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
@@ -24,6 +27,8 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.StandardCopyOption;
 import java.time.Instant;
+import java.time.LocalDate;
+import java.time.LocalTime;
 import java.time.ZoneId;
 import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
@@ -46,12 +51,16 @@ public class DatabaseBackupService {
     private final String dbName;
     private final boolean useDocker;
     private final String dockerContainer;
+    private final Path backupBaseDir;
 
     private final ReentrantLock restoreLock = new ReentrantLock();
 
     private static final byte[] PGDUMP_MAGIC = {'P', 'G', 'D', 'M', 'P'};
     private static final long MAX_BACKUP_FILE_SIZE = 2L * 1024 * 1024 * 1024; // 2 GB
     private static final long PROCESS_TIMEOUT_MINUTES = 30;
+
+    private boolean isScheduledBackupExecuted = false;
+    private LocalDate scheduledBackupDate = null;
 
     public DatabaseBackupService(
             PasswordEncoder passwordEncoder,
@@ -61,7 +70,8 @@ public class DatabaseBackupService {
             @Value("${spring.datasource.username}") String datasourceUsername,
             @Value("${spring.datasource.password}") String datasourcePassword,
             @Value("${app.database.backup.use-docker:false}") boolean useDocker,
-            @Value("${app.database.backup.docker-container:postgres-db}") String dockerContainer) {
+            @Value("${app.database.backup.docker-container:postgres-db}") String dockerContainer,
+            @Value("${app.project.dir:}") String projectDir) {
         this.passwordEncoder = passwordEncoder;
         this.authenticatedUserService = authenticatedUserService;
         this.databaseBackupAuditHelper = databaseBackupAuditHelper;
@@ -69,6 +79,11 @@ public class DatabaseBackupService {
         this.datasourcePassword = datasourcePassword;
         this.useDocker = useDocker;
         this.dockerContainer = dockerContainer;
+
+        String baseDir = projectDir != null && !projectDir.isBlank()
+                ? projectDir
+                : System.getProperty("user.dir");
+        this.backupBaseDir = Path.of(baseDir, "backups");
 
         // Parse jdbc:postgresql://host:port/dbname
         String url = datasourceUrl.replace("jdbc:postgresql://", "");
@@ -89,23 +104,188 @@ public class DatabaseBackupService {
         }
     }
 
-    public void validatePassword(String currentPassword) {
-        User user = authenticatedUserService.getCurrentUser();
-        if (currentPassword == null || currentPassword.isBlank()
-                || !passwordEncoder.matches(currentPassword, user.getPasswordHash())) {
-            throw new BadRequestException("Incorrect password. Please verify your password and try again.");
+    @PostConstruct
+    public void init() {
+        try {
+            Files.createDirectories(backupBaseDir);
+            log.info("Backup base directory initialized: {}", backupBaseDir.toAbsolutePath());
+        } catch (IOException e) {
+            log.error("Failed to create backup base directory: {}", backupBaseDir.toAbsolutePath(), e);
+        }
+
+        checkAndExecuteMissedBackup();
+    }
+
+    private void checkAndExecuteMissedBackup() {
+        LocalTime now = LocalTime.now();
+        LocalTime scheduledTime = LocalTime.of(17, 0);
+        
+        if (!now.isBefore(scheduledTime)) {
+            log.info("Startup: current time is {} (at/after 5:00 PM). Checking if backup is needed.", now);
+            
+            if (!isScheduledBackupExecuted || !LocalDate.now().equals(scheduledBackupDate)) {
+                log.info("Startup: no backup executed today. Executing missed scheduled backup.");
+                try {
+                    String filename = executeDumpToBackupsFolder("SYSTEM-MISSED");
+                    isScheduledBackupExecuted = true;
+                    scheduledBackupDate = LocalDate.now();
+                    log.info("Missed backup completed successfully.");
+                    
+                    File backupFile = resolveBackupFilePath(filename);
+                    databaseBackupAuditHelper.logSystemBackup(filename, backupFile.length(), "SYSTEM-MISSED");
+                } catch (Exception e) {
+                    log.error("Startup: failed to execute missed backup", e);
+                }
+            } else {
+                log.info("Startup: backup already executed today. Skipping.");
+            }
         }
     }
+
+    // ---- Automated triggers ----
+
+    @Scheduled(cron = "0 0 17 * * MON-SAT")
+    public void scheduledBackup() {
+        log.info("Scheduled backup triggered at {}", Instant.now());
+        String filename = null;
+        try {
+            filename = executeDumpToBackupsFolder("SYSTEM");
+            isScheduledBackupExecuted = true;
+            scheduledBackupDate = LocalDate.now();
+            log.info("Scheduled backup completed successfully. Flag set.");
+        } catch (Exception e) {
+            log.error("Scheduled backup failed", e);
+        }
+
+        if (filename != null) {
+            try {
+                File backupFile = resolveBackupFilePath(filename);
+                databaseBackupAuditHelper.logSystemBackup(filename, backupFile.length(), "SYSTEM");
+            } catch (Exception e) {
+                log.error("Failed to log scheduled backup audit", e);
+            }
+        }
+    }
+
+    @PreDestroy
+    public void onShutdown() {
+        LocalDate today = LocalDate.now();
+
+        if (isScheduledBackupExecuted && today.equals(scheduledBackupDate)) {
+            log.info("Shutdown: scheduled backup already executed today, skipping.");
+            return;
+        }
+
+        LocalTime now = LocalTime.now();
+        if (now.isBefore(LocalTime.of(17, 0))) {
+            log.info("Shutdown: before 5:00 PM ({}), executing emergency safety backup.", now);
+            String filename = null;
+            try {
+                filename = executeDumpToBackupsFolder("SYSTEM-EMERGENCY");
+            } catch (Exception e) {
+                log.error("Emergency shutdown backup failed", e);
+            }
+            if (filename != null) {
+                try {
+                    File backupFile = resolveBackupFilePath(filename);
+                    databaseBackupAuditHelper.logSystemBackup(filename, backupFile.length(), "SYSTEM-EMERGENCY");
+                } catch (Exception e) {
+                    log.error("Failed to log emergency backup audit", e);
+                }
+            }
+        } else {
+            log.info("Shutdown: at/after 5:00 PM but scheduled backup was not executed (laptop was offline/asleep). Executing backup now.");
+            String filename = null;
+            try {
+                filename = executeDumpToBackupsFolder("SYSTEM-EMERGENCY");
+            } catch (Exception e) {
+                log.error("Post-5PM shutdown backup failed", e);
+            }
+            if (filename != null) {
+                try {
+                    File backupFile = resolveBackupFilePath(filename);
+                    databaseBackupAuditHelper.logSystemBackup(filename, backupFile.length(), "SYSTEM-EMERGENCY");
+                } catch (Exception e) {
+                    log.error("Failed to log post-5PM backup audit", e);
+                }
+            }
+        }
+    }
+
+    // ---- Manual backup (called from controller) ----
 
     public File generateBackup(String currentPassword) {
         validatePassword(currentPassword);
 
-        String timestamp = DateTimeFormatter.ofPattern("yyyyMMdd_HHmmss")
-                .withZone(ZoneId.systemDefault())
-                .format(Instant.now());
-        String filename = "backup_" + timestamp + ".dump";
-        File tempFile;
+        User user = authenticatedUserService.getCurrentUser();
+        String filename = executeDumpToBackupsFolder(user.getFirstName() + " " + user.getLastName());
+        File backupFile = resolveBackupFilePath(filename);
+        databaseBackupAuditHelper.logBackup(filename, backupFile.length());
+        return backupFile;
+    }
 
+    public void restoreBackup(MultipartFile file, String currentPassword) {
+        validatePassword(currentPassword);
+        validateBackupFile(file);
+
+        if (!restoreLock.tryLock()) {
+            throw new ConflictException("A restore operation is already in progress. Please wait for it to complete.");
+        }
+
+        File uploadedFile = null;
+        File safetyBackupFile = null;
+
+        try {
+            safetyBackupFile = createSafetyBackup();
+            uploadedFile = writeUploadedFile(file);
+
+            // Read embedded metadata from the uploaded file before stripping it
+            String backupTimestamp = "";
+            String backupPerformedBy = "";
+            try {
+                byte[] content = Files.readAllBytes(uploadedFile.toPath());
+                int newlinePos = -1;
+                for (int i = 0; i < Math.min(content.length, 2048); i++) {
+                    if (content[i] == '\n') {
+                        newlinePos = i;
+                        break;
+                    }
+                }
+                if (newlinePos > 0 && content[0] == '{') {
+                    String jsonLine = new String(content, 0, newlinePos, StandardCharsets.UTF_8);
+                    log.info("Restore file metadata header: {}", jsonLine);
+                    backupTimestamp = extractJsonString(jsonLine, "backupTimestamp");
+                    backupPerformedBy = extractJsonString(jsonLine, "performedBy");
+                    log.info("Extracted metadata — backupTimestamp: '{}', backupPerformedBy: '{}'",
+                            backupTimestamp, backupPerformedBy);
+                } else {
+                    log.warn("No metadata header found in restore file. firstByte={}, newlinePos={}",
+                            content.length > 0 ? (char) content[0] : "empty", newlinePos);
+                }
+            } catch (IOException e) {
+                log.warn("Failed to read metadata from restore file", e);
+            }
+
+            uploadedFile = stripMetadataLine(uploadedFile);
+            executePgRestore(uploadedFile);
+
+            long fileSize = file.getSize();
+            databaseBackupAuditHelper.logRestore(
+                    file.getOriginalFilename(), fileSize, backupTimestamp, backupPerformedBy);
+
+        } catch (IOException e) {
+            throw new RuntimeException("Failed to process backup file for restore", e);
+        } finally {
+            cleanupTempFile(uploadedFile);
+            cleanupTempFile(safetyBackupFile);
+            restoreLock.unlock();
+        }
+    }
+
+    // ---- Core dump execution ----
+
+    private String executeDumpToBackupsFolder(String performedBy) {
+        File tempFile;
         try {
             tempFile = File.createTempFile("pgdump_", ".dump");
         } catch (IOException e) {
@@ -184,10 +364,12 @@ public class DatabaseBackupService {
             }
 
             long fileSize = tempFile.length();
-            tempFile = prependMetadata(tempFile);
-            databaseBackupAuditHelper.logBackup(filename, fileSize);
+            String filename = buildBackupFilename();
+            tempFile = prependMetadata(tempFile, performedBy);
+            moveBackupToFolder(tempFile, filename);
 
-            return tempFile;
+            log.info("Backup saved to backups folder: {} ({} bytes)", filename, fileSize);
+            return filename;
 
         } catch (IOException e) {
             tempFile.delete();
@@ -199,113 +381,7 @@ public class DatabaseBackupService {
         }
     }
 
-    public void restoreBackup(MultipartFile file, String currentPassword) {
-        validatePassword(currentPassword);
-        validateBackupFile(file);
-
-        if (!restoreLock.tryLock()) {
-            throw new ConflictException("A restore operation is already in progress. Please wait for it to complete.");
-        }
-
-        File uploadedFile = null;
-        File safetyBackupFile = null;
-
-        try {
-            safetyBackupFile = createSafetyBackup();
-            uploadedFile = writeUploadedFile(file);
-
-            // Read embedded metadata from the uploaded file before stripping it
-            String backupTimestamp = "";
-            String backupPerformedBy = "";
-            try {
-                byte[] content = Files.readAllBytes(uploadedFile.toPath());
-                int newlinePos = -1;
-                for (int i = 0; i < Math.min(content.length, 2048); i++) {
-                    if (content[i] == '\n') {
-                        newlinePos = i;
-                        break;
-                    }
-                }
-                if (newlinePos > 0 && content[0] == '{') {
-                    String jsonLine = new String(content, 0, newlinePos, StandardCharsets.UTF_8);
-                    log.info("Restore file metadata header: {}", jsonLine);
-                    backupTimestamp = extractJsonString(jsonLine, "backupTimestamp");
-                    backupPerformedBy = extractJsonString(jsonLine, "performedBy");
-                    log.info("Extracted metadata — backupTimestamp: '{}', backupPerformedBy: '{}'",
-                            backupTimestamp, backupPerformedBy);
-                } else {
-                    log.warn("No metadata header found in restore file. firstByte={}, newlinePos={}",
-                            content.length > 0 ? (char) content[0] : "empty", newlinePos);
-                }
-            } catch (IOException e) {
-                log.warn("Failed to read metadata from restore file", e);
-            }
-
-            uploadedFile = stripMetadataLine(uploadedFile);
-            executePgRestore(uploadedFile);
-
-            long fileSize = file.getSize();
-            databaseBackupAuditHelper.logRestore(
-                    file.getOriginalFilename(), fileSize, backupTimestamp, backupPerformedBy);
-
-        } catch (IOException e) {
-            throw new RuntimeException("Failed to process backup file for restore", e);
-        } finally {
-            cleanupTempFile(uploadedFile);
-            cleanupTempFile(safetyBackupFile);
-            restoreLock.unlock();
-        }
-    }
-
-    private void validateBackupFile(MultipartFile file) {
-        if (file.isEmpty()) {
-            throw new BadRequestException("Backup file is empty");
-        }
-
-        if (file.getSize() > MAX_BACKUP_FILE_SIZE) {
-            throw new BadRequestException("Backup file exceeds maximum allowed size of 2 GB");
-        }
-
-        byte[] magic = new byte[5];
-        try (InputStream is = file.getInputStream()) {
-            int firstByte = is.read();
-            if (firstByte < 0) {
-                throw new BadRequestException("Invalid backup file: file is too small to be a valid PostgreSQL backup");
-            }
-
-            // Skip metadata header line if present (new format: {json}\nPGDMP...)
-            if (firstByte == '{') {
-                int b;
-                while ((b = is.read()) != -1 && b != '\n') {
-                    // skip metadata line
-                }
-                if (b != '\n') {
-                    throw new BadRequestException("Invalid backup file: metadata header is malformed");
-                }
-                firstByte = is.read(); // should now be 'P' from PGDMP
-            }
-
-            magic[0] = (byte) firstByte;
-            int bytesRead = is.read(magic, 1, 4);
-            if (bytesRead < 4) {
-                throw new BadRequestException("Invalid backup file: file is too small to be a valid PostgreSQL backup");
-            }
-            for (int i = 0; i < 5; i++) {
-                if (magic[i] != PGDUMP_MAGIC[i]) {
-                    throw new BadRequestException("Invalid backup file: file does not appear to be a valid PostgreSQL custom-format dump. Only pg_dump -Fc custom-format backups are supported.");
-                }
-            }
-        } catch (IOException e) {
-            throw new RuntimeException("Failed to validate backup file", e);
-        }
-    }
-
     private File createSafetyBackup() {
-        String timestamp = DateTimeFormatter.ofPattern("yyyyMMdd_HHmmss")
-                .withZone(ZoneId.systemDefault())
-                .format(Instant.now());
-        String filename = "pre_restore_" + timestamp + ".dump";
-
         File tempFile;
         try {
             tempFile = File.createTempFile("pre_restore_", ".dump");
@@ -380,7 +456,7 @@ public class DatabaseBackupService {
                 throw new RuntimeException("Failed to create safety backup before restore: " + errorOutput);
             }
 
-            log.info("Safety backup created: {} ({} bytes)", filename, tempFile.length());
+            log.info("Safety backup created ({} bytes)", tempFile.length());
             return prependMetadata(tempFile);
 
         } catch (IOException e) {
@@ -390,6 +466,81 @@ public class DatabaseBackupService {
             Thread.currentThread().interrupt();
             tempFile.delete();
             throw new RuntimeException("Safety backup was interrupted", e);
+        }
+    }
+
+    // ---- Backup file path management ----
+
+    private String buildBackupFilename() {
+        return "backup_" + DateTimeFormatter.ofPattern("HH-mm-ss")
+                .withZone(ZoneId.systemDefault())
+                .format(Instant.now()) + ".dump";
+    }
+
+    private File resolveBackupFilePath(String filename) {
+        return backupBaseDir.resolve(buildDateFolderName()).resolve(filename).toFile();
+    }
+
+    private String buildDateFolderName() {
+        return DateTimeFormatter.ofPattern("MM-dd-yyyy")
+                .withZone(ZoneId.systemDefault())
+                .format(Instant.now());
+    }
+
+    private void moveBackupToFolder(File sourceFile, String filename) {
+        try {
+            Path dateFolder = backupBaseDir.resolve(buildDateFolderName());
+            Files.createDirectories(dateFolder);
+            Path destination = dateFolder.resolve(filename);
+            Files.move(sourceFile.toPath(), destination, StandardCopyOption.REPLACE_EXISTING);
+        } catch (IOException e) {
+            cleanupTempFile(sourceFile);
+            throw new RuntimeException("Failed to move backup to backups folder", e);
+        }
+    }
+
+    // ---- Restore helpers ----
+
+    private void validateBackupFile(MultipartFile file) {
+        if (file.isEmpty()) {
+            throw new BadRequestException("Backup file is empty");
+        }
+
+        if (file.getSize() > MAX_BACKUP_FILE_SIZE) {
+            throw new BadRequestException("Backup file exceeds maximum allowed size of 2 GB");
+        }
+
+        byte[] magic = new byte[5];
+        try (InputStream is = file.getInputStream()) {
+            int firstByte = is.read();
+            if (firstByte < 0) {
+                throw new BadRequestException("Invalid backup file: file is too small to be a valid PostgreSQL backup");
+            }
+
+            // Skip metadata header line if present (new format: {json}\nPGDMP...)
+            if (firstByte == '{') {
+                int b;
+                while ((b = is.read()) != -1 && b != '\n') {
+                    // skip metadata line
+                }
+                if (b != '\n') {
+                    throw new BadRequestException("Invalid backup file: metadata header is malformed");
+                }
+                firstByte = is.read(); // should now be 'P' from PGDMP
+            }
+
+            magic[0] = (byte) firstByte;
+            int bytesRead = is.read(magic, 1, 4);
+            if (bytesRead < 4) {
+                throw new BadRequestException("Invalid backup file: file is too small to be a valid PostgreSQL backup");
+            }
+            for (int i = 0; i < 5; i++) {
+                if (magic[i] != PGDUMP_MAGIC[i]) {
+                    throw new BadRequestException("Invalid backup file: file does not appear to be a valid PostgreSQL custom-format dump. Only pg_dump -Fc custom-format backups are supported.");
+                }
+            }
+        } catch (IOException e) {
+            throw new RuntimeException("Failed to validate backup file", e);
         }
     }
 
@@ -571,6 +722,14 @@ public class DatabaseBackupService {
 
     // ---- Metadata ----
 
+    private void validatePassword(String currentPassword) {
+        User user = authenticatedUserService.getCurrentUser();
+        if (currentPassword == null || currentPassword.isBlank()
+                || !passwordEncoder.matches(currentPassword, user.getPasswordHash())) {
+            throw new BadRequestException("Incorrect password. Please verify your password and try again.");
+        }
+    }
+
     private String extractJsonString(String json, String key) {
         String search = "\"" + key + "\":\"";
         int start = json.indexOf(search);
@@ -593,7 +752,18 @@ public class DatabaseBackupService {
     }
 
     private File prependMetadata(File dumpFile) throws IOException {
-        String metadata = buildMetadataJson();
+        return prependMetadata(dumpFile, null);
+    }
+
+    private File prependMetadata(File dumpFile, String performedBy) throws IOException {
+        String metadata;
+        if (performedBy != null) {
+            metadata = String.format(
+                    "{\"backupTimestamp\":\"%s\",\"performedBy\":\"%s\",\"databaseName\":\"%s\"}",
+                    Instant.now().toString(), performedBy, dbName);
+        } else {
+            metadata = buildMetadataJson();
+        }
         byte[] metadataBytes = (metadata + "\n").getBytes(StandardCharsets.UTF_8);
 
         File finalFile = File.createTempFile("pgdump_meta_", ".dump");

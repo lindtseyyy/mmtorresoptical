@@ -1,5 +1,6 @@
 package com.mmtorresoptical.OpticalClinicManagementSystem.repository;
 
+import com.mmtorresoptical.OpticalClinicManagementSystem.enums.Role;
 import com.mmtorresoptical.OpticalClinicManagementSystem.model.User;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
@@ -13,6 +14,8 @@ import java.util.Optional;
 import java.util.UUID;
 
 public interface UserRepository extends JpaRepository<User, UUID>, JpaSpecificationExecutor<User> {
+
+    Optional<User> findFirstByRoleAndIsArchivedFalse(Role role);
 
     Page<User> findAllByIsArchivedFalse(Pageable pageable);
     Page<User> findAllByIsArchivedTrue(Pageable pageable);
