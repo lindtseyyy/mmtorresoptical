@@ -100,7 +100,7 @@ const ManageInventory: React.FC = () => {
         <div>
           <h2 className="text-3xl font-bold">Products and Services Management</h2>
           <p className="text-muted-foreground">
-            Monitor and manage optical product inventory.
+            Monitor and manage optical products and services.
           </p>
         </div>
         {/* Updated Button to navigate */}
