@@ -722,7 +722,7 @@ const AddPrescription: React.FC = () => {
                 onClick={() => appendLens({ ...emptyLens })}
               >
                 <Eye className="h-4 w-4" />
-                Add Eyeglass Specification
+                Add Optical Specification
               </Button>
 
               <Button
@@ -733,7 +733,7 @@ const AddPrescription: React.FC = () => {
                 onClick={() => appendRec({ productId: "", quantity: 1, staffNotes: "" })}
               >
                 <Package className="h-4 w-4" />
-                Add Medication / Product
+                Attach Product
               </Button>
             </div>
           </div>
