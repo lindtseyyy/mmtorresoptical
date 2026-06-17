@@ -74,16 +74,16 @@ export default function HelpPage() {
               </p>
             </div>
             <div>
-              <h4 className="font-semibold">Inventory Management</h4>
+              <h4 className="font-semibold">Products and Services Management</h4>
               {role === "ADMIN" ? (
                 <p className="text-muted-foreground">
-                  Navigate to <em>Inventory Management</em> in the sidebar. View products, filter by category,
+                  Navigate to <em>Products and Services Management</em> in the sidebar. View products, filter by category,
                   and check stock levels. Add and edit products using the respective buttons. Product archiving
                   and restoration is available under <em>Maintenance &gt; Inventory Maintenance</em>.
                 </p>
               ) : (
                 <p className="text-muted-foreground">
-                  Navigate to <em>Inventory Management</em> in the sidebar. View products, filter by category,
+                  Navigate to <em>Products and Services Management</em> in the sidebar. View products, filter by category,
                   and check stock levels. Adding, editing, and archiving products are restricted to administrators.
                 </p>
               )}
@@ -116,7 +116,7 @@ export default function HelpPage() {
                   <h4 className="font-semibold">Maintenance (Admin only)</h4>
                   <p className="text-muted-foreground">
                     The <em>Maintenance</em> section allows administrators to create password-protected database
-                    backups and restore from previous backup files. It also includes the Audit Trail for reviewing
+                    backups and restore from previous backup files. It also includes the System Activity Logs for reviewing
                     system activity, and sub-pages for managing archived users, patients, and inventory.
                   </p>
                 </div>
@@ -293,7 +293,7 @@ export default function HelpPage() {
             <li>For transaction and patient reports, set a date range using the filter inputs.</li>
             <li>Click <strong>Export as PDF</strong> or <strong>Export as Excel</strong> to download the report.</li>
           </ol>
-          <p>All report exports are recorded in the Audit Trail.</p>
+          <p>All report exports are recorded in the System Activity Logs.</p>
         </div>
       ),
     },
@@ -381,12 +381,12 @@ export default function HelpPage() {
       answer: (
         <div className="space-y-2 text-muted-foreground">
           <ol className="list-decimal pl-5 space-y-1.5">
-            <li>Go to <strong>Inventory Management</strong>, find the product, and click the <strong>View</strong> button.</li>
+            <li>Go to <strong>Products and Services Management</strong>, find the product, and click the <strong>View</strong> button.</li>
             <li>In the product detail view, click the stock adjustment button.</li>
             <li>Choose <strong>Add Stock</strong> or <strong>Remove Stock</strong>.</li>
             <li>Enter the quantity and select or type a reason.</li>
           </ol>
-          <p>A preview shows the resulting stock level before you confirm. All adjustments are recorded in the Audit Trail.</p>
+          <p>A preview shows the resulting stock level before you confirm. All adjustments are recorded in the System Activity Logs.</p>
         </div>
       ),
     },
@@ -474,7 +474,7 @@ export default function HelpPage() {
       answer: (
         <div className="space-y-2 text-muted-foreground">
           <ol className="list-decimal pl-5 space-y-1.5">
-            <li>Go to <strong>Inventory Management</strong>.</li>
+            <li>Go to <strong>Products and Services Management</strong>.</li>
             <li>Click <strong>Add Product</strong> to create a new product, or find an existing product and click the <strong>Edit</strong> icon.</li>
             <li>Fill in or update the product details including name, category, supplier, price, cost, and stock quantity.</li>
             <li>Optionally upload a product image.</li>
@@ -499,10 +499,10 @@ export default function HelpPage() {
       ),
     },
     {
-      question: "How do I use the Audit Trail?",
+      question: "How do I use the System Activity Logs?",
       answer: (
         <div className="space-y-2 text-muted-foreground">
-          <p>The Audit Trail is found under <strong>Maintenance</strong>. It logs all system actions including:</p>
+          <p>The System Activity Logs is found under <strong>Maintenance</strong>. It logs all system actions including:</p>
           <ul className="list-disc pl-5 space-y-1">
             <li>Login and logout activity</li>
             <li>Creating or updating records</li>
@@ -628,7 +628,7 @@ export default function HelpPage() {
       answer: (
         <div className="space-y-2 text-muted-foreground">
           <ol className="list-decimal pl-5 space-y-1.5">
-            <li>Go to <strong>Inventory Management</strong>, find the product, and click <strong>View</strong>.</li>
+            <li>Go to <strong>Products and Services Management</strong>, find the product, and click <strong>View</strong>.</li>
             <li>In the product detail page, click <strong>Adjust Stock</strong>.</li>
             <li>Choose <strong>Add Stock</strong> or <strong>Remove Stock</strong>.</li>
             <li>Enter the quantity and select or type a reason.</li>
@@ -641,7 +641,7 @@ export default function HelpPage() {
       question: "What do the stock status badges mean?",
       answer: (
         <div className="space-y-2 text-muted-foreground">
-          <p>In the Inventory Management table, each product has a stock status badge:</p>
+          <p>In the Products and Services Management table, each product has a stock status badge:</p>
           <ul className="space-y-1.5">
             <li><strong>Normal</strong> (green) — Stock is at a healthy level.</li>
             <li><strong>Reorder</strong> (yellow) — Stock is at or below the reorder point and needs restocking.</li>
@@ -661,7 +661,7 @@ export default function HelpPage() {
       question: "How do I look up a product in inventory?",
       answer: (
         <div className="space-y-2 text-muted-foreground">
-          <p>Go to <strong>Inventory Management</strong> and use the following tools to find products:</p>
+          <p>Go to <strong>Products and Services Management</strong> and use the following tools to find products:</p>
           <ul className="space-y-1.5">
             <li><strong>Search bar</strong> — Find products by name.</li>
             <li><strong>Category filter</strong> — Filter products by category.</li>
@@ -719,7 +719,7 @@ export default function HelpPage() {
           <p>As a Staff user, the following restrictions apply:</p>
           <ul className="space-y-1.5">
             <li><strong>Inaccessible modules</strong> — Dashboard, Patient Management, Registration, Maintenance, and Reports.</li>
-            <li><strong>Inventory Management</strong> — You can view products and check stock, but cannot add, edit, or archive products.</li>
+            <li><strong>Products and Services Management</strong> — You can view products and check stock, but cannot add, edit, or archive products.</li>
             <li><strong>Transactions</strong> — Processing refunds, voiding transactions, and marking fulfillment statuses (Ready for Pickup, Picked Up) are restricted to administrators.</li>
           </ul>
           <p>If you need to perform any restricted action, please ask your system administrator.</p>

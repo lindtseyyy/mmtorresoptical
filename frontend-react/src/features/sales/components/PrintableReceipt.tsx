@@ -586,101 +586,127 @@ const StaffPickSlip: React.FC<{
   const dateStr = date.toLocaleDateString(undefined, { year: "numeric", month: "long", day: "numeric" });
   const timeStr = date.toLocaleTimeString(undefined, { hour: "2-digit", minute: "2-digit" });
 
-  const itemsWithBatches = tx.transactionItems.filter(
-    (item) => item.batchAllocations && item.batchAllocations.length > 0
+  // Consolidate items by product name and batch number
+  const consolidatedItems = new Map<string, {
+    productName: string;
+    batches: Map<string, { productBatchId: number; batchNumber: string; quantity: number }>;
+    isService: boolean;
+  }>();
+
+  tx.transactionItems.forEach((item) => {
+    const productName = item.product.productName;
+    const hasBatches = item.batchAllocations && item.batchAllocations.length > 0;
+
+    if (!consolidatedItems.has(productName)) {
+      consolidatedItems.set(productName, {
+        productName,
+        batches: new Map(),
+        isService: !hasBatches,
+      });
+    }
+
+    const entry = consolidatedItems.get(productName)!;
+
+    if (hasBatches) {
+      item.batchAllocations!.forEach((alloc) => {
+        const batchKey = alloc.batchNumber;
+        const existing = entry.batches.get(batchKey);
+        if (existing) {
+          existing.quantity += alloc.quantityDeducted;
+        } else {
+          entry.batches.set(batchKey, {
+            productBatchId: alloc.productBatchId,
+            batchNumber: alloc.batchNumber,
+            quantity: alloc.quantityDeducted,
+          });
+        }
+      });
+    }
+  });
+
+  const itemsWithBatches = Array.from(consolidatedItems.values()).filter(
+    (item) => item.batches.size > 0
+  );
+
+  const serviceItems = Array.from(consolidatedItems.values()).filter(
+    (item) => item.isService
   );
 
   const totalUnits = itemsWithBatches.reduce(
     (sum, item) =>
-      sum +
-      (item.batchAllocations?.reduce((s, a) => s + a.quantityDeducted, 0) ?? 0),
+      sum + Array.from(item.batches.values()).reduce((s, b) => s + b.quantity, 0),
     0
   );
 
   return (
-    <div className="receipt-canvas font-mono text-xs leading-relaxed text-foreground max-h-[65vh] overflow-y-auto print:max-h-none print:overflow-visible print:mt-6">
+    <div className="max-h-[65vh] overflow-y-auto print:max-h-none print:overflow-visible">
       {/* Header */}
-      <div className="text-center mb-4">
-        <h2 className="text-xs font-bold tracking-wide uppercase text-muted-foreground mb-1">
-          STAFF PICK LIST
-        </h2>
-        <h2 className="receipt-title text-sm font-bold tracking-wide uppercase">
-          {BUSINESS_NAME}
-        </h2>
-        <p className="text-[10px] text-muted-foreground mt-0.5">Internal Use Only</p>
+      <div className="bg-primary text-primary-foreground pl-3 pr-10 py-2 print:bg-transparent print:text-black print:border-b-2 print:border-black">
+        <h2 className="text-base font-bold">STAFF PICK LIST</h2>
       </div>
 
-      <hr className="border-dashed border-border mb-3" />
-
-      {/* Metadata */}
-      <div className="space-y-0.5 mb-3">
-        <div className="flex justify-between">
-          <span className="text-muted-foreground">Transaction #</span>
-          <span className="font-semibold">{tx.transactionNumber}</span>
-        </div>
-        <div className="flex justify-between">
-          <span className="text-muted-foreground">Date</span>
-          <span>{dateStr}</span>
-        </div>
-        <div className="flex justify-between">
-          <span className="text-muted-foreground">Time</span>
-          <span>{timeStr}</span>
-        </div>
-        {tx.patient && (
-          <div className="flex justify-between">
-            <span className="text-muted-foreground">Patient</span>
-            <span>{tx.patient.fullName}</span>
+      {/* Transaction Info */}
+      <div className="px-3 py-2 border-b print:border-black">
+        <div className="grid grid-cols-2 gap-2 text-xs">
+          <div>
+            <p className="text-[10px] text-muted-foreground">Transaction #</p>
+            <p className="font-semibold">{tx.transactionNumber}</p>
           </div>
-        )}
+          <div>
+            <p className="text-[10px] text-muted-foreground">Date & Time</p>
+            <p>{dateStr} at {timeStr}</p>
+          </div>
+          {tx.patient && (
+            <div className="col-span-2">
+              <p className="text-[10px] text-muted-foreground">Patient</p>
+              <p className="font-semibold">{tx.patient.fullName}</p>
+            </div>
+          )}
+        </div>
       </div>
 
-      <hr className="border-dashed border-border mb-3" />
-
-      {/* Pick List */}
-      <div className="space-y-3">
+      {/* Pick List Items */}
+      <div className="px-3 py-2 space-y-1.5">
         {itemsWithBatches.map((item) => (
-          <div key={item.transactionItemId}>
-            <p className="font-bold text-sm mb-1">{item.product.productName}</p>
-            <div className="space-y-0.5 ml-1">
-              {item.batchAllocations!.map((alloc) => (
-                <div key={alloc.productBatchId} className="flex items-start gap-2">
-                  <span className="inline-block w-3 h-3 border border-foreground mt-0.5 shrink-0 print:border-black" />
-                  <span>
-                    Pull <span className="font-bold">{alloc.quantityDeducted}</span>{" "}
-                    {alloc.quantityDeducted === 1 ? "unit" : "units"} from{" "}
-                    <span className="font-bold">[{alloc.batchNumber}]</span>
-                  </span>
+          <div key={item.productName} className="border rounded px-2 py-1.5 print:border-black">
+            <h3 className="font-semibold text-xs mb-1">{item.productName}</h3>
+            <div className="space-y-0.5">
+              {Array.from(item.batches.values()).map((batch) => (
+                <div key={batch.productBatchId} className="flex items-center gap-2 bg-muted/50 px-2 py-1 rounded print:bg-transparent print:border print:border-black">
+                  <div className="flex-1">
+                    <p className="text-[11px]">
+                      Pull <span className="font-bold text-sm">{batch.quantity}</span>{" "}
+                      {batch.quantity === 1 ? "unit" : "units"}
+                    </p>
+                    <p className="text-[10px] text-muted-foreground print:text-black">
+                      Batch: <span className="font-mono font-semibold">{batch.batchNumber}</span>
+                    </p>
+                  </div>
                 </div>
               ))}
             </div>
           </div>
         ))}
 
-        {/* SERVICE items without batch allocations */}
-        {tx.transactionItems
-          .filter((item) => !item.batchAllocations || item.batchAllocations.length === 0)
-          .map((item) => (
-            <div key={item.transactionItemId}>
-              <p className="font-bold text-sm mb-1">{item.product.productName}</p>
-              <div className="ml-1 text-muted-foreground">
-                <span className="inline-block w-3 h-3 border border-muted-foreground mt-0.5 mr-2 shrink-0 align-middle" />
+        {/* Service items */}
+        {serviceItems.map((item) => (
+          <div key={item.productName} className="border rounded px-2 py-1.5 print:border-black">
+            <h3 className="font-semibold text-xs mb-1">{item.productName}</h3>
+            <div className="flex items-center gap-2 bg-muted/30 px-2 py-1 rounded print:bg-transparent print:border print:border-black">
+              <p className="text-[11px] text-muted-foreground print:text-black">
                 Service — no physical pull needed
-              </div>
+              </p>
             </div>
-          ))}
+          </div>
+        ))}
       </div>
-
-      <hr className="border-dashed border-border my-3" />
 
       {/* Footer */}
-      <div className="flex justify-between text-sm font-bold">
-        <span>Total physical units to pull:</span>
-        <span>{totalUnits}</span>
-      </div>
-
-      <div className="text-center text-[10px] text-muted-foreground mt-4 space-y-1">
-        <p>Check off each item as you retrieve it.</p>
-        <p>Confirm all items before handing to customer.</p>
+      <div className="px-3 py-2 border-t print:border-black">
+        <div className="flex justify-between items-center">
+          <span className="font-semibold text-xs">Total units to pull:</span>
+          <span className="text-lg font-bold">{totalUnits}</span>
+        </div>
       </div>
     </div>
   );
@@ -730,10 +756,12 @@ const PrintableReceipt: React.FC<PrintableReceiptProps> = ({
 
         {/* Action buttons */}
         <div className="receipt-actions flex gap-2 mt-4 print:hidden">
+          {!isPickSlip && (
           <Button className="flex-1" onClick={handlePrint}>
             <Printer className="mr-2 h-4 w-4" />
-            {isUpdated ? "Print Statement" : isDualSlip ? "Print Receipts" : isPickSlip ? "Print Pick List" : "Print Receipt"}
+            {isUpdated ? "Print Statement" : isDualSlip ? "Print Receipts" : "Print Receipt"}
           </Button>
+          )}
           {extraButton}
           <Button
             variant="outline"

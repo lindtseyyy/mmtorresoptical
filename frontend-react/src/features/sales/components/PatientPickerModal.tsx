@@ -63,7 +63,7 @@ const PatientPickerModal: React.FC<PatientPickerModalProps> = ({
           />
         </div>
 
-        <div className="max-h-[400px] overflow-y-auto">
+        <div className="max-h-[500px] overflow-y-auto">
           {isLoading ? (
             <div className="flex h-32 items-center justify-center">
               <Loader2 className="h-6 w-6 animate-spin text-muted-foreground" />
@@ -77,32 +77,32 @@ const PatientPickerModal: React.FC<PatientPickerModalProps> = ({
               </p>
             </div>
           ) : (
-            <div className="space-y-1">
+            <div className="space-y-0.5">
               {patients.map((patient) => (
                 <div
                   key={patient.patientId}
-                  className="flex items-center rounded-lg border p-3 transition-colors hover:bg-muted/50"
+                  className="flex items-center rounded-md border px-3 py-1.5 transition-colors hover:bg-muted/50"
                 >
-                  <div className="flex h-9 w-9 items-center justify-center rounded-full bg-primary/10 mr-3 shrink-0">
-                    <UserRound className="h-4 w-4 text-primary" />
+                  <div className="flex h-7 w-7 items-center justify-center rounded-full bg-primary/10 mr-2 shrink-0">
+                    <UserRound className="h-3.5 w-3.5 text-primary" />
                   </div>
                   <div className="min-w-0 flex-1">
-                    <p className="text-sm font-medium truncate">
+                    <p className="text-xs font-medium truncate leading-tight">
                       {patient.fullName}
                     </p>
-                    <p className="text-xs text-muted-foreground">
+                    <p className="text-[11px] text-muted-foreground truncate leading-tight">
                       {patient.email}
                     </p>
                   </div>
                   <Button
                     size="sm"
-                    className="ml-3 shrink-0"
+                    className="ml-2 shrink-0 h-7 px-2 text-xs"
                     onClick={() => {
                       onSelect(patient);
                       onOpenChange(false);
                     }}
                   >
-                    Select Patient
+                    Select
                   </Button>
                 </div>
               ))}

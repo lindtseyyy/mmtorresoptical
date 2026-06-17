@@ -119,34 +119,20 @@ export default function Dashboard() {
         {/* Needs Reordering */}
         <div
           onClick={() => navigate("/inventory")}
-          className={`rounded-xl border p-4 shadow-sm cursor-pointer transition-colors hover:opacity-90 ${
-            (ropAlerts?.count ?? 0) > 0
-              ? "border-orange-200 bg-orange-50"
-              : "border-muted bg-card"
-          }`}
+          className="rounded-xl border border-border bg-card p-4 shadow-sm cursor-pointer transition-colors hover:opacity-90"
         >
           <div className="flex items-center justify-between gap-2">
             <div className="flex items-center gap-2">
-              <div className={`flex h-9 w-9 items-center justify-center rounded-lg ${
-                (ropAlerts?.count ?? 0) > 0 ? "bg-orange-100" : "bg-muted"
-              }`}>
-                <AlertTriangle className={`h-4 w-4 ${
-                  (ropAlerts?.count ?? 0) > 0 ? "text-orange-700" : "text-muted-foreground"
-                }`} />
+              <div className="flex h-9 w-9 items-center justify-center rounded-lg bg-muted">
+                <AlertTriangle className="h-4 w-4 text-muted-foreground" />
               </div>
-              <p className={`text-xs font-medium ${
-                (ropAlerts?.count ?? 0) > 0 ? "text-orange-800" : "text-muted-foreground"
-              }`}>
+              <p className="text-xs font-medium text-muted-foreground">
                 Needs Reordering
               </p>
             </div>
-            <ArrowRight className={`h-4 w-4 ${
-              (ropAlerts?.count ?? 0) > 0 ? "text-orange-700" : "text-muted-foreground"
-            }`} />
+            <ArrowRight className="h-4 w-4 text-muted-foreground" />
           </div>
-          <p className={`mt-2 text-2xl font-bold ${
-            (ropAlerts?.count ?? 0) > 0 ? "text-orange-900" : "text-foreground"
-          }`}>
+          <p className="mt-2 text-2xl font-bold text-foreground">
             {ropAlerts?.count ?? "—"}
           </p>
         </div>

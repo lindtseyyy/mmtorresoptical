@@ -18,7 +18,7 @@ interface MenuItem {
 
 const menuItems: MenuItem[] = [
   { title: "Dashboard", href: "/dashboard", icon: LayoutDashboard, roles: ["ADMIN"] as Role[] },
-  { title: "Inventory Management", href: "/inventory", icon: Eye, roles: ["ADMIN", "STAFF"] as Role[] },
+  { title: "Products and Services Management", href: "/inventory", icon: Eye, roles: ["ADMIN", "STAFF"] as Role[] },
   { title: "Patient Management", href: "/patients", icon: UserRound, roles: ["ADMIN"] as Role[] },
   { title: "Billing and Payment", href: "/sales", icon: ShoppingCart, roles: ["ADMIN", "STAFF"] as Role[] },
   { title: "Sales and Transactions", href: "/transactions", icon: Receipt, roles: ["ADMIN", "STAFF"] as Role[] },
@@ -33,7 +33,7 @@ const menuItems: MenuItem[] = [
       { title: "Patient Maintenance", href: "/admin/patient-maintenance" },
       { title: "Inventory Maintenance", href: "/admin/inventory-maintenance" },
       { title: "Backup & Restore", href: "/admin/backup-restore" },
-      { title: "Audit Trail", href: "/admin/audit-logs" },
+      { title: "System Activity Logs", href: "/admin/audit-logs" },
     ],
   },
   { title: "Help", href: "/help", icon: CircleHelp, roles: ["ADMIN", "STAFF"] as Role[] },
@@ -131,7 +131,7 @@ const Sidenav: React.FC = () => {
   };
 
   return (
-    <div className="flex h-screen w-64 shrink-0 flex-col border-r border-border bg-card shadow-xl">
+    <div className="flex h-screen w-80 shrink-0 flex-col border-r border-border bg-card shadow-xl">
       <div className="flex h-16 items-center gap-2 border-b border-border p-4">
         <div className="flex h-10 w-10 items-center justify-center rounded-full bg-primary">
           <Eye className="h-5 w-5 text-primary-foreground" />

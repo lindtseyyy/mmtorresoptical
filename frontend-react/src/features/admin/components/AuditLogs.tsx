@@ -128,7 +128,7 @@ const AuditLogs: React.FC = () => {
   return (
     <div className="space-y-6">
       <div>
-        <h2 className="text-3xl font-bold">Audit Trail</h2>
+        <h2 className="text-3xl font-bold">System Activity Logs</h2>
         <p className="text-muted-foreground">
           View and track all system activity and changes.
         </p>
@@ -290,7 +290,7 @@ const AuditLogs: React.FC = () => {
 
               {auditLogs.length === 0 && (
                 <p className="py-8 text-center text-muted-foreground">
-                  No audit trail entries found.
+                  No system activity entries found.
                 </p>
               )}
 
