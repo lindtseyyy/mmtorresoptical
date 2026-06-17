@@ -159,19 +159,6 @@ const ViewProduct: React.FC = () => {
         </Button>
       </div>
 
-      {/* Days-of-Supply Reorder Warning Banner */}
-      {!isService && !product.isArchived && product.reorderPoint != null &&
-        product.quantity <= product.reorderPoint &&
-        product.suggestedOrderQuantity != null && product.suggestedOrderQuantity > 0 && (
-          <div className="rounded-lg border border-amber-700/60 bg-amber-700 px-4 py-3">
-            <p className="text-sm text-white">
-              <span className="font-semibold">⚠️ Reorder Warning:</span> Stock is low. Based on
-              your current 30-day sales velocity data, the suggested reorder quantity is{" "}
-              <span className="font-bold">{product.suggestedOrderQuantity} units</span>.
-            </p>
-          </div>
-        )}
-
       {/* Card Metrics */}
       <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
         <MetricCard

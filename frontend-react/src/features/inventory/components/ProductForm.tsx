@@ -116,6 +116,7 @@ export const ProductForm: React.FC<ProductFormProps> = ({
   const isService = watchedProductType === "SERVICE";
 
   useEffect(() => {
+    if (isEditMode) return;
     setSelectedCategoryId(null);
     form.setValue("categoryId", undefined, { shouldValidate: false });
     form.setValue("newCategoryName", undefined, { shouldValidate: false });
@@ -127,7 +128,7 @@ export const ProductForm: React.FC<ProductFormProps> = ({
       form.setValue("leadTimeDays", origIsPhysical ? String(passedDefaultValues.leadTimeDays ?? 3) : "3", { shouldValidate: false });
       form.setValue("supplierId", selectedSupplierId ?? undefined, { shouldValidate: false });
     }
-  }, [watchedProductType, form, passedDefaultValues]);
+  }, [watchedProductType, form, passedDefaultValues, isEditMode]);
 
   useEffect(() => {
     form.reset(initialFormValues);
@@ -159,34 +160,6 @@ export const ProductForm: React.FC<ProductFormProps> = ({
       <form onSubmit={handleSubmit}>
         <Card>
           <CardContent className="space-y-4 pt-6">
-            <FormField
-              control={form.control}
-              name="productType"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel className="font-semibold">Item Type</FormLabel>
-                  <Select
-                    value={field.value}
-                    onValueChange={(value) => {
-                      field.onChange(value);
-                      field.onBlur();
-                    }}
-                  >
-                    <FormControl>
-                      <SelectTrigger>
-                        <SelectValue placeholder="Select item type" />
-                      </SelectTrigger>
-                    </FormControl>
-                    <SelectContent>
-                      <SelectItem value="PHYSICAL">Physical (Inventory)</SelectItem>
-                      <SelectItem value="SERVICE">Service</SelectItem>
-                    </SelectContent>
-                  </Select>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
-
             <div className={isService ? "grid gap-4 md:grid-cols-2" : ""}>
             <FormField
               control={form.control}
