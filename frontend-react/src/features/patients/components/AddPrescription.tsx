@@ -271,7 +271,7 @@ const AddPrescription: React.FC = () => {
     const hasProductsData = data.products.length > 0;
 
     if (!hasLensData && !hasProductsData) {
-      toast.error("A prescription must contain either an eyeglass specification or a product recommendation.");
+      toast.error("A prescription must contain either an optical specification or a product recommendation.");
       return;
     }
 
@@ -454,7 +454,7 @@ const AddPrescription: React.FC = () => {
                 <CardHeader>
                   <div className="flex items-center justify-between">
                     <div>
-                      <CardTitle>Eyeglass Specification</CardTitle>
+                      <CardTitle>Optical Specification</CardTitle>
                       <CardDescription>Optical measurements and lens preferences</CardDescription>
                     </div>
                     <Button
