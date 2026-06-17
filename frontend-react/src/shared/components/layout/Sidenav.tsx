@@ -20,8 +20,8 @@ const menuItems: MenuItem[] = [
   { title: "Dashboard", href: "/dashboard", icon: LayoutDashboard, roles: ["ADMIN"] as Role[] },
   { title: "Products and Services Management", href: "/inventory", icon: Eye, roles: ["ADMIN", "STAFF"] as Role[] },
   { title: "Patient Management", href: "/patients", icon: UserRound, roles: ["ADMIN"] as Role[] },
-  { title: "Billing and Payment", href: "/sales", icon: ShoppingCart, roles: ["ADMIN", "STAFF"] as Role[] },
-  { title: "Sales and Transactions", href: "/transactions", icon: Receipt, roles: ["ADMIN", "STAFF"] as Role[] },
+  { title: "Point of Sale (POS)", href: "/sales", icon: ShoppingCart, roles: ["ADMIN", "STAFF"] as Role[] },
+  { title: "Transaction History & Refunds", href: "/transactions", icon: Receipt, roles: ["ADMIN", "STAFF"] as Role[] },
   { title: "Reports", href: "/reports", icon: FileText, roles: ["ADMIN"] as Role[] },
   { title: "Registration", href: "/users", icon: Users, roles: ["ADMIN"] as Role[] },
   {
@@ -31,7 +31,7 @@ const menuItems: MenuItem[] = [
     children: [
       { title: "User Maintenance", href: "/admin/user-maintenance" },
       { title: "Patient Maintenance", href: "/admin/patient-maintenance" },
-      { title: "Inventory Maintenance", href: "/admin/inventory-maintenance" },
+      { title: "Products and Services Maintenance", href: "/admin/inventory-maintenance" },
       { title: "Backup & Restore", href: "/admin/backup-restore" },
       { title: "System Activity Logs", href: "/admin/audit-logs" },
     ],

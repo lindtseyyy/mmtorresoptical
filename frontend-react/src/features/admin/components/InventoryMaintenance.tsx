@@ -99,7 +99,7 @@ const InventoryMaintenance: React.FC = () => {
   return (
     <div className="space-y-6">
       <div>
-        <h2 className="text-3xl font-bold">Inventory Maintenance</h2>
+        <h2 className="text-3xl font-bold">Products and Services Maintenance</h2>
         <p className="text-muted-foreground">
           Archive and restore products.
         </p>

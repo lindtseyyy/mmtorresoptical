@@ -53,7 +53,7 @@ const InventoryValueChart: React.FC = () => {
   return (
     <Card>
       <CardHeader className="bg-muted">
-        <CardTitle>12-Month Inventory Value Trend</CardTitle>
+        <CardTitle>12-Month Product Value Trend</CardTitle>
       </CardHeader>
       <CardContent className="pt-6">
         {isLoading ? (

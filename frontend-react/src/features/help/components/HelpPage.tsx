@@ -79,7 +79,7 @@ export default function HelpPage() {
                 <p className="text-muted-foreground">
                   Navigate to <em>Products and Services Management</em> in the sidebar. View products, filter by category,
                   and check stock levels. Add and edit products using the respective buttons. Product archiving
-                  and restoration is available under <em>Maintenance &gt; Inventory Maintenance</em>.
+                  and restoration is available under <em>Maintenance &gt; Products and Services Maintenance</em>.
                 </p>
               ) : (
                 <p className="text-muted-foreground">
@@ -289,7 +289,7 @@ export default function HelpPage() {
         <div className="space-y-2 text-muted-foreground">
           <ol className="list-decimal pl-5 space-y-1.5">
             <li>Go to <strong>Reports</strong> in the sidebar.</li>
-            <li>Use the segmented control to switch between <strong>Inventory Analytics</strong>, <strong>Transactions</strong>, and <strong>Patients</strong>.</li>
+            <li>Use the segmented control to switch between <strong>Products and Services</strong>, <strong>Transactions</strong>, and <strong>Patients</strong>.</li>
             <li>For transaction and patient reports, set a date range using the filter inputs.</li>
             <li>Click <strong>Export as PDF</strong> or <strong>Export as Excel</strong> to download the report.</li>
           </ol>
@@ -447,7 +447,7 @@ export default function HelpPage() {
     {
       question: "What happens when a product is archived?",
       answer:
-        "Archiving a product hides it from the main product list and the billing and payment interface. It does not delete historical transaction data. Archived products can be restored by an administrator from Maintenance &gt; Inventory Maintenance.",
+        "Archiving a product hides it from the main product list and the billing and payment interface. It does not delete historical transaction data. Archived products can be restored by an administrator from Maintenance &gt; Products and Services Maintenance.",
     },
     {
       question: "What happens when a user account is archived?",

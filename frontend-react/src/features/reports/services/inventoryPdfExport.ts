@@ -455,7 +455,7 @@ function generateInventoryPdf(
   doc.setFontSize(9);
   doc.setTextColor(80);
   doc.setFont("helvetica", "bold");
-  doc.text("12-Month Inventory Value Trend", margin, cursorY);
+  doc.text("12-Month Product Value Trend", margin, cursorY);
   cursorY += 3;
 
   const areaRect: ChartRect = { x: margin, y: cursorY, w: fullChartW, h: chartTargetH };
@@ -471,7 +471,7 @@ function generateInventoryPdf(
   doc.setFontSize(9);
   doc.setTextColor(80);
   doc.setFont("helvetica", "bold");
-  doc.text("Inventory Valuation by Category", margin, cursorY);
+  doc.text("Product Valuation by Category", margin, cursorY);
   cursorY += 3;
 
   const sortedCategories = [...categoryBreakdown]

@@ -33,7 +33,7 @@ import type {
 // ── Report type options ───────────────────────────────────────────────
 
 const REPORT_TYPE_OPTIONS = [
-  { value: "INVENTORY_ANALYTICS", label: "Inventory Analytics" },
+  { value: "INVENTORY_ANALYTICS", label: "Products and Services" },
   { value: "TRANSACTIONS", label: "Transactions" },
   { value: "PATIENTS", label: "Patients" },
 ];

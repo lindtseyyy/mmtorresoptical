@@ -5,9 +5,6 @@ import EmptyTableRows from "@/shared/components/EmptyTableRows";
 import type { PageResponse } from "@/shared/types";
 import type { ProductDetailsDTO } from "@/features/reports/types";
 
-const currency = (value: number) =>
-  new Intl.NumberFormat("en-PH", { style: "currency", currency: "PHP" }).format(value);
-
 interface LowStockProductsTableProps {
   data: PageResponse<ProductDetailsDTO> | undefined;
   isLoading: boolean;
@@ -44,7 +41,7 @@ const LowStockProductsTable: React.FC<LowStockProductsTableProps> = ({
                   <th className="w-[20%] py-3 pr-4 font-medium">Category</th>
                   <th className="w-[15%] py-3 pr-4 font-medium text-right">Quantity</th>
                   <th className="w-[15%] py-3 pr-4 font-medium text-right">Threshold</th>
-                  <th className="w-[15%] py-3 pr-4 font-medium text-right">Unit Price</th>
+                  <th className="w-[15%] py-3 pr-4 font-medium text-right">Suggested Order Qty</th>
                 </tr>
               </thead>
               <tbody>
@@ -56,7 +53,7 @@ const LowStockProductsTable: React.FC<LowStockProductsTableProps> = ({
                     </td>
                     <td className="py-3 pr-4 text-right text-yellow-600 font-medium">{p.quantity}</td>
                     <td className="py-3 pr-4 text-right">{p.lowLevelThreshold}</td>
-                    <td className="py-3 pr-4 text-right">{currency(p.unitPrice)}</td>
+                    <td className="py-3 pr-4 text-right">{p.suggestedOrderQuantity ?? "—"}</td>
                   </tr>
                 ))}
                 <EmptyTableRows

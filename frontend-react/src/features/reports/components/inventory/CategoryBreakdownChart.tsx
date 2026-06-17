@@ -51,7 +51,7 @@ const CategoryBreakdownChart: React.FC = () => {
   return (
     <Card>
       <CardHeader className="bg-muted">
-        <CardTitle>Inventory Valuation by Category</CardTitle>
+        <CardTitle>Product Valuation by Category</CardTitle>
       </CardHeader>
       <CardContent className="pt-6">
         {isLoading ? (

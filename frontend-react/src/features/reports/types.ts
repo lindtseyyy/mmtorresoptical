@@ -20,6 +20,7 @@ export interface ProductDetailsDTO {
   productType: "PHYSICAL" | "SERVICE";
   lowLevelThreshold: number;
   overstockedThreshold: number;
+  suggestedOrderQuantity: number | null;
   isArchived: boolean;
   createdAt: string;
 }
