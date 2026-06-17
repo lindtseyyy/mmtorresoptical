@@ -205,7 +205,7 @@ const ViewProduct: React.FC = () => {
 
         <MetricCard
           icon={TrendingUp}
-          label="Inventory Value"
+          label="Product Value"
           value={isService
             ? "—"
             : `₱ ${inventoryValue.toLocaleString("en-US", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`
