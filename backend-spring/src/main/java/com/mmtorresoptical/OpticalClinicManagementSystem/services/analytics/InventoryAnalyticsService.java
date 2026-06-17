@@ -137,8 +137,13 @@ public class InventoryAnalyticsService {
 
         int totalPages = (int) Math.ceil((double) sorted.size() / size);
 
+        List<ProductDetailsDTO> dtoContent = pageContent.stream()
+                .map(productMapper::entityToDetailsDTO)
+                .collect(Collectors.toList());
+        enrichWithReorderPoints(dtoContent);
+
         Page<ProductDetailsDTO> result = new org.springframework.data.domain.PageImpl<>(
-                pageContent.stream().map(productMapper::entityToDetailsDTO).collect(Collectors.toList()),
+                dtoContent,
                 PageRequest.of(page, size),
                 sorted.size()
         );
@@ -181,7 +186,7 @@ public class InventoryAnalyticsService {
         // Compute reorder points and filter
         Map<UUID, Long> velocityMap = fetchSalesVelocityMap();
 
-        return candidates.stream()
+        List<ProductDetailsDTO> dtos = candidates.stream()
                 .filter(p -> {
                     int rop = computeReorderPoint(
                             p.getProductId(),
@@ -197,6 +202,8 @@ public class InventoryAnalyticsService {
                 .sorted(Comparator.comparingInt(Product::getQuantity))
                 .map(productMapper::entityToDetailsDTO)
                 .toList();
+        enrichWithReorderPoints(dtos);
+        return dtos;
     }
 
     public List<ProductDetailsDTO> getAllOverStockedProducts() {
@@ -225,16 +232,20 @@ public class InventoryAnalyticsService {
 
         Page<Product> products = inventoryAnalyticsRepository.findOutOfStockProducts(pageable);
 
-        return products.map(productMapper::entityToDetailsDTO);
+        Page<ProductDetailsDTO> result = products.map(productMapper::entityToDetailsDTO);
+        enrichWithReorderPoints(result.getContent());
+        return result;
     }
 
     public List<ProductDetailsDTO> getAllOutOfStockProducts() {
         Sort sort = Sort.by(Sort.Direction.ASC, "productName");
         List<Product> products = inventoryAnalyticsRepository.findOutOfStockProducts(sort);
 
-        return products.stream()
+        List<ProductDetailsDTO> dtos = products.stream()
                 .map(productMapper::entityToDetailsDTO)
                 .toList();
+        enrichWithReorderPoints(dtos);
+        return dtos;
     }
 
     public List<TopSellingProductDTO> getTopSellingProducts(LocalDate startDate,
