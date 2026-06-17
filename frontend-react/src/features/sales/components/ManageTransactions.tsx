@@ -128,9 +128,9 @@ const ManageTransactions: React.FC = () => {
     <div className="space-y-6">
       <div className="flex items-center justify-between">
         <div>
-          <h2 className="text-3xl font-bold">Sales and Transactions</h2>
+          <h2 className="text-3xl font-bold">Transaction History and Refunds</h2>
           <p className="text-muted-foreground">
-            View and manage all sales and transactions.
+            View and manage all transaction history and refunds.
           </p>
         </div>
       </div>
