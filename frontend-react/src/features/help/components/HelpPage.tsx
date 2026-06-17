@@ -24,7 +24,7 @@ export default function HelpPage() {
   };
 
   const handlePrint = () => {
-    window.open("/MM Torres Optical User Manual.pdf", "_blank");
+    window.open("/MM%20Torres%20Optical%20User%20Manual.pdf", "_blank");
   };
 
   const manualSections = useMemo(() => {
